@@ -1,0 +1,31 @@
+.task-board {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.task-column {
+    flex: 1;
+    min-width: 240px;
+
+    padding: 16px;
+
+    border-radius: 10px;
+    background-color: #e9edf2;
+}
+
+.task-column-title {
+    margin-bottom: 12px;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.task-card {
+    padding: 14px;
+
+    border-radius: 8px;
+    background-color: white;
+
+    font-size: 14px;
+}

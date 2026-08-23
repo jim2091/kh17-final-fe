@@ -13,7 +13,7 @@ export default function ProjectLayout() {
             <ProjectTabs/>
 
             {/* 탭별 실제 화면 */}
-            <div>
+            <div className="project-content">
                 <Outlet/>
             </div>
         </div>
