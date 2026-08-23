@@ -22,65 +22,31 @@ function App() {
       <Route element={<MainLayout />}>
 
         {/* 임시 메인 화면 */}
-        <Route
-          path="/"
-          element={<div>메인화면입니다(민영 브렌치 연습중)</div>}
-        />
-        <Route
-          path="/projects"
-          element={<ProjectList />}
-        />
-        <Route
-          path="/projects/public"
-          element={<PublicProjectList />}
-        />
-        <Route
-          path="/projects/archive"
-          element={<ArcheiveProjectList />}
-        />
+        <Route path="/" element={<div>메인화면입니다(민영 브렌치 연습중)</div>} />
+        <Route path="/projects" element={<ProjectList />} />
+        <Route path="/projects/public" element={<PublicProjectList />} />
+        <Route path="/projects/archive" element={<ArcheiveProjectList />}/>
 
         {/* 프로젝트 내부 */}
-        <Route
-          path="/projects/:projectNo"
-          element={<ProjectLayout />}
-        >
-          <Route
-            index
-            element={<Navigate to="task" replace />}
-          />
+        <Route path="/projects/:projectNo" element={<ProjectLayout />}>
+          <Route index element={<Navigate to="task" replace />}/>
           
-          <Route
-            path="task"
-            element={<Task />}
-          />
+          <Route path="task" element={<Task />}/>
 
-          <Route
-            path="chat"
-            element={<Chat />}
-          />
+          <Route path="chat" element={<Chat />}/>
 
-          <Route
-            path="calendar"
-            element={<Calendar />}
-          />
+          <Route path="calendar" element={<Calendar/>}/>
 
-          <Route
-            path="notes"
-            element={<Notes />}
-          />
+          <Route path="notes" element={<Notes />}/>
 
-          <Route
-            path="files"
-            element={<Files />}
-          />
+          <Route path="files" element={<Files />}/>
 
-          <Route
-            path="records"
-            element={<Records />}
-          />
+          <Route path="records" element={<Records />}/>
 
         </Route>
       </Route>
+
+      <Route path="*" element={<NotFound />}/>
     </Routes>
   )
 }
