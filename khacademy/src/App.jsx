@@ -12,8 +12,19 @@ import Calendar from './components/calendar/Calendar';
 import Notes from './components/notes/Notes';
 import Files from './components/files/Files';
 import Records from './components/records/Records';
+import { useEffect } from 'react';
+import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
 
 function App() {
+
+  //공용 소켓 연결 테스트 코드.
+  useEffect(()=>{
+    connectWebSocket();
+
+    return () =>{
+      disconnectWebSocket();
+    }
+  }, []);
 
   return (
     <Routes>
