@@ -24,7 +24,7 @@ function App() {
         {/* 임시 메인 화면 */}
         <Route
           path="/"
-          element={<div>메인화면입니다</div>}
+          element={<div>메인화면입니다(민영 브렌치 연습중)</div>}
         />
         <Route
           path="/projects"
