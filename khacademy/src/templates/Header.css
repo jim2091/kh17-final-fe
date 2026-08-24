@@ -48,3 +48,56 @@
 .header-profile {
     cursor: pointer;
 }
+
+.header-menu-button {
+    display: none;
+
+    border: none;
+    background-color: transparent;
+
+    font-size: 22px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+
+    .header {
+        padding: 0 16px;
+    }
+
+    .header-menu-button {
+        display: block;
+        margin-right: 12px;
+    }
+
+    .header-logo {
+        width: auto;
+    }
+
+    .header-search {
+        margin-left: 16px;
+    }
+
+    .header-search input {
+        max-width: none;
+    }
+
+    .header-actions {
+        margin-left: 12px;
+        gap: 12px;
+    }
+
+}
+
+@media (max-width: 576px) {
+
+    .header-search {
+        display: none;
+    }
+
+    .header-actions {
+        margin-left: auto;
+    }
+
+}
+

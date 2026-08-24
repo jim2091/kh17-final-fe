@@ -1,9 +1,16 @@
 import "./Header.css";
 
-export default function Header() {
+export default function Header({openSidebar}) {
     return (
         <div className="header">
 
+            <button
+                type="button"
+                className="header-menu-button"
+                onClick={openSidebar}
+            >
+                ☰
+            </button>
             <div className="header-logo">
                 LOGO
             </div>
@@ -24,7 +31,7 @@ export default function Header() {
                 <div className="header-profile">
                     프로필
                 </div>
-                
+
             </div>
         </div>
     )
