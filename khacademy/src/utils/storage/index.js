@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage, RESET} from "jotai/utils";
 
 //로컬스토리지를 JSON 스토리지로 생성
-const localStroageWrapper = createJSONStorage(()=>window.localStorage);
+const localStorageWrapper = createJSONStorage(()=>window.localStorage);
 
 //로그인한 사용자 정보
 export const loginUserState = atomWithStorage("loginUserState", null, localStorageWrapper);
@@ -17,7 +17,7 @@ export const isLoginState = atom(get=>{
 export const isAdminState = atom(get=>{
     const loginUser = get(loginUserState);
     //데이터명/값 임의로 넣어뒀어요 권한 담당자분 여기 적절히 바꿔주셔야 함
-    return loginUser?.empRole === "ADMIN";
+    return loginUser?.empLevel === "admin";
 });
 
 //로그인 처리
