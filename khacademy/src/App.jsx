@@ -3,6 +3,7 @@ import './App.css'
 import { Navigate, Route, Routes } from "react-router-dom"
 import MainLayout from "./templates/MainLayout";
 import ProjectList from './components/project/ProjectList';
+import ProjectAdd from "./components/project/projectAdd";
 import PublicProjectList from './components/project/PublicProjectList';
 import ArcheiveProjectList from './components/project/ArchiveProjectList';
 import ProjectLayout from './templates/ProjectLayout';
@@ -42,6 +43,7 @@ function App() {
         {/* 임시 메인 화면 */}
         <Route path="/" element={<div>메인화면입니다</div>} />
         <Route path="/projects" element={<ProjectList />} />
+        <Route path="/projects/add" element={<ProjectAdd />} />
         <Route path="/projects/public" element={<PublicProjectList />} />
         <Route path="/projects/archive" element={<ArcheiveProjectList />}/>
 

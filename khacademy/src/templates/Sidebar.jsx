@@ -1,12 +1,15 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 export default function Sidebar() {
+
+    const navigate = useNavigate();
+
     return (
         <div className="sidebar">
 
             <div className="sidebar-create">
-                <button type="button">
+                <button onClick={() => navigate("/projects/add")}>
                     + 새 프로젝트
                 </button>
             </div>
