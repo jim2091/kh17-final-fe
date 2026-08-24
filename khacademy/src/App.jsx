@@ -3,7 +3,7 @@ import './App.css'
 import { Navigate, Route, Routes } from "react-router-dom"
 import MainLayout from "./templates/MainLayout";
 import ProjectList from './components/project/ProjectList';
-import ProjectAdd from "./components/project/projectAdd";
+import ProjectAdd from "./components/project/ProjectAdd";
 import PublicProjectList from './components/project/PublicProjectList';
 import ArcheiveProjectList from './components/project/ArchiveProjectList';
 import ProjectLayout from './templates/ProjectLayout';
@@ -17,8 +17,6 @@ import Login from './components/member/Login';
 import { useEffect } from 'react';
 import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
 import NotFound from "./error/NotFound";
-
-import NotFound from './error/NotFound';
 import EmpInactive from "./error/EmpInactive";
 
 function App() {
