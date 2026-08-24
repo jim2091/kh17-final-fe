@@ -14,6 +14,7 @@ import Files from './components/files/Files';
 import Records from './components/records/Records';
 import { useEffect } from 'react';
 import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
+import NotFound from "./error/NotFound";
 
 function App() {
 
