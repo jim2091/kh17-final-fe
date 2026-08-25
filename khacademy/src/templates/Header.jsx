@@ -62,7 +62,7 @@ export default function Header({ openSidebar }) {
             >
                 ☰
             </button>
-            <div className="header-logo">\
+            <div className="header-logo">
                 LOGO
             </div>
 

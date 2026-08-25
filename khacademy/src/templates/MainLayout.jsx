@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 
 import "./MainLayout.css";
 import { useCallback, useState } from "react";
+import { Bounce, ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
 
@@ -16,7 +17,7 @@ export default function MainLayout() {
     const closeSidebar = useCallback(() => {
         setSidebarOpen(false);
     }, []);
-    
+
     return (
         <div className="main-layout">
 
@@ -32,9 +33,24 @@ export default function MainLayout() {
                 />
 
                 <div className="main-content">
-                    <Outlet/>
+                    <Outlet />
                 </div>
             </div>
+
+            {/* react-toastify container */}
+            <ToastContainer
+                position="bottom-right"
+                autoClose={3000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick={true}
+                rtl={false}
+                pauseOnFocusLoss={false}
+                // draggable
+                pauseOnHover
+                theme="colored"
+                transition={Bounce}
+            />
         </div>
     )
 }
