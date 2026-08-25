@@ -15,6 +15,7 @@ import Files from './components/files/Files';
 import Records from './components/records/Records';
 import Login from './components/member/Login';
 import Invite from './components/member/admin/Invite';
+import Mypage from "./components/member/Mypage";
 import { useEffect } from 'react';
 import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
 
@@ -47,9 +48,11 @@ function App() {
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
 
         {/* 로그인 화면 */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login/>} />
+        {/* 내 정보 페이지 */}
+        <Route path="/me" element={<Mypage/>} />
         {/* 초대하기 화면 */}
-        <Route path="/invite" element={<Invite />} />
+        <Route path="/invite" element={<Invite/>} />
 
         {/* 프로젝트 내부 */}
         <Route path="/projects/:projectNo" element={<ProjectLayout />}>

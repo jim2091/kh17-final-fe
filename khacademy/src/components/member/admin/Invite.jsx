@@ -2,6 +2,7 @@ import { Col, Row, Button, Form } from "react-bootstrap";
 import { useCallback, useState } from 'react'
 import { apiClient } from "@utils/reaxios";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -11,6 +12,7 @@ export default function invite() {
         empEmail: "",
         empPassword: ""
     });
+    const navigate = useNavigate();
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
         setEmp(prev => ({
@@ -41,8 +43,8 @@ export default function invite() {
         if(result.isConfirmed === false) return;
         await apiClient.post("/admin/add", emp);
         // await apiClient.post("/admin/invite", emp);
-
-
+        navigate("/");
+        toast.success("사용자 초대 완료!");
     }, [emp]);
     return (<>
 

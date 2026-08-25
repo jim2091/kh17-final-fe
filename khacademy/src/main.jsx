@@ -1,3 +1,5 @@
+console.log("Main 컴포넌트 렌더링");
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, HashRouter } from "react-router-dom";
