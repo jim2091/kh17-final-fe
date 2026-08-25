@@ -2,8 +2,6 @@ import { Link } from "react-router-dom";
 import "./Header.css";
 import { Button } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
-import { useState } from 'react';
-import Modal from 'react-bootstrap/Modal';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
@@ -11,44 +9,40 @@ import Popover from 'react-bootstrap/Popover';
 
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import Container from 'react-bootstrap/Container';
 import { loginUserState } from "@utils/storage";
 import { useCallback, useMemo } from "react";
-import { RESET } from "jotai/utils";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
-import axios from "axios";
-import { loginActionState } from "@utils/storage";
-import { authClient } from "@utils/reaxios";
+import { authClient, apiClient } from "@utils/reaxios";
 
 
 
 export default function Header({ openSidebar }) {
 
-    const [loginUser, setLoginUser] = useAtom(loginUserState);
 
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
-    console.log(isLoginState);
+    // console.log(isLoginState);
     const isLogin = useAtomValue(isLoginState);
     const isAdmin = useAtomValue(isAdminState);
 
-    const loginAction = useSetAtom(loginActionState);
     const logoutAction = useSetAtom(logoutActionState);
 
 
-    const logout = useCallback(async ()=>{
+    const logout = useCallback(async () => {
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
             await authClient.delete("/logout");//쿠키 삭제 요청
         }
-        catch(e){
+        catch (e) {
             console.error(e);
         }
         finally {
             logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
         }
     }, []);
+
+    
 
 
 
@@ -87,21 +81,28 @@ export default function Header({ openSidebar }) {
                     </>)}
                     {isLogin === true && (<>
 
+
+
                         <OverlayTrigger trigger="click" placement="bottom"
                             overlay={
                                 <Popover id="popover-positioned-bottom">
                                     <Popover.Header as="h3">프로필</Popover.Header>
                                     <Popover.Body>
+                                        {isAdmin === true && (<>
+                                            <strong>
+                                                <Button as={Link} to="/invite" >사용자 초대하기</Button>
+                                            </strong>
+                                        </>)}
                                         <strong>
                                             <Button onClick={logout} >로그아웃</Button>
-                                        </strong> Check this info.
+                                        </strong>
                                     </Popover.Body>
                                 </Popover>
                             }
                         >
 
                             <Image src="https://placehold.co/50x50"
-                                
+
                                 roundedCircle />
                         </OverlayTrigger>
                     </>)}
