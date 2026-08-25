@@ -368,6 +368,7 @@
 /* 일정 내용 */
 
 .calendar-card .fc .fc-event-main {
+    cursor: pointer;
     overflow: hidden;
 }
 
@@ -434,6 +435,303 @@
     font-weight: 600;
 }
 
+/* 추가 */
+.calendar-card .fc-daygrid-day-frame:hover {
+    background-color: #f8fafc;
+}
+
+/* =========================================================
+   Schedule Modal Common
+========================================================= */
+
+/* 등록 / 상세 모달 공통 박스 */
+.schedule-modal .modal-content,
+.schedule-detail-modal .modal-content {
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
+}
+
+/* Header */
+.schedule-modal .modal-header,
+.schedule-detail-modal .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+/* Title */
+.schedule-modal .modal-title,
+.schedule-detail-modal .modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+/* Body */
+.schedule-modal .modal-body,
+.schedule-detail-modal .modal-body {
+    padding: 22px 24px;
+}
+
+/* Footer */
+.schedule-modal .modal-footer,
+.schedule-detail-modal .modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #edf0f3;
+    gap: 8px;
+}
+
+/* Footer 버튼 */
+.schedule-modal .modal-footer .btn,
+.schedule-detail-modal .modal-footer .btn {
+    min-width: 78px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* secondary 버튼을 너무 진하지 않게 */
+.schedule-modal .btn-secondary,
+.schedule-detail-modal .btn-secondary {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.schedule-modal .btn-secondary:hover,
+.schedule-detail-modal .btn-secondary:hover {
+    border-color: #d3d7dc;
+    background-color: #eef0f2;
+    color: #343a40;
+}
+
+
+/* =========================================================
+   Schedule Input / Edit Form Common
+========================================================= */
+
+/* 등록 Form + 수정 Form 공통 Label */
+.schedule-modal .form-label,
+.schedule-edit-form .form-label {
+    margin-bottom: 7px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* 등록 Form + 수정 Form 공통 Input */
+.schedule-modal .form-control,
+.schedule-edit-form .form-control {
+    min-height: 42px;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+
+    font-size: 0.93rem;
+    color: #343a40;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+/* textarea */
+.schedule-modal textarea.form-control,
+.schedule-edit-form textarea.form-control {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+/* placeholder */
+.schedule-modal .form-control::placeholder,
+.schedule-edit-form .form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* 일반 focus */
+.schedule-modal .form-control:focus,
+.schedule-edit-form .form-control:focus {
+    border-color: #86aaf8;
+    box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
+}
+
+
+/* =========================================================
+   Validation
+========================================================= */
+
+/*
+    정상 값은 초록색으로 강조하지 않는다.
+    내부적으로 is-valid 클래스는 사용하지만
+    화면상으로는 일반 input처럼 표시한다.
+*/
+.schedule-modal .form-control.is-valid,
+.schedule-edit-form .form-control.is-valid {
+    border-color: #dfe3e8;
+    background-image: none;
+}
+
+/* 정상 상태에서 focus */
+.schedule-modal .form-control.is-valid:focus,
+.schedule-edit-form .form-control.is-valid:focus {
+    border-color: #86aaf8;
+    box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
+}
+
+/* 오류는 빨간색으로 표시 */
+.schedule-modal .form-control.is-invalid,
+.schedule-edit-form .form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+/* 오류 상태에서 focus */
+.schedule-modal .form-control.is-invalid:focus,
+.schedule-edit-form .form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
+}
+
+/* 오류 설명 */
+.schedule-modal .invalid-feedback,
+.schedule-edit-form .invalid-feedback {
+    margin-top: 5px;
+    font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   Schedule Detail
+========================================================= */
+
+/* 일정 제목 */
+.schedule-detail-title {
+    margin-bottom: 22px;
+
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.4;
+
+    color: #263238;
+    word-break: break-word;
+}
+
+/* 시작 / 종료 / 장소 묶음 */
+.schedule-detail-info {
+    padding: 14px 18px;
+    margin-bottom: 20px;
+
+    background-color: #f8f9fb;
+    border: 1px solid #edf0f3;
+    border-radius: 10px;
+}
+
+/* 한 줄 */
+.schedule-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    padding: 7px 0;
+}
+
+/* Label */
+.schedule-detail-label {
+    flex-shrink: 0;
+    width: 52px;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #7a8491;
+}
+
+/* 실제 값 */
+.schedule-detail-value {
+    flex: 1;
+
+    font-size: 0.93rem;
+    line-height: 1.5;
+    color: #343a40;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   Schedule Detail Content
+========================================================= */
+
+.schedule-detail-content {
+    margin-top: 4px;
+}
+
+/* 내용 Label만 width 제한 제거 */
+.schedule-detail-content > .schedule-detail-label {
+    width: auto;
+    margin-bottom: 8px;
+}
+
+/* 내용 표시 박스 */
+.schedule-detail-content-box {
+    min-height: 100px;
+    padding: 14px 16px;
+
+    background-color: #f8f9fb;
+    border: 1px solid #edf0f3;
+    border-radius: 10px;
+
+    font-size: 0.93rem;
+    line-height: 1.65;
+    color: #495057;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   Edit Mode
+========================================================= */
+
+/*
+    수정 Form은 상세 모달 내부에 들어가므로
+    위의 schedule-edit-form 공통 스타일을 그대로 사용
+*/
+
+.schedule-edit-form {
+    width: 100%;
+}
+
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 576px) {
+
+    .schedule-modal .modal-header,
+    .schedule-detail-modal .modal-header {
+        padding: 18px 18px 14px;
+    }
+
+    .schedule-modal .modal-body,
+    .schedule-detail-modal .modal-body {
+        padding: 18px;
+    }
+
+    .schedule-modal .modal-footer,
+    .schedule-detail-modal .modal-footer {
+        padding: 14px 18px 18px;
+    }
+
+    .schedule-detail-row {
+        gap: 10px;
+    }
+
+    .schedule-detail-label {
+        width: 44px;
+    }
+}
 
 /* =====================================================
     반응형
@@ -462,3 +760,4 @@
     }
 
 }
+
