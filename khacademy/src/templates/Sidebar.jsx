@@ -1,18 +1,19 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 export default function Sidebar({
     sidebarOpen,
     closeSidebar
 }) {
+    const navigate = useNavigate();
     return (<>
         <div className={
-            sidebarOpen ? 
-            "sidebar open" : "sidebar"
+            sidebarOpen ?
+                "sidebar open" : "sidebar"
         }>
 
             <div className="sidebar-create">
-                <button type="button">
+                <button onClick={() => navigate("/projects/add")}>
                     + 새 프로젝트
                 </button>
             </div>
@@ -22,27 +23,27 @@ export default function Sidebar({
                 <NavLink
                     to="/projects"
                     end
-                    className={({isActive}) => 
+                    className={({ isActive }) =>
                         isActive ? "sidebar-link active" : "sidebar-link"
                     }
                     onClick={closeSidebar}
                 >
                     내 프로젝트
                 </NavLink>
-                
+
                 <NavLink
                     to="/projects/public"
-                    className={({isActive}) => 
+                    className={({ isActive }) =>
                         isActive ? "sidebar-link active" : "sidebar-link"
                     }
                     onClick={closeSidebar}
                 >
                     공개 프로젝트
                 </NavLink>
-                
+
                 <NavLink
                     to="/projects/archive"
-                    className={({isActive}) => 
+                    className={({ isActive }) =>
                         isActive ? "sidebar-link active" : "sidebar-link"
                     }
                     onClick={closeSidebar}
@@ -54,7 +55,7 @@ export default function Sidebar({
         </div>
 
         {sidebarOpen && (
-            <div className="sidebar-backdrop" onClick={closeSidebar}/>
+            <div className="sidebar-backdrop" onClick={closeSidebar} />
         )}
     </>)
 }
