@@ -32,3 +32,7 @@ export const logoutActionState = atom(null, (get, set) => {
 //Access Token
 export const accessTokenState = atom(null);
 
+loginUserState.debugLabel = "로그인 유저의 정보";
+isLoginState.debugLabel = "로그인 상태";
+isAdminState.debugLabel = "관리자 여부";
+
