@@ -1,16 +1,18 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
-import { Button } from 'react-bootstrap';
+import { Button, Col, Row } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 
+import { useNavigate } from "react-router-dom";
+
 
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { loginUserState } from "@utils/storage";
-import { useCallback, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
@@ -19,11 +21,14 @@ import { authClient, apiClient } from "@utils/reaxios";
 
 export default function Header({ openSidebar }) {
 
+    const { empName, empEmail } = useAtomValue(loginUserState) || {};
+
 
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
     // console.log(isLoginState);
     const isLogin = useAtomValue(isLoginState);
+    // console.log("isLogin : ", isLogin);
     const isAdmin = useAtomValue(isAdminState);
 
     const logoutAction = useSetAtom(logoutActionState);
@@ -33,6 +38,7 @@ export default function Header({ openSidebar }) {
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
             await authClient.delete("/logout");//쿠키 삭제 요청
+           
         }
         catch (e) {
             console.error(e);
@@ -43,6 +49,9 @@ export default function Header({ openSidebar }) {
     }, []);
 
     
+
+
+
 
 
 
@@ -83,19 +92,38 @@ export default function Header({ openSidebar }) {
 
 
 
-                        <OverlayTrigger trigger="click" placement="bottom"
+                        <OverlayTrigger trigger="click" placement="bottom" rootClose={true}
                             overlay={
                                 <Popover id="popover-positioned-bottom">
                                     <Popover.Header as="h3">프로필</Popover.Header>
                                     <Popover.Body>
-                                        {isAdmin === true && (<>
-                                            <strong>
-                                                <Button as={Link} to="/invite" >사용자 초대하기</Button>
-                                            </strong>
-                                        </>)}
-                                        <strong>
-                                            <Button onClick={logout} >로그아웃</Button>
-                                        </strong>
+
+                                        <Row className="align-items-center">
+                                            <Col xs="auto">
+                                                <Link to="/me">
+                                                    <Image src="https://placehold.co/50x50"
+                                                        roundedCircle />
+                                                </Link>
+                                            </Col>
+                                            <Col>
+                                                <div>{empName}</div>
+                                                <div>{empEmail}</div>
+                                            </Col>
+                                        </Row>
+                                        <Row>
+                                            <Col>
+                                                {isAdmin === true && (<>
+                                                    <strong>
+                                                        <Button as={Link} to="/invite" >사용자 초대하기</Button>
+                                                    </strong>
+                                                </>)}
+                                                <strong>
+                                                    <Button onClick={logout} >로그아웃</Button>
+                                                </strong>
+                                            </Col>
+                                        </Row>
+
+
                                     </Popover.Body>
                                 </Popover>
                             }

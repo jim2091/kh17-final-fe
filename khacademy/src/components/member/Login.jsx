@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 import { loginUserState } from "@utils/storage";
 import { useNavigate } from "react-router-dom";
 import { loginActionState } from "@utils/storage";
-import { authClient } from "@utils/reaxios";
+import { authClient, apiClient } from "@utils/reaxios";
 
 export default function Login() {
 
@@ -51,11 +51,12 @@ export default function Login() {
             //loginAction(data);//jotai setter atom 사용
 
             loginAction(data);
+            //await apiClient.get(`/member/loginState`);
 
             // console.log(userData);
             //로그인 성공 시에도 경우가 나눠진다
             // - data에 needUpdate 항목의 값에 따라 이동하는 페이지가 달라진다
-                navigate("/");
+            navigate("/");
 
         }
         catch(e){
@@ -76,7 +77,7 @@ export default function Login() {
                 await Swal.fire("일시적인 서버 오류입니다.\n잠시 후 실행해주세요");
             }
         }
-    }, [emp]);
+    }, [emp, loginAction]);
 
     
     return (<>
