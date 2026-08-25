@@ -15,7 +15,8 @@ import axios from "axios";
 import { loginActionState } from "@utils/storage";
 import { authClient } from "@utils/reaxios";
 
-export default function Header() {
+export default function Header({openSidebar}) {
+
     const [loginUser, setLoginUser] = useAtom(loginUserState);
     
     //읽기전용 atom을 불러오는법
@@ -30,7 +31,14 @@ export default function Header() {
     return (
         <div className="header">
 
-            <div className="header-logo">
+            <button
+                type="button"
+                className="header-menu-button"
+                onClick={openSidebar}
+            >
+                ☰
+            </button>
+            <div className="header-logo">\
                 LOGO
             </div>
 
@@ -58,7 +66,7 @@ export default function Header() {
                     </>)} */}
                     
                 </div>
-                
+
             </div>
         </div>
     )
