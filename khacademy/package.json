@@ -35,11 +35,8 @@
     "react-toastify": "^11.1.0",
     "sockjs-client": "^1.6.1",
     "sweetalert": "^2.1.2",
-
     "sweetalert2": "^11.26.25",
-
     "temporal-polyfill": "^1.0.4",
-
     "uuid": "^14.0.2"
   },
   "devDependencies": {
