@@ -28,8 +28,11 @@ export const apiClient = axios.create({
     baseURL : `${baseURL}/api`,
     timeout : 5000,
     withCredentials : true
+
 });
 
+console.log("현재 MODE =", import.meta.env.MODE);
+console.log("VITE_SERVER_URL =", baseURL);
 
 //(추가) [3]번 API 요청용 Axios객체의 요청이 실패한 상황 중 응답코드가 401번인 경우 갱신 요청
 //- axios에는 interceptor라는 기능이 존재
