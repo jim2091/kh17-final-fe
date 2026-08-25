@@ -8,11 +8,13 @@ export default function Chat() {
         const client = getWebSocketClient();
 
         if (client === null || client.connected == false) {
+            console.log("WebSocket이 연결되지 않았습니다.");
             return;
         }
 
+        //채널 2의 메세지 구독
         const subscription = client.subscribe(
-            "/public/test",
+            "/public/2/chat",
             message => {
                 console.log("WebSocket 수신 : ", message.body);
             }
@@ -25,19 +27,24 @@ export default function Chat() {
 
     }, []);
 
+    //채널 2에 메세지 전송
     const sendTest = () => {
 
-    const client = getWebSocketClient();
+        const client = getWebSocketClient();
 
-    if (client === null || client.connected === false) {
-        return;
-    }
+        if (client === null || client.connected === false) {
+            console.log("WebSocket이 연결되지 않았습니다.");
+            return;
+        }
 
-    client.publish({
-        destination: "/app/test",
-        body: "테스트 메시지",
-    });
-};
+        client.publish({
+            destination: "/app/2/chat",
+            body: JSON.stringify({
+                content: "웹소켓 테스트 메시지입니다!"
+            })
+        });
+        console.log("WebSocket 전송 완료");
+    };
     return(<>
         <h1>Chat</h1>
 

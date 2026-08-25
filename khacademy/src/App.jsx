@@ -17,8 +17,6 @@ import Login from './components/member/Login';
 import { useEffect } from 'react';
 import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
 import NotFound from "./error/NotFound";
-
-import NotFound from './error/NotFound';
 import EmpInactive from "./error/EmpInactive";
 
 function App() {
