@@ -14,7 +14,7 @@ export default function Chat() {
             return;
         }
 
-        //채널 2의 메시지 구독
+        //채널 2의 메세지 구독
         const subscription = client.subscribe(
             "/public/2/chat",
             message => {
@@ -32,7 +32,7 @@ export default function Chat() {
 
     }, []);
 
-    //채널 2에 메시지 전송
+    //채널 2에 메세지 전송
     const sendTest = () => {
         const client = getWebSocketClient();
 
