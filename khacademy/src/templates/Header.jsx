@@ -1,35 +1,70 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
-import {Button} from 'react-bootstrap';
+import { Button, Col, Row } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
+
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
+
+import { useNavigate } from "react-router-dom";
+
 
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import Container from 'react-bootstrap/Container';
 import { loginUserState } from "@utils/storage";
-import { useCallback, useMemo } from "react";
-import { RESET } from "jotai/utils";
+import { useCallback, useState, useEffect } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
-import axios from "axios";
-import { loginActionState } from "@utils/storage";
-import { authClient } from "@utils/reaxios";
+import { authClient, apiClient } from "@utils/reaxios";
 
-export default function Header() {
-    const [loginUser, setLoginUser] = useAtom(loginUserState);
-    
+
+
+export default function Header({ openSidebar }) {
+
+    const { empName, empEmail } = useAtomValue(loginUserState) || {};
+
+
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
+    // console.log(isLoginState);
     const isLogin = useAtomValue(isLoginState);
+    // console.log("isLogin : ", isLogin);
     const isAdmin = useAtomValue(isAdminState);
-    
-    const loginAction = useSetAtom(loginActionState);
+
     const logoutAction = useSetAtom(logoutActionState);
 
+
+    const logout = useCallback(async () => {
+        try {
+            //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
+            await authClient.delete("/logout");//쿠키 삭제 요청
+           
+        }
+        catch (e) {
+            console.error(e);
+        }
+        finally {
+            logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
+        }
+    }, []);
+
     
-    return (
+
+
+
+
+
+
+    return (<>
         <div className="header">
 
+            <button
+                type="button"
+                className="header-menu-button"
+                onClick={openSidebar}
+            >
+                ☰
+            </button>
             <div className="header-logo">
                 LOGO
             </div>
@@ -48,18 +83,66 @@ export default function Header() {
                 </div>
 
                 <div className="header-profile">
-                    {/* {isLogin !== true && (<> */}
-                    <Button as={Link} to="/login" className="primary">
-                        로그인
-                    </Button>
-                    {/* </>)} */}
-                    {/* {isLogin === true && (<>
-                    <Image src="hero.png" roundedCircle />
-                    </>)} */}
-                    
+                    {isLogin !== true && (<>
+                        <Button as={Link} to="/login" className="primary">
+                            로그인
+                        </Button>
+                    </>)}
+                    {isLogin === true && (<>
+
+
+
+                        <OverlayTrigger trigger="click" placement="bottom" rootClose={true}
+                            overlay={
+                                <Popover id="popover-positioned-bottom">
+                                    <Popover.Header as="h3">프로필</Popover.Header>
+                                    <Popover.Body>
+
+                                        <Row className="align-items-center">
+                                            <Col xs="auto">
+                                                <Link to="/me">
+                                                    <Image src="https://placehold.co/50x50"
+                                                        roundedCircle />
+                                                </Link>
+                                            </Col>
+                                            <Col>
+                                                <div>{empName}</div>
+                                                <div>{empEmail}</div>
+                                            </Col>
+                                        </Row>
+                                        <Row>
+                                            <Col>
+                                                {isAdmin === true && (<>
+                                                    <strong>
+                                                        <Button as={Link} to="/invite" >사용자 초대하기</Button>
+                                                    </strong>
+                                                </>)}
+                                                <strong>
+                                                    <Button onClick={logout} >로그아웃</Button>
+                                                </strong>
+                                            </Col>
+                                        </Row>
+
+
+                                    </Popover.Body>
+                                </Popover>
+                            }
+                        >
+
+                            <Image src="https://placehold.co/50x50"
+
+                                roundedCircle />
+                        </OverlayTrigger>
+                    </>)}
+
                 </div>
-                
+
             </div>
         </div>
+
+
+
+
+    </>
     )
 }

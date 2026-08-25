@@ -96,6 +96,6 @@ apiClient.interceptors.response.use(
 function moveToLoginPage() {
     store.set(logoutAction);//jotai의 logoutActionState를 호출
 
-    const url = "/account/login";
+    const url = "/login";
     window.location.replace(url);
 }

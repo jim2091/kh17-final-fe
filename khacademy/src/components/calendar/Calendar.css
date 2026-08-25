@@ -1,0 +1,464 @@
+/* =====================================================
+    Calendar Page
+===================================================== */
+
+.calendar-page {
+    width: 100%;
+    padding: 24px;
+    background-color: #f7f8fa;
+
+    /* 좁아지면 캘린더를 찌그러뜨리지 않고 스크롤 */
+    overflow-x: auto;
+}
+
+.calendar-card {
+    width: 100%;
+    min-width: 700px;
+
+    background-color: #ffffff;
+    border: 1px solid #e8eaed;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+
+/* =====================================================
+    FullCalendar 전체
+===================================================== */
+
+.calendar-card .fc {
+    font-family: inherit;
+    font-size: 14px;
+    color: #343a40;
+}
+
+
+/* =====================================================
+    Toolbar
+===================================================== */
+
+.calendar-card .fc .fc-toolbar {
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+
+/* 현재 년 / 월 */
+
+.calendar-card .fc .fc-toolbar-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #212529;
+    letter-spacing: -0.4px;
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+    Toolbar 버튼 공통
+===================================================== */
+
+.calendar-card .fc .fc-button {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #ffffff;
+
+    color: #495057;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    padding: 7px 12px;
+
+    box-shadow: none;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.calendar-card .fc .fc-button:hover {
+    background-color: #f1f3f5;
+    border-color: #ced4da;
+    color: #212529;
+}
+
+
+.calendar-card .fc .fc-button:focus {
+    box-shadow: none;
+}
+
+
+/* FullCalendar에서 붙이는 active 상태 제거 */
+
+.calendar-card .fc .fc-button-primary:not(:disabled):active,
+.calendar-card .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #212529;
+}
+
+
+/* =====================================================
+    이전 / 다음 버튼
+===================================================== */
+
+.calendar-card .fc .fc-prev-button,
+.calendar-card .fc .fc-next-button {
+    width: 36px;
+    height: 36px;
+
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* 이전 / 다음 버튼 붙어있는 느낌 제거 */
+
+.calendar-card .fc .fc-button-group {
+    gap: 6px;
+}
+
+
+.calendar-card .fc .fc-button-group > .fc-button {
+    border-radius: 8px;
+}
+
+
+/* =====================================================
+    오늘 버튼
+===================================================== */
+
+.calendar-card .fc .fc-today-button {
+    margin-left: 6px;
+
+    background-color: #ffffff;
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+
+.calendar-card .fc .fc-today-button:hover {
+    background-color: #f1f3f5;
+}
+
+
+/* =====================================================
+    일정 등록 버튼
+===================================================== */
+
+.calendar-card .fc .fc-addSchedule-button {
+    background-color: #4f6ef7;
+    border-color: #4f6ef7;
+    color: #ffffff;
+
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+
+.calendar-card .fc .fc-addSchedule-button:hover {
+    background-color: #405edc;
+    border-color: #405edc;
+    color: #ffffff;
+}
+
+
+/* =====================================================
+    Calendar Table
+===================================================== */
+
+.calendar-card .fc-theme-standard td,
+.calendar-card .fc-theme-standard th {
+    border-color: #edf0f2;
+}
+
+
+.calendar-card .fc-theme-standard .fc-scrollgrid {
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+
+/* =====================================================
+    요일 Header
+===================================================== */
+
+.calendar-card .fc .fc-col-header-cell {
+    background-color: #fafbfc;
+    border-bottom: 1px solid #e8eaed;
+}
+
+
+.calendar-card .fc .fc-col-header-cell-cushion {
+    display: block;
+
+    padding: 12px 6px;
+
+    color: #6c757d;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+/* 일요일 */
+
+.calendar-card .fc .fc-day-sun .fc-col-header-cell-cushion {
+    color: #e05252;
+}
+
+
+/* 토요일 */
+
+.calendar-card .fc .fc-day-sat .fc-col-header-cell-cushion {
+    color: #4f6ef7;
+}
+
+
+/* =====================================================
+    날짜 Cell
+===================================================== */
+
+.calendar-card .fc .fc-daygrid-day {
+    background-color: #ffffff;
+
+    transition: background-color 0.12s ease;
+}
+
+
+.calendar-card .fc .fc-daygrid-day:hover {
+    background-color: #fafbfc;
+}
+
+
+/* 날짜칸 최소 높이 */
+
+.calendar-card .fc .fc-daygrid-day-frame {
+    min-height: 110px;
+}
+
+
+/* 날짜 숫자 영역 */
+
+.calendar-card .fc .fc-daygrid-day-top {
+    justify-content: flex-end;
+}
+
+
+/* 날짜 숫자 */
+
+.calendar-card .fc .fc-daygrid-day-number {
+    margin: 8px;
+
+    min-width: 28px;
+    height: 28px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    color: #495057;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    text-decoration: none;
+}
+
+
+/* 일요일 날짜 */
+
+.calendar-card .fc .fc-day-sun .fc-daygrid-day-number {
+    color: #e05252;
+}
+
+
+/* 토요일 날짜 */
+
+.calendar-card .fc .fc-day-sat .fc-daygrid-day-number {
+    color: #4f6ef7;
+}
+
+
+/* =====================================================
+    오늘
+===================================================== */
+
+/* FullCalendar 기본 노란 배경 제거 */
+
+.calendar-card .fc .fc-day-today {
+    background-color: #ffffff !important;
+}
+
+
+/* 오늘 날짜 숫자만 강조 */
+
+.calendar-card .fc .fc-day-today .fc-daygrid-day-number {
+    background-color: #4f6ef7;
+    color: #ffffff;
+
+    font-weight: 700;
+}
+
+
+/* 오늘 날짜 cell 은 살짝 배경 */
+
+.calendar-card .fc .fc-day-today .fc-daygrid-day-frame {
+    background-color: #f8f9ff;
+}
+
+
+/* =====================================================
+    지난달 / 다음달 날짜
+===================================================== */
+
+.calendar-card .fc .fc-day-other {
+    background-color: #fbfcfd;
+}
+
+
+.calendar-card .fc .fc-day-other .fc-daygrid-day-number {
+    color: #c1c7cd;
+}
+
+
+/* =====================================================
+    Event
+===================================================== */
+
+.calendar-card .fc .fc-daygrid-event {
+    margin: 2px 6px;
+
+    border: none;
+    border-radius: 6px;
+
+    padding: 3px 6px;
+
+    cursor: pointer;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    transition:
+        transform 0.12s ease,
+        opacity 0.12s ease;
+}
+
+
+.calendar-card .fc .fc-daygrid-event:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+
+/* 일정 내용 */
+
+.calendar-card .fc .fc-event-main {
+    overflow: hidden;
+}
+
+
+/* 일정 시간 */
+
+.calendar-card .fc .fc-event-time {
+    font-weight: 600;
+}
+
+
+/* 일정 제목 */
+
+.calendar-card .fc .fc-event-title {
+    font-weight: 500;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =====================================================
+    + more
+===================================================== */
+
+.calendar-card .fc .fc-daygrid-more-link {
+    margin-left: 7px;
+
+    color: #6c757d;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+.calendar-card .fc .fc-daygrid-more-link:hover {
+    color: #4f6ef7;
+}
+
+
+/* =====================================================
+    Popup
+===================================================== */
+
+.calendar-card .fc .fc-popover {
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    overflow: hidden;
+}
+
+
+.calendar-card .fc .fc-popover-header {
+    padding: 10px 12px;
+
+    background-color: #f8f9fa;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+    반응형
+===================================================== */
+
+@media (max-width: 900px) {
+
+    .calendar-page {
+        padding: 16px;
+    }
+
+    .calendar-card {
+        padding: 16px;
+    }
+
+    .calendar-card .fc .fc-toolbar {
+        gap: 12px;
+    }
+
+    .calendar-card .fc .fc-toolbar-title {
+        font-size: 18px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-frame {
+        min-height: 90px;
+    }
+
+}
