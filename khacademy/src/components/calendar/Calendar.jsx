@@ -9,6 +9,12 @@ import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
 import Swal from "sweetalert2";
 
+// 참고
+// 피드백 처음엔 배운대로 구현하다가
+// 마음에 안드는거 조금씩 수정하다가
+// 결국 valid시 딱히 없고 invalid일때만 빨간테두리 보여주는걸로 하기로 했는데
+// 기존 코드 싹 고치기 귀찮아서 해당 부분은 css로 처리함
+
 export default function Calendar() {
     const { projectNo } = useParams();
     const [scheduleList, setScheduleList] = useState([]);
@@ -20,8 +26,18 @@ export default function Calendar() {
     }, []);
 
     const loadScheduleList = useCallback(async () => {
-        const { data } = await apiClient.get(`/schedule/project/${projectNo}`)
-        setScheduleList(data.scheduleList);
+        try {
+            setLoading(true);
+            const {data} = await apiClient.get(`/schedule/project/${projectNo}`);
+            setScheduleList(data.scheduleList);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("일정을 불러오지 못했습니다.");
+        }
+        finally {
+            setLoading(false);
+        }
     }, []);
 
     //FullCallendar용 데이터로 변환
@@ -30,14 +46,9 @@ export default function Calendar() {
         title: schedule.scheduleTitle,
         start: schedule.scheduleStart,
         end: schedule.scheduleEnd || undefined,
+
+        backgroundColor: "#6f8fcf",
     }));
-
-    const handleDateClick = (info) => {
-        console.log("날짜 클릭", info.dateStr);
-    };
-
-    
-
 
     //등록 관련
     const [inputModal, setInputModal] = useState(false);
@@ -134,6 +145,15 @@ export default function Calendar() {
         }
     }, [scheduleInput]);
 
+    const handleDateClick = useCallback((info)=>{
+        setScheduleInput(prev=>({...prev,
+            scheduleStart: `${info.dateStr}T09:00`,
+        }));
+        
+        setInputResult(prev=>({...prev, scheduleStart: "is-valid"}));
+        setInputModal(true);
+    }, []);
+
     //상세 관련
     const [detailModal, setDetailModal] = useState(false);
     
@@ -198,14 +218,27 @@ export default function Calendar() {
     const openEditMode = useCallback(()=>{
         if(scheduleDetail === null) return;
 
-        setScheduleEdit({
-            scheduleTitle : scheduleDetail.scheduleTitle || "",
-            scheduleContent : scheduleDetail.scheduleContent || "",
-            scheduleStart : scheduleDetail.scheduleStart
-                ? scheduleDetail.scheduleStart.slice(0,16) : "",
-            scheduleEnd : scheduleDetail.scheduleEnd
-                ? scheduleDetail.scheduleEnd.slice(0,16) : "",
-            schedulePlace : scheduleDetail.schedulePlace || "",
+        const editData = {
+            scheduleTitle: scheduleDetail.scheduleTitle || "",
+            scheduleContent: scheduleDetail.scheduleContent || "",
+            scheduleStart: scheduleDetail.scheduleStart
+                ? scheduleDetail.scheduleStart.slice(0, 16)
+                : "",
+            scheduleEnd: scheduleDetail.scheduleEnd
+                ? scheduleDetail.scheduleEnd.slice(0, 16)
+                : "",
+            schedulePlace: scheduleDetail.schedulePlace || "",
+        };
+
+        setScheduleEdit(editData);
+        //수정모드 들어가자마자 전체 체크 한번 해버리는걸로
+        //이렇게 안하면 필수값들 하나하나 다 blur 일으켜야 저장버튼 활성화되니까
+        setEditResult({
+            scheduleTitle: checkScheduleField(editData, "scheduleTitle"),
+            scheduleContent: null,
+            scheduleStart: checkScheduleField(editData, "scheduleStart"),
+            scheduleEnd: checkScheduleField(editData, "scheduleEnd"),
+            schedulePlace: null,
         });
 
         setEditMode(true);
@@ -222,9 +255,16 @@ export default function Calendar() {
         setEditResult(prev => ({...prev, [name]: checkScheduleField(scheduleEdit, name)}));
     }, [scheduleEdit]);
 
+    //하던대로 필수항목의 result가 valid인가로 체크하게되면 문제가 있음
+    //실제로 입력된 값을 하나씩따지도록 수정
     const editAllValid = useMemo(() => {
-        return isAllValid(editResult);
-    }, [editResult, isAllValid]);
+        if(scheduleEdit.scheduleTitle.trim().length === 0) return false;
+        if(scheduleEdit.scheduleStart.length === 0) return false;
+        if(scheduleEdit.scheduleEnd.length > 0 &&
+            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd) 
+            return false;
+        return true;
+    }, [scheduleEdit]);
 
     const cancelEditMode = useCallback(() => {
         setEditMode(false);
@@ -232,6 +272,13 @@ export default function Calendar() {
 
     const editSchedule = useCallback(async ()=>{
         if(scheduleDetail === null) return;
+
+        //저장 버튼의 disabled가 어떻든 여기서도 체크하고.
+        if(scheduleEdit.scheduleTitle.trim().length === 0) return;
+        if(scheduleEdit.scheduleStart.length === 0) return;
+        if(scheduleEdit.scheduleEnd.length > 0 &&
+            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd) 
+            return;
         
         try {
             const requestData = {
@@ -294,9 +341,9 @@ export default function Calendar() {
             title: "일정을 삭제하시겠습니까?",
             text: "삭제한 일정은 복구할 수 없습니다",
             icon: "warning",
-            showCancelButton: "true",
+            showCancelButton: true,
             confirmButtonText: "삭제",
-            cancelButtonTest: "취소"
+            cancelButtonText: "취소"
         });
 
         if(result.isConfirmed === false) return;
@@ -314,46 +361,74 @@ export default function Calendar() {
         }
     }, [scheduleDetail]);
 
+    //시간 형식 변경
+    const formatScheduleDate = (value) => {
+        if(!value) return "-";
+
+        return value
+            .replace("T", " ")
+            .slice(0, 16);
+    };
+
+    //다른 월에서 일정 등록 등 후에 다시 현재 월로 안오게 되려나
+    const [currentDate, setCurrentDate] = useState(new Date());
+
     return (<>
         <div className="calendar-page">
             <div className="calendar-card">
+                {loading ? (
+                    <div className="calendar-loading">
+                        일정을 불러오는 중입니다...
+                    </div>
+                ):(
+                    <FullCalendar
+                        plugins={[
+                            dayGridPlugin,
+                            interactionPlugin
+                        ]}
+                        initialView="dayGridMonth"
 
-                <FullCalendar
-                    plugins={[
-                        dayGridPlugin,
-                        interactionPlugin
-                    ]}
-                    initialView="dayGridMonth"
+                        locale="ko"
+                        height="auto"
 
-                    locale="ko"
-                    height="auto"
-
-                    customButtons={{
-                        addSchedule: {
-                            text: "일정 등록",
-                            click: () => {
-                                openInputModal();
+                        customButtons={{
+                            addSchedule: {
+                                text: "일정 등록",
+                                click: () => {
+                                    openInputModal();
+                                }
                             }
-                        }
-                    }}
+                        }}
 
-                    headerToolbar={{
-                        left: "prev,next today",
-                        center: "title",
-                        right: "addSchedule"
-                    }}
+                        headerToolbar={{
+                            left: "prev,next today",
+                            center: "title",
+                            right: "addSchedule"
+                        }}
 
-                    events={schedules}
+                        events={schedules}
 
-                    dateClick={handleDateClick}
-                    eventClick={handleScheduleClick}
-                />
+                        dateClick={handleDateClick}
+                        eventClick={handleScheduleClick}
+
+                        dayMaxEvents={2}
+
+                        initialDate={currentDate}
+
+                        datesSet={(info) => {
+                            setCurrentDate(info.view.currentStart);
+                        }}
+                    />
+                )}
+
 
             </div>
         </div>
 
         {/* 등록 모달 */}
-        <Modal show={inputModal} onHide={closeInputModal} centered>
+        <Modal show={inputModal} onHide={closeInputModal}
+                centered className="schedule-modal" restoreFocus={false}>
+
             <Modal.Header closeButton>
                 <Modal.Title>일정 등록</Modal.Title>
             </Modal.Header>
@@ -361,7 +436,10 @@ export default function Calendar() {
             <Modal.Body>
                 <Form>
                     <Form.Group className="mb-3">
-                        <Form.Label>일정 제목</Form.Label>
+                        <Form.Label>
+                            <span>일정 제목</span>
+                            <span className="required-mark">*</span>
+                        </Form.Label>
                         <Form.Control type="text" name="scheduleTitle"
                             value={scheduleInput.scheduleTitle}
                             onChange={changeScheduleInput}
@@ -385,7 +463,10 @@ export default function Calendar() {
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                        <Form.Label>시작 일시</Form.Label>
+                        <Form.Label>
+                            <span>시작일시</span>
+                            <span className="required-mark">*</span>
+                        </Form.Label>
                         <Form.Control type="datetime-local" name="scheduleStart"
                             value={scheduleInput.scheduleStart}
                             onChange={changeScheduleInput}
@@ -431,7 +512,8 @@ export default function Calendar() {
         </Modal>
 
         {/* 상세 모달 */}
-        <Modal show={detailModal} onHide={closeDetailModal} centered>
+        <Modal show={detailModal} onHide={closeDetailModal} 
+                centered className="schedule-detail-modal" restoreFocus={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     {editMode ? "일정 수정" : "일정 상세"}
@@ -440,41 +522,52 @@ export default function Calendar() {
 
             <Modal.Body>
                 {scheduleDetail !== null && (<>
-                    {editMode === false ? (<>
-                        {/* 상세 화면 */}
-                        <div className="mb-3">
-                            <strong>제목</strong>
-                            <div>{scheduleDetail.scheduleTitle}</div>
-                        </div>
+                    {editMode === false ? (
+                        <div className="schedule-detail">
+                            {/* 상세 화면 */}
+                            <div className="schedule-detail-title">
+                                <div>{scheduleDetail.scheduleTitle}</div>
+                            </div>
 
-                        <div className="mb-3">
-                            <strong>내용</strong>
-                            <div>
-                                {scheduleDetail.scheduleContent || "-"}
+                            <div className="schedule-detail-info">
+                                <div className="schedule-detail-row">
+                                    <div className="schedule-detail-label">
+                                        시작
+                                    </div>
+                                    <div className="schedule-detail-value">
+                                        {formatScheduleDate(scheduleDetail.scheduleStart)}
+                                    </div>
+                                </div>
+                                
+                                <div className="schedule-detail-row">
+                                    <div className="schedule-detail-label">
+                                        종료
+                                    </div>
+                                    <div className="schedule-detail-value">
+                                        {formatScheduleDate(scheduleDetail.scheduleEnd) || "-"}
+                                    </div>
+                                </div>
+                                <div className="schedule-detail-row">
+                                    <div className="schedule-detail-label">
+                                        장소
+                                    </div>
+                                    <div className="schedule-detail-value">
+                                        {scheduleDetail.schedulePlace || "-"}
+                                    </div>
+                                </div>
+                                <div className="schedule-detail-row">
+                                    <div className="schedule-detail-label">
+                                        내용
+                                    </div>
+                                    <div className="schedule-detail-value">
+                                        {scheduleDetail.scheduleContent || "등록된 내용이 없습니다"}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <div className="mb-3">
-                            <strong>시작 일시</strong>
-                            <div>{scheduleDetail.scheduleStart}</div>
-                        </div>
-
-                        <div className="mb-3">
-                            <strong>종료 일시</strong>
-                            <div>
-                                {scheduleDetail.scheduleEnd || "-"}
-                            </div>
-                        </div>
-
-                        <div className="mb-3">
-                            <strong>장소</strong>
-                            <div>
-                                {scheduleDetail.schedulePlace || "-"}
-                            </div>
-                        </div>
-                    </>) : (<>
+                    ) : (<>
                         {/* 수정 화면 */}
-                        <Form>
+                        <Form className="schedule-edit-form">
                             <Form.Group className="mb-3">
                                 <Form.Label>일정 제목</Form.Label>
 
