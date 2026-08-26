@@ -5,8 +5,8 @@
 
 import { useAtomValue } from "jotai";
 import { isAdminState, isLoginState } from "@utils/storage";
-import NotAuthorization from "@error/NotAuthorization";
 import NeedPermission from "@error/NeedPermission";
+import NotAuthorized from "../error/NotAuthorized";
 
 //React Component에서는 전달된 내부 컨텐츠를 children이란 이름으로 접근할 수 있다.
 export default function Private({children}){
@@ -19,7 +19,7 @@ export default function Private({children}){
 
     if(isLogin !== true){//로그인 상태가 아니라면
         return (
-        <NotAuthorization/>
+        <NotAuthorized/>
     );
     }
 
