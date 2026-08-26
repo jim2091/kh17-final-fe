@@ -20,6 +20,9 @@ import Invite from './components/member/admin/Invite';
 import Mypage from "./components/member/Mypage";
 import Edit from "./components/member/Edit";
 import Login from './components/member/Login';
+import Users from "./components/member/admin/Users";
+import Positions from "./components/member/admin/Positions";
+import Departments from "./components/member/admin/Departments";
 
 import Private from "./guard/Private";
 import Admin from "./guard/Admin";
@@ -58,10 +61,16 @@ function App() {
         <Route path="/login" element={<Login/>} />
         {/* 내 정보 페이지 */}
         <Route path="/me" element={<Private><Mypage/></Private>} />
-        {/* 초대하기 화면 */}
-        <Route path="/invite" element={<Admin><Invite/></Admin>} />
         {/* 내 정보 수정 페이지 */}
         <Route path="/edit" element={<Private><Edit/></Private>} />
+        {/* 초대하기 화면 */}
+        <Route path="/invite" element={<Admin><Invite/></Admin>} />
+        {/* 사용자 관리(관리자) */}
+        <Route path="/users" element={<Admin><Users/></Admin>} />
+        {/* 부서관리(관리자) */}
+        <Route path="/departments" element={<Admin><Departments/></Admin>} />
+        {/* 직급관리(관리자) */}
+        <Route path="/positions" element={<Admin><Positions/></Admin>} />
 
         {/* 프로젝트 내부 */}
         <Route path="/projects/:projectNo" element={<ProjectLayout />}>
