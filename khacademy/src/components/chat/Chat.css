@@ -1,0 +1,218 @@
+/* 전체 채팅 화면 */
+.chat-page {
+    display: flex;
+    width: 100%;
+    /* Header 64px을 제외한 화면 높이 */
+    height: calc(100vh - 270px);
+    min-height: 0;
+    background-color: white;
+    overflow: hidden;
+}
+
+/* 채널 사이드바 */
+.chat-sidebar {
+    width: 240px;
+    height: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    overflow-y: auto;
+}
+
+/* 오른쪽 채팅 전체 영역 */
+.chat-main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 채팅 헤더 */
+.chat-header {
+    flex-shrink: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: white;
+}
+
+/* 메시지 영역 */
+.message-area {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    background-color: white;
+}
+
+/* 메시지 입력 영역 */
+.message-input {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 70px;
+    padding: 12px 20px;
+    border-top: 1px solid #e5e7eb;
+    background-color: white;
+}
+
+/* 태블릿 / 작은 화면 */
+@media (max-width: 768px) {
+    .chat-sidebar {
+        width: 200px;
+    }
+
+    .chat-header {
+        height: 56px;
+
+        padding: 0 16px;
+    }
+
+    .message-area {
+        padding: 16px;
+    }
+
+    .message-input {
+        min-height: 64px;
+
+        padding: 10px 16px;
+    }
+}
+
+/* 모바일 */
+@media (max-width: 576px) {
+    .chat-sidebar {
+        width: 180px;
+    }
+
+    .chat-header {
+        padding: 0 12px;
+    }
+
+    .message-area {
+        padding: 12px;
+    }
+
+    .message-input {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+}
+
+/* =========================
+   메시지
+   ========================= */
+
+/* 메시지 하나 */
+.message-area > .message-outer {
+    display: flex;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+/* 메시지 내부 */
+.message-area > .message-outer > .message-inner {
+    display: flex;
+    max-width: 70%;
+}
+
+/* 메시지 내용 영역 */
+.message-area > .message-outer > .message-inner > .content-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 작성자 이름 */
+.message-area .sender {
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* 메시지 + 시간 */
+.message-area .content {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+/* 메시지 말풍선 */
+.message-area .body {
+    padding: 9px 12px;
+    border-radius: 12px;
+    background-color: #f3f4f6;
+    word-break: break-word;
+}
+
+/* 시간 */
+.message-area .time {
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+
+/* =========================
+   내 메시지
+   ========================= */
+
+/* 오른쪽 정렬 */
+.message-area > .message-outer.my {
+    justify-content: flex-end;
+}
+
+/* 내 메시지 내용 */
+.message-area > .message-outer.my > .message-inner {
+    flex-direction: row-reverse;
+}
+
+/* 내 메시지 */
+.message-area > .message-outer.my .body {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* 내 메시지 시간 */
+.message-area > .message-outer.my .content {
+    flex-direction: row-reverse;
+}
+
+/* 내 메시지 시간 */
+.message-area > .message-outer.my .time {
+    color: #9ca3af;
+}
+
+/* 날짜 구분선 */
+.date-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 20px 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.date-divider::before,
+.date-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.date-divider::before {
+    margin-right: 12px;
+}
+
+.date-divider::after {
+    margin-left: 12px;
+}
