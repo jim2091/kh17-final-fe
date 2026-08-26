@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import { isAdminState, isLoginState } from "@utils/storage";
-import NotAuthorization from "@error/NotAuthorization";
 import NeedPermission from "@error/NeedPermission";
+import NotAuthorized from "../error/NotAuthorized";
 
 
 export default function Admin({children}){
@@ -10,7 +10,7 @@ export default function Admin({children}){
     const isAdmin = useAtomValue(isAdminState);
 
     if(isLogin !== true){
-        return(<NotAuthorization/>)
+        return(<NotAuthorized/>)
     }
     if(isAdmin !== true){
         return(<><NeedPermission/></>)
