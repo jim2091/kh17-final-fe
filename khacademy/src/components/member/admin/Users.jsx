@@ -2,10 +2,24 @@ import { Button, Col, Form, Row, Table } from "react-bootstrap";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import Nav from 'react-bootstrap/Nav';
 import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { apiClient } from "@utils/reaxios";
 
 
 export default function Users() {
+    const [empList, setEmpList] = useState(null);
 
+    useEffect(()=>{
+        loadData();
+    }, []);
+
+    const loadData = useCallback( async()=>{
+        const {data} = await apiClient.get("/admin/");
+
+        setEmpList(data);
+    }, []);
+
+    console.log("empList : ", empList);
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
             <Nav.Item>
@@ -63,15 +77,19 @@ export default function Users() {
                         </tr>
                     </thead>
                     <tbody>
+                    {empList.map((emp)=>(
 
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                        <tr key={emp.empNo}>
+                            <td>{emp.empNo}</td>
+                            <td>{emp.empName}</td>
+                            <td>{emp.deptName}</td>
+                            <td>{emp.positionName}</td>
+                            <td>{emp.state}</td>
+                            <td>
+                                <FaMagnifyingGlass/>
+                            </td>
                         </tr>
+                    ))}
                     </tbody>
                 </Table>
             </Col>
