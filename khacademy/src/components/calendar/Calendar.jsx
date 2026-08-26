@@ -3,13 +3,16 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import "./Calendar.css";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
+import DatePicker from "react-datepicker";
+import { ko } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
 
+import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 // 참고
 // 피드백 처음엔 배운대로 구현하다가
 // 마음에 안드는거 조금씩 수정하다가
@@ -20,7 +23,6 @@ export default function Calendar() {
     const { projectNo } = useParams();
     const [scheduleList, setScheduleList] = useState([]);
     const [loading, setLoading] = useState(false);
-    console.log(dayjs().format("YYYY-MM-DD HH:mm"));
     //초기 목록 로딩
     useEffect(() => {
         loadScheduleList();
@@ -29,10 +31,10 @@ export default function Calendar() {
     const loadScheduleList = useCallback(async () => {
         try {
             setLoading(true);
-            const {data} = await apiClient.get(`/schedule/project/${projectNo}`);
+            const { data } = await apiClient.get(`/schedule/project/${projectNo}`);
             setScheduleList(data.scheduleList);
         }
-        catch(e) {
+        catch (e) {
             console.error(e);
             toast.error("일정을 불러오지 못했습니다.");
         }
@@ -52,12 +54,12 @@ export default function Calendar() {
     }));
 
     //다가오는 일정
-    const upcomingSchedules = useMemo(()=>{
+    const upcomingSchedules = useMemo(() => {
         const now = dayjs();
 
         return scheduleList
             .filter(schedule => {
-                if(!schedule.scheduleStart) return false;
+                if (!schedule.scheduleStart) return false;
                 return dayjs(schedule.scheduleStart).isAfter(now)
                     || dayjs(schedule.scheduleStart).isSame(now, "minute");
             })
@@ -70,14 +72,14 @@ export default function Calendar() {
 
     //오늘 일정
     const todaySchedules = useMemo(() => {
-        return scheduleList.filter(schedule=>{
-            if(!schedule.scheduleStart) return false;
+        return scheduleList.filter(schedule => {
+            if (!schedule.scheduleStart) return false;
             return dayjs(schedule.scheduleStart).isSame(dayjs(), "day");
         })
     }, [scheduleList]);
 
     //이번 주 일정 개수
-    const thisWeekScheduleCount = useMemo(()=>{
+    const thisWeekScheduleCount = useMemo(() => {
         const today = dayjs();
 
         //오늘에서 며칠을 빼야 월요일이 되는지 계산
@@ -91,22 +93,22 @@ export default function Calendar() {
             .endOf("day");//그날의 마지막시간
 
         return scheduleList.filter(schedule => {
-            if(!schedule.scheduleStart) return false;
+            if (!schedule.scheduleStart) return false;
             const scheduleStart = dayjs(schedule.scheduleStart);
             const scheduleEnd = schedule.scheduleEnd
                 ? dayjs(schedule.scheduleEnd) : scheduleStart;
             return (
                 scheduleStart.isBefore(endOfWeek) || scheduleStart.isSame(endOfWeek)
             ) && (
-                scheduleEnd.isAfter(startOfWeek) || scheduleEnd.isSame(startOfWeek)
-            );
+                    scheduleEnd.isAfter(startOfWeek) || scheduleEnd.isSame(startOfWeek)
+                );
         }).length;
 
     }, [scheduleList]);
 
     //등록 관련
     const [inputModal, setInputModal] = useState(false);
-    const openInputModal = useCallback(()=>{
+    const openInputModal = useCallback(() => {
         setInputModal(true);
     }, []);
     const closeInputModal = useCallback(() => {
@@ -136,18 +138,18 @@ export default function Calendar() {
     }, []);
 
     const checkInput = useCallback((e) => {
-        const {name} = e.target;
+        const { name } = e.target;
         const result = checkScheduleField(scheduleInput, name);
-        setInputResult(prev=>({...prev, [name]: result}))
+        setInputResult(prev => ({ ...prev, [name]: result }))
     }, [scheduleInput]);
 
     //얘는 수정에서도 쓰임
     const isAllValid = useCallback((result) => {
-        if(result.scheduleTitle !== "is-valid") return false;
-        if(result.scheduleContent === "is-invalid") return false;
-        if(result.scheduleStart !== "is-valid") return false;
-        if(result.scheduleEnd === "is-invalid") return false;
-        if(result.schedulePlace === "is-invalid") return false;
+        if (result.scheduleTitle !== "is-valid") return false;
+        if (result.scheduleContent === "is-invalid") return false;
+        if (result.scheduleStart !== "is-valid") return false;
+        if (result.scheduleEnd === "is-invalid") return false;
+        if (result.schedulePlace === "is-invalid") return false;
 
         return true;
     }, []);
@@ -174,8 +176,8 @@ export default function Calendar() {
         });
     }, []);
 
-    
-    const addSchedule = useCallback(async()=>{
+
+    const addSchedule = useCallback(async () => {
         try {
             //projectNo가 필요함
             const requestData = {
@@ -186,34 +188,35 @@ export default function Calendar() {
                 scheduleEnd: scheduleInput.scheduleEnd || null,
                 schedulePlace: scheduleInput.schedulePlace,
             };
-    
+
             await apiClient.post("/schedule/", requestData);
-    
+
             toast.success("일정이 등록되었습니다");
             closeInputModal();
             loadScheduleList();
         }
-        catch(e) {
+        catch (e) {
             console.error(e);
             toast.error("일정 등록에 실패했습니다. \n잠시 후에 다시 시도해주세요")
         }
     }, [scheduleInput]);
 
-    const handleDateClick = useCallback((info)=>{
-        setScheduleInput(prev=>({...prev,
+    const handleDateClick = useCallback((info) => {
+        setScheduleInput(prev => ({
+            ...prev,
             scheduleStart: `${info.dateStr}T09:00`,
         }));
-        
-        setInputResult(prev=>({...prev, scheduleStart: "is-valid"}));
+
+        setInputResult(prev => ({ ...prev, scheduleStart: "is-valid" }));
         setInputModal(true);
     }, []);
 
     //상세 관련
     const [detailModal, setDetailModal] = useState(false);
-    
+
     const [scheduleDetail, setScheduleDetail] = useState(null);
     const [editMode, setEditMode] = useState(false);
-    
+
     const [scheduleEdit, setScheduleEdit] = useState({
         scheduleTitle: "",
         scheduleContent: "",
@@ -242,16 +245,16 @@ export default function Calendar() {
             schedulePlace: null,
         });
     }, []);
-    
+
     //일정 상세 조회
-    const openScheduleDetail = useCallback(async(scheduleNo)=>{
-        try{
-            const {data} = await apiClient.get(`/schedule/${scheduleNo}`);
+    const openScheduleDetail = useCallback(async (scheduleNo) => {
+        try {
+            const { data } = await apiClient.get(`/schedule/${scheduleNo}`);
             setScheduleDetail(data);
             setDetailModal(true);
             setEditMode(false);
         }
-        catch(e){
+        catch (e) {
             console.error(e);
             toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
         };
@@ -272,8 +275,8 @@ export default function Calendar() {
         schedulePlace: null,
     });
 
-    const openEditMode = useCallback(()=>{
-        if(scheduleDetail === null) return;
+    const openEditMode = useCallback(() => {
+        if (scheduleDetail === null) return;
 
         const editData = {
             scheduleTitle: scheduleDetail.scheduleTitle || "",
@@ -302,23 +305,23 @@ export default function Calendar() {
     }, [scheduleDetail]);
 
     const changeScheduleEdit = useCallback((e) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
 
-        setScheduleEdit(prev => ({...prev, [name]: value}));
+        setScheduleEdit(prev => ({ ...prev, [name]: value }));
     }, []);
 
     const checkEdit = useCallback((e) => {
-        const {name} = e.target;
-        setEditResult(prev => ({...prev, [name]: checkScheduleField(scheduleEdit, name)}));
+        const { name } = e.target;
+        setEditResult(prev => ({ ...prev, [name]: checkScheduleField(scheduleEdit, name) }));
     }, [scheduleEdit]);
 
     //하던대로 필수항목의 result가 valid인가로 체크하게되면 문제가 있음
     //실제로 입력된 값을 하나씩따지도록 수정
     const editAllValid = useMemo(() => {
-        if(scheduleEdit.scheduleTitle.trim().length === 0) return false;
-        if(scheduleEdit.scheduleStart.length === 0) return false;
-        if(scheduleEdit.scheduleEnd.length > 0 &&
-            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd) 
+        if (scheduleEdit.scheduleTitle.trim().length === 0) return false;
+        if (scheduleEdit.scheduleStart.length === 0) return false;
+        if (scheduleEdit.scheduleEnd.length > 0 &&
+            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd)
             return false;
         return true;
     }, [scheduleEdit]);
@@ -327,16 +330,16 @@ export default function Calendar() {
         setEditMode(false);
     }, []);
 
-    const editSchedule = useCallback(async ()=>{
-        if(scheduleDetail === null) return;
+    const editSchedule = useCallback(async () => {
+        if (scheduleDetail === null) return;
 
         //저장 버튼의 disabled가 어떻든 여기서도 체크하고.
-        if(scheduleEdit.scheduleTitle.trim().length === 0) return;
-        if(scheduleEdit.scheduleStart.length === 0) return;
-        if(scheduleEdit.scheduleEnd.length > 0 &&
-            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd) 
+        if (scheduleEdit.scheduleTitle.trim().length === 0) return;
+        if (scheduleEdit.scheduleStart.length === 0) return;
+        if (scheduleEdit.scheduleEnd.length > 0 &&
+            scheduleEdit.scheduleStart >= scheduleEdit.scheduleEnd)
             return;
-        
+
         try {
             const requestData = {
                 scheduleTitle: scheduleEdit.scheduleTitle,
@@ -357,7 +360,7 @@ export default function Calendar() {
             await loadScheduleList();
 
             //현재 상세 내용도 다시 조회
-            const {data} = await apiClient.get(
+            const { data } = await apiClient.get(
                 `/schedule/${scheduleDetail.scheduleNo}`
             );
 
@@ -366,15 +369,15 @@ export default function Calendar() {
             //상세 모드로 복귀
             setEditMode(false);
         }
-        catch(e) {
+        catch (e) {
             console.error(e);
             toast.error("수정에 실패했습니다. \n잠시 후에 다시 시도해주세요");
         }
     }, [scheduleDetail, scheduleEdit]);
 
     //등록/수정 공통 체크 함수
-    const checkScheduleField = useCallback((input, name)=>{
-        switch(name) {
+    const checkScheduleField = useCallback((input, name) => {
+        switch (name) {
             case "scheduleTitle":
                 return input.scheduleTitle.trim().length > 0
                     ? "is-valid" : "is-invalid";
@@ -382,7 +385,7 @@ export default function Calendar() {
                 return input.scheduleStart.length > 0
                     ? "is-valid" : "is-invalid";
             case "scheduleEnd":
-                return (input.scheduleEnd.length === 0 || 
+                return (input.scheduleEnd.length === 0 ||
                     input.scheduleStart < input.scheduleEnd)
                     ? "is-valid" : "is-invalid";
             default:
@@ -391,8 +394,8 @@ export default function Calendar() {
     }, []);
 
     //삭제
-    const deleteSchedule = useCallback(async()=>{
-        if(scheduleDetail === null) return;
+    const deleteSchedule = useCallback(async () => {
+        if (scheduleDetail === null) return;
 
         const result = await Swal.fire({
             title: "일정을 삭제하시겠습니까?",
@@ -403,7 +406,7 @@ export default function Calendar() {
             cancelButtonText: "취소"
         });
 
-        if(result.isConfirmed === false) return;
+        if (result.isConfirmed === false) return;
 
         try {
             await apiClient.delete(`/schedule/${scheduleDetail.scheduleNo}`);
@@ -412,7 +415,7 @@ export default function Calendar() {
             closeDetailModal();
             loadScheduleList();
         }
-        catch(e){
+        catch (e) {
             console.error(e);
             toast.error("일정 삭제에 실패했습니다 \n잠시 후에 다시 시도해주세요");
         }
@@ -420,14 +423,25 @@ export default function Calendar() {
 
     //시간 형식 변경
     const formatScheduleDate = (value) => {
-        if(!value) return "-";
+        if (!value) return "-";
 
         return dayjs(value).format("YYYY-MM-DD HH:mm")
     };
 
     const formatUpcomingDate = (value) => {
-        if(!value) return "";
-        return dayjs(value).format("M/D HH:mm")
+        if (!value) return "";
+
+        const target = dayjs(value);
+        const today = dayjs();
+
+        if (target.isSame(today, "day")){
+            return "오늘"
+        }
+        if (target.isSame(today.add(1, "day"), "day")){
+            return "내일"
+        }
+        
+        return dayjs(value).format("M/D")
     }
 
     //다른 월에서 일정 등록 등 후에 다시 현재 월로 안오게 되려나
@@ -444,7 +458,7 @@ export default function Calendar() {
                         <div className="calendar-loading">
                             일정을 불러오는 중입니다...
                         </div>
-                    ):(
+                    ) : (
                         <FullCalendar
                             plugins={[
                                 dayGridPlugin,
@@ -499,7 +513,7 @@ export default function Calendar() {
                             {thisWeekScheduleCount}건
                         </div>
                     </div>
-                    
+
                     {/* 오늘 일정 */}
                     <div className="calendar-side-section">
                         <div className="calendar-side-title">
@@ -511,26 +525,50 @@ export default function Calendar() {
                                     오늘 예정된 일정이 없습니다.
                                 </div>
                             ) : (
-                                todaySchedules.map(schedule => (
-                                    <div
-                                        key={schedule.scheduleNo}
-                                        className="calendar-side-item"
-                                        onClick={()=>openScheduleDetail(schedule.scheduleNo)}
-                                    >
-                                        <div className="calendar-side-date">
-                                            {dayjs(schedule.scheduleStart).format("HH:mm")}
-                                        </div>
+                                todaySchedules.map(schedule => {
+                                    const now = dayjs();
 
-                                        <div className="calendar-side-content">
-                                            <div className="calendar-side-item-title">
-                                                {schedule.scheduleTitle}
+                                    const scheduleLastTime = schedule.scheduleEnd
+                                        ? dayjs(schedule.scheduleEnd)
+                                        : dayjs(schedule.scheduleStart)
+                                    
+                                    const isPast = scheduleLastTime.isBefore(now);
+                                    const isOngoing = schedule.scheduleEnd
+                                        && dayjs(schedule.scheduleStart).isBefore(now)
+                                        && dayjs(schedule.scheduleEnd).isAfter(now);
+                                    
+                                    return(
+                                        <div
+                                            key={schedule.scheduleNo}
+                                            className={`calendar-side-item
+                                                ${isPast ? "calendar-side-item-past" : ""}
+                                                ${isOngoing ? "calendar-side-item-ongoing" : ""}
+                                            `}
+                                            onClick={() => openScheduleDetail(schedule.scheduleNo)}
+                                        >
+                                            <div className="calendar-today-time">
+                                                {dayjs(schedule.scheduleStart).format("HH:mm")}
+                                                {schedule.scheduleEnd && (<>
+                                                    {" - "}
+                                                    {dayjs(schedule.scheduleEnd).format("HH:mm")}
+                                                </>)}
                                             </div>
-                                            <div className="calendar-side-item-place">
-                                                {schedule.schedulePlace || "장소 미정"}
+
+                                            <div className="calendar-side-content">
+                                                <div className="calendar-side-item-title">
+                                                    {schedule.scheduleTitle}
+                                                </div>
+                                                {schedule.schedulePlace && (
+                                                    <div className="calendar-side-place">
+                                                        {schedule.schedulePlace}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
+                                    
+                             
                             )}
                         </div>
                     </div>
@@ -552,13 +590,18 @@ export default function Calendar() {
                                         className="calendar-side-item"
                                         onClick={() => openScheduleDetail(schedule.scheduleNo)}
                                     >
+                                        <div className="calendar-side-date">
+                                            {formatUpcomingDate(schedule.scheduleStart)}
+                                        </div>
                                         <div className="calendar-side-content">
                                             <div className="calendar-side-item-title">
                                                 {schedule.scheduleTitle}
                                             </div>
-                                            <div className="calendar-side-place">
-                                                {schedule.schedulePlace || "장소 미정"}
-                                            </div>
+                                            {schedule.schedulePlace && (
+                                                <div className="calendar-side-place">
+                                                    {schedule.schedulePlace}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))
@@ -572,7 +615,7 @@ export default function Calendar() {
 
         {/* 등록 모달 */}
         <Modal show={inputModal} onHide={closeInputModal}
-                centered className="schedule-modal" restoreFocus={false}>
+            centered className="schedule-modal" restoreFocus={false}>
 
             <Modal.Header closeButton>
                 <Modal.Title>일정 등록</Modal.Title>
@@ -612,11 +655,34 @@ export default function Calendar() {
                             <span>시작일시</span>
                             <span className="required-mark">*</span>
                         </Form.Label>
-                        <Form.Control type="datetime-local" name="scheduleStart"
+                        {/* <Form.Control type="datetime-local" name="scheduleStart"
                             value={scheduleInput.scheduleStart}
                             onChange={changeScheduleInput}
                             className={inputResult.scheduleStart}
                             onBlur={checkInput}
+                        /> */}
+                        {/* datepicker로 변경 */}
+                        <DatePicker
+                            selected={
+                                scheduleInput.scheduleStart
+                                    ? dayjs(scheduleInput.scheduleStart).toDate() : null
+                            }
+                            onChange={(date)=>{
+                                const value = date
+                                ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
+                                setScheduleInput(prev=>({...prev, scheduleStart: value}))
+                                setInputResult(prev=>({...prev, 
+                                    scheduleStart: value.length > 0 ? "is-valid" : "is-invalid"
+                                }));
+                            }}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={30}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            placeholderText="시작 일시를 선택하세요"
+                            className={`form-control ${inputResult.scheduleStart || ""}`}
+                            locale={ko}
+                            timeCaption="시간"
                         />
                     </Form.Group>
 
@@ -650,15 +716,15 @@ export default function Calendar() {
                 </Button>
 
                 <Button variant="primary" onClick={addSchedule}
-                        disabled={inputAllValid === false}>
+                    disabled={inputAllValid === false}>
                     등록
                 </Button>
             </Modal.Footer>
         </Modal>
 
         {/* 상세 모달 */}
-        <Modal show={detailModal} onHide={closeDetailModal} 
-                centered className="schedule-detail-modal" restoreFocus={false}>
+        <Modal show={detailModal} onHide={closeDetailModal}
+            centered className="schedule-detail-modal" restoreFocus={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     {editMode ? "일정 수정" : "일정 상세"}
@@ -683,7 +749,7 @@ export default function Calendar() {
                                         {formatScheduleDate(scheduleDetail.scheduleStart)}
                                     </div>
                                 </div>
-                                
+
                                 <div className="schedule-detail-row">
                                     <div className="schedule-detail-label">
                                         종료
@@ -800,7 +866,7 @@ export default function Calendar() {
 
             <Modal.Footer className="justify-content-between">
                 {editMode === false ? (<>
-                    <Button variant="danger" onClick={deleteSchedule }>
+                    <Button variant="danger" onClick={deleteSchedule}>
                         삭제
                     </Button>
                     <div className="d-flex gap-2">
@@ -817,8 +883,8 @@ export default function Calendar() {
                         <Button variant="secondary" onClick={cancelEditMode}>
                             취소
                         </Button>
-                        <Button variant="primary" onClick={editSchedule} 
-                                disabled={editAllValid === false}>
+                        <Button variant="primary" onClick={editSchedule}
+                            disabled={editAllValid === false}>
                             저장
                         </Button>
                     </div>
