@@ -6,11 +6,10 @@ import Image from 'react-bootstrap/Image';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 
-import { useNavigate } from "react-router-dom";
 
 
 
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { loginUserState } from "@utils/storage";
 import { useCallback, useState, useEffect } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
@@ -38,7 +37,7 @@ export default function Header({ openSidebar }) {
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
             await authClient.delete("/logout");//쿠키 삭제 요청
-           
+
         }
         catch (e) {
             console.error(e);
@@ -48,7 +47,7 @@ export default function Header({ openSidebar }) {
         }
     }, []);
 
-    
+
 
 
 
@@ -110,17 +109,24 @@ export default function Header({ openSidebar }) {
                                                 <div>{empEmail}</div>
                                             </Col>
                                         </Row>
-                                        <Row>
-                                            <Col>
-                                                {isAdmin === true && (<>
+                                        <Row className="mt-2">
+                                            {isAdmin === true && (<>
+                                                <Row>
                                                     <strong>
                                                         <Button as={Link} to="/invite" >사용자 초대하기</Button>
                                                     </strong>
-                                                </>)}
+                                                    </Row>
+                                                    <Row className="mt-2">
+                                                    <strong>
+                                                        <Button as={Link} to="/users" >관리</Button>
+                                                    </strong>
+                                                </Row>
+                                            </>)}
+                                            <Row className="mt-2">
                                                 <strong>
                                                     <Button onClick={logout} >로그아웃</Button>
                                                 </strong>
-                                            </Col>
+                                            </Row>
                                         </Row>
 
 
