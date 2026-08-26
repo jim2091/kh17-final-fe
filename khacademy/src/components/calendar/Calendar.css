@@ -4,7 +4,8 @@
 
 .calendar-page {
     width: 100%;
-    padding: 24px;
+    padding: 26px;
+
     background-color: #f7f8fa;
 
     /* 좁아지면 캘린더를 찌그러뜨리지 않고 스크롤 */
@@ -13,12 +14,15 @@
 
 .calendar-card {
     width: 100%;
-    min-width: 700px;
+    min-width: 760px;
+
+    padding: 26px;
 
     background-color: #ffffff;
+
     border: 1px solid #e8eaed;
     border-radius: 16px;
-    padding: 24px;
+
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -29,7 +33,8 @@
 
 .calendar-card .fc {
     font-family: inherit;
-    font-size: 14px;
+
+    font-size: 15px;
     color: #343a40;
 }
 
@@ -39,8 +44,10 @@
 ===================================================== */
 
 .calendar-card .fc .fc-toolbar {
-    margin-bottom: 24px;
+    margin-bottom: 26px;
+
     align-items: center;
+
     flex-wrap: nowrap;
     min-width: 0;
 }
@@ -49,10 +56,13 @@
 /* 현재 년 / 월 */
 
 .calendar-card .fc .fc-toolbar-title {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
+
     color: #212529;
+
     letter-spacing: -0.4px;
+
     white-space: nowrap;
 }
 
@@ -62,16 +72,17 @@
 ===================================================== */
 
 .calendar-card .fc .fc-button {
+    padding: 8px 13px;
+
     border: 1px solid #dee2e6;
     border-radius: 8px;
+
     background-color: #ffffff;
 
     color: #495057;
 
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-
-    padding: 7px 12px;
 
     box-shadow: none;
 
@@ -81,13 +92,13 @@
         color 0.15s ease;
 }
 
-
 .calendar-card .fc .fc-button:hover {
     background-color: #f1f3f5;
+
     border-color: #ced4da;
+
     color: #212529;
 }
-
 
 .calendar-card .fc .fc-button:focus {
     box-shadow: none;
@@ -99,7 +110,9 @@
 .calendar-card .fc .fc-button-primary:not(:disabled):active,
 .calendar-card .fc .fc-button-primary:not(:disabled).fc-button-active {
     background-color: #e9ecef;
+
     border-color: #ced4da;
+
     color: #212529;
 }
 
@@ -110,8 +123,8 @@
 
 .calendar-card .fc .fc-prev-button,
 .calendar-card .fc .fc-next-button {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
 
     padding: 0;
 
@@ -127,7 +140,6 @@
     gap: 6px;
 }
 
-
 .calendar-card .fc .fc-button-group > .fc-button {
     border-radius: 8px;
 }
@@ -141,10 +153,11 @@
     margin-left: 6px;
 
     background-color: #ffffff;
+
     border-color: #dee2e6;
+
     color: #495057;
 }
-
 
 .calendar-card .fc .fc-today-button:hover {
     background-color: #f1f3f5;
@@ -156,18 +169,21 @@
 ===================================================== */
 
 .calendar-card .fc .fc-addSchedule-button {
+    padding-left: 18px;
+    padding-right: 18px;
+
     background-color: #4f6ef7;
+
     border-color: #4f6ef7;
+
     color: #ffffff;
-
-    padding-left: 16px;
-    padding-right: 16px;
 }
-
 
 .calendar-card .fc .fc-addSchedule-button:hover {
     background-color: #405edc;
+
     border-color: #405edc;
+
     color: #ffffff;
 }
 
@@ -181,10 +197,10 @@
     border-color: #edf0f2;
 }
 
-
 .calendar-card .fc-theme-standard .fc-scrollgrid {
     border: 1px solid #e8eaed;
     border-radius: 12px;
+
     overflow: hidden;
 }
 
@@ -195,18 +211,18 @@
 
 .calendar-card .fc .fc-col-header-cell {
     background-color: #fafbfc;
+
     border-bottom: 1px solid #e8eaed;
 }
-
 
 .calendar-card .fc .fc-col-header-cell-cushion {
     display: block;
 
-    padding: 12px 6px;
+    padding: 13px 6px;
 
     color: #6c757d;
 
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 
     text-decoration: none;
@@ -237,7 +253,6 @@
     transition: background-color 0.12s ease;
 }
 
-
 .calendar-card .fc .fc-daygrid-day:hover {
     background-color: #fafbfc;
 }
@@ -246,7 +261,7 @@
 /* 날짜칸 최소 높이 */
 
 .calendar-card .fc .fc-daygrid-day-frame {
-    min-height: 110px;
+    min-height: 118px;
 }
 
 
@@ -260,10 +275,10 @@
 /* 날짜 숫자 */
 
 .calendar-card .fc .fc-daygrid-day-number {
-    margin: 8px;
+    margin: 9px;
 
-    min-width: 28px;
-    height: 28px;
+    min-width: 30px;
+    height: 30px;
 
     display: inline-flex;
     align-items: center;
@@ -273,7 +288,7 @@
 
     color: #495057;
 
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
 
     text-decoration: none;
@@ -309,6 +324,7 @@
 
 .calendar-card .fc .fc-day-today .fc-daygrid-day-number {
     background-color: #4f6ef7;
+
     color: #ffffff;
 
     font-weight: 700;
@@ -330,7 +346,6 @@
     background-color: #fbfcfd;
 }
 
-
 .calendar-card .fc .fc-day-other .fc-daygrid-day-number {
     color: #c1c7cd;
 }
@@ -341,16 +356,16 @@
 ===================================================== */
 
 .calendar-card .fc .fc-daygrid-event {
-    margin: 2px 6px;
+    margin: 3px 6px;
+
+    padding: 4px 7px;
 
     border: none;
     border-radius: 6px;
 
-    padding: 3px 6px;
-
     cursor: pointer;
 
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
 
     transition:
@@ -358,9 +373,9 @@
         opacity 0.12s ease;
 }
 
-
 .calendar-card .fc .fc-daygrid-event:hover {
     opacity: 0.88;
+
     transform: translateY(-1px);
 }
 
@@ -369,6 +384,7 @@
 
 .calendar-card .fc .fc-event-main {
     cursor: pointer;
+
     overflow: hidden;
 }
 
@@ -386,7 +402,9 @@
     font-weight: 500;
 
     overflow: hidden;
+
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
@@ -400,12 +418,11 @@
 
     color: #6c757d;
 
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
 
     text-decoration: none;
 }
-
 
 .calendar-card .fc .fc-daygrid-more-link:hover {
     color: #4f6ef7;
@@ -425,83 +442,108 @@
     overflow: hidden;
 }
 
-
 .calendar-card .fc .fc-popover-header {
-    padding: 10px 12px;
+    padding: 11px 13px;
 
     background-color: #f8f9fa;
 
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
-/* 추가 */
 .calendar-card .fc-daygrid-day-frame:hover {
     background-color: #f8fafc;
 }
+
 
 /* =========================================================
    Schedule Modal Common
 ========================================================= */
 
-/* 등록 / 상세 모달 공통 박스 */
 .schedule-modal .modal-content,
 .schedule-detail-modal .modal-content {
     border: 0;
     border-radius: 16px;
+
     overflow: hidden;
+
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
 }
 
+
 /* Header */
+
 .schedule-modal .modal-header,
 .schedule-detail-modal .modal-header {
-    padding: 20px 24px 16px;
+    padding: 21px 24px 17px;
+
     border-bottom: 1px solid #edf0f3;
 }
 
+
 /* Title */
+
 .schedule-modal .modal-title,
 .schedule-detail-modal .modal-title {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     font-weight: 700;
+
     color: #212529;
 }
 
+
 /* Body */
+
 .schedule-modal .modal-body,
 .schedule-detail-modal .modal-body {
-    padding: 22px 24px;
+    padding: 23px 24px;
 }
 
+
 /* Footer */
+
 .schedule-modal .modal-footer,
 .schedule-detail-modal .modal-footer {
-    padding: 16px 24px 20px;
+    padding: 17px 24px 20px;
+
     border-top: 1px solid #edf0f3;
+
     gap: 8px;
 }
 
+
 /* Footer 버튼 */
+
 .schedule-modal .modal-footer .btn,
 .schedule-detail-modal .modal-footer .btn {
-    min-width: 78px;
+    min-width: 82px;
+
+    padding: 8px 14px;
+
     border-radius: 8px;
+
+    font-size: 14px;
     font-weight: 600;
 }
 
+
 /* secondary 버튼을 너무 진하지 않게 */
+
 .schedule-modal .btn-secondary,
 .schedule-detail-modal .btn-secondary {
     border-color: #dee2e6;
+
     background-color: #f8f9fa;
+
     color: #495057;
 }
 
 .schedule-modal .btn-secondary:hover,
 .schedule-detail-modal .btn-secondary:hover {
     border-color: #d3d7dc;
+
     background-color: #eef0f2;
+
     color: #343a40;
 }
 
@@ -511,22 +553,29 @@
 ========================================================= */
 
 /* 등록 Form + 수정 Form 공통 Label */
+
 .schedule-modal .form-label,
 .schedule-edit-form .form-label {
     margin-bottom: 7px;
-    font-size: 0.9rem;
+
+    font-size: 0.95rem;
     font-weight: 600;
+
     color: #495057;
 }
 
+
 /* 등록 Form + 수정 Form 공통 Input */
+
 .schedule-modal .form-control,
 .schedule-edit-form .form-control {
-    min-height: 42px;
+    min-height: 44px;
+
     border: 1px solid #dfe3e8;
     border-radius: 8px;
 
-    font-size: 0.93rem;
+    font-size: 0.95rem;
+
     color: #343a40;
 
     transition:
@@ -534,24 +583,33 @@
         box-shadow 0.15s ease;
 }
 
+
 /* textarea */
+
 .schedule-modal textarea.form-control,
 .schedule-edit-form textarea.form-control {
-    min-height: 110px;
+    min-height: 115px;
+
     resize: vertical;
+
     line-height: 1.55;
 }
 
+
 /* placeholder */
+
 .schedule-modal .form-control::placeholder,
 .schedule-edit-form .form-control::placeholder {
     color: #adb5bd;
 }
 
+
 /* 일반 focus */
+
 .schedule-modal .form-control:focus,
 .schedule-edit-form .form-control:focus {
     border-color: #86aaf8;
+
     box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
 }
 
@@ -565,38 +623,52 @@
     내부적으로 is-valid 클래스는 사용하지만
     화면상으로는 일반 input처럼 표시한다.
 */
+
 .schedule-modal .form-control.is-valid,
 .schedule-edit-form .form-control.is-valid {
     border-color: #dfe3e8;
+
     background-image: none;
 }
 
+
 /* 정상 상태에서 focus */
+
 .schedule-modal .form-control.is-valid:focus,
 .schedule-edit-form .form-control.is-valid:focus {
     border-color: #86aaf8;
+
     box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
 }
 
+
 /* 오류는 빨간색으로 표시 */
+
 .schedule-modal .form-control.is-invalid,
 .schedule-edit-form .form-control.is-invalid {
     border-color: #dc3545;
+
     background-image: none;
 }
 
+
 /* 오류 상태에서 focus */
+
 .schedule-modal .form-control.is-invalid:focus,
 .schedule-edit-form .form-control.is-invalid:focus {
     border-color: #dc3545;
+
     box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
 }
 
+
 /* 오류 설명 */
+
 .schedule-modal .invalid-feedback,
 .schedule-edit-form .invalid-feedback {
     margin-top: 5px;
-    font-size: 0.8rem;
+
+    font-size: 0.82rem;
 }
 
 
@@ -605,52 +677,69 @@
 ========================================================= */
 
 /* 일정 제목 */
+
 .schedule-detail-title {
     margin-bottom: 22px;
 
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 700;
+
     line-height: 1.4;
 
     color: #263238;
+
     word-break: break-word;
 }
 
+
 /* 시작 / 종료 / 장소 묶음 */
+
 .schedule-detail-info {
-    padding: 14px 18px;
+    padding: 15px 18px;
     margin-bottom: 20px;
 
     background-color: #f8f9fb;
+
     border: 1px solid #edf0f3;
     border-radius: 10px;
 }
 
+
 /* 한 줄 */
+
 .schedule-detail-row {
     display: flex;
     align-items: flex-start;
+
     gap: 16px;
 
-    padding: 7px 0;
+    padding: 8px 0;
 }
 
+
 /* Label */
+
 .schedule-detail-label {
     flex-shrink: 0;
-    width: 52px;
 
-    font-size: 0.85rem;
+    width: 54px;
+
+    font-size: 0.9rem;
     font-weight: 600;
+
     color: #7a8491;
 }
 
+
 /* 실제 값 */
+
 .schedule-detail-value {
     flex: 1;
 
-    font-size: 0.93rem;
+    font-size: 0.96rem;
+
     line-height: 1.5;
+
     color: #343a40;
 
     word-break: break-word;
@@ -665,26 +754,36 @@
     margin-top: 4px;
 }
 
+
 /* 내용 Label만 width 제한 제거 */
+
 .schedule-detail-content > .schedule-detail-label {
     width: auto;
+
     margin-bottom: 8px;
 }
 
+
 /* 내용 표시 박스 */
+
 .schedule-detail-content-box {
-    min-height: 100px;
-    padding: 14px 16px;
+    min-height: 105px;
+
+    padding: 15px 16px;
 
     background-color: #f8f9fb;
+
     border: 1px solid #edf0f3;
     border-radius: 10px;
 
-    font-size: 0.93rem;
+    font-size: 0.96rem;
+
     line-height: 1.65;
+
     color: #495057;
 
     white-space: pre-wrap;
+
     word-break: break-word;
 }
 
@@ -693,19 +792,123 @@
    Edit Mode
 ========================================================= */
 
-/*
-    수정 Form은 상세 모달 내부에 들어가므로
-    위의 schedule-edit-form 공통 스타일을 그대로 사용
-*/
-
 .schedule-edit-form {
     width: 100%;
 }
 
 
-/* =========================================================
-   Responsive
-========================================================= */
+/* =====================================================
+    큰 화면
+===================================================== */
+
+@media (min-width: 1600px) {
+
+    .calendar-page {
+        padding: 30px;
+    }
+
+    .calendar-card {
+        padding: 30px;
+    }
+
+    .calendar-card .fc {
+        font-size: 16px;
+    }
+
+    .calendar-card .fc .fc-toolbar {
+        margin-bottom: 28px;
+    }
+
+    .calendar-card .fc .fc-toolbar-title {
+        font-size: 26px;
+    }
+
+    .calendar-card .fc .fc-button {
+        padding: 9px 14px;
+
+        font-size: 15px;
+    }
+
+    .calendar-card .fc .fc-prev-button,
+    .calendar-card .fc .fc-next-button {
+        width: 40px;
+        height: 40px;
+    }
+
+    .calendar-card .fc .fc-col-header-cell-cushion {
+        padding: 14px 6px;
+
+        font-size: 15px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-frame {
+        min-height: 125px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-number {
+        min-width: 32px;
+        height: 32px;
+
+        font-size: 15px;
+    }
+
+    .calendar-card .fc .fc-daygrid-event {
+        padding: 4px 8px;
+
+        font-size: 14px;
+    }
+
+    .calendar-card .fc .fc-daygrid-more-link {
+        font-size: 14px;
+    }
+
+}
+
+
+/* =====================================================
+    중간 화면
+===================================================== */
+
+@media (max-width: 900px) {
+
+    .calendar-page {
+        padding: 16px;
+    }
+
+    .calendar-card {
+        padding: 16px;
+    }
+
+    .calendar-card .fc {
+        font-size: 14px;
+    }
+
+    .calendar-card .fc .fc-toolbar {
+        gap: 12px;
+    }
+
+    .calendar-card .fc .fc-toolbar-title {
+        font-size: 19px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-frame {
+        min-height: 90px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-number {
+        font-size: 13px;
+    }
+
+    .calendar-card .fc .fc-daygrid-event {
+        font-size: 12px;
+    }
+
+}
+
+
+/* =====================================================
+    모바일
+===================================================== */
 
 @media (max-width: 576px) {
 
@@ -731,33 +934,5 @@
     .schedule-detail-label {
         width: 44px;
     }
-}
-
-/* =====================================================
-    반응형
-===================================================== */
-
-@media (max-width: 900px) {
-
-    .calendar-page {
-        padding: 16px;
-    }
-
-    .calendar-card {
-        padding: 16px;
-    }
-
-    .calendar-card .fc .fc-toolbar {
-        gap: 12px;
-    }
-
-    .calendar-card .fc .fc-toolbar-title {
-        font-size: 18px;
-    }
-
-    .calendar-card .fc .fc-daygrid-day-frame {
-        min-height: 90px;
-    }
 
 }
-

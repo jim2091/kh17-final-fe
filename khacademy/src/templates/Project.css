@@ -3,16 +3,16 @@
     justify-content: space-between;
     align-items: center;
 
-    padding: 24px 32px;
+    padding: 26px 34px;
 
     background-color: white;
 }
 
 .project-title {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
 
-    margin-bottom: 6px;
+    margin-bottom: 7px;
 }
 
 .project-description {
@@ -23,29 +23,34 @@
 .project-header-info {
     display: flex;
     align-items: center;
-    gap: 16px;
 
-    font-size: 13px;
+    gap: 18px;
+
+    font-size: 14px;
     color: #6b7280;
 }
 
 
+/* =====================================================
+    Project Tabs
+===================================================== */
+
 .project-tabs {
     display: flex;
 
-    padding: 0 32px;
+    padding: 0 34px;
 
     border-bottom: 1px solid #e5e7eb;
     background-color: white;
 }
 
 .project-tab {
-    padding: 14px 16px;
+    padding: 15px 17px;
 
     color: #6b7280;
     text-decoration: none;
 
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
 
     border-bottom: 2px solid transparent;
@@ -62,14 +67,68 @@
     font-weight: 600;
 }
 
+
+/* =====================================================
+    Project Layout
+===================================================== */
+
 .project-layout {
     min-height: 100%;
+
     background-color: #f5f7fa;
 }
 
 .project-content {
-    padding: 24px 32px;
+    padding: 26px 34px;
 }
+
+
+/* =====================================================
+    큰 화면
+===================================================== */
+
+@media (min-width: 1600px) {
+
+    .project-header {
+        padding: 30px 40px;
+    }
+
+    .project-title {
+        font-size: 26px;
+
+        margin-bottom: 8px;
+    }
+
+    .project-description {
+        font-size: 15px;
+    }
+
+    .project-header-info {
+        gap: 20px;
+
+        font-size: 15px;
+    }
+
+    .project-tabs {
+        padding: 0 40px;
+    }
+
+    .project-tab {
+        padding: 16px 18px;
+
+        font-size: 16px;
+    }
+
+    .project-content {
+        padding: 30px 40px;
+    }
+
+}
+
+
+/* =====================================================
+    태블릿 / 모바일
+===================================================== */
 
 @media (max-width: 768px) {
 
@@ -80,21 +139,36 @@
         gap: 16px;
     }
 
+    .project-title {
+        font-size: 21px;
+    }
+
+    .project-description {
+        font-size: 13px;
+    }
+
     .project-header-info {
         flex-direction: column;
         align-items: flex-end;
+
         gap: 4px;
+
+        font-size: 12px;
     }
 
     .project-tabs {
         padding: 0 8px;
+
         overflow-x: auto;
         white-space: nowrap;
     }
 
     .project-tab {
         flex-shrink: 0;
+
         padding: 12px 12px;
+
+        font-size: 14px;
     }
 
     .project-content {

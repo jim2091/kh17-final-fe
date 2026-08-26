@@ -3,8 +3,10 @@ import { getWebSocketClient } from "@utils/websocket";
 
 export default function Chat() {
 
-    //써둔거 공용 웹소켓 서버 테스트 코드입니다
+    //WebSocket 채널 메시지 테스트
     useEffect(() => {
+        console.log("Chat useEffect 실행");
+        
         const client = getWebSocketClient();
 
         if (client === null || client.connected == false) {
@@ -16,9 +18,12 @@ export default function Chat() {
         const subscription = client.subscribe(
             "/public/2/chat",
             message => {
+                console.log("===== WebSocket 수신 =====");
                 console.log("WebSocket 수신 : ", message.body);
             }
         );
+
+        console.log("채널 2 구독 완료");
 
         return () => {
             //서버를 deactivate하는게 아니라 chat 구독만 해제
@@ -29,7 +34,6 @@ export default function Chat() {
 
     //채널 2에 메세지 전송
     const sendTest = () => {
-
         const client = getWebSocketClient();
 
         if (client === null || client.connected === false) {
@@ -45,6 +49,7 @@ export default function Chat() {
         });
         console.log("WebSocket 전송 완료");
     };
+
     return(<>
         <h1>Chat</h1>
 
