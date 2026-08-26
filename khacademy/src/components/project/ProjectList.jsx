@@ -18,10 +18,9 @@ export default function ProjectList() {
         try{
             setLoading(true);
             
-            const response = await apiClient.get("/project/my");
+            const {data} = await apiClient.get("/project/my");
 
-            ("프로젝트 목록 응답 =", response.data)
-            setProjectList(response.data);
+            setProjectList(data);
         }
         catch(e){
             console.error(e);

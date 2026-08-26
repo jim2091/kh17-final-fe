@@ -149,11 +149,11 @@ export default function ProjectAdd() {
         }
 
         try {
-            const response = await apiClient.post( "/project/", project);
+            const {data} = await apiClient.post( "/project/", project);
 
             toast.success("프로젝트가 생성되었습니다");
 
-            navigate(`/projects/${response.data}/task`);
+            navigate(`/projects/${data}/task`);
 
         }
         catch(e) {
