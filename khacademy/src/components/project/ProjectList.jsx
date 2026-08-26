@@ -3,6 +3,7 @@ import { Badge, Card, Col, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
+// import "../Project.css";
 
 export default function ProjectList() {
     //프로젝트 목록
@@ -126,8 +127,7 @@ export default function ProjectList() {
 
                             <Badge
                                 bg={project.projectVisibility === "public" ? "info" : "secondary"}>
-                                
-                                {project.projectVisibility === "public" ? "공개" : "비공개"}
+                                    {project.projectVisibility === "public" ? "공개" : "비공개"}
                             </Badge>
                         </div>
 
