@@ -20,6 +20,10 @@ export default function Users() {
     }, []);
 
     console.log("empList : ", empList);
+
+    if (empList === null) {
+        return (<h1>로딩중인 화면</h1>);
+    }
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
             <Nav.Item>
