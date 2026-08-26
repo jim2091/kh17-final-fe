@@ -1,44 +1,49 @@
 .sidebar {
-    width: 220px;
+    width: 230px;
     flex-shrink: 0;
 
-    padding: 20px 16px;
+    padding: 22px 18px;
 
     border-right: 1px solid #e5e7eb;
     background-color: #f9fafb;
 }
 
 .sidebar-create {
-    margin-bottom: 24px;
+    margin-bottom: 26px;
 }
 
 .sidebar-create button {
     width: 100%;
 
-    padding: 10px 12px;
+    padding: 11px 14px;
 
     border: none;
     border-radius: 8px;
 
     background-color: #2563eb;
     color: white;
+
     font-size: 14px;
     font-weight: 600;
 
     cursor: pointer;
 }
 
+.sidebar-create button:hover {
+    background-color: #1d4ed8;
+}
+
 .sidebar-menu {
     display: flex;
     flex-direction: column;
 
-    gap: 6px;
+    gap: 7px;
 }
 
 .sidebar-link {
     display: block;
 
-    padding: 10px 12px;
+    padding: 11px 13px;
 
     border-radius: 8px;
 
@@ -46,10 +51,12 @@
     text-decoration: none;
 
     font-size: 14px;
+    font-weight: 500;
 }
 
 .sidebar-link:hover {
     background-color: #e5e7eb;
+    color: #111827;
 }
 
 .sidebar-link.active {
@@ -63,6 +70,46 @@
     display: none;
 }
 
+
+/* =====================================================
+    큰 화면
+===================================================== */
+
+@media (min-width: 1600px) {
+
+    .sidebar {
+        width: 240px;
+
+        padding: 24px 20px;
+    }
+
+    .sidebar-create {
+        margin-bottom: 28px;
+    }
+
+    .sidebar-create button {
+        padding: 12px 15px;
+
+        font-size: 15px;
+    }
+
+    .sidebar-menu {
+        gap: 8px;
+    }
+
+    .sidebar-link {
+        padding: 12px 14px;
+
+        font-size: 15px;
+    }
+
+}
+
+
+/* =====================================================
+    태블릿 / 모바일
+===================================================== */
+
 @media (max-width: 768px) {
 
     .sidebar {
@@ -74,7 +121,9 @@
 
         z-index: 1001;
 
-        width: 220px;
+        width: 230px;
+
+        padding: 20px 16px;
 
         transform: translateX(-100%);
         transition: transform 0.2s ease;
