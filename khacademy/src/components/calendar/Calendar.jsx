@@ -8,6 +8,7 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
 import Swal from "sweetalert2";
+import dayjs from "dayjs";
 
 // 참고
 // 피드백 처음엔 배운대로 구현하다가
@@ -19,7 +20,7 @@ export default function Calendar() {
     const { projectNo } = useParams();
     const [scheduleList, setScheduleList] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    console.log(dayjs().format("YYYY-MM-DD HH:mm"));
     //초기 목록 로딩
     useEffect(() => {
         loadScheduleList();
@@ -49,6 +50,59 @@ export default function Calendar() {
 
         backgroundColor: "#6f8fcf",
     }));
+
+    //다가오는 일정
+    const upcomingSchedules = useMemo(()=>{
+        const now = dayjs();
+
+        return scheduleList
+            .filter(schedule => {
+                if(!schedule.scheduleStart) return false;
+                return dayjs(schedule.scheduleStart).isAfter(now)
+                    || dayjs(schedule.scheduleStart).isSame(now, "minute");
+            })
+            .sort((a, b) => {
+                return dayjs(a.scheduleStart).valueOf()
+                    - dayjs(b.scheduleStart).valueOf()
+            })
+            .slice(0, 5);
+    }, [scheduleList]);
+
+    //오늘 일정
+    const todaySchedules = useMemo(() => {
+        return scheduleList.filter(schedule=>{
+            if(!schedule.scheduleStart) return false;
+            return dayjs(schedule.scheduleStart).isSame(dayjs(), "day");
+        })
+    }, [scheduleList]);
+
+    //이번 주 일정 개수
+    const thisWeekScheduleCount = useMemo(()=>{
+        const today = dayjs();
+
+        //오늘에서 며칠을 빼야 월요일이 되는지 계산
+        const mondayOffset = today.day() === 0 ? -6 : 1 - today.day();
+
+        const startOfWeek = today
+            .add(mondayOffset, "day")//이번주 월요일 계산
+            .startOf("day");//그날의 시작시간
+        const endOfWeek = startOfWeek
+            .add(6, "day")//시작일인 월요일에 6을 더하고
+            .endOf("day");//그날의 마지막시간
+
+        return scheduleList.filter(schedule => {
+            if(!schedule.scheduleStart) return false;
+            const scheduleStart = dayjs(schedule.scheduleStart);
+            const scheduleEnd = schedule.scheduleEnd
+                ? dayjs(schedule.scheduleEnd) : scheduleStart;
+            return (
+                scheduleStart.isBefore(endOfWeek) || scheduleStart.isSame(endOfWeek)
+            ) && (
+                scheduleEnd.isAfter(startOfWeek) || scheduleEnd.isSame(startOfWeek)
+            );
+        }).length;
+
+    }, [scheduleList]);
 
     //등록 관련
     const [inputModal, setInputModal] = useState(false);
@@ -189,22 +243,25 @@ export default function Calendar() {
         });
     }, []);
     
-    const handleScheduleClick = useCallback(async (info) => {
-        const scheduleNo = info.event.id;
-
+    //일정 상세 조회
+    const openScheduleDetail = useCallback(async(scheduleNo)=>{
         try{
-            const {data} = await apiClient.get(
-                `/schedule/${scheduleNo}`
-            );
+            const {data} = await apiClient.get(`/schedule/${scheduleNo}`);
             setScheduleDetail(data);
             setDetailModal(true);
             setEditMode(false);
         }
-        catch(e) {
+        catch(e){
             console.error(e);
-            toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요");
-        }
+            toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
+        };
     }, []);
+
+    const handleScheduleClick = useCallback((info) => {
+        openScheduleDetail(info.event.id);
+    }, [openScheduleDetail]);
+
+
 
     //수정 관련
     const [editResult, setEditResult] = useState({
@@ -365,63 +422,151 @@ export default function Calendar() {
     const formatScheduleDate = (value) => {
         if(!value) return "-";
 
-        return value
-            .replace("T", " ")
-            .slice(0, 16);
+        return dayjs(value).format("YYYY-MM-DD HH:mm")
     };
+
+    const formatUpcomingDate = (value) => {
+        if(!value) return "";
+        return dayjs(value).format("M/D HH:mm")
+    }
 
     //다른 월에서 일정 등록 등 후에 다시 현재 월로 안오게 되려나
     const [currentDate, setCurrentDate] = useState(new Date());
 
+
+
     return (<>
         <div className="calendar-page">
-            <div className="calendar-card">
-                {loading ? (
-                    <div className="calendar-loading">
-                        일정을 불러오는 중입니다...
-                    </div>
-                ):(
-                    <FullCalendar
-                        plugins={[
-                            dayGridPlugin,
-                            interactionPlugin
-                        ]}
-                        initialView="dayGridMonth"
+            <div className="calendar-main">
+                {/* 달력 */}
+                <div className="calendar-card">
+                    {loading ? (
+                        <div className="calendar-loading">
+                            일정을 불러오는 중입니다...
+                        </div>
+                    ):(
+                        <FullCalendar
+                            plugins={[
+                                dayGridPlugin,
+                                interactionPlugin
+                            ]}
+                            initialView="dayGridMonth"
 
-                        locale="ko"
-                        height="auto"
+                            locale="ko"
+                            height="auto"
 
-                        customButtons={{
-                            addSchedule: {
-                                text: "일정 등록",
-                                click: () => {
-                                    openInputModal();
+                            customButtons={{
+                                addSchedule: {
+                                    text: "일정 등록",
+                                    click: () => {
+                                        openInputModal();
+                                    }
                                 }
-                            }
-                        }}
+                            }}
 
-                        headerToolbar={{
-                            left: "prev,next today",
-                            center: "title",
-                            right: "addSchedule"
-                        }}
+                            headerToolbar={{
+                                left: "prev,next today",
+                                center: "title",
+                                right: "addSchedule"
+                            }}
 
-                        events={schedules}
+                            events={schedules}
 
-                        dateClick={handleDateClick}
-                        eventClick={handleScheduleClick}
+                            dateClick={handleDateClick}
+                            eventClick={handleScheduleClick}
 
-                        dayMaxEvents={2}
+                            dayMaxEvents={2}
 
-                        initialDate={currentDate}
+                            initialDate={currentDate}
 
-                        datesSet={(info) => {
-                            setCurrentDate(info.view.currentStart);
-                        }}
-                    />
-                )}
+                            datesSet={(info) => {
+                                setCurrentDate(info.view.currentStart);
+                            }}
+                        />
+                    )}
 
 
+                </div>
+
+                {/* 오른쪽 사이드 */}
+                <div className="calendar-side">
+                    {/* 이번 주 일정 */}
+                    <div className="calendar-week-summary">
+                        <div className="calendar-week-label">
+                            이번 주 일정
+                        </div>
+                        <div className="calendar-week-count">
+                            {thisWeekScheduleCount}건
+                        </div>
+                    </div>
+                    
+                    {/* 오늘 일정 */}
+                    <div className="calendar-side-section">
+                        <div className="calendar-side-title">
+                            오늘 일정
+                        </div>
+                        <div className="calendar-side-list">
+                            {todaySchedules.length === 0 ? (
+                                <div className="calendar-side-empty">
+                                    오늘 예정된 일정이 없습니다.
+                                </div>
+                            ) : (
+                                todaySchedules.map(schedule => (
+                                    <div
+                                        key={schedule.scheduleNo}
+                                        className="calendar-side-item"
+                                        onClick={()=>openScheduleDetail(schedule.scheduleNo)}
+                                    >
+                                        <div className="calendar-side-date">
+                                            {dayjs(schedule.scheduleStart).format("HH:mm")}
+                                        </div>
+
+                                        <div className="calendar-side-content">
+                                            <div className="calendar-side-item-title">
+                                                {schedule.scheduleTitle}
+                                            </div>
+                                            <div className="calendar-side-item-place">
+                                                {schedule.schedulePlace || "장소 미정"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 다가오는 일정 */}
+                    <div className="calendar-side-section">
+                        <div className="calendar-side-title">
+                            다가오는 일정
+                        </div>
+                        <div className="calendar-side-list">
+                            {upcomingSchedules.length === 0 ? (
+                                <div className="calendar-side-empty">
+                                    예정된 일정이 없습니다.
+                                </div>
+                            ) : (
+                                upcomingSchedules.map(schedule => (
+                                    <div
+                                        key={schedule.scheduleNo}
+                                        className="calendar-side-item"
+                                        onClick={() => openScheduleDetail(schedule.scheduleNo)}
+                                    >
+                                        <div className="calendar-side-content">
+                                            <div className="calendar-side-item-title">
+                                                {schedule.scheduleTitle}
+                                            </div>
+                                            <div className="calendar-side-place">
+                                                {schedule.schedulePlace || "장소 미정"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 

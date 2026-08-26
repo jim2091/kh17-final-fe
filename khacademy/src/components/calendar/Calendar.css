@@ -1,5 +1,5 @@
 /* =====================================================
-    Calendar Page
+    1. Calendar Page / Main Layout
 ===================================================== */
 
 .calendar-page {
@@ -8,13 +8,34 @@
 
     background-color: #f7f8fa;
 
-    /* 좁아지면 캘린더를 찌그러뜨리지 않고 스크롤 */
+    box-sizing: border-box;
     overflow-x: auto;
 }
 
+/*
+    PC 기본 화면
+    왼쪽 : 달력
+    오른쪽 : 일정 요약 사이드
+*/
+.calendar-main {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+
+    gap: 24px;
+    align-items: start;
+}
+
+
+/* =====================================================
+    2. Calendar Card
+===================================================== */
+
 .calendar-card {
     width: 100%;
-    min-width: 760px;
+    min-width: 0;
 
     padding: 26px;
 
@@ -24,11 +45,173 @@
     border-radius: 16px;
 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    box-sizing: border-box;
+}
+
+.calendar-loading {
+    padding: 40px 20px;
+
+    text-align: center;
+
+    font-size: 14px;
+    color: #8a939e;
 }
 
 
 /* =====================================================
-    FullCalendar 전체
+    3. Calendar Side - Common
+===================================================== */
+
+.calendar-side {
+    min-width: 0;
+
+    padding: 22px;
+
+    background-color: #ffffff;
+
+    border: 1px solid #e8eaed;
+    border-radius: 16px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    box-sizing: border-box;
+}
+
+/*
+    이후
+    오늘 일정 / 이번 주 일정 / 다가오는 일정
+    영역을 나눌 때 공통으로 사용
+*/
+.calendar-side-section {
+    width: 100%;
+}
+
+.calendar-side-section + .calendar-side-section {
+    margin-top: 32px;
+}
+
+.calendar-side-title {
+    margin-bottom: 18px;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #212529;
+}
+/* =====================================================
+    Calendar Side - Week Summary
+===================================================== */
+
+.calendar-week-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin: 0 0 32px;
+    padding: 14px 15px;
+
+    background-color: #f5f7ff;
+    border-radius: 10px;
+}
+
+.calendar-week-label {
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #495057;
+}
+
+.calendar-week-count {
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #4f6ef7;
+}
+
+
+/* =====================================================
+    4. Calendar Side - Upcoming Schedule
+===================================================== */
+
+.calendar-side-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.calendar-side-item {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 14px;
+
+    padding: 13px 12px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+.calendar-side-item:hover {
+    background-color: #f5f7fa;
+}
+
+.calendar-side-date {
+    flex-shrink: 0;
+
+    width: 42px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #4f6ef7;
+}
+
+.calendar-side-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.calendar-side-item-title {
+    margin-bottom: 4px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #343a40;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-side-place {
+    font-size: 12px;
+
+    color: #8a939e;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-side-empty {
+    padding: 30px 10px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    color: #9ca3af;
+}
+
+
+/* =====================================================
+    5. FullCalendar - 전체
 ===================================================== */
 
 .calendar-card .fc {
@@ -40,7 +223,7 @@
 
 
 /* =====================================================
-    Toolbar
+    6. FullCalendar - Toolbar
 ===================================================== */
 
 .calendar-card .fc .fc-toolbar {
@@ -68,7 +251,7 @@
 
 
 /* =====================================================
-    Toolbar 버튼 공통
+    7. FullCalendar - Toolbar Buttons
 ===================================================== */
 
 .calendar-card .fc .fc-button {
@@ -105,7 +288,7 @@
 }
 
 
-/* FullCalendar에서 붙이는 active 상태 제거 */
+/* FullCalendar 기본 active 스타일 제거 */
 
 .calendar-card .fc .fc-button-primary:not(:disabled):active,
 .calendar-card .fc .fc-button-primary:not(:disabled).fc-button-active {
@@ -117,9 +300,7 @@
 }
 
 
-/* =====================================================
-    이전 / 다음 버튼
-===================================================== */
+/* 이전 / 다음 */
 
 .calendar-card .fc .fc-prev-button,
 .calendar-card .fc .fc-next-button {
@@ -133,9 +314,6 @@
     justify-content: center;
 }
 
-
-/* 이전 / 다음 버튼 붙어있는 느낌 제거 */
-
 .calendar-card .fc .fc-button-group {
     gap: 6px;
 }
@@ -145,9 +323,7 @@
 }
 
 
-/* =====================================================
-    오늘 버튼
-===================================================== */
+/* 오늘 버튼 */
 
 .calendar-card .fc .fc-today-button {
     margin-left: 6px;
@@ -164,9 +340,7 @@
 }
 
 
-/* =====================================================
-    일정 등록 버튼
-===================================================== */
+/* 일정 등록 버튼 */
 
 .calendar-card .fc .fc-addSchedule-button {
     padding-left: 18px;
@@ -189,7 +363,7 @@
 
 
 /* =====================================================
-    Calendar Table
+    8. FullCalendar - Table
 ===================================================== */
 
 .calendar-card .fc-theme-standard td,
@@ -206,7 +380,7 @@
 
 
 /* =====================================================
-    요일 Header
+    9. FullCalendar - 요일 Header
 ===================================================== */
 
 .calendar-card .fc .fc-col-header-cell {
@@ -244,7 +418,7 @@
 
 
 /* =====================================================
-    날짜 Cell
+    10. FullCalendar - 날짜 Cell
 ===================================================== */
 
 .calendar-card .fc .fc-daygrid-day {
@@ -254,7 +428,7 @@
 }
 
 .calendar-card .fc .fc-daygrid-day:hover {
-    background-color: #fafbfc;
+    background-color: #f8fafc;
 }
 
 
@@ -295,14 +469,14 @@
 }
 
 
-/* 일요일 날짜 */
+/* 일요일 */
 
 .calendar-card .fc .fc-day-sun .fc-daygrid-day-number {
     color: #e05252;
 }
 
 
-/* 토요일 날짜 */
+/* 토요일 */
 
 .calendar-card .fc .fc-day-sat .fc-daygrid-day-number {
     color: #4f6ef7;
@@ -310,17 +484,17 @@
 
 
 /* =====================================================
-    오늘
+    11. FullCalendar - 오늘
 ===================================================== */
 
-/* FullCalendar 기본 노란 배경 제거 */
+/* 기본 노란 배경 제거 */
 
 .calendar-card .fc .fc-day-today {
     background-color: #ffffff !important;
 }
 
 
-/* 오늘 날짜 숫자만 강조 */
+/* 오늘 날짜 숫자 */
 
 .calendar-card .fc .fc-day-today .fc-daygrid-day-number {
     background-color: #4f6ef7;
@@ -331,7 +505,7 @@
 }
 
 
-/* 오늘 날짜 cell 은 살짝 배경 */
+/* 오늘 날짜 Cell */
 
 .calendar-card .fc .fc-day-today .fc-daygrid-day-frame {
     background-color: #f8f9ff;
@@ -339,7 +513,7 @@
 
 
 /* =====================================================
-    지난달 / 다음달 날짜
+    12. FullCalendar - 이전 / 다음 달
 ===================================================== */
 
 .calendar-card .fc .fc-day-other {
@@ -352,7 +526,7 @@
 
 
 /* =====================================================
-    Event
+    13. FullCalendar - Event
 ===================================================== */
 
 .calendar-card .fc .fc-daygrid-event {
@@ -379,38 +553,27 @@
     transform: translateY(-1px);
 }
 
-
-/* 일정 내용 */
-
 .calendar-card .fc .fc-event-main {
     cursor: pointer;
 
     overflow: hidden;
 }
 
-
-/* 일정 시간 */
-
 .calendar-card .fc .fc-event-time {
     font-weight: 600;
 }
-
-
-/* 일정 제목 */
 
 .calendar-card .fc .fc-event-title {
     font-weight: 500;
 
     overflow: hidden;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
 
 /* =====================================================
-    + more
+    14. FullCalendar - More
 ===================================================== */
 
 .calendar-card .fc .fc-daygrid-more-link {
@@ -430,7 +593,7 @@
 
 
 /* =====================================================
-    Popup
+    15. FullCalendar - Popup
 ===================================================== */
 
 .calendar-card .fc .fc-popover {
@@ -451,14 +614,10 @@
     font-weight: 600;
 }
 
-.calendar-card .fc-daygrid-day-frame:hover {
-    background-color: #f8fafc;
-}
 
-
-/* =========================================================
-   Schedule Modal Common
-========================================================= */
+/* =====================================================
+    16. Schedule Modal - Common
+===================================================== */
 
 .schedule-modal .modal-content,
 .schedule-detail-modal .modal-content {
@@ -470,18 +629,12 @@
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
 }
 
-
-/* Header */
-
 .schedule-modal .modal-header,
 .schedule-detail-modal .modal-header {
     padding: 21px 24px 17px;
 
     border-bottom: 1px solid #edf0f3;
 }
-
-
-/* Title */
 
 .schedule-modal .modal-title,
 .schedule-detail-modal .modal-title {
@@ -491,16 +644,10 @@
     color: #212529;
 }
 
-
-/* Body */
-
 .schedule-modal .modal-body,
 .schedule-detail-modal .modal-body {
     padding: 23px 24px;
 }
-
-
-/* Footer */
 
 .schedule-modal .modal-footer,
 .schedule-detail-modal .modal-footer {
@@ -510,9 +657,6 @@
 
     gap: 8px;
 }
-
-
-/* Footer 버튼 */
 
 .schedule-modal .modal-footer .btn,
 .schedule-detail-modal .modal-footer .btn {
@@ -527,7 +671,7 @@
 }
 
 
-/* secondary 버튼을 너무 진하지 않게 */
+/* Secondary 버튼 */
 
 .schedule-modal .btn-secondary,
 .schedule-detail-modal .btn-secondary {
@@ -548,11 +692,9 @@
 }
 
 
-/* =========================================================
-   Schedule Input / Edit Form Common
-========================================================= */
-
-/* 등록 Form + 수정 Form 공통 Label */
+/* =====================================================
+    17. Schedule Form - 등록 / 수정 공통
+===================================================== */
 
 .schedule-modal .form-label,
 .schedule-edit-form .form-label {
@@ -563,9 +705,6 @@
 
     color: #495057;
 }
-
-
-/* 등록 Form + 수정 Form 공통 Input */
 
 .schedule-modal .form-control,
 .schedule-edit-form .form-control {
@@ -583,9 +722,6 @@
         box-shadow 0.15s ease;
 }
 
-
-/* textarea */
-
 .schedule-modal textarea.form-control,
 .schedule-edit-form textarea.form-control {
     min-height: 115px;
@@ -595,16 +731,10 @@
     line-height: 1.55;
 }
 
-
-/* placeholder */
-
 .schedule-modal .form-control::placeholder,
 .schedule-edit-form .form-control::placeholder {
     color: #adb5bd;
 }
-
-
-/* 일반 focus */
 
 .schedule-modal .form-control:focus,
 .schedule-edit-form .form-control:focus {
@@ -613,15 +743,18 @@
     box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
 }
 
+.schedule-edit-form {
+    width: 100%;
+}
 
-/* =========================================================
-   Validation
-========================================================= */
+
+/* =====================================================
+    18. Schedule Form - Validation
+===================================================== */
 
 /*
-    정상 값은 초록색으로 강조하지 않는다.
-    내부적으로 is-valid 클래스는 사용하지만
-    화면상으로는 일반 input처럼 표시한다.
+    is-valid은 내부 검증용으로 사용하지만
+    정상 입력은 초록색으로 표시하지 않는다.
 */
 
 .schedule-modal .form-control.is-valid,
@@ -631,9 +764,6 @@
     background-image: none;
 }
 
-
-/* 정상 상태에서 focus */
-
 .schedule-modal .form-control.is-valid:focus,
 .schedule-edit-form .form-control.is-valid:focus {
     border-color: #86aaf8;
@@ -642,7 +772,7 @@
 }
 
 
-/* 오류는 빨간색으로 표시 */
+/* 오류만 빨간색 */
 
 .schedule-modal .form-control.is-invalid,
 .schedule-edit-form .form-control.is-invalid {
@@ -651,18 +781,12 @@
     background-image: none;
 }
 
-
-/* 오류 상태에서 focus */
-
 .schedule-modal .form-control.is-invalid:focus,
 .schedule-edit-form .form-control.is-invalid:focus {
     border-color: #dc3545;
 
     box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
 }
-
-
-/* 오류 설명 */
 
 .schedule-modal .invalid-feedback,
 .schedule-edit-form .invalid-feedback {
@@ -672,11 +796,9 @@
 }
 
 
-/* =========================================================
-   Schedule Detail
-========================================================= */
-
-/* 일정 제목 */
+/* =====================================================
+    19. Schedule Detail
+===================================================== */
 
 .schedule-detail-title {
     margin-bottom: 22px;
@@ -691,9 +813,6 @@
     word-break: break-word;
 }
 
-
-/* 시작 / 종료 / 장소 묶음 */
-
 .schedule-detail-info {
     padding: 15px 18px;
     margin-bottom: 20px;
@@ -704,9 +823,6 @@
     border-radius: 10px;
 }
 
-
-/* 한 줄 */
-
 .schedule-detail-row {
     display: flex;
     align-items: flex-start;
@@ -715,9 +831,6 @@
 
     padding: 8px 0;
 }
-
-
-/* Label */
 
 .schedule-detail-label {
     flex-shrink: 0;
@@ -729,9 +842,6 @@
 
     color: #7a8491;
 }
-
-
-/* 실제 값 */
 
 .schedule-detail-value {
     flex: 1;
@@ -746,59 +856,8 @@
 }
 
 
-/* =========================================================
-   Schedule Detail Content
-========================================================= */
-
-.schedule-detail-content {
-    margin-top: 4px;
-}
-
-
-/* 내용 Label만 width 제한 제거 */
-
-.schedule-detail-content > .schedule-detail-label {
-    width: auto;
-
-    margin-bottom: 8px;
-}
-
-
-/* 내용 표시 박스 */
-
-.schedule-detail-content-box {
-    min-height: 105px;
-
-    padding: 15px 16px;
-
-    background-color: #f8f9fb;
-
-    border: 1px solid #edf0f3;
-    border-radius: 10px;
-
-    font-size: 0.96rem;
-
-    line-height: 1.65;
-
-    color: #495057;
-
-    white-space: pre-wrap;
-
-    word-break: break-word;
-}
-
-
-/* =========================================================
-   Edit Mode
-========================================================= */
-
-.schedule-edit-form {
-    width: 100%;
-}
-
-
 /* =====================================================
-    큰 화면
+    20. Large Desktop
 ===================================================== */
 
 @media (min-width: 1600px) {
@@ -807,8 +866,18 @@
         padding: 30px;
     }
 
+    .calendar-main {
+        grid-template-columns: minmax(0, 1fr) 340px;
+
+        gap: 28px;
+    }
+
     .calendar-card {
         padding: 30px;
+    }
+
+    .calendar-side {
+        padding: 24px;
     }
 
     .calendar-card .fc {
@@ -866,7 +935,24 @@
 
 
 /* =====================================================
-    중간 화면
+    21. Medium Screen
+===================================================== */
+
+/*
+    사이드바까지 포함했을 때 공간이 부족해지는 시점부터
+    오른쪽 패널을 달력 아래로 이동
+*/
+@media (max-width: 1300px) {
+
+    .calendar-main {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* =====================================================
+    22. Small Screen
 ===================================================== */
 
 @media (max-width: 900px) {
@@ -875,7 +961,12 @@
         padding: 16px;
     }
 
-    .calendar-card {
+    .calendar-main {
+        gap: 16px;
+    }
+
+    .calendar-card,
+    .calendar-side {
         padding: 16px;
     }
 
@@ -907,7 +998,7 @@
 
 
 /* =====================================================
-    모바일
+    23. Mobile
 ===================================================== */
 
 @media (max-width: 576px) {
