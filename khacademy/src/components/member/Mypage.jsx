@@ -75,7 +75,7 @@ export default function Mypage() {
         <Row className="mt-5">
             <Col className="text-center">
 
-                <Button as={Link} to=""
+                <Button as={Link} to="/edit"
                     variant="warning" className="ms-2" >
                     <FaPenToSquare />
                     <span>내 정보 수정</span>
