@@ -17,11 +17,11 @@ export const authClient = axios.create({
 });
 
 //[2] 인증 메일용 Axios 객체
-export const certClient = axios.create({
-    baseURL : `${baseURL}/service/cert`,
-    timeout : 10000,
-    withCredentials : false
-});
+// export const certClient = axios.create({
+//     baseURL : `${baseURL}/service/cert`,
+//     timeout : 10000,
+//     withCredentials : false
+// });
 
 //[3] API 요청용 Axios 객체
 export const apiClient = axios.create({
@@ -37,15 +37,15 @@ export const apiClient = axios.create({
 
 // 요청에 대한 인터셉터
 // - 정상 요청의 경우 커스텀 헤더를 하나 생성해서 현재 페이지의 주소를 첨부하도록 구현
-apiClient.interceptors.request.use(
-  config=>{
-    //config.headers["X-Client-Page"] = window.location.href;//풀주소
-    const { origin, pathname } = window.location;
-    config.headers["X-Client-Page"] = origin + pathname;//파라미터 제거
-    return config;
-  },
-  error=>error
-);
+// apiClient.interceptors.request.use(
+//   config=>{
+//     //config.headers["X-Client-Page"] = window.location.href;//풀주소
+//     const { origin, pathname } = window.location;
+//     config.headers["X-Client-Page"] = origin + pathname;//파라미터 제거
+//     return config;
+//   },
+//   error=>error
+// );
 
 // 응답에 대한 인터셉터
 apiClient.interceptors.response.use(
@@ -78,7 +78,7 @@ apiClient.interceptors.response.use(
 
     console.log("액세스 토큰 만료됨 → 갱신 요청 시작");
     try {
-        const {data} = await authClient.post("/refresh");
+        await authClient.post("/refresh");
         //현재 화면은 로그인상태이므로 갱신이 필요하지 않음(필요하다면 해도 됨)
         return apiClient(originalRequest);//apiClient에 원래요청을 다시보낸 결과를 반환
     }
