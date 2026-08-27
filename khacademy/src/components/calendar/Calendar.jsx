@@ -2,7 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
@@ -21,6 +21,11 @@ import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 
 export default function Calendar() {
     const { projectNo } = useParams();
+    const { project, loadProject } = useOutletContext();
+
+    console.log("project", project);
+    console.log("loadProject", loadProject);
+
     const [scheduleList, setScheduleList] = useState([]);
     const [loading, setLoading] = useState(false);
     //초기 목록 로딩
@@ -684,6 +689,7 @@ export default function Calendar() {
                             locale={ko}
                             timeCaption="시간"
                         />
+
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -791,10 +797,6 @@ export default function Calendar() {
                                     className={editResult.scheduleTitle}
                                     maxLength={300}
                                 />
-
-                                <div className="invalid-feedback">
-                                    일정 제목을 입력하세요
-                                </div>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -814,20 +816,31 @@ export default function Calendar() {
 
                             <Form.Group className="mb-3">
                                 <Form.Label>시작 일시</Form.Label>
-
-                                <Form.Control
-                                    type="datetime-local"
-                                    name="scheduleStart"
-                                    value={scheduleEdit.scheduleStart}
-                                    onChange={changeScheduleEdit}
-                                    onBlur={checkEdit}
-                                    className={editResult.scheduleStart}
+                                <DatePicker
+                                    selected={
+                                        scheduleEdit.scheduleStart
+                                            ? dayjs(scheduleEdit.scheduleStart).toDate() : null
+                                    }
+                                    onChange={(date)=>{
+                                        const value = date
+                                        ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
+                                        setScheduleEdit(prev=>({...prev, scheduleStart: value}))
+                                        setEditResult(prev=>({...prev, 
+                                            scheduleStart: value.length > 0 ? "is-valid" : "is-invalid"
+                                        }));
+                                    }}
+                                    showTimeSelect
+                                    timeFormat="HH:mm"
+                                    timeIntervals={30}
+                                    dateFormat="yyyy-MM-dd HH:mm"
+                                    placeholderText="시작 일시를 선택하세요"
+                                    className={`form-control ${editResult.scheduleStart || ""}`}
+                                    locale={ko}
+                                    timeCaption="시간"
                                 />
 
-                                <div className="invalid-feedback">
-                                    시작 일시를 입력하세요
-                                </div>
                             </Form.Group>
+                            
 
                             <Form.Group className="mb-3">
                                 <Form.Label>종료 일시</Form.Label>
