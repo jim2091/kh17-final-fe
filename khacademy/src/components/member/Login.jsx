@@ -43,30 +43,15 @@ export default function Login() {
         }
 
         try {
-            //const {data} = await axios.post("/service/auth/login", account);
             const {data} = await authClient.post("/login", emp);
-            //로그인 성공 → data를 jotai storage에 저장하자!
-            // console.log(data);
-            //setLoginUser(data);//jotai storage에 저장 완료
-            //loginAction(data);//jotai setter atom 사용
 
             loginAction(data);
-            //await apiClient.get(`/member/loginState`);
 
-            // console.log(userData);
-            //로그인 성공 시에도 경우가 나눠진다
-            // - data에 needUpdate 항목의 값에 따라 이동하는 페이지가 달라진다
             navigate("/");
 
         }
         catch(e){
-            //로그인 실패가 경우가 나눠진다
-            //- 404 : 정보 불일치
-            //- 403 : 차단된 회원
-            //console.log(Object.keys(e));
-            //console.log(e.response);
-            //console.log(e.status);//우리가 원하는거
-            //console.log(typeof e.status);//자료형 확인
+           
             if(e.status === 403) {
                 navigate("/emp/inactive");
             }
