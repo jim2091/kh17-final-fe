@@ -25,21 +25,37 @@ function MyVerticallyCenteredModal(props) {
     const navigate = useNavigate();
     const sendData = useCallback(async()=>{
         await apiClient.post("/dept/add", dept);
-        setDept(null);
         toast.success("부서가 추가되었습니다.");
+        
+        setDept({
+            deptName: "",
+            deptInfo: "",
+            deptBlock: "",
+        });
 
-        navigate("/departments");
+        // 부모에게 "추가 완료"를 알림
+        props.onAdd();
 
-    }, [dept]);
+        // 모달 닫기
+        props.onHide();
 
-    if(dept === null){
-        return(<h1>로딩중...</h1>);
-    }
+    }, [dept, props]);
+
+   
 
 
   return (
     <Modal
       {...props}
+      onHide={() => {
+                setDept({
+                    deptName: "",
+                    deptInfo: "",
+                    deptBlock: "",
+                });
+
+                props.onHide();
+            }}
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
@@ -91,8 +107,15 @@ function MyVerticallyCenteredModal(props) {
         </Row>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={() => (props.onHide(), sendData())}>Add</Button>
-        <Button onClick={props.onHide}>Close</Button>
+        <Button onClick={sendData}>Add</Button>
+        <Button onClick={()=>{
+                    setDept({
+                        deptName: "",
+                        deptInfo: "",
+                        deptBlock: "",
+                    });
+                    props.onHide();
+                }}>Close</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -140,6 +163,7 @@ export default function Departments() {
             <MyVerticallyCenteredModal
                 show={modalShow}
                 onHide={() => setModalShow(false)}
+                onAdd={loadData}
             />
         </Col>
 
