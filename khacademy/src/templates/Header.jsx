@@ -105,8 +105,12 @@ export default function Header({ openSidebar }) {
                                                 </Link>
                                             </Col>
                                             <Col>
+                                                <Link to="/me">
                                                 <div>{empName}</div>
+                                                </Link>
+                                                <Link to="/me">
                                                 <div>{empEmail}</div>
+                                                </Link>
                                             </Col>
                                         </Row>
                                         <Row className="mt-2">

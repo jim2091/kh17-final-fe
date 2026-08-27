@@ -1,9 +1,28 @@
+import { useCallback, useEffect, useState } from "react";
 import { Button, Col, Row, Table } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
-import { FaPlus } from "react-icons/fa6";
+import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
+import { apiClient } from "@utils/reaxios";
 
 export default function departments(){
+
+    const [deptList, setDeptList] = useState(null);
+
+    useEffect(()=>{
+        loadData();
+    }, []);
+
+    const loadData = useCallback( async()=>{
+        const {data} = await apiClient.get("/dept/");
+
+        setDeptList(data);
+    }, []);
+
+    if(deptList === null){
+        return(<h1>로딩중인 화면</h1>);
+    }
+
     return(<>
     <Nav variant="tabs" defaultActiveKey="/users">
             <Nav.Item>
@@ -38,14 +57,17 @@ export default function departments(){
                         </tr>
                     </thead>
                     <tbody>
-
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                    {deptList.map((dept)=>(
+                        <tr key={dept.deptNo}>
+                            <td>{dept.deptNo}</td>
+                            <td>{dept.deptName}</td>
+                            <td>{dept.deptInfo}</td>
+                            <td>{dept.deptBlock}</td>
+                            <td>
+                                <FaMagnifyingGlass/>
+                            </td>
                         </tr>
+                    ))}
                     </tbody>
                 </Table>
             </Col>
