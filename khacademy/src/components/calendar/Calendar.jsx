@@ -1,7 +1,7 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -487,6 +487,40 @@ export default function Calendar() {
         }));
     }, []);
 
+    //연/월 선택 이동
+    const calendarRef = useRef(null);
+
+    //이동할 연/월 state
+    const [moveYear, setMoveYear] = useState(dayjs(currentDate).year());
+    const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month()+1);//1월이 0임
+    
+    const moveCalendar = useCallback(()=>{
+        const calendarApi = calendarRef.current.getApi();
+
+        const targetDate = dayjs()
+            .year(Number(moveYear))
+            .month(Number(moveMonth) - 1)
+            .date(1)
+            .format("YYYY-MM-DD");
+
+        calendarApi.gotoDate(targetDate);
+
+        setMoveModal(false);
+    },[moveYear, moveMonth]);
+
+    //이동 연/월 선택 모달
+    const [moveModal, setMoveModal] = useState(false);
+    const openMoveModal = useCallback(()=>{
+        setMoveYear(dayjs(currentDate).year());
+        setMoveMonth(dayjs(currentDate).month()+1);
+
+        setMoveModal(true);
+    }, [currentDate]);
+    const closeMoveModal = useCallback(()=>{
+        setMoveModal(false);
+    }, []);
+
+
 
     return (<>
         <div className="calendar-page">
@@ -499,6 +533,7 @@ export default function Calendar() {
                         </div>
                     ) : (
                         <FullCalendar
+                            ref={calendarRef}
                             plugins={[
                                 dayGridPlugin,
                                 interactionPlugin
@@ -514,12 +549,18 @@ export default function Calendar() {
                                     click: () => {
                                         openInputModal();
                                     }
+                                },
+
+                                moveMonth: {
+                                    text: dayjs(currentDate).format("YYYY년 M월"),
+                                    click: openMoveModal
                                 }
                             }}
 
                             headerToolbar={{
                                 left: "prev,next today",
-                                center: "title",
+                                center: "moveMonth",//원래 여기 title이라고 써야 자동으로 해당 연월이 제목처럼 생김
+                                //근데 거기엔 우리가 따로 onclick같은 이벤트를 걸 수 없어서 커스텀 버튼을 만들어서 넣어줄거
                                 right: "addSchedule"
                             }}
 
@@ -966,6 +1007,61 @@ export default function Calendar() {
                     </div>
                 </>)}
 
+            </Modal.Footer>
+        </Modal>
+
+        <Modal
+            show={moveModal}
+            onHide={closeMoveModal}
+            centered
+            size="sm"
+            className="calendar-move-modal"
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>연/월 이동</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                <Form.Group className="mb-3">
+                    <Form.Label>연도</Form.Label>
+
+                    <Form.Control
+                        type="number"
+                        value={moveYear}
+                        onChange={(e)=>setMoveYear(e.target.value)}
+                        min={1900}
+                        max={2100}
+                    />
+                </Form.Group>
+
+                <Form.Group>
+
+                    <Form.Label>월</Form.Label>
+
+                    <Form.Select
+                        value={moveMonth}
+                        onChange={(e)=>setMoveMonth(e.target.value)}
+                        >
+                        {Array.from({ length: 12 }, (_, index)=> (
+                            <option
+                            key={index + 1}
+                            value={index + 1}
+                            >
+                                {index + 1}월
+                            </option>
+                        ))}
+                    </Form.Select>
+                </Form.Group>
+            </Modal.Body>
+            
+            <Modal.Footer>
+                <Button variant="secondary" onClick={closeMoveModal}>
+                    취소
+                </Button>
+
+                <Button variant="primary" onClick={moveCalendar}>
+                    이동
+                </Button>
             </Modal.Footer>
         </Modal>
 
