@@ -2,9 +2,9 @@ import { useState } from 'react'
 import './App.css'
 import { Navigate, Route, Routes } from "react-router-dom"
 import MainLayout from "./templates/MainLayout";
-import ProjectList from './components/project/ProjectList';
-import ProjectAdd from "./components/project/projectAdd";
-import ProjectEdit from "./components/project/projectEdit";
+import MyProjectList from "./components/project/MyProjectList";
+import ProjectAdd from "./components/project/ProjectAdd";
+import ProjectEdit from "./components/project/ProjectEdit";
 import PublicProjectList from './components/project/PublicProjectList';
 import ArcheiveProjectList from './components/project/ArchiveProjectList';
 import ProjectLayout from './templates/ProjectLayout';
@@ -53,8 +53,11 @@ function App() {
 
         {/* 임시 메인 화면 */}
         <Route path="/" element={<div>메인화면입니다</div>} />
-        <Route path="/projects" element={<ProjectList />} />
+        {/* 내 프로젝트 목록 */}
+        <Route path="/projects/my" element={<MyProjectList />} />
+        {/* 새 프로젝트 등록 */}
         <Route path="/projects/add" element={<ProjectAdd />} />
+        {/* 프로젝트 수정 */}
         <Route path="/projects/:projectNo/edit" element={<ProjectEdit />} />
         <Route path="/projects/public" element={<PublicProjectList />} />
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
