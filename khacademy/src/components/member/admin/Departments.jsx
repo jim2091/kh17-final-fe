@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Col, Row, Table, Form } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
 import Modal from 'react-bootstrap/Modal';
+import { toast } from "react-toastify";
 
 function MyVerticallyCenteredModal(props) {
     const [dept, setDept] = useState({
@@ -21,9 +22,19 @@ function MyVerticallyCenteredModal(props) {
         }));
     }, []);
 
+    const navigate = useNavigate();
     const sendData = useCallback(async()=>{
+        await apiClient.post("/dept/add", dept);
+        setDept(null);
+        toast.success("부서가 추가되었습니다.");
+
+        navigate("/departments");
 
     }, [dept]);
+
+    if(dept === null){
+        return(<h1>로딩중...</h1>);
+    }
 
 
   return (
@@ -58,15 +69,25 @@ function MyVerticallyCenteredModal(props) {
         <Row className="mt-4">
             <Form.Label column sm={3}>활성화여부</Form.Label>
             <Col sm={9}>
-                <Form.Check type="radio" name="deptBlock" value={dept.deptBlock}
-                className="d-inline-block" aria-label="Y">
+                <Form.Check type="radio"
+                 name="deptBlock" 
+                 value="Y"
+                className="d-inline-block" 
+                label="Y"
+                checked={dept.deptBlock === "Y"}
+                onChange={changeStringValue}
+                >
                 </Form.Check>
-                <span className="mt-4" aria-label="Y">Y</span>
-                <Form.Check type="radio" name="deptBlock" value={dept.deptBlock}
-                className="d-inline-block" aria-label="N">
+                <Form.Check type="radio"
+                 name="deptBlock" 
+                 value="N"
+                className="d-inline-block" 
+                label="N"
+                checked={dept.deptBlock === "N"}
+                onChange={changeStringValue}
+                >
                 </Form.Check>
-                <span className="mt-4" aria-label="N">N</span>
-            </Col>
+                </Col>
         </Row>
       </Modal.Body>
       <Modal.Footer>
