@@ -23,9 +23,9 @@ export default function Private({children}){
     );
     }
 
-    if(isAdmin === true){
-        return (<><NeedPermission/></>);
-    }
+    // if(isAdmin === true){
+    //     return (<><NeedPermission/></>);
+    // }
     return children;
 
 }
