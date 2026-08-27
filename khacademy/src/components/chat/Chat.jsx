@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom";
 import { getWebSocketClient } from "@utils/websocket";
 import { apiClient } from "../../utils/reaxios";
@@ -23,8 +23,11 @@ export default function Chat() {
     const [input, setInput] = useState("");
     const [client, setClient] = useState(null);
     const loginUser = useAtomValue(loginUserState);
+    const [last, setLast] = useState(true);//과거 메세지가 더 있는지 여부(true/false)
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    //● 채널 목록
+
+    //● 채널 목록 불러오기
     const loadChannelList = useCallback(async () => {
         try {
             const { data } = await apiClient.get(
@@ -51,12 +54,15 @@ export default function Chat() {
     }, [channels, selectedChannel]);
 
 
-    //● 메세지 내역
+    //● 처음 메세지 조회
     const loadMessages = useCallback(async (channelNo) => {
         try {
             const { data } = await apiClient.post(
                 `/channel/${channelNo}/messages`,
-                { size : 100 , lastMessageNo : null }
+                { 
+                    size : 100 , 
+                    lastMessageNo : null 
+                }
             );
             //console.log("과거 메세지 : ", data);
 
@@ -64,19 +70,64 @@ export default function Chat() {
                 ...message,
                 time: message.ctime
             }));
-
+            
             setMessages(messages);
+            setLast(data.last);
         }
         catch(e) {
             console.error("메세지 조회 실패 : ", e);
         }
     }, []);
 
+
+    //● 채널 변경시 처음 메세지 조회
     useEffect(() => {
         if (!selectedChannel) return;
 
         loadMessages(selectedChannel.chatChannelNo);
     }, [selectedChannel, loadMessages]);
+
+
+    //● 현재 화면에서 가장 오래된 메세지 번호
+    const oldestMessageNo = useMemo(() => {
+        if(!messages || messages.length === 0) {
+            return null;
+        }
+        return messages[0].no;
+    }, [messages]);
+
+
+    //● 더보기 과거 메세지 100개 가져오기
+    const loadMoreMessages = useCallback(async() => {
+        if(!selectedChannel) return;//채널을 선택하지 않았으면 종료
+        if(last === true) return;//과거 메세지가 더 이상 없으면 종료
+        if(oldestMessageNo === 0) return;//아직 메세지가 없다면 종료
+
+        try {
+            const { data } = await apiClient.post(
+                `/channel/${selectedChannel.chatChannelNo}/messages`,
+                { 
+                    size : 100 , 
+                    lastMessageNo : oldestMessageNo 
+                }
+            );
+
+            const newMessages  = data.messages.map(message => ({
+                ...message,
+                time: message.ctime
+            }));
+            
+            //- 기존 메세지 앞에 과거 메세지 추가
+            setMessages(prev => [
+                ...newMessages,
+                ...prev
+            ]);
+            setLast(data.last);
+        }
+        catch(e) {
+            console.error("메세지 조회 실패 : ", e);
+        }
+    }, [selectedChannel, last, oldestMessageNo]);
 
 
     //● 메세지 전송
@@ -99,6 +150,53 @@ export default function Chat() {
         setInput("");
 
     }, [client, input, selectedChannel]);
+
+
+    //● 메세지 삭제 
+    const handelDelete = async(message) => {
+        try {
+            await apiClient.delete(`/message/${message.no}`);
+
+            //- 삭제 후 메세지 목록 다시 불러오기
+            loadMessages(selectedChannel.chatChannelNo);
+        }
+        catch(e) {
+            console.error("메시지 삭제 실패", e);
+        }
+    };
+
+
+    //● 메세지 수정
+    const handelEdit = async(message) => {
+        const content = window.prompt(
+            "메시지를 수정하세요.",
+            message.content
+        );
+
+        // 취소
+        if(content === null) {
+            return;
+        }
+
+        // 빈 문자열 방지
+        if(content.trim() === "") {
+            return;
+        }
+
+        try {
+
+            await apiClient.put(`/message/${message.no}`, {
+                content: content
+            });
+
+            //- 수정 후 다시 조회
+            loadMessages(selectedChannel.chatChannelNo);
+
+        }
+        catch(e) {
+            console.error("메시지 수정 실패", e);
+        }
+    };
 
 
     //● WebSocket 연결
@@ -147,22 +245,31 @@ export default function Chat() {
         };
     }, [selectedChannel]);
 
+
     //● view
     return(<>
         <div className="chat-page">
 
             <ChatSidebar 
                 channels={channels} 
-                onSelectedChannel={setSelectedChannel}
+                selectedChannel={selectedChannel}
+                setSelectedChannel={setSelectedChannel}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
             />
 
             <div className="chat-main">
                 <ChatHeader 
                     selectedChannel={selectedChannel}
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
                 />
 
                 <MessageArea 
                     messages={messages}
+                    onLoadMore={loadMoreMessages}
+                    onEdit={handelEdit}
+                    onDelete={handelDelete}
                 />
 
                 <MessageInput 

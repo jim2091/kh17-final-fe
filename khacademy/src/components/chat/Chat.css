@@ -1,5 +1,6 @@
 /* 전체 채팅 화면 */
 .chat-page {
+    position: relative;
     display: flex;
     width: 100%;
     /* Header 64px을 제외한 화면 높이 */
@@ -42,6 +43,23 @@
     background-color: white;
 }
 
+/* 목록 버튼 */
+.sidebar-toggle {
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: none;
+
+    font-size: 24px;
+    cursor: pointer;
+
+    padding: 5px;
+    margin-right: 10px;
+}
+
 /* 메시지 영역 */
 .message-area {
     flex: 1;
@@ -64,15 +82,60 @@
     background-color: white;
 }
 
+/* 닫기 */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+
+.sidebar-close {
+    display: none;
+
+    border: none;
+    background: none;
+
+    font-size: 28px;
+    cursor: pointer;
+
+    color: #666;
+}
+
 /* 태블릿 / 작은 화면 */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
+
+    /* 채널 sidebar를 공간에서 빼고
+       chat-page 위에 띄움 */
     .chat-sidebar {
-        width: 200px;
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        width: 240px;
+        height: 100%;
+
+        z-index: 1000;
+
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 열림 */
+    .chat-sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* 목록 버튼 표시 */
+    .sidebar-toggle {
+        display: flex;
     }
 
     .chat-header {
         height: 56px;
-
         padding: 0 16px;
     }
 
@@ -82,15 +145,19 @@
 
     .message-input {
         min-height: 64px;
-
         padding: 10px 16px;
+    }
+
+    .sidebar-close {
+        display: block;
     }
 }
 
 /* 모바일 */
 @media (max-width: 576px) {
+
     .chat-sidebar {
-        width: 180px;
+        width: 220px;
     }
 
     .chat-header {
@@ -215,4 +282,13 @@
 
 .date-divider::after {
     margin-left: 12px;
+}
+
+/* 삭제된 메세지 */
+.deleted-message {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #a30d0d;
+    font-style: italic;
 }
