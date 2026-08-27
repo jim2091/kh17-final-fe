@@ -79,18 +79,9 @@ export default function ProjectAdd() {
                 ...prev,
                 projectStart: null
             }));
-
             return;
         }
 
-        const valid = !Number.isNaN(
-            new Date(project.projectStart).getTime()
-        );
-
-        setResult(prev => ({
-            ...prev,
-            projectStart: valid ? "is-valid" : "is-invalid"
-        }));
 
     }, [project.projectStart]);
 
@@ -105,31 +96,16 @@ export default function ProjectAdd() {
                 ...prev,
                 projectDeadline: null
             }));
-
             return;
         }
-
-        const valid = !Number.isNaN(
-            new Date(project.projectDeadline).getTime()
-        );
-
-        setResult(prev => ({
-            ...prev,
-            projectDeadline: valid ? "is-valid" : "is-invalid"
-        }));
 
     }, [project.projectDeadline]);
 
 
     //전체 입력 가능 여부
     const valid = useMemo(() => {
-
-        if(result.projectName !== "is-valid")
-            return false;
-
-        if(result.projectPurpose !== "is-valid")
-            return false;
-
+        if(result.projectName !== "is-valid")return false;
+        if(result.projectPurpose !== "is-valid")return false;
         return true;
 
     }, [result]);

@@ -1095,7 +1095,15 @@
     border-width: 2px 2px 0 0;
 }
 
+.react-datepicker__day--disabled {
+    color: #c5c9ce;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
 
+.react-datepicker__day--disabled:hover {
+    background-color: #f8f9fa;
+}
 
 /* =====================================================
     20. Large Desktop
