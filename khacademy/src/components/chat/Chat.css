@@ -292,3 +292,10 @@
     color: #a30d0d;
     font-style: italic;
 }
+
+/* 채널별 안 읽은 메세지 수 */
+.unread-count {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: bold;
+}
