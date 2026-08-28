@@ -123,7 +123,7 @@ function MyVerticallyCenteredModal(props) {
 }
 export default function Positions() {
 
-    const [positionList, setPositionList] = useState(null);
+    const [positionList, setPositionList] = useState([]);
 
     const [modalShow, setModalShow] = useState(false);
 
@@ -137,9 +137,9 @@ export default function Positions() {
         setPositionList(data);
     }, []);
 
-    if (positionList === null) {
-        return (<h1>로딩중인 화면</h1>);
-    }
+    // if (positionList === null) {
+    //     return (<h1>로딩중인 화면</h1>);
+    // }
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
             <Nav.Item>

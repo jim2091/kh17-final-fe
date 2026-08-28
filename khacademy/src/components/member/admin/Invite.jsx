@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 
 
 export default function invite() {
+
     const [emp, setEmp] = useState({
         empName: "",
         empEmail: "",
@@ -18,6 +19,18 @@ export default function invite() {
         empName: null,
         empEmail: { clazz: null, code: null },
     });
+
+    //부서목록 불러오기(부서명검색선택에서 쓰임)
+    const [deptList, setDeptList] = useState([]);
+
+    const deptNameSearch = useCallback(async()=>{
+
+        const {data} = await apiClient.get("/dept/");
+        setDeptList(data);
+        
+    }, [deptList]);
+
+
     const navigate = useNavigate();
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
@@ -129,16 +142,17 @@ export default function invite() {
         <Row className="mt-4">
             <Form.Label column sm={3}>부서</Form.Label>
             <Col sm={9}>
-                <Form.Select name="empDeptNo"
+                <Form.Select onClick={deptNameSearch} name="empDeptNo"
                 className="w-50 d-inline-block"
                     value={emp.empDeptNo}
                     onChange={changeNumericValue}>
                     <option value="">선택하세요</option>
-                    <option value="1">개발팀</option>
-                    <option value="2">디자인팀</option>
-                    <option value="3">마케팅팀</option>
-                    <option value="4">경영지원팀</option>
-                    <option value="5">영업팀</option>
+                        {deptList.map(dept=>(
+                            <option key={dept.deptNo} value={dept.deptNo}>
+                                {dept.deptName}
+                            </option>
+                        ))}
+                    
                 </Form.Select>
             </Col>
         </Row>

@@ -123,7 +123,7 @@ function MyVerticallyCenteredModal(props) {
 
 export default function Departments() {
 
-    const [deptList, setDeptList] = useState(null);
+    const [deptList, setDeptList] = useState([]);
 
     const [modalShow, setModalShow] = useState(false);
 
@@ -137,9 +137,9 @@ export default function Departments() {
         setDeptList(data);
     }, []);
 
-    if (deptList === null) {
-        return (<h1>로딩중인 화면</h1>);
-    }
+    // if (deptList === null) {
+    //     return (<h1>로딩중인 화면</h1>);
+    // }
 
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
