@@ -6,12 +6,10 @@ import Image from 'react-bootstrap/Image';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 
-
-
-
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+
 import { loginUserState } from "@utils/storage";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
@@ -23,7 +21,7 @@ import { FaCircle } from "react-icons/fa6";
 
 
 
-export default function Header({ openSidebar }) {
+export default function Header({ toggleSidebar }) {
 
     const { empName, empEmail } = useAtomValue(loginUserState) || {};
 
@@ -85,7 +83,7 @@ export default function Header({ openSidebar }) {
             <button
                 type="button"
                 className="header-menu-button"
-                onClick={openSidebar}
+                onClick={toggleSidebar}
             >
                 ☰
             </button>
