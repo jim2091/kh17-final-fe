@@ -54,6 +54,7 @@ apiClient.interceptors.response.use(
   async function (error) {
     // console.log(Object.keys(error));//error 객체의 모든 필드명을 배열로 출력
     console.log(error?.response?.status);
+
     if(error?.response?.status !== 401) {
         return Promise.reject(error);//통과
     }
