@@ -13,6 +13,9 @@ export default function Files({ source = "파일함" }) {
     // 파일 목록
     const [files, setFiles] = useState([]);
 
+    // 현재 로그인 사용자
+    const [loginUser, setLoginUser] = useState("");
+
     // 검색어
     const [keyword, setKeyword] = useState("");
 
@@ -20,6 +23,10 @@ export default function Files({ source = "파일함" }) {
     const [loading, setLoading] = useState(false);
     const [projectLoading, setProjectLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+
+    // 이미지 미리보기
+    const [previewFile, setPreviewFile] = useState(null);
+    const [previewError, setPreviewError] = useState(false);
 
     // 파일 input
     const fileInputRef = useRef(null);
@@ -104,9 +111,18 @@ export default function Files({ source = "파일함" }) {
             );
 
             setFiles(
-                Array.isArray(response.data)
-                    ? response.data
+                Array.isArray(response.data.files)
+                    ? response.data.files
                     : []
+            );
+
+            setLoginUser(
+                response.data.loginUser || ""
+            );
+
+            console.log(
+                "현재 로그인 사용자:",
+                response.data.loginUser
             );
 
         } catch (error) {
@@ -117,6 +133,8 @@ export default function Files({ source = "파일함" }) {
             );
 
             setFiles([]);
+
+            setLoginUser("");
 
             alert(
                 "파일 목록을 불러오는 중 오류가 발생했습니다."
@@ -239,7 +257,6 @@ export default function Files({ source = "파일함" }) {
             return;
         }
 
-
         const formData = new FormData();
 
         formData.append(
@@ -256,7 +273,6 @@ export default function Files({ source = "파일함" }) {
             "source",
             source
         );
-
 
         try {
 
@@ -307,7 +323,7 @@ export default function Files({ source = "파일함" }) {
 
 
     // ==================================================
-    // 확장자
+    // 파일 확장자
     // ==================================================
 
     const getExtension = (fileName = "") => {
@@ -341,7 +357,8 @@ export default function Files({ source = "파일함" }) {
                 "png",
                 "gif",
                 "webp",
-                "svg"
+                "svg",
+                "bmp"
             ].includes(extension)
         ) {
             return "image";
@@ -380,8 +397,89 @@ export default function Files({ source = "파일함" }) {
 
 
     // ==================================================
+    // 파일 URL
+    // ==================================================
+
+    const getFileUrl = (attachNo) => {
+
+        if (!attachNo) {
+            return "";
+        }
+
+        return `http://localhost:8080/api/attach/${attachNo}`;
+
+    };
+
+
+    // ==================================================
+    // 이미지 미리보기 열기
+    // ==================================================
+
+    const handlePreview = (file) => {
+
+        const type =
+            getFileType(file.attachName);
+
+        // 이미지만 미리보기
+        if (type !== "image") {
+            return;
+        }
+
+        setPreviewError(false);
+
+        setPreviewFile(file);
+
+    };
+
+
+    // ==================================================
+    // 이미지 미리보기 닫기
+    // ==================================================
+
+    const closePreview = () => {
+
+        setPreviewFile(null);
+        setPreviewError(false);
+
+    };
+
+
+    // ==================================================
+    // ESC로 미리보기 닫기
+    // ==================================================
+
+    useEffect(() => {
+
+        const handleKeyDown = (e) => {
+
+            if (
+                e.key === "Escape" &&
+                previewFile
+            ) {
+                closePreview();
+            }
+
+        };
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
+
+        return () => {
+
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
+
+        };
+
+    }, [previewFile]);
+
+
+    // ==================================================
     // 다운로드
-    // 다운로드 버튼에서만 호출
     // ==================================================
 
     const handleDownload = (attachNo) => {
@@ -391,7 +489,7 @@ export default function Files({ source = "파일함" }) {
         }
 
         window.location.href =
-            `http://localhost:8080/api/attach/${attachNo}`;
+            getFileUrl(attachNo);
 
     };
 
@@ -417,6 +515,14 @@ export default function Files({ source = "파일함" }) {
                 `/attach/${attachNo}`
             );
 
+            // 현재 미리보기 중인 파일이면 닫기
+            if (
+                previewFile?.attachNo === attachNo
+            ) {
+                closePreview();
+            }
+
+            // 화면에서도 즉시 삭제
             setFiles((prev) =>
                 prev.filter(
                     (file) =>
@@ -435,7 +541,13 @@ export default function Files({ source = "파일함" }) {
                 error
             );
 
+            console.error(
+                "서버 응답:",
+                error.response?.data
+            );
+
             alert(
+                error.response?.data?.message ||
                 "파일 삭제 중 오류가 발생했습니다."
             );
 
@@ -529,7 +641,47 @@ export default function Files({ source = "파일함" }) {
     // 파일 아이콘
     // ==================================================
 
-    const FileIcon = ({ type }) => {
+    const FileIcon = ({ file }) => {
+
+        const type =
+            getFileType(file.attachName);
+
+        // ==========================================
+        // 이미지
+        // ==========================================
+
+        if (type === "image") {
+
+            return (
+                <div className="files-image-thumbnail">
+
+                    <img
+                        src={getFileUrl(file.attachNo)}
+                        alt={file.attachName}
+                        onError={(e) => {
+
+                            e.currentTarget.style.display =
+                                "none";
+
+                            e.currentTarget.nextElementSibling.style.display =
+                                "flex";
+
+                        }}
+                    />
+
+                    <div className="files-image-fallback">
+                        <span>이미지 없음</span>
+                    </div>
+
+                </div>
+            );
+
+        }
+
+
+        // ==========================================
+        // PDF
+        // ==========================================
 
         if (type === "pdf") {
 
@@ -541,42 +693,10 @@ export default function Files({ source = "파일함" }) {
 
         }
 
-        if (type === "image") {
 
-            return (
-                <div className="files-icon files-icon-image">
-
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                    >
-
-                        <rect
-                            x="3"
-                            y="3"
-                            width="18"
-                            height="18"
-                            rx="2"
-                        />
-
-                        <circle
-                            cx="8.5"
-                            cy="8.5"
-                            r="1.5"
-                        />
-
-                        <path
-                            d="M3 17l5-5 4 4 2.5-2.5L21 20"
-                        />
-
-                    </svg>
-
-                </div>
-            );
-
-        }
+        // ==========================================
+        // Word
+        // ==========================================
 
         if (type === "word") {
 
@@ -588,6 +708,11 @@ export default function Files({ source = "파일함" }) {
 
         }
 
+
+        // ==========================================
+        // Excel
+        // ==========================================
+
         if (type === "excel") {
 
             return (
@@ -597,6 +722,11 @@ export default function Files({ source = "파일함" }) {
             );
 
         }
+
+
+        // ==========================================
+        // PowerPoint
+        // ==========================================
 
         if (type === "powerpoint") {
 
@@ -608,6 +738,11 @@ export default function Files({ source = "파일함" }) {
 
         }
 
+
+        // ==========================================
+        // ZIP
+        // ==========================================
+
         if (type === "zip") {
 
             return (
@@ -617,6 +752,11 @@ export default function Files({ source = "파일함" }) {
             );
 
         }
+
+
+        // ==========================================
+        // 일반 파일
+        // ==========================================
 
         return (
             <div className="files-icon files-icon-default">
@@ -640,6 +780,7 @@ export default function Files({ source = "파일함" }) {
 
             </div>
         );
+
     };
 
 
@@ -730,6 +871,63 @@ export default function Files({ source = "파일함" }) {
 
 
     // ==================================================
+    // 삭제 아이콘
+    // ==================================================
+
+    const DeleteIcon = () => {
+
+        return (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+
+                <polyline points="3 6 5 6 21 6" />
+
+                <path d="M19 6l-1 14H6L5 6" />
+
+                <path d="M10 11v5" />
+
+                <path d="M14 11v5" />
+
+                <path d="M9 6V4h6v2" />
+
+            </svg>
+        );
+
+    };
+
+
+    // ==================================================
+    // 미리보기 닫기 아이콘
+    // ==================================================
+
+    const CloseIcon = () => {
+
+        return (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            >
+
+                <path d="M6 6l12 12" />
+
+                <path d="M18 6L6 18" />
+
+            </svg>
+        );
+
+    };
+
+
+    // ==================================================
     // 화면
     // ==================================================
 
@@ -739,7 +937,9 @@ export default function Files({ source = "파일함" }) {
 
             <div className="files-container">
 
-                {/* 검색 + 업로드 */}
+                {/* ==========================================
+                    검색 + 업로드
+                ========================================== */}
 
                 <div className="files-toolbar">
 
@@ -808,7 +1008,9 @@ export default function Files({ source = "파일함" }) {
                 </div>
 
 
-                {/* 파일 목록 */}
+                {/* ==========================================
+                    파일 목록
+                ========================================== */}
 
                 <div className="files-list">
 
@@ -818,6 +1020,10 @@ export default function Files({ source = "파일함" }) {
 
                         <div className="files-col-file">
                             파일명
+                        </div>
+
+                        <div className="files-col-source">
+                            출처
                         </div>
 
                         <div className="files-col-uploader">
@@ -834,6 +1040,10 @@ export default function Files({ source = "파일함" }) {
 
                         <div className="files-col-size">
                             크기
+                        </div>
+
+                        <div className="files-col-delete">
+                            삭제
                         </div>
 
                     </div>
@@ -900,8 +1110,17 @@ export default function Files({ source = "파일함" }) {
                             return (
 
                                 <div
-                                    className="files-list-row"
+                                    className={
+                                        `files-list-row ${
+                                            type === "image"
+                                                ? "files-image-row"
+                                                : ""
+                                        }`
+                                    }
                                     key={file.attachNo}
+                                    onClick={() =>
+                                        handlePreview(file)
+                                    }
                                 >
 
                                     {/* 파일명 */}
@@ -909,16 +1128,21 @@ export default function Files({ source = "파일함" }) {
                                     <div className="files-col-file files-file-name">
 
                                         <FileIcon
-                                            type={type}
+                                            file={file}
                                         />
 
-                                        {/* 파일명은 클릭 기능 없음 */}
-
-                                        <span
-                                            className="files-name-text"
-                                        >
+                                        <span className="files-name-text">
                                             {file.attachName}
                                         </span>
+
+                                    </div>
+
+
+                                    {/* 출처 */}
+
+                                    <div className="files-col-source">
+
+                                        {file.attachSource || "-"}
 
                                     </div>
 
@@ -927,8 +1151,7 @@ export default function Files({ source = "파일함" }) {
 
                                     <div className="files-col-uploader">
 
-                                        {file.attachUploader ||
-                                            "-"}
+                                        {file.empName || "-"}
 
                                     </div>
 
@@ -951,11 +1174,15 @@ export default function Files({ source = "파일함" }) {
                                         <button
                                             type="button"
                                             className="files-download-button"
-                                            onClick={() =>
+                                            onClick={(e) => {
+
+                                                e.stopPropagation();
+
                                                 handleDownload(
                                                     file.attachNo
-                                                )
-                                            }
+                                                );
+
+                                            }}
                                             title="다운로드"
                                         >
 
@@ -976,6 +1203,36 @@ export default function Files({ source = "파일함" }) {
 
                                     </div>
 
+
+                                    {/* 삭제 */}
+
+                                    <div className="files-col-delete">
+
+                                        {loginUser === file.attachUploader && (
+
+                                            <button
+                                                type="button"
+                                                className="files-delete-button"
+                                                onClick={(e) => {
+
+                                                    e.stopPropagation();
+
+                                                    handleDelete(
+                                                        file.attachNo
+                                                    );
+
+                                                }}
+                                                title="삭제"
+                                            >
+
+                                                <DeleteIcon />
+
+                                            </button>
+
+                                        )}
+
+                                    </div>
+
                                 </div>
 
                             );
@@ -985,6 +1242,178 @@ export default function Files({ source = "파일함" }) {
                 </div>
 
             </div>
+
+
+            {/* ==================================================
+                이미지 미리보기
+            ================================================== */}
+
+            {previewFile && (
+
+                <div
+                    className="files-preview-overlay"
+                    onMouseDown={(e) => {
+
+                        if (
+                            e.target === e.currentTarget
+                        ) {
+                            closePreview();
+                        }
+
+                    }}
+                >
+
+                    <div className="files-preview-modal">
+
+                        {/* ==========================================
+                            미리보기 헤더
+                        ========================================== */}
+
+                        <div className="files-preview-header">
+
+                            <div className="files-preview-title">
+
+                                <div className="files-preview-image-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.8"
+                                    >
+
+                                        <rect
+                                            x="3"
+                                            y="3"
+                                            width="18"
+                                            height="18"
+                                            rx="2"
+                                        />
+
+                                        <circle
+                                            cx="8.5"
+                                            cy="8.5"
+                                            r="1.5"
+                                        />
+
+                                        <path
+                                            d="M3 17l5-5 4 4 2.5-2.5L21 20"
+                                        />
+
+                                    </svg>
+
+                                </div>
+
+                                <span>
+                                    {previewFile.attachName}
+                                </span>
+
+                            </div>
+
+
+                            <div className="files-preview-actions">
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleDownload(
+                                            previewFile.attachNo
+                                        )
+                                    }
+                                    title="다운로드"
+                                >
+
+                                    <DownloadIcon />
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onClick={
+                                        closePreview
+                                    }
+                                    title="닫기"
+                                >
+
+                                    <CloseIcon />
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* ==========================================
+                            이미지 영역
+                        ========================================== */}
+
+                        <div className="files-preview-body">
+
+                            {!previewError ? (
+
+                                <img
+                                    src={getFileUrl(
+                                        previewFile.attachNo
+                                    )}
+                                    alt={
+                                        previewFile.attachName
+                                    }
+                                    className="files-preview-image"
+                                    onError={() => {
+                                        setPreviewError(true);
+                                    }}
+                                />
+
+                            ) : (
+
+                                <div className="files-preview-error">
+
+                                    <div className="files-preview-error-icon">
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                        >
+
+                                            <rect
+                                                x="3"
+                                                y="3"
+                                                width="18"
+                                                height="18"
+                                                rx="2"
+                                            />
+
+                                            <path d="M8 15l2.5-3 2 2 2-2.5L17 15" />
+
+                                            <path d="M8 8h.01" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <strong>
+                                        이미지를 불러올 수 없습니다.
+                                    </strong>
+
+                                    <span>
+                                        이미지 없음
+                                    </span>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
     );

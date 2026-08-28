@@ -8,8 +8,9 @@ import ProjectEdit from "./components/project/ProjectEdit";
 import PublicProjectList from './components/project/PublicProjectList';
 import ArcheiveProjectList from './components/project/ArchiveProjectList';
 import ProjectLayout from './templates/ProjectLayout';
-import Task from './components/task/Task';
 import Chat from './components/chat/Chat';
+import Task from './components/task/Task';
+import TaskInsert from './components/task/TaskInsert';
 import Calendar from './components/calendar/Calendar';
 import Notes from './components/notes/Notes';
 import Files from './components/files/Files';
@@ -82,6 +83,7 @@ function App() {
           <Route index element={<Navigate to="task" replace />} />
 
           <Route path="task" element={<Task />} />
+          <Route path="taskInsert" element={<TaskInsert />} />
 
           <Route path="chat" element={<Chat />} />
 

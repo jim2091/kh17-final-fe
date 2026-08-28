@@ -163,22 +163,21 @@ export default function MessageArea(
                                     <div className="content">
                                         
                                         <div className="body">
-                                            {message.deleted === "Y" 
-                                                ? (
-                                                    <span className="deleted-message">
-                                                        <FiAlertCircle />
-                                                        삭제된 메세지 입니다.
-                                                    </span>
-                                                )
-                                                : message.content
-                                            }
+                                            {message.deleted === "Y" ? (
+                                                <span className="deleted-message">
+                                                    <FiAlertCircle />
+                                                    삭제된 메세지 입니다.
+                                                </span>
+                                            ) : (
+                                                message.content
+                                            )}
                                         </div>
 
-                                        {/* {message.unreadCount > 0 && (
+                                        {message.unreadCount > 0 && (
                                             <span className="unread-count">
                                                 {message.unreadCount}
                                             </span>
-                                        )} */}
+                                        )}
 
                                         {message.deleted !=="Y" &&
                                         message.utime &&

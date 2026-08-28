@@ -8,6 +8,11 @@ import { loginUserState } from "@utils/storage";
 import { useNavigate } from "react-router-dom";
 import { loginActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
+import { socketState } from "@utils/storage";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
+import { heartbeatState } from "@utils/storage";
+import { onlineState } from "@utils/storage";
 
 export default function Login() {
 
@@ -16,14 +21,18 @@ export default function Login() {
         empEmail : "",
         empPassword : ""
     });
-    //jotai state
-    //const [loginUser, setLoginUser] = useAtom(loginUserState);
 
-    //쓰기 전용 atom
-    //const [_, loginAction] = useAtom(loginActionState);
+    //WebSocket state
+    // const [client, setClient] = useState(null);
+    const[socket, setSocket] = useAtom(socketState);
+
+    const[heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
+
+    const[online, setOnline] = useAtom(onlineState);
+
+    
     const loginAction = useSetAtom(loginActionState);
 
-    //navigate
     const navigate = useNavigate();
 
     //입력
@@ -47,6 +56,8 @@ export default function Login() {
 
             loginAction(data);
 
+            connectToServer();
+
             navigate("/");
 
         }
@@ -63,6 +74,53 @@ export default function Login() {
             }
         }
     }, [emp, loginAction]);
+
+    // console.log("socket : " , socket);
+
+    const connectToServer = useCallback(()=>{
+        const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
+
+        const client = new Client({
+
+            webSocketFactory : () => socket,
+
+            onConnect: ()=>{
+                
+
+                setSocket(client);
+
+                client.subscribe("/public/online", (message)=>{
+
+                    const data = JSON.parse(message.body);
+
+                    console.log("온라인 상태 : ", data);
+
+                    setOnline(data);
+                });
+                
+
+                //10초마다 연결 확인
+                const intervalId = setInterval(()=>{
+                    if(client.connected){
+                        client.publish({
+                            destination: "/app/heartbeat",
+                            body:""
+                        });
+                        console.log("heartbeat 전송");
+                    }
+                }, 10000);
+
+                setHeartbeatInterval(intervalId);
+            },
+
+            debug:(str)=>console.log(str)
+
+        });
+
+
+        client.activate();
+
+    }, []);
 
     
     return (<>
