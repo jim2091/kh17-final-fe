@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; 
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Task.css";
@@ -13,6 +13,7 @@ const COLUMNS = [
 
 export default function Task() {
   const { projectNo } = useParams();
+  const navigate = useNavigate(); 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +86,6 @@ export default function Task() {
   };
 
   const handleDragEnd = () => {
-    // 드래그 종료 후 150ms 뒤에 클릭 가능 상태로 전환
     setTimeout(() => {
       setIsDragging(false);
       setDraggedTaskId(null);
@@ -121,7 +121,7 @@ export default function Task() {
 
     if (!targetTask || targetTask.taskStatus === targetStatus) return;
 
-    // 1) 낙관적 업데이트: 기존 객체 필드 보존(...t)하며 상태만 변경
+    // 1) 낙관적 업데이트
     const backupTasks = [...tasks];
     setTasks((prev) =>
       prev.map((t) =>
@@ -140,7 +140,7 @@ export default function Task() {
     } catch (error) {
       console.error("이동 실패:", error);
       toast.error("이동에 실패하여 복구합니다.");
-      setTasks(backupTasks); // 실패 시 롤백
+      setTasks(backupTasks);
     }
   };
 
@@ -176,9 +176,21 @@ export default function Task() {
 
   return (
     <div className="custom-kanban-page">
+      {/* 상단 헤더: 타이틀 + [새 업무 등록] 이동 버튼 */}
       <div className="kanban-title-bar">
-        <h2>프로젝트 #{projectNo} 업무 보드</h2>
-        <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
+        <div className="kanban-title-text">
+          <h2>프로젝트 #{projectNo} 업무 보드</h2>
+          <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
+        </div>
+
+        {/*  TaskInsert 화면으로 이동하는 버튼 */}
+        <button
+          type="button"
+          className="btn-create-task"
+          onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
+        >
+          <span className="plus-icon">+</span> 새 업무 등록
+        </button>
       </div>
 
       {/* 3단 칸반 그리드 */}
@@ -266,7 +278,6 @@ export default function Task() {
           <div className="drawer-loading">상세 정보를 불러오는 중...</div>
         ) : selectedTask ? (
           <div className="drawer-container">
-            {/* 드로어 헤더 */}
             <div className="drawer-header">
               <div className="drawer-header-left">
                 <span className="task-id-badge">TASK #{selectedTask.taskNo}</span>
@@ -282,15 +293,12 @@ export default function Task() {
               </button>
             </div>
 
-            {/* 드로어 본문: 상세 정보 열람 뷰 */}
             <div className="drawer-body view-mode">
-              {/* 업무 제목 */}
               <div className="view-title-section">
                 <span className="view-category-badge">#{selectedTask.taskCategory || "일반"}</span>
                 <h3 className="view-task-title">{selectedTask.taskTitle}</h3>
               </div>
 
-              {/* 주요 메타 정보 카드 그리드 */}
               <div className="view-meta-grid">
                 <div className="meta-card-item">
                   <span className="meta-label">담당자</span>
@@ -326,7 +334,6 @@ export default function Task() {
                 </div>
               </div>
 
-              {/* 진척도 (Progress) 게이지 */}
               <div className="view-section">
                 <div className="section-header-flex">
                   <span className="section-title">진행률 (Progress)</span>
@@ -340,7 +347,6 @@ export default function Task() {
                 </div>
               </div>
 
-              {/* 지정된 협업자 목록 */}
               <div className="view-section">
                 <span className="section-title">
                   함께하는 협업자 (
@@ -351,7 +357,7 @@ export default function Task() {
                     selectedTask.collaborators.map((c, idx) => (
                       <div key={idx} className="collab-chip">
                         <span className="chip-icon">👤</span>
-                        <span className="chip-name">{c.memberName || `멤버 #${c.projectMemberName}`}</span>
+                        <span className="chip-name">{c.memberName || `멤버 #${c.projectMemberNo}`}</span>
                         {c.deptName && <span className="chip-dept">({c.deptName})</span>}
                       </div>
                     ))
@@ -361,7 +367,6 @@ export default function Task() {
                 </div>
               </div>
 
-              {/* 업무 상세 설명 본문 */}
               <div className="view-section">
                 <span className="section-title">업무 세부 내용</span>
                 <div className="view-content-box">
@@ -369,7 +374,6 @@ export default function Task() {
                 </div>
               </div>
 
-              {/* 등록 및 수정 일시 */}
               <div className="view-timestamps">
                 <span>등록일시: {selectedTask.taskCtime ? String(selectedTask.taskCtime).replace("T", " ").slice(0, 19) : "-"}</span>
                 {selectedTask.taskUtime && (
@@ -378,7 +382,6 @@ export default function Task() {
               </div>
             </div>
 
-            {/* 드로어 하단 닫기 푸터 */}
             <div className="drawer-footer">
               <button className="btn-cancel" onClick={handleCloseDrawer}>
                 닫기
