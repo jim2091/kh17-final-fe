@@ -2,7 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useLinkClickHandler, useOutletContext, useParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
@@ -77,6 +77,10 @@ export default function Calendar() {
         };
     });
 
+    //FullCalendar가 보여주고 있는 날짜
+    const [currentDate, setCurrentDate] = useState(new Date());
+    //View 변경시 기준이 되는 날짜
+    const [anchorDate, setAnchorDate] = useState(new Date());
     //현재 view state
     const [currentView, setCurrentView] = useState("dayGridMonth");
 
@@ -487,9 +491,7 @@ export default function Calendar() {
         
         return dayjs(value).format("M/D")
     }
-
-    //다른 월에서 일정 등록 등 후에 다시 현재 월로 안오게 되려나
-    const [currentDate, setCurrentDate] = useState(new Date());
+    
 
     //여기 함수 네개 참 애매하네 이렇게까지 반복해야하나
     //jsx안에 바로 각각 써주기 길어서 따로 뺀건데 따로 빼도 뭐 크게 다를바 없네 이러면..
@@ -532,6 +534,10 @@ export default function Calendar() {
     //연/월 선택 이동
     const calendarRef = useRef(null);
 
+    //휠 연속 입력 방지
+    //이 값이 변한다고 다시 렌더링할 필요가 없으니 state 말고 Ref로
+    const wheelLockRef = useRef(false);
+
     //이동할 연/월/일 state
     const [moveYear, setMoveYear] = useState(dayjs(currentDate).year());
     const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month()+1);//1월이 0임
@@ -542,21 +548,27 @@ export default function Calendar() {
 
         //월간
         if(currentView === "dayGridMonth") {
-            const targetDate = dayjs()
+            const targetMonth = dayjs()
                 .year(Number(moveYear))
                 .month(Number(moveMonth) - 1)
-                .date(1)
-                .format("YYYY-MM-DD");
-    
+                .date(1);
+            //월간 이동시 기존 기준일의 '일' 유지
+            const anchorDay = dayjs(anchorDate).date();
+            //31일 혹은 29일 이상일때 2월로 이동시 보정
+            const targetDay = Math.min(anchorDay, targetMonth.daysInMonth());
+            const targetDate = targetMonth.date(targetDay).toDate();
+
+            setAnchorDate(targetDate);
             calendarApi.gotoDate(targetDate);
         }
         //주간/목록
         else {
+            setAnchorDate(moveDate);
             calendarApi.gotoDate(moveDate);
         }
 
         setMoveModal(false);
-    },[moveYear, moveMonth, moveDate, currentView]);
+    },[moveYear, moveMonth, moveDate, currentView, anchorDate]);
 
     //이동 연/월 선택 모달
     const [moveModal, setMoveModal] = useState(false);
@@ -564,10 +576,10 @@ export default function Calendar() {
     const openMoveModal = useCallback(()=>{
         setMoveYear(dayjs(currentDate).year());
         setMoveMonth(dayjs(currentDate).month()+1);
-        setMoveDate(dayjs(currentDate).toDate());
+        setMoveDate(dayjs(anchorDate).toDate());
 
         setMoveModal(true);
-    }, [currentDate]);
+    }, [currentDate, anchorDate]);
 
     const closeMoveModal = useCallback(()=>{
         setMoveModal(false);
@@ -594,6 +606,121 @@ export default function Calendar() {
 
     }, [currentDate, currentView]);
 
+    const changeCalendarView = useCallback((viewName) => {
+        const calendarApi = calendarRef.current.getApi();
+        calendarApi.changeView(viewName, anchorDate);
+    }, [anchorDate]);
+
+    //화살표도 anchorDate 쓰도록 하는 커스텀 버튼에 들어갈 함수
+    const movePrev = useCallback(()=>{
+        const calendarApi = calendarRef.current.getApi();
+        calendarApi.prev();
+
+        const viewType = calendarApi.view.type;
+
+        //월 view일 경우 이전 앵커에서 월만 1 빼는 형태로
+        if(viewType === "dayGridMonth") {
+            setAnchorDate(prev => dayjs(prev).subtract(1, "month").toDate())
+        }
+        //주/목록 view일 경우 이전 앵커에서 주만 1빼는 형태로
+        else {
+            setAnchorDate(prev=>dayjs(prev).subtract(1, "week").toDate());
+        }
+    }, []);
+
+    const moveNext = useCallback(()=>{
+        const calendarApi = calendarRef.current.getApi();
+        calendarApi.next();
+
+        const viewType = calendarApi.view.type;
+
+        if(viewType === "dayGridMonth") {
+            setAnchorDate(prev => dayjs(prev).add(1, "month").toDate());
+        }
+        else {
+            setAnchorDate(prev=>dayjs(prev).add(1, "week").toDate());
+        }
+    }, []);
+
+    const moveToday = useCallback(()=>{
+        const calendarApi = calendarRef.current.getApi();
+
+        const today = new Date();
+
+        setAnchorDate(today);
+        calendarApi.today();
+    }, []);
+
+    //기존 이동 관련 버튼을 따로 커스텀버튼으로 교체하여 active 클래스 추가 별도로 해주는 함수
+    const updateViewButtonActive = useCallback((viewType) => {
+        const monthButton = document.querySelector(".fc-monthView-button");
+        const weekButton = document.querySelector(".fc-weekView-button");
+        const listButton = document.querySelector(".fc-listView-button");
+
+        monthButton?.classList.remove("fc-button-active");
+        weekButton?.classList.remove("fc-button-active");
+        listButton?.classList.remove("fc-button-active");
+
+        if(viewType === "dayGridMonth") {
+            monthButton?.classList.add("fc-button-active");
+        }
+        else if(viewType === "timeGridWeek") {
+            weekButton?.classList.add("fc-button-active");
+        }
+        if(viewType === "listWeek") {
+            listButton?.classList.add("fc-button-active");
+        }
+    }, []);
+
+    useEffect(()=>{
+        const wheelButton = document.querySelector(".fc-wheelMove-button");
+
+        if(!wheelButton) return;
+
+        // 현재 view에 따라 툴팁 설명 변경
+        if(currentView === "dayGridMonth") {
+            wheelButton.title = "이 영역에서 마우스 휠을 사용하면 월 단위로 이동됩니다.";
+        }
+        else {
+            wheelButton.title = "이 영역에서 마우스 휠을 사용하면 주 단위로 이동됩니다.";
+        }
+
+        const handleWheel = (e) => {
+            //이 영역에서 휠을 굴릴 때 스크롤 방지
+            e.preventDefault();
+
+            //직전 휠 이동 처리 중이면 무시
+            if(wheelLockRef.current === true) return;
+            wheelLockRef.current = true;
+
+            //아래로 휠
+            if(e.deltaY > 0) {
+                moveNext();
+            }
+            else if(e.deltaY < 0){
+                movePrev();
+            }
+
+            //빠르게 휙휙 이동하지 않도록 잠깐 잠금
+            setTimeout(()=>{
+                wheelLockRef.current = false;
+            }, 20);
+        }
+
+        wheelButton.addEventListener("wheel", handleWheel, {
+            passive: false//이건 진짜 gpt 아니었으면 전혀 몰랐을듯
+        });
+
+        return () => {
+            wheelButton.removeEventListener("wheel", handleWheel);
+        }
+    }, [currentView, movePrev, moveNext, loading]);//이것도 몰랐을듯
+    //최초 렌더링시 loading이 false라 Fullcalendar가 잠깐 만들어짐
+    //이때 휠 useEffect가 실행되면서 이 버튼에 이벤트가 붙음.
+    //근데 이후 목록 조회가 시작되며 loading이 true가 되고 이때 Fullcalendar가 사라짐
+    //그러니 loading도 의존배열에 넣어서 loading이 바뀌면 다시 effect 실행되도록 조치
+
+
     return (<>
         <div className="calendar-page">
             <div className="calendar-main">
@@ -618,6 +745,18 @@ export default function Calendar() {
                             height="auto"
 
                             customButtons={{
+                                prevCustom: {
+                                    text: "<",
+                                    click: movePrev
+                                },
+                                nextCustom: {
+                                    text: ">",
+                                    click: moveNext
+                                },
+                                todayCustom: {
+                                    text: "오늘",
+                                    click: moveToday
+                                },
                                 addSchedule: {
                                     text: "일정 등록",
                                     click: () => {
@@ -628,6 +767,23 @@ export default function Calendar() {
                                 moveMonth: {
                                     text: getCalendarTitle(),
                                     click: openMoveModal
+                                },
+
+                                monthView: {
+                                    text: "월",
+                                    click: () => changeCalendarView("dayGridMonth")
+                                },
+                                weekView: {
+                                    text: "주",
+                                    click: () => changeCalendarView("timeGridWeek")
+                                },
+                                listView: {
+                                    text: "목록",
+                                    click: () => changeCalendarView("listWeek")
+                                },
+
+                                wheelMove: {
+                                    text: "↕ 휠 이동"
                                 }
                             }}
 
@@ -650,14 +806,18 @@ export default function Calendar() {
                             }}
 
                             headerToolbar={{
-                                left: "prev,next today",
+                                left: "prevCustom,nextCustom todayCustom",
                                 center: "moveMonth",//원래 여기 title이라고 써야 자동으로 해당 연월이 제목처럼 생김
                                 //근데 거기엔 우리가 따로 onclick같은 이벤트를 걸 수 없어서 커스텀 버튼을 만들어서 넣어줄거
 
                                 //종료된 프로젝트면 등록 버튼이 안보이게 처리
                                 right: canAddSchedule
-                                ? "dayGridMonth,timeGridWeek,listWeek addSchedule"
-                                : "dayGridMonth,timeGridWeek,listWeek"
+                                // 월 -> 주 변경시 1일이 기준이 되므로 오늘을 포함하는 기간을 보여주지 않음
+                                // ? "dayGridMonth,timeGridWeek,listWeek addSchedule"
+                                // : "dayGridMonth,timeGridWeek,listWeek"
+                                //그래서 별도로 버튼 만들어서 연결
+                                ? "wheelMove monthView,weekView,listView addSchedule"
+                                : "wheelMove monthView,weekView,listView"
                             }}
 
                             events={schedules}
@@ -670,8 +830,10 @@ export default function Calendar() {
                             initialDate={currentDate}
 
                             datesSet={(info) => {
-                                setCurrentDate(info.view.currentStart);
                                 setCurrentView(info.view.type);
+                                setCurrentDate(info.view.currentStart);
+
+                                updateViewButtonActive(info.view.type);
                             }}
                         />
                     )}
