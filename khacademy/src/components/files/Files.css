@@ -1,0 +1,606 @@
+/* ==========================================
+   전체 페이지
+========================================== */
+
+.files-page {
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+
+    padding: 11px 7px 30px;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    color: #202124;
+
+    background: #fff;
+}
+
+
+/* ==========================================
+   파일함
+========================================== */
+
+.files-container {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 0;
+
+    border: none;
+
+    background: #fff;
+}
+
+
+/* ==========================================
+   검색 + 업로드
+========================================== */
+
+.files-toolbar {
+    width: 100%;
+    height: 57px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+/* ==========================================
+   검색
+========================================== */
+
+.files-search {
+    position: relative;
+
+    width: 300px;
+    height: 34px;
+}
+
+.files-search input {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+
+    padding: 0 40px 0 38px;
+
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+
+    outline: none;
+
+    background: #fff;
+
+    font-size: 13px;
+    color: #202124;
+}
+
+.files-search input::placeholder {
+    color: #777;
+}
+
+.files-search input:focus {
+    border-color: #9aa0a6;
+}
+
+
+/* 검색 버튼 */
+
+.files-search button {
+    position: absolute;
+
+    top: 3px;
+    left: 4px;
+
+    width: 28px;
+    height: 28px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+.files-search button:hover {
+    background: #f1f3f4;
+    border-radius: 50%;
+}
+
+.files-search button svg {
+    width: 18px;
+    height: 18px;
+
+    stroke: #5f6368;
+}
+
+
+/* ==========================================
+   업로드 버튼
+========================================== */
+
+.files-upload-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-width: 100px;
+    height: 34px;
+
+    box-sizing: border-box;
+
+    padding: 0 14px;
+
+    border: 1px solid #dadce0;
+    border-radius: 7px;
+
+    background: #fff;
+
+    color: #3c4043;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.files-upload-button:hover {
+    background: #f8f9fa;
+
+    box-shadow:
+        0 1px 2px rgba(60, 64, 67, 0.15);
+}
+
+.files-upload-button:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+.files-upload-button svg {
+    width: 15px;
+    height: 15px;
+
+    stroke: #5f6368;
+}
+
+
+/* 실제 input */
+
+.files-hidden-input {
+    display: none;
+}
+
+
+/* ==========================================
+   파일 목록
+========================================== */
+
+.files-list {
+    width: 100%;
+}
+
+
+/* ==========================================
+   목록 헤더
+========================================== */
+
+.files-list-header {
+    display: grid;
+
+    grid-template-columns:
+        minmax(400px, 1fr)
+        150px
+        110px
+        55px
+        90px;
+
+    align-items: center;
+
+    height: 43px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px 0 14px;
+
+    border-top: 1px solid #dadce0;
+    border-bottom: 1px solid #dadce0;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    color: #5f6368;
+}
+
+
+/* ==========================================
+   파일 목록 행
+========================================== */
+
+.files-list-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(400px, 1fr)
+        150px
+        110px
+        55px
+        90px;
+
+    align-items: center;
+
+    min-height: 64px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px 0 14px;
+
+    border-bottom: 1px solid #e8eaed;
+
+    font-size: 12px;
+
+    transition:
+        background-color 0.1s ease;
+}
+
+.files-list-row:hover {
+    background: #f8f9fa;
+}
+
+
+/* ==========================================
+   컬럼
+========================================== */
+
+.files-col-file {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+}
+
+.files-col-uploader {
+    padding-left: 10px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.files-col-date {
+    white-space: nowrap;
+}
+
+.files-col-size {
+    padding-left: 8px;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   파일명
+========================================== */
+
+.files-file-name {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+    padding-left: 2px;
+
+    overflow: hidden;
+}
+
+
+/*
+ * 파일명을 button으로 만들어서
+ * 클릭하면 실제 파일을 볼 수 있도록 함
+ */
+
+.files-name-button {
+    min-width: 0;
+
+    max-width: 100%;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    overflow: hidden;
+}
+
+.files-name-button:hover .files-name-text {
+    text-decoration: underline;
+}
+
+.files-name-text {
+    display: block;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-size: 12px;
+
+    color: #202124;
+}
+
+
+/* ==========================================
+   파일 아이콘
+========================================== */
+
+.files-icon {
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 600;
+
+    overflow: hidden;
+}
+
+.files-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+
+/* ==========================================
+   이미지
+========================================== */
+
+.files-icon-image {
+    border: 1px solid #dadce0;
+
+    background: #fff;
+
+    color: #444;
+}
+
+
+/* ==========================================
+   PDF
+========================================== */
+
+.files-icon-pdf {
+    background: #ea4335;
+
+    color: #fff;
+}
+
+.files-icon-pdf span {
+    font-size: 9px;
+}
+
+
+/* ==========================================
+   Word
+========================================== */
+
+.files-icon-word {
+    background: #4285f4;
+
+    color: #fff;
+}
+
+.files-icon-word span {
+    font-size: 16px;
+}
+
+
+/* ==========================================
+   Excel
+========================================== */
+
+.files-icon-excel {
+    background: #34a853;
+
+    color: #fff;
+}
+
+.files-icon-excel span {
+    font-size: 16px;
+}
+
+
+/* ==========================================
+   PowerPoint
+========================================== */
+
+.files-icon-powerpoint {
+    background: #f4511e;
+
+    color: #fff;
+}
+
+.files-icon-powerpoint span {
+    font-size: 16px;
+}
+
+
+/* ==========================================
+   ZIP
+========================================== */
+
+.files-icon-zip {
+    background: #fbbc04;
+
+    color: #fff;
+}
+
+.files-icon-zip span {
+    font-size: 8px;
+}
+
+
+/* ==========================================
+   일반 파일
+========================================== */
+
+.files-icon-default {
+    border: 1px solid #dadce0;
+
+    background: #f8f9fa;
+
+    color: #5f6368;
+}
+
+
+/* ==========================================
+   다운로드
+========================================== */
+
+.files-download-button {
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+.files-download-button:hover {
+    background: #e8eaed;
+}
+
+.files-download-button svg {
+    width: 17px;
+    height: 17px;
+
+    stroke: #5f6368;
+}
+
+
+/* ==========================================
+   데이터 없음
+========================================== */
+
+.files-empty {
+    min-height: 350px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #80868b;
+
+    font-size: 13px;
+}
+
+.files-empty-icon {
+    margin-bottom: 10px;
+}
+
+.files-empty-icon svg {
+    width: 42px;
+    height: 42px;
+}
+
+
+/* ==========================================
+   반응형
+========================================== */
+
+@media (max-width: 900px) {
+
+    .files-page {
+        padding: 10px 5px 30px;
+    }
+
+    .files-search {
+        width: 250px;
+    }
+
+    .files-list-header,
+    .files-list-row {
+        grid-template-columns:
+            minmax(300px, 1fr)
+            120px
+            100px
+            50px
+            80px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .files-toolbar {
+        gap: 10px;
+    }
+
+    .files-search {
+        width: 100%;
+    }
+
+    .files-upload-button {
+        flex: 0 0 auto;
+    }
+
+    .files-list {
+        overflow-x: auto;
+    }
+
+    .files-list-header,
+    .files-list-row {
+        min-width: 650px;
+    }
+
+}
