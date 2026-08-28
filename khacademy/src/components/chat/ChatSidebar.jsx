@@ -5,7 +5,8 @@ export default function ChatSidebar(
         selectedChannel,
         setSelectedChannel,
         sidebarOpen,
-        setSidebarOpen 
+        setSidebarOpen,
+        unreadCounts
     }
 ) {
 
@@ -30,7 +31,15 @@ export default function ChatSidebar(
                         setSidebarOpen(false);
                     }}
                 >
-                    {channel.chatChannelName}
+                    <span>
+                        {channel.chatChannelName}
+                    </span>
+
+                    {unreadCounts?.[channel.chatChannelNo] > 0 && (
+                        <span className="unread-count">
+                            {unreadCounts[channel.chatChannelNo]}
+                        </span>
+                    )}
                 </div>
             ))}
         </aside>
