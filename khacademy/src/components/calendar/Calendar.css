@@ -1544,10 +1544,89 @@
         font-size: 14px;
     }
 
+
+    /* =========================
+       Toolbar
+    ========================= */
+
     .calendar-card .fc .fc-toolbar {
-        gap: 12px;
+        display: grid;
+
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+
+        gap: 10px 8px;
+
+        align-items: center;
+
+        margin-bottom: 20px;
     }
 
+
+    /* 이전 / 다음 */
+    .calendar-card .fc .fc-toolbar-chunk:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+
+        display: flex;
+        align-items: center;
+    }
+
+
+    /* 날짜 제목 */
+    .calendar-card .fc .fc-toolbar-chunk:nth-child(2) {
+        grid-column: 2;
+        grid-row: 1;
+
+        display: flex;
+        justify-content: center;
+
+        min-width: 0;
+    }
+
+
+    /* View / 일정등록 */
+    .calendar-card .fc .fc-toolbar-chunk:nth-child(3) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        gap: 6px;
+    }
+
+
+    /* 기간 제목 줄바꿈 방지 */
+    .calendar-card .fc-moveMonth-button {
+        white-space: nowrap;
+
+        font-size: 1.1rem !important;
+        padding: 5px 8px !important;
+    }
+
+
+    /* 버튼도 살짝 축소 */
+    .calendar-card .fc .fc-button {
+        padding: 7px 10px;
+
+        font-size: 13px;
+    }
+
+    .calendar-card .fc .fc-prev-button,
+    .calendar-card .fc .fc-next-button {
+        width: 36px;
+        height: 36px;
+    }
+
+    .calendar-card .fc .fc-addSchedule-button {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+
+
+    /* 기존 작은 화면 설정 */
     .calendar-card .fc .fc-toolbar-title {
         font-size: 19px;
     }
@@ -1563,7 +1642,6 @@
     .calendar-card .fc .fc-daygrid-event {
         font-size: 12px;
     }
-
 }
 
 
