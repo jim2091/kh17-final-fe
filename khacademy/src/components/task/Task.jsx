@@ -6,9 +6,9 @@ import "./Task.css";
 
 // 3단 컬럼 정의 (TODO, IN_PROGRESS, DONE)
 const COLUMNS = [
-  { id: "TODO", title: "📋 할 일 (To Do)", colorClass: "col-todo" },
-  { id: "IN_PROGRESS", title: "⚡ 진행 중 (In Progress)", colorClass: "col-progress" },
-  { id: "DONE", title: "✅ 완료 (Done)", colorClass: "col-done" }
+  { id: "TODO", title: "To Do", colorClass: "col-todo" },
+  { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
+  { id: "DONE", title: "Done", colorClass: "col-done" }
 ];
 
 export default function Task() {
@@ -243,9 +243,6 @@ export default function Task() {
 
                         <div className="card-bottom-info">
                           <div className="assignee-info">
-                            <div className="avatar-circle">
-                              {(task.assignedMemberName || "미").slice(0, 1)}
-                            </div>
                             <span>{task.assignedMemberName || "미배정"}</span>
                           </div>
                           <span className="due-date-text">
@@ -298,11 +295,8 @@ export default function Task() {
                 <div className="meta-card-item">
                   <span className="meta-label">담당자</span>
                   <div className="meta-user-val">
-                    <div className="avatar-circle small">
-                      {(selectedTask.assignedMemberName || "미").slice(0, 1)}
-                    </div>
                     <span className="meta-bold-val">
-                      {selectedTask.assignedMemberName || "미배정"}
+                      {selectedTask.assignedMemberName || "미입력"}
                     </span>
                     {selectedTask.assignedMemberDept && (
                       <span className="meta-sub-val">({selectedTask.assignedMemberDept})</span>
@@ -313,7 +307,7 @@ export default function Task() {
                 <div className="meta-card-item">
                   <span className="meta-label">작성자</span>
                   <span className="meta-bold-val">
-                    {selectedTask.taskWriterName || "등록 사원"}
+                    {selectedTask.taskWriterName || "미입력"}
                   </span>
                 </div>
 
@@ -357,7 +351,7 @@ export default function Task() {
                     selectedTask.collaborators.map((c, idx) => (
                       <div key={idx} className="collab-chip">
                         <span className="chip-icon">👤</span>
-                        <span className="chip-name">{c.memberName || `멤버 #${c.projectMemberNo}`}</span>
+                        <span className="chip-name">{c.memberName || `멤버 #${c.projectMemberName}`}</span>
                         {c.deptName && <span className="chip-dept">({c.deptName})</span>}
                       </div>
                     ))
