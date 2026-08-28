@@ -19,7 +19,7 @@ export default function TaskInsert() {
     taskContent: "",
     assignedMemberNo: "",
     taskStatus: "TODO",
-    taskPriority: "낮음",
+    taskPriority: "보통",
     taskCategory: "",
     taskProgress: 0,
     taskStart: "",
@@ -39,8 +39,8 @@ export default function TaskInsert() {
   const findProjectMembers = async (pNo) => {
     try {
       setLoadingMembers(true);
-      // 프로젝트 멤버 목록 API 호출
-      const res = await apiClient.get(`/project/${pNo}/members`);
+      // 백엔드 프로젝트 멤버 API 호출 (URL 규격 통일)
+      const res = await apiClient.get(`/projects/${pNo}/members`);
       setProjectMembers(res.data || []);
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
@@ -83,16 +83,21 @@ export default function TaskInsert() {
       return;
     }
 
-    // 서버 전송용 Payload 구성 (선택 항목은 null 처리)
+    // 👈 백엔드 TaskAddRequestVO 규격에 맞춘 Payload 정제
     const payload = {
       projectNo: Number(projectNo),
       taskTitle: formData.taskTitle.trim(),
       taskContent: formData.taskContent ? formData.taskContent.trim() : null,
-      assignedMemberNo: formData.assignedMemberNo ? Number(formData.assignedMemberNo) : null,
+      // 0이나 빈 문자열은 반드시 null로 전송하여 ORA-02291 외래키 위반 방지
+      assignedMemberNo:
+        formData.assignedMemberNo && Number(formData.assignedMemberNo) > 0
+          ? Number(formData.assignedMemberNo)
+          : null,
       taskStatus: formData.taskStatus || "TODO",
       taskPriority: formData.taskPriority || "보통",
       taskCategory: formData.taskCategory ? formData.taskCategory.trim() : null,
       taskProgress: Number(formData.taskProgress) || 0,
+      // Timestamp 파싱용 포맷 지정 (미입력 시 null)
       taskStart: formData.taskStart ? `${formData.taskStart} 00:00:00` : null,
       taskEnd: formData.taskEnd ? `${formData.taskEnd} 23:59:59` : null,
       collaboratorMemberNos: selectedCollaborators
@@ -102,10 +107,12 @@ export default function TaskInsert() {
       setSubmitting(true);
       await apiClient.post("/task/", payload);
       toast.success("신규 업무가 성공적으로 등록되었습니다.");
-      navigate(`/project/${projectNo}/task`); // 보드 화면으로 이동
+      
+      // 👈 App.jsx 라우터 경로(/projects/:projectNo/task)와 일치시킴
+      navigate(`/projects/${projectNo}/task`);
     } catch (error) {
       console.error("업무 등록 실패:", error);
-      toast.error("업무 등록에 실패했습니다. 입력값을 확인해 주세요.");
+      toast.error("업무 등록에 실패했습니다. 백엔드 콘솔 에러를 확인하세요.");
     } finally {
       setSubmitting(false);
     }
@@ -251,7 +258,7 @@ export default function TaskInsert() {
           </div>
         </div>
 
-        {/* 협업자 다중 선택 (칩 버튼 형태) */}
+        {/* 협업자 다중 선택 */}
         <div className="form-group full-width">
           <label className="form-label">함께할 협업자 (다중 선택)</label>
           <div className="collab-chips-box">

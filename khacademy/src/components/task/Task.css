@@ -728,3 +728,83 @@
   font-weight: 800;
   line-height: 1;
 }
+/* 드로어 수정 모드 전용 폼 레이아웃 */
+.drawer-edit-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.drawer-body.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.editing-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #d97706;
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* 열람 모드의 [수정하기] 버튼 */
+.btn-edit-trigger {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s;
+}
+
+.btn-edit-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+/* 수정 폼의 [저장 완료] 버튼 */
+.btn-save-edit {
+  padding: 9px 22px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s;
+}
+
+.btn-save-edit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+}
+
+.btn-save-edit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 입력 필드 크기 및 라벨 규격 */
+.drawer-body.edit-mode .form-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.drawer-body.edit-mode .form-input,
+.drawer-body.edit-mode .form-select,
+.drawer-body.edit-mode .form-textarea {
+  font-size: 13px;
+  padding: 8px 12px;
+}
