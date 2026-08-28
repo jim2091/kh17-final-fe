@@ -25,6 +25,14 @@ export default function Calendar() {
     const { projectNo } = useParams();
     const { project, loadProject } = useOutletContext();
 
+    //권한 + 프로젝트 상태에 따른 제어
+    const isClosed = project?.projectStatus === "closed"
+    //일정 작성자인지는 scheduleDetail이 생긴 후에 계산 가능해서 아래쪽으로 옮김
+    const isManagerOrOwner = project?.projectMemberRole === "owner"
+        || project?.projectMemberRole === "manager";
+    const canAddSchedule = !isClosed;
+    //수정/삭제 가능한지 판정도 작성자인지를 써야하니 아래로
+
     const [scheduleList, setScheduleList] = useState([]);
     const [loading, setLoading] = useState(false);
     //초기 목록 로딩
@@ -128,8 +136,10 @@ export default function Calendar() {
     //등록 관련
     const [inputModal, setInputModal] = useState(false);
     const openInputModal = useCallback(() => {
+        //아마 버튼들 다 막아놔서 닫힌 프로젝트면 이걸 실행시킬 방법이 없겠지만 혹시나
+        if(canAddSchedule === false) return;
         setInputModal(true);
-    }, []);
+    }, [canAddSchedule]);
     const closeInputModal = useCallback(() => {
         resetInput();
         setInputModal(false);
@@ -222,6 +232,9 @@ export default function Calendar() {
 
     const handleDateClick = useCallback((info) => {
 
+        //종료된 프로젝트면 작동 안하게
+        if(canAddSchedule === false) return;
+
         let start;
         //월간에서 클릭한 날짜의 오전 9시로 자동 입력
         if (info.view.type === "dayGridMonth") {
@@ -239,7 +252,7 @@ export default function Calendar() {
 
         setInputResult(prev => ({ ...prev, scheduleStart: "is-valid" }));
         setInputModal(true);
-    }, []);
+    }, [canAddSchedule]);
 
     //상세 관련
     const [detailModal, setDetailModal] = useState(false);
@@ -293,6 +306,9 @@ export default function Calendar() {
     const handleScheduleClick = useCallback((info) => {
         openScheduleDetail(info.event.id);
     }, [openScheduleDetail]);
+
+    const isScheduleWriter = project?.projectMemberNo === scheduleDetail?.scheduleWriterNo;
+    const canEditSchedule = !isClosed && (isScheduleWriter || isManagerOrOwner);
 
     //수정 관련
     const [editResult, setEditResult] = useState({
@@ -578,8 +594,6 @@ export default function Calendar() {
 
     }, [currentDate, currentView]);
 
-
-
     return (<>
         <div className="calendar-page">
             <div className="calendar-main">
@@ -639,7 +653,11 @@ export default function Calendar() {
                                 left: "prev,next today",
                                 center: "moveMonth",//원래 여기 title이라고 써야 자동으로 해당 연월이 제목처럼 생김
                                 //근데 거기엔 우리가 따로 onclick같은 이벤트를 걸 수 없어서 커스텀 버튼을 만들어서 넣어줄거
-                                right: "dayGridMonth,timeGridWeek,listWeek addSchedule"
+
+                                //종료된 프로젝트면 등록 버튼이 안보이게 처리
+                                right: canAddSchedule
+                                ? "dayGridMonth,timeGridWeek,listWeek addSchedule"
+                                : "dayGridMonth,timeGridWeek,listWeek"
                             }}
 
                             events={schedules}
@@ -1062,13 +1080,17 @@ export default function Calendar() {
 
             <Modal.Footer className="justify-content-between">
                 {editMode === false ? (<>
-                    <Button variant="danger" onClick={deleteSchedule}>
-                        삭제
-                    </Button>
-                    <div className="d-flex gap-2">
-                        <Button variant="primary" onClick={openEditMode}>
-                            수정
+                    {canEditSchedule && (
+                        <Button variant="danger" onClick={deleteSchedule}>
+                            삭제
                         </Button>
+                    )}
+                    <div className="d-flex gap-2">
+                        {canEditSchedule && (
+                            <Button variant="primary" onClick={openEditMode}>
+                                수정
+                            </Button>
+                        )}
                         <Button variant="secondary" onClick={closeDetailModal}>
                             닫기
                         </Button>
