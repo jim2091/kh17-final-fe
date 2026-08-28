@@ -7,6 +7,15 @@ const localStorageWrapper = createJSONStorage(()=>window.localStorage);
 //로그인한 사용자 정보
 export const loginUserState = atomWithStorage("loginUserState", null, localStorageWrapper);
 
+//온라인/오프라인 WebSocket연결 여부
+export const socketState = atom(null);
+
+//10초마다 연결확인 상태
+export const heartbeatState = atom(null);
+
+//현재 온라인 상태
+export const onlineState = atom(null);
+
 //로그인 여부
 export const isLoginState = atom(get=>{
     const loginUser = get(loginUserState);
