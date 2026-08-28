@@ -9,12 +9,17 @@ import Popover from 'react-bootstrap/Popover';
 
 
 
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { loginUserState } from "@utils/storage";
 import { useCallback, useState, useEffect } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
+import { socketState } from "@utils/storage";
+import { heartbeatState } from "@utils/storage";    
+
+import { onlineState } from "@utils/storage";
+import { FaCircle } from "react-icons/fa6";
 
 
 
@@ -22,6 +27,11 @@ export default function Header({ openSidebar }) {
 
     const { empName, empEmail } = useAtomValue(loginUserState) || {};
 
+    const [socket, setSocket] = useAtom(socketState);
+
+    const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
+
+    const [online, setOnline] = useAtom(onlineState);
 
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
@@ -34,9 +44,23 @@ export default function Header({ openSidebar }) {
 
 
     const logout = useCallback(async () => {
+
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            setHeartbeatInterval(null);
+        }
+        console.log("heartbeat전송 끝");
+
+        if (socket) {
+            await socket.deactivate();
+            setSocket(null);
+        }
+
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
             await authClient.delete("/logout");//쿠키 삭제 요청
+
+
 
         }
         catch (e) {
@@ -45,12 +69,13 @@ export default function Header({ openSidebar }) {
         finally {
             logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
         }
-    }, []);
+    }, [socket]);
 
 
 
+    // console.log(socket?.readyState);
 
-
+    console.log("online:", online);
 
 
 
@@ -106,10 +131,10 @@ export default function Header({ openSidebar }) {
                                             </Col>
                                             <Col>
                                                 <Link to="/me">
-                                                <div>{empName}</div>
+                                                    <div>{empName}</div>
                                                 </Link>
                                                 <Link to="/me">
-                                                <div>{empEmail}</div>
+                                                    <div>{empEmail}</div>
                                                 </Link>
                                             </Col>
                                         </Row>
@@ -119,8 +144,8 @@ export default function Header({ openSidebar }) {
                                                     <strong>
                                                         <Button as={Link} to="/invite" >사용자 초대하기</Button>
                                                     </strong>
-                                                    </Row>
-                                                    <Row className="mt-2">
+                                                </Row>
+                                                <Row className="mt-2">
                                                     <strong>
                                                         <Button as={Link} to="/users" >관리</Button>
                                                     </strong>
@@ -143,6 +168,11 @@ export default function Header({ openSidebar }) {
 
                                 roundedCircle />
                         </OverlayTrigger>
+                        {online && (<>
+
+                            <FaCircle className="text-success"/>
+                            <span>online</span>
+                        </>)}
                     </>)}
 
                 </div>
