@@ -16,7 +16,6 @@
         sans-serif;
 
     color: #202124;
-
     background: #fff;
 }
 
@@ -28,10 +27,6 @@
 .files-container {
     width: 100%;
     box-sizing: border-box;
-
-    padding: 0;
-
-    border: none;
 
     background: #fff;
 }
@@ -106,7 +101,6 @@
     padding: 0;
 
     border: none;
-
     background: transparent;
 
     display: flex;
@@ -173,9 +167,7 @@
 
 .files-upload-button:disabled {
     opacity: 0.5;
-
     cursor: not-allowed;
-
     box-shadow: none;
 }
 
@@ -200,6 +192,20 @@
 
 .files-list {
     width: 100%;
+
+    /*
+     * 전체 컬럼을 하나의 기준으로 통일
+     *
+     * 파일명 | 출처 | 업로더 | 날짜 | 다운로드 | 크기 | 삭제
+     */
+    --file-col:
+        minmax(0, 1fr)
+        100px
+        120px
+        100px
+        65px
+        85px
+        65px;
 }
 
 
@@ -210,20 +216,16 @@
 .files-list-header {
     display: grid;
 
-    grid-template-columns:
-        minmax(400px, 1fr)
-        150px
-        110px
-        55px
-        90px;
+    grid-template-columns: var(--file-col);
 
     align-items: center;
 
+    width: 100%;
     height: 43px;
 
     box-sizing: border-box;
 
-    padding: 0 12px 0 14px;
+    padding: 0 10px 0 14px;
 
     border-top: 1px solid #dadce0;
     border-bottom: 1px solid #dadce0;
@@ -242,20 +244,16 @@
 .files-list-row {
     display: grid;
 
-    grid-template-columns:
-        minmax(400px, 1fr)
-        150px
-        110px
-        55px
-        90px;
+    grid-template-columns: var(--file-col);
 
     align-items: center;
 
+    width: 100%;
     min-height: 64px;
 
     box-sizing: border-box;
 
-    padding: 0 12px 0 14px;
+    padding: 0 10px 0 14px;
 
     border-bottom: 1px solid #e8eaed;
 
@@ -271,7 +269,18 @@
 
 
 /* ==========================================
-   컬럼
+   공통 컬럼
+========================================== */
+
+.files-list-header > div,
+.files-list-row > div {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+
+/* ==========================================
+   파일명
 ========================================== */
 
 .files-col-file {
@@ -281,69 +290,17 @@
     align-items: center;
 }
 
-.files-col-uploader {
-    padding-left: 10px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.files-col-date {
-    white-space: nowrap;
-}
-
-.files-col-size {
-    padding-left: 8px;
-
-    white-space: nowrap;
-}
-
-
-/* ==========================================
-   파일명
-========================================== */
-
 .files-file-name {
     display: flex;
     align-items: center;
 
-    gap: 12px;
+    gap: 10px;
 
     min-width: 0;
 
     padding-left: 2px;
 
     overflow: hidden;
-}
-
-
-/*
- * 파일명을 button으로 만들어서
- * 클릭하면 실제 파일을 볼 수 있도록 함
- */
-
-.files-name-button {
-    min-width: 0;
-
-    max-width: 100%;
-
-    padding: 0;
-
-    border: none;
-
-    background: transparent;
-
-    cursor: pointer;
-
-    text-align: left;
-
-    overflow: hidden;
-}
-
-.files-name-button:hover .files-name-text {
-    text-decoration: underline;
 }
 
 .files-name-text {
@@ -360,6 +317,90 @@
     font-size: 12px;
 
     color: #202124;
+}
+
+
+/* ==========================================
+   출처
+========================================== */
+
+.files-col-source {
+    min-width: 0;
+
+    padding: 0 8px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ==========================================
+   업로더
+========================================== */
+
+.files-col-uploader {
+    min-width: 0;
+
+    padding: 0 8px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ==========================================
+   날짜
+========================================== */
+
+.files-col-date {
+    min-width: 0;
+
+    padding: 0 4px;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   다운로드
+========================================== */
+
+.files-col-download {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ==========================================
+   크기
+========================================== */
+
+.files-col-size {
+    min-width: 0;
+
+    padding-left: 15px;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   삭제
+========================================== */
+
+.files-col-delete {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
@@ -409,7 +450,6 @@
 
 .files-icon-pdf {
     background: #ea4335;
-
     color: #fff;
 }
 
@@ -424,7 +464,6 @@
 
 .files-icon-word {
     background: #4285f4;
-
     color: #fff;
 }
 
@@ -439,7 +478,6 @@
 
 .files-icon-excel {
     background: #34a853;
-
     color: #fff;
 }
 
@@ -454,7 +492,6 @@
 
 .files-icon-powerpoint {
     background: #f4511e;
-
     color: #fff;
 }
 
@@ -469,7 +506,6 @@
 
 .files-icon-zip {
     background: #fbbc04;
-
     color: #fff;
 }
 
@@ -492,7 +528,7 @@
 
 
 /* ==========================================
-   다운로드
+   다운로드 버튼
 ========================================== */
 
 .files-download-button {
@@ -522,6 +558,43 @@
     height: 17px;
 
     stroke: #5f6368;
+}
+
+
+/* ==========================================
+   삭제 버튼
+========================================== */
+
+.files-delete-button {
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease;
+}
+
+.files-delete-button:hover {
+    background: #fce8e6;
+}
+
+.files-delete-button svg {
+    width: 17px;
+    height: 17px;
+
+    stroke: #d93025;
 }
 
 
@@ -557,25 +630,21 @@
    반응형
 ========================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
 
-    .files-page {
-        padding: 10px 5px 30px;
+    .files-list {
+    width: 100%;
+
+    --file-col:
+        minmax(0, 1fr)
+        100px
+        120px
+        100px
+        80px
+        100px
+        65px;
     }
 
-    .files-search {
-        width: 250px;
-    }
-
-    .files-list-header,
-    .files-list-row {
-        grid-template-columns:
-            minmax(300px, 1fr)
-            120px
-            100px
-            50px
-            80px;
-    }
 
 }
 
@@ -596,11 +665,20 @@
 
     .files-list {
         overflow-x: auto;
+
+        --file-col:
+            minmax(250px, 1fr)
+            90px
+            110px
+            95px
+            60px
+            75px
+            60px;
     }
 
     .files-list-header,
     .files-list-row {
-        min-width: 650px;
+        min-width: 740px;
     }
 
 }
