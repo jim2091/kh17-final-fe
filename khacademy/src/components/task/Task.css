@@ -1,31 +1,194 @@
-.task-board {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
+/* 전체 레이아웃 */
+.kanban-container {
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
-.task-column {
-    flex: 1;
-    min-width: 240px;
-
-    padding: 16px;
-
-    border-radius: 10px;
-    background-color: #e9edf2;
+.kanban-header-bar {
+  margin-bottom: 20px;
 }
 
-.task-column-title {
-    margin-bottom: 12px;
-
-    font-size: 15px;
-    font-weight: 600;
+.kanban-header-bar h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 
-.task-card {
-    padding: 14px;
+.kanban-header-bar p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
 
-    border-radius: 8px;
-    background-color: white;
+.kanban-board-wrapper {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
 
-    font-size: 14px;
+/* Syncfusion 컬럼 스타일 커스텀 */
+.e-kanban .e-kanban-header,
+.e-kanban .e-kanban-content {
+  background: transparent !important;
+}
+
+.e-kanban .e-header-cells {
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  font-size: 14px !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.e-kanban .e-content-cells {
+  background-color: #f1f5f9 !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+}
+
+/* 커스텀 카드 스타일 */
+.custom-task-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: grab;
+}
+
+.custom-task-card:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+}
+
+/* 우선순위별 좌측 포인트 라인 */
+.priority-border-badge-urgent { border-left: 4px solid #ef4444; }
+.priority-border-badge-high { border-left: 4px solid #f97316; }
+.priority-border-badge-normal { border-left: 4px solid #3b82f6; }
+.priority-border-badge-low { border-left: 4px solid #64748b; }
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.task-category {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.task-priority {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-urgent { color: #dc2626; background: #fee2e2; }
+.badge-high { color: #ea580c; background: #ffedd5; }
+.badge-normal { color: #2563eb; background: #dbeafe; }
+.badge-low { color: #475569; background: #f1f5f9; }
+
+.card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+/* 진척도 바 */
+.progress-wrap {
+  margin-bottom: 12px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 5px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  border-radius: 4px;
+}
+
+/* 카드 하단 정보 */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.assignee-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #334155;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assignee-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.due-date {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+
+/* 칸반 컬럼 헤더 텍스트 굵게 및 크기/색상 조정 */
+.e-kanban .e-header-cells .e-header-text {
+  font-weight: 800 !important;   /* 👈 굵은 글씨 */
+  font-size: 15px !important;     /* 글자 크기 */
+  color: #1e293b !important;      /* 진한 텍스트 컬러 */
+  letter-spacing: -0.02em;
+}
+
+/* 헤더 영역 하단 라인 및 패딩 다듬기 */
+.e-kanban .e-header-cells {
+  border-bottom: 2px solid #e2e8f0 !important;
+  padding: 12px 14px !important;
 }
