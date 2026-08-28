@@ -1,7 +1,7 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -22,9 +22,6 @@ import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 export default function Calendar() {
     const { projectNo } = useParams();
     const { project, loadProject } = useOutletContext();
-
-    console.log("project", project);
-    console.log("loadProject", loadProject);
 
     const [scheduleList, setScheduleList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -452,6 +449,77 @@ export default function Calendar() {
     //다른 월에서 일정 등록 등 후에 다시 현재 월로 안오게 되려나
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    //여기 함수 네개 참 애매하네 이렇게까지 반복해야하나
+    //jsx안에 바로 각각 써주기 길어서 따로 뺀건데 따로 빼도 뭐 크게 다를바 없네 이러면..
+
+    //datepicker 등록/수정 모달 시작/종료일 변경
+    //여기선 변경된 값 형태 변경해서 저장 및 그에 따른 result 변경 까지만
+    //invalid는 그냥 시작일 없을때만 주는걸로
+    //굳이 여기서 빡세게 나눠서 함수까지 더만들어가며 컨트롤해주긴 좀 그렇다
+    //어차피 다른 부분들에서 입력안되게 혹은 전송안되게 막고 있으니까.
+    const changeScheduleDate = useCallback((name, date)=>{
+        const value = date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
+
+        setScheduleInput(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        setInputResult(prev=>({
+            ...prev,
+            [name]:
+                name === "scheduleStart" && value.length === 0
+                    ? "is-invalid" : "is-valid"
+        }));
+    }, []);
+
+    const changeScheduleEditDate = useCallback((name, date) => {
+        const value = date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
+        setScheduleEdit(prev=>({
+            ...prev,
+            [name]: value
+        }));
+        setEditResult(prev=>({
+            ...prev,
+            [name]:
+                name === "scheduleStart" && value.length === 0
+                    ? "is-invalid" : "is-valid"
+        }));
+    }, []);
+
+    //연/월 선택 이동
+    const calendarRef = useRef(null);
+
+    //이동할 연/월 state
+    const [moveYear, setMoveYear] = useState(dayjs(currentDate).year());
+    const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month()+1);//1월이 0임
+    
+    const moveCalendar = useCallback(()=>{
+        const calendarApi = calendarRef.current.getApi();
+
+        const targetDate = dayjs()
+            .year(Number(moveYear))
+            .month(Number(moveMonth) - 1)
+            .date(1)
+            .format("YYYY-MM-DD");
+
+        calendarApi.gotoDate(targetDate);
+
+        setMoveModal(false);
+    },[moveYear, moveMonth]);
+
+    //이동 연/월 선택 모달
+    const [moveModal, setMoveModal] = useState(false);
+    const openMoveModal = useCallback(()=>{
+        setMoveYear(dayjs(currentDate).year());
+        setMoveMonth(dayjs(currentDate).month()+1);
+
+        setMoveModal(true);
+    }, [currentDate]);
+    const closeMoveModal = useCallback(()=>{
+        setMoveModal(false);
+    }, []);
+
 
 
     return (<>
@@ -465,6 +533,7 @@ export default function Calendar() {
                         </div>
                     ) : (
                         <FullCalendar
+                            ref={calendarRef}
                             plugins={[
                                 dayGridPlugin,
                                 interactionPlugin
@@ -480,12 +549,18 @@ export default function Calendar() {
                                     click: () => {
                                         openInputModal();
                                     }
+                                },
+
+                                moveMonth: {
+                                    text: dayjs(currentDate).format("YYYY년 M월"),
+                                    click: openMoveModal
                                 }
                             }}
 
                             headerToolbar={{
                                 left: "prev,next today",
-                                center: "title",
+                                center: "moveMonth",//원래 여기 title이라고 써야 자동으로 해당 연월이 제목처럼 생김
+                                //근데 거기엔 우리가 따로 onclick같은 이벤트를 걸 수 없어서 커스텀 버튼을 만들어서 넣어줄거
                                 right: "addSchedule"
                             }}
 
@@ -672,14 +747,7 @@ export default function Calendar() {
                                 scheduleInput.scheduleStart
                                     ? dayjs(scheduleInput.scheduleStart).toDate() : null
                             }
-                            onChange={(date)=>{
-                                const value = date
-                                ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
-                                setScheduleInput(prev=>({...prev, scheduleStart: value}))
-                                setInputResult(prev=>({...prev, 
-                                    scheduleStart: value.length > 0 ? "is-valid" : "is-invalid"
-                                }));
-                            }}
+                            onChange={(date) => changeScheduleDate("scheduleStart", date)}
                             showTimeSelect
                             timeFormat="HH:mm"
                             timeIntervals={30}
@@ -694,13 +762,37 @@ export default function Calendar() {
 
                     <Form.Group className="mb-3">
                         <Form.Label>종료 일시</Form.Label>
-                        <Form.Control type="datetime-local" name="scheduleEnd"
-                            value={scheduleInput.scheduleEnd}
-                            onChange={changeScheduleInput}
-                            className={inputResult.scheduleEnd}
-                            onBlur={checkInput}
+                        <DatePicker
+                            selected={
+                                scheduleInput.scheduleEnd
+                                    ? dayjs(scheduleInput.scheduleEnd).toDate() : null
+                            }
+                            onChange={(date) => changeScheduleDate("scheduleEnd", date)}
+                            minDate={
+                                scheduleInput.scheduleStart
+                                    ? dayjs(scheduleInput.scheduleStart).toDate() : undefined
+                            }
+                            filterTime={(time)=>{
+                                if(!scheduleInput.scheduleStart) return true;
+
+                                const start = dayjs(scheduleInput.scheduleStart);
+                                const target = dayjs(time);
+
+                                //시작일과 다른 날짜면 모든 시간 선택 가능
+                                if(!target.isSame(start, "day")) return true;
+
+                                //같은 날짜면 시작시간 이후만 선택 가능
+                                return target.isAfter(start);
+                            }}
+                            showTimeSelect
+                            timeFormat="HH:mm"
+                            timeIntervals={30}
+                            dateFormat="yyyy-MM-dd HH:mm"
+                            placeholderText="종료 일시를 선택하세요"
+                            className={`form-control ${inputResult.scheduleEnd || ""}`}
+                            locale={ko}
+                            timeCaption="시간"
                         />
-                        <div className="invalid-feedback">종료일시는 시작일시보다 빠를 수 없습니다</div>
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -821,14 +913,7 @@ export default function Calendar() {
                                         scheduleEdit.scheduleStart
                                             ? dayjs(scheduleEdit.scheduleStart).toDate() : null
                                     }
-                                    onChange={(date)=>{
-                                        const value = date
-                                        ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
-                                        setScheduleEdit(prev=>({...prev, scheduleStart: value}))
-                                        setEditResult(prev=>({...prev, 
-                                            scheduleStart: value.length > 0 ? "is-valid" : "is-invalid"
-                                        }));
-                                    }}
+                                    onChange={(date) => changeScheduleEditDate("scheduleStart", date)}
                                     showTimeSelect
                                     timeFormat="HH:mm"
                                     timeIntervals={30}
@@ -845,18 +930,37 @@ export default function Calendar() {
                             <Form.Group className="mb-3">
                                 <Form.Label>종료 일시</Form.Label>
 
-                                <Form.Control
-                                    type="datetime-local"
-                                    name="scheduleEnd"
-                                    value={scheduleEdit.scheduleEnd}
-                                    onChange={changeScheduleEdit}
-                                    onBlur={checkEdit}
-                                    className={editResult.scheduleEnd}
-                                />
+                                <DatePicker
+                                    selected={
+                                        scheduleEdit.scheduleEnd
+                                            ? dayjs(scheduleEdit.scheduleEnd).toDate() : null
+                                    }
+                                    onChange={(date) => changeScheduleEditDate("scheduleEnd", date)}
+                                    minDate={
+                                        scheduleEdit.scheduleStart
+                                            ? dayjs(scheduleEdit.scheduleStart).toDate() : undefined
+                                    }
+                                    filterTime={(time)=>{
+                                        if(!scheduleEdit.scheduleStart) return true;
 
-                                <div className="invalid-feedback">
-                                    종료 일시는 시작 일시보다 빠를 수 없습니다
-                                </div>
+                                        const start = dayjs(scheduleEdit.scheduleStart);
+                                        const target = dayjs(time);
+
+                                        //시작일과 다른 날짜면 모든 시간 선택 가능
+                                        if(!target.isSame(start, "day")) return true;
+
+                                        //같은 날짜면 시작시간 이후만 선택 가능
+                                        return target.isAfter(start);
+                                    }}
+                                    showTimeSelect
+                                    timeFormat="HH:mm"
+                                    timeIntervals={30}
+                                    dateFormat="yyyy-MM-dd HH:mm"
+                                    placeholderText="종료 일시를 선택하세요"
+                                    className={`form-control ${editResult.scheduleEnd || ""}`}
+                                    locale={ko}
+                                    timeCaption="시간"
+                                />
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -903,6 +1007,61 @@ export default function Calendar() {
                     </div>
                 </>)}
 
+            </Modal.Footer>
+        </Modal>
+
+        <Modal
+            show={moveModal}
+            onHide={closeMoveModal}
+            centered
+            size="sm"
+            className="calendar-move-modal"
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>연/월 이동</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                <Form.Group className="mb-3">
+                    <Form.Label>연도</Form.Label>
+
+                    <Form.Control
+                        type="number"
+                        value={moveYear}
+                        onChange={(e)=>setMoveYear(e.target.value)}
+                        min={1900}
+                        max={2100}
+                    />
+                </Form.Group>
+
+                <Form.Group>
+
+                    <Form.Label>월</Form.Label>
+
+                    <Form.Select
+                        value={moveMonth}
+                        onChange={(e)=>setMoveMonth(e.target.value)}
+                        >
+                        {Array.from({ length: 12 }, (_, index)=> (
+                            <option
+                            key={index + 1}
+                            value={index + 1}
+                            >
+                                {index + 1}월
+                            </option>
+                        ))}
+                    </Form.Select>
+                </Form.Group>
+            </Modal.Body>
+            
+            <Modal.Footer>
+                <Button variant="secondary" onClick={closeMoveModal}>
+                    취소
+                </Button>
+
+                <Button variant="primary" onClick={moveCalendar}>
+                    이동
+                </Button>
             </Modal.Footer>
         </Modal>
 

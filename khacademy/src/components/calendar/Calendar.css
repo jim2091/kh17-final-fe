@@ -1095,7 +1095,116 @@
     border-width: 2px 2px 0 0;
 }
 
+.react-datepicker__day--disabled {
+    color: #c5c9ce;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
 
+.react-datepicker__day--disabled:hover {
+    background-color: #f8f9fa;
+}
+
+/* 날짜 이동 모달 */
+/* 연/월 이동 모달 */
+.calendar-move-modal .modal-content {
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
+}
+
+.calendar-move-modal .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.calendar-move-modal .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.calendar-move-modal .modal-body {
+    padding: 22px 24px;
+}
+
+.calendar-move-modal .form-label {
+    margin-bottom: 7px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.calendar-move-modal .form-control,
+.calendar-move-modal .form-select {
+    min-height: 42px;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    font-size: 0.93rem;
+}
+
+.calendar-move-modal .form-control:focus,
+.calendar-move-modal .form-select:focus {
+    border-color: #86aaf8;
+    box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.12);
+}
+
+.calendar-move-modal .modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #edf0f3;
+    gap: 8px;
+}
+
+.calendar-move-modal .modal-footer .btn {
+    min-width: 78px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.calendar-move-modal .btn-secondary {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.calendar-move-modal .btn-secondary:hover {
+    border-color: #d3d7dc;
+    background-color: #eef0f2;
+    color: #343a40;
+}
+
+/* 가운데 연/월 이동 버튼 */
+.calendar-card .fc-moveMonth-button {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    padding: 6px 12px !important;
+
+    color: #263238 !important;
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+
+    border-radius: 8px !important;
+
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.calendar-card .fc-moveMonth-button:hover {
+    background-color: #f3f5f7 !important;
+    color: #376feb !important;
+}
+
+.calendar-card .fc-moveMonth-button:focus,
+.calendar-card .fc-moveMonth-button:active {
+    background-color: #eef3ff !important;
+    color: #376feb !important;
+    box-shadow: none !important;
+}
 
 /* =====================================================
     20. Large Desktop

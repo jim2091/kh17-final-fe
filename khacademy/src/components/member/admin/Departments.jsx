@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Col, Row, Table, Form } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
 import Modal from 'react-bootstrap/Modal';
+import { toast } from "react-toastify";
 
 function MyVerticallyCenteredModal(props) {
     const [dept, setDept] = useState({
@@ -21,14 +22,40 @@ function MyVerticallyCenteredModal(props) {
         }));
     }, []);
 
+    const navigate = useNavigate();
     const sendData = useCallback(async()=>{
+        await apiClient.post("/dept/add", dept);
+        toast.success("부서가 추가되었습니다.");
+        
+        setDept({
+            deptName: "",
+            deptInfo: "",
+            deptBlock: "",
+        });
 
-    }, [dept]);
+        // 부모에게 "추가 완료"를 알림
+        props.onAdd();
+
+        // 모달 닫기
+        props.onHide();
+
+    }, [dept, props]);
+
+   
 
 
   return (
     <Modal
       {...props}
+      onHide={() => {
+                setDept({
+                    deptName: "",
+                    deptInfo: "",
+                    deptBlock: "",
+                });
+
+                props.onHide();
+            }}
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
@@ -58,20 +85,37 @@ function MyVerticallyCenteredModal(props) {
         <Row className="mt-4">
             <Form.Label column sm={3}>활성화여부</Form.Label>
             <Col sm={9}>
-                <Form.Check type="radio" name="deptBlock" value={dept.deptBlock}
-                className="d-inline-block" aria-label="Y">
+                <Form.Check type="radio"
+                 name="deptBlock" 
+                 value="Y"
+                className="d-inline-block" 
+                label="Y"
+                checked={dept.deptBlock === "Y"}
+                onChange={changeStringValue}
+                >
                 </Form.Check>
-                <span className="mt-4" aria-label="Y">Y</span>
-                <Form.Check type="radio" name="deptBlock" value={dept.deptBlock}
-                className="d-inline-block" aria-label="N">
+                <Form.Check type="radio"
+                 name="deptBlock" 
+                 value="N"
+                className="d-inline-block" 
+                label="N"
+                checked={dept.deptBlock === "N"}
+                onChange={changeStringValue}
+                >
                 </Form.Check>
-                <span className="mt-4" aria-label="N">N</span>
-            </Col>
+                </Col>
         </Row>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={() => (props.onHide(), sendData())}>Add</Button>
-        <Button onClick={props.onHide}>Close</Button>
+        <Button onClick={sendData}>Add</Button>
+        <Button onClick={()=>{
+                    setDept({
+                        deptName: "",
+                        deptInfo: "",
+                        deptBlock: "",
+                    });
+                    props.onHide();
+                }}>Close</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -119,6 +163,7 @@ export default function Departments() {
             <MyVerticallyCenteredModal
                 show={modalShow}
                 onHide={() => setModalShow(false)}
+                onAdd={loadData}
             />
         </Col>
 

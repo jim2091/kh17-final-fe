@@ -5,7 +5,7 @@ import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
 // import "../Project.css";
 
-export default function ProjectList() {
+export default function MyProjectList() {
     //프로젝트 목록
     const [projectList, setProjectList] = useState([]);
     //로딩상태

@@ -21,7 +21,7 @@ export default function Sidebar({
             <div className="sidebar-menu">
 
                 <NavLink
-                    to="/projects"
+                    to="/projects/my"
                     end
                     className={({ isActive }) =>
                         isActive ? "sidebar-link active" : "sidebar-link"
