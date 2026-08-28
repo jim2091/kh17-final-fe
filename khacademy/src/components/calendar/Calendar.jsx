@@ -11,6 +11,8 @@ import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import { ko } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
 
 import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 // 참고
@@ -46,14 +48,29 @@ export default function Calendar() {
     }, []);
 
     //FullCallendar용 데이터로 변환
-    const schedules = scheduleList.map(schedule => ({
-        id: String(schedule.scheduleNo),
-        title: schedule.scheduleTitle,
-        start: schedule.scheduleStart,
-        end: schedule.scheduleEnd || undefined,
+    const schedules = scheduleList.map(schedule => {
+        
+        //여러 일자에 걸친 일정 처리 추가
+        const isMultiday = 
+            schedule.scheduleEnd &&
+            !dayjs(schedule.scheduleStart)
+                .isSame(dayjs(schedule.scheduleEnd), "day");
 
-        backgroundColor: "#6f8fcf",
-    }));
+        return {
+            id: String(schedule.scheduleNo),
+            title: schedule.scheduleTitle,
+            start: schedule.scheduleStart,
+            end: schedule.scheduleEnd || undefined,
+            
+            //여러 날짜에 걸치는 일정은 주간 화면에서 상단에 표시
+            allDay: isMultiday,
+
+            backgroundColor: "#6f8fcf",
+        };
+    });
+
+    //현재 view state
+    const [currentView, setCurrentView] = useState("dayGridMonth");
 
     //다가오는 일정
     const upcomingSchedules = useMemo(() => {
@@ -204,9 +221,20 @@ export default function Calendar() {
     }, [scheduleInput]);
 
     const handleDateClick = useCallback((info) => {
+
+        let start;
+        //월간에서 클릭한 날짜의 오전 9시로 자동 입력
+        if (info.view.type === "dayGridMonth") {
+            start = `${info.dateStr}T09:00`;
+        }
+        //주간에서 클릭한 시간 그대로 자동 입력
+        else {
+            start = dayjs(info.date).format("YYYY-MM-DDTHH:mm");
+        }
+
         setScheduleInput(prev => ({
             ...prev,
-            scheduleStart: `${info.dateStr}T09:00`,
+            scheduleStart: start,
         }));
 
         setInputResult(prev => ({ ...prev, scheduleStart: "is-valid" }));
@@ -265,8 +293,6 @@ export default function Calendar() {
     const handleScheduleClick = useCallback((info) => {
         openScheduleDetail(info.event.id);
     }, [openScheduleDetail]);
-
-
 
     //수정 관련
     const [editResult, setEditResult] = useState({
@@ -490,35 +516,67 @@ export default function Calendar() {
     //연/월 선택 이동
     const calendarRef = useRef(null);
 
-    //이동할 연/월 state
+    //이동할 연/월/일 state
     const [moveYear, setMoveYear] = useState(dayjs(currentDate).year());
     const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month()+1);//1월이 0임
-    
+    const [moveDate, setMoveDate] = useState(dayjs(currentDate).toDate());
+
     const moveCalendar = useCallback(()=>{
         const calendarApi = calendarRef.current.getApi();
 
-        const targetDate = dayjs()
-            .year(Number(moveYear))
-            .month(Number(moveMonth) - 1)
-            .date(1)
-            .format("YYYY-MM-DD");
-
-        calendarApi.gotoDate(targetDate);
+        //월간
+        if(currentView === "dayGridMonth") {
+            const targetDate = dayjs()
+                .year(Number(moveYear))
+                .month(Number(moveMonth) - 1)
+                .date(1)
+                .format("YYYY-MM-DD");
+    
+            calendarApi.gotoDate(targetDate);
+        }
+        //주간/목록
+        else {
+            calendarApi.gotoDate(moveDate);
+        }
 
         setMoveModal(false);
-    },[moveYear, moveMonth]);
+    },[moveYear, moveMonth, moveDate, currentView]);
 
     //이동 연/월 선택 모달
     const [moveModal, setMoveModal] = useState(false);
+
     const openMoveModal = useCallback(()=>{
         setMoveYear(dayjs(currentDate).year());
         setMoveMonth(dayjs(currentDate).month()+1);
+        setMoveDate(dayjs(currentDate).toDate());
 
         setMoveModal(true);
     }, [currentDate]);
+
     const closeMoveModal = useCallback(()=>{
         setMoveModal(false);
     }, []);
+
+    //View에 따라 다른 제목 state
+    const getCalendarTitle = useCallback(()=>{
+        //월간
+        if (currentView === "dayGridMonth") {
+            return dayjs(currentDate).format("YYYY년 M월");
+        }
+        //주간/목록
+        const calendarApi = calendarRef.current?.getApi();
+
+        if(!calendarApi) {
+            return dayjs(currentDate).format("YYYY년 M월");
+        }
+
+        const view = calendarApi.view;
+        const start = dayjs(view.activeStart);
+        const end = dayjs(view.activeEnd).subtract(1, "day");
+
+        return `${start.format("YYYY.MM.DD")} ~ ${end.format("MM.DD")}`;
+
+    }, [currentDate, currentView]);
 
 
 
@@ -536,6 +594,8 @@ export default function Calendar() {
                             ref={calendarRef}
                             plugins={[
                                 dayGridPlugin,
+                                timeGridPlugin,
+                                listPlugin,
                                 interactionPlugin
                             ]}
                             initialView="dayGridMonth"
@@ -552,16 +612,34 @@ export default function Calendar() {
                                 },
 
                                 moveMonth: {
-                                    text: dayjs(currentDate).format("YYYY년 M월"),
+                                    text: getCalendarTitle(),
                                     click: openMoveModal
                                 }
+                            }}
+
+                            buttonText={{
+                                today: "오늘",
+                                month: "월",
+                                week: "주",
+                                list: "목록"
+                            }}
+
+                            slotMinTime="07:00:00"
+                            slotMaxTime="22:00:00"
+                            scrollTime="09:00:00"
+
+                            allDayText="-"
+                            slotLabelFormat={{
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false
                             }}
 
                             headerToolbar={{
                                 left: "prev,next today",
                                 center: "moveMonth",//원래 여기 title이라고 써야 자동으로 해당 연월이 제목처럼 생김
                                 //근데 거기엔 우리가 따로 onclick같은 이벤트를 걸 수 없어서 커스텀 버튼을 만들어서 넣어줄거
-                                right: "addSchedule"
+                                right: "dayGridMonth,timeGridWeek,listWeek addSchedule"
                             }}
 
                             events={schedules}
@@ -575,6 +653,7 @@ export default function Calendar() {
 
                             datesSet={(info) => {
                                 setCurrentDate(info.view.currentStart);
+                                setCurrentView(info.view.type);
                             }}
                         />
                     )}
@@ -1010,48 +1089,72 @@ export default function Calendar() {
             </Modal.Footer>
         </Modal>
 
+        {/* 선택 모달 */}
         <Modal
             show={moveModal}
             onHide={closeMoveModal}
             centered
-            size="sm"
-            className="calendar-move-modal"
+            className="calendar-move-modal calendar-week-move-modal"
         >
             <Modal.Header closeButton>
-                <Modal.Title>연/월 이동</Modal.Title>
+                {currentView === "dayGridMonth"
+                    ? "연/월 이동"
+                    : "날짜 이동"}
             </Modal.Header>
 
             <Modal.Body>
-                <Form.Group className="mb-3">
-                    <Form.Label>연도</Form.Label>
+                {currentView === "dayGridMonth" ? (<>
+                    {/* 월간 이동 */}
+                    <Form.Group className="mb-3">
+                        <Form.Label>연도</Form.Label>
 
-                    <Form.Control
-                        type="number"
-                        value={moveYear}
-                        onChange={(e)=>setMoveYear(e.target.value)}
-                        min={1900}
-                        max={2100}
-                    />
-                </Form.Group>
+                        <Form.Control
+                            type="number"
+                            value={moveYear}
+                            onChange={(e)=>setMoveYear(e.target.value)}
+                            min={1900}
+                            max={2100}
+                        />
+                    </Form.Group>
 
-                <Form.Group>
+                    <Form.Group>
 
-                    <Form.Label>월</Form.Label>
+                        <Form.Label>월</Form.Label>
 
-                    <Form.Select
-                        value={moveMonth}
-                        onChange={(e)=>setMoveMonth(e.target.value)}
-                        >
-                        {Array.from({ length: 12 }, (_, index)=> (
-                            <option
-                            key={index + 1}
-                            value={index + 1}
+                        <Form.Select
+                            value={moveMonth}
+                            onChange={(e)=>setMoveMonth(e.target.value)}
                             >
-                                {index + 1}월
-                            </option>
-                        ))}
-                    </Form.Select>
-                </Form.Group>
+                            {Array.from({ length: 12 }, (_, index)=> (
+                                <option
+                                key={index + 1}
+                                value={index + 1}
+                                >
+                                    {index + 1}월
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                </>) : (<>
+                    {/* 주간 이동 */}
+                    <div className="calendar-move-week">
+                        <div className="calendar-move-week-guide">
+                            <div>이동할 날짜를 선택하세요.</div>
+                            <small>선택한 날짜가 포함된 주로 이동합니다.</small>
+                        </div>
+
+                        <DatePicker
+                            selected={moveDate}
+                            onChange={(date) => {
+                                if(date) {
+                                    setMoveDate(date);
+                                }
+                            }}
+                            inline
+                            locale={ko}
+                        />
+                    </div>
+                </>)}
             </Modal.Body>
             
             <Modal.Footer>
