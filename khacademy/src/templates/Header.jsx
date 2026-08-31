@@ -13,6 +13,8 @@ import { useCallback } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
+import { useWebSocket } from "@websocket/WebSocketProvider";
+import { FaCircle } from "react-icons/fa6";
 // import { socketState } from "@utils/storage";
 // import { heartbeatState } from "@utils/storage";    
 
@@ -39,6 +41,8 @@ export default function Header({ toggleSidebar }) {
     const isAdmin = useAtomValue(isAdminState);
 
     const logoutAction = useSetAtom(logoutActionState);
+
+    const { users } = useWebSocket();
 
 
     const logout = useCallback(async () => {
@@ -70,6 +74,7 @@ export default function Header({ toggleSidebar }) {
     }, []);
 
 
+    const online = users.some(user=>user.empName === empName);
 
     // console.log(socket?.readyState);
 
@@ -167,11 +172,10 @@ export default function Header({ toggleSidebar }) {
 
                                 roundedCircle />
                         </OverlayTrigger>
-                        {/* {online && (<>
 
-                            <FaCircle className="text-success"/>
+
+                            <FaCircle className={online ? "text-success" : ""}/>
                             <span>online</span>
-                        </>)} */}
                     </>)}
 
                 </div>

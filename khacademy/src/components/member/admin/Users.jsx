@@ -28,9 +28,12 @@ export default function Users() {
     });
 
     //로그인 중인 사용자 목록
-    const { users } = useWebSocket();
+    // const [users, setUsers] = useState({});
 
-    console.log("관리자 페이지로 가져온 로그인사용자명단 : ", users);
+
+    
+
+    // console.log("관리자 페이지로 가져온 로그인사용자명단 : ", users);
 
     const deptNameSearch = useCallback(async () => {
 
@@ -49,15 +52,24 @@ export default function Users() {
 
     useEffect(() => {
         loadData();
+        
+    
     }, []);
+
+    
 
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/admin/");
 
         setEmpList(data);
+
+        
         // console.log("전체 회원 목록 : ", data);
     }, []);
+    
+    const { users } = useWebSocket();
 
+    // setUsers(users);
     // console.log("empList : ", empList);
 
     // if (empList === null) {
