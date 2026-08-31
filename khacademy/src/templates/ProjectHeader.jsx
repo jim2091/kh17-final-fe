@@ -6,40 +6,17 @@ import { apiClient } from "../utils/reaxios";
 import { toast } from "react-toastify";
 import { Badge, Button, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
+import ProjectMemberModal from "../components/project/ProjectMemberModal";
 
 export default function ProjectHeader({project, loadProject}) {
     //프로젝트 번호
     const { projectNo } = useParams();
-    //프로젝트 정보
-    // const [ project,setProject] = useState(null);
-    //로딩
-    // const [loading,setLoading] = useState(true);
-    
-    //프로젝트 상세 조회
-    // const loadProject = useCallback(async ()=>{
-    //     try{
-    //         setLoading(true);
-    //         const response = await apiClient.get(`/project/${projectNo}`);
-    
-    //         setProject(response.data);
-    //     }
-    //     catch(e){
-    //         console.error(e);
-    
-    //         toast.error("프로젝트 정보를 불러오지 못했습니다.");
-    //     }
-    //     finally{
-    //         setLoading(false);
-    //     }
-    // },[projectNo]);
-    
-    //최초실행
-    // useEffect(()=>{
-    //     loadProject();
-    // },[]);
                     
     //페이지 이동
     const navigate = useNavigate();
+
+    //멤버 관리
+    const [showMember, setShowMember] = useState(false);
 
     //프로젝트 수정페이지 이동
     const moveEdit = useCallback(()=>{
@@ -79,20 +56,6 @@ export default function ProjectHeader({project, loadProject}) {
         }
     },[projectNo])
 
-    //로딩중
-    // if(loading === true){
-    //     return(
-    //         <div className="project-header">
-    //             <Spinner animation="border" size="sm"/>
-    //         </div>
-    //     )
-    // }
-
-    //프로젝트 정보가 없는 경우
-    // if(project === null){
-    //     return null;
-    // }
-
     return (
         <div className="project-header">
 
@@ -120,6 +83,14 @@ export default function ProjectHeader({project, loadProject}) {
 
             {/* 오른쪽 영역 */}
             <div className="project-header-info">
+                <Button size="sm" variant="outline-secondary"
+                        onClick={()=> setShowMember(true)}>
+                        멤버관리
+                </Button>
+                <ProjectMemberModal show={showMember}
+                    onHide={()=>setShowMember(false)}
+                    projectNo={projectNo}
+                    project = {project}/>
                 {/* 상태 */}
                 <Badge
                     bg={project.projectStatus === "active" ? "success" : "secondary"}>
