@@ -1,11 +1,12 @@
 import { Button, Col, Form, Row, Table } from "react-bootstrap";
-import { FaCircle, FaMagnifyingGlass, FaPlus, FaRegCircle } from "react-icons/fa6";
+import { FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import Nav from 'react-bootstrap/Nav';
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import { useWebSocket } from "@websocket/WebSocketProvider";
 
 
 export default function Users() {
@@ -25,6 +26,11 @@ export default function Users() {
         empstate: "",
         empName: "",
     });
+
+    //로그인 중인 사용자 목록
+    const { users } = useWebSocket();
+
+    console.log("관리자 페이지로 가져온 로그인사용자명단 : ", users);
 
     const deptNameSearch = useCallback(async () => {
 
@@ -157,57 +163,54 @@ export default function Users() {
                         </tr>
                     </thead>
                     <tbody>
-                        {empList.map((emp) => (
+                        {empList.map((emp) => {
+                            const online = users.some(user => user.empNo === emp.empNo);
 
-                            <tr key={emp.empNo}>
-                                <td>{emp.empNo}</td>
-                                <td>{emp.empName}</td>
-                                <td>{emp.deptName}</td>
-                                <td>{emp.positionName}</td>
-                                <td>{emp.empState}</td>
-                                <td>
-                                        <OverlayTrigger
-                                            trigger="click"
-                                            placement="left"
-                                            rootClose={true}
-                                            overlay={
-                                                <Popover id={`popover-positioned-left`}>
-                                                    <Popover.Header as="h3">{emp.empName}</Popover.Header>
-                                                    <Popover.Body>
-                                                        <Row className="mt-4">
-                                                            <Col>이메일</Col>
-                                                            <Col>{emp.empEmail}</Col>
-                                                        </Row>
-                                                    </Popover.Body>
-                                                </Popover>
-                                            }
-                                        >
-                                            <Button variant="secondary">
-                                                <FaMagnifyingGlass />
-                                            </Button>
-                                        </OverlayTrigger>
+                            return(
 
+                            
+                    <tr key={emp.empNo}>
+                        <td>{emp.empNo}</td>
+                        <td>{emp.empName}
+                            
+                                <span className="ms-2">
 
+                                    <FaCircle className={online? "text-success" : ""}/>
+                                </span>
+                        </td>
+                        <td>{emp.deptName}</td>
+                        <td>{emp.positionName}</td>
+                        <td>{emp.empState}</td>
+                        <td>
+                            <OverlayTrigger
+                                trigger="click"
+                                placement="left"
+                                rootClose={true}
+                                overlay={
+                                    <Popover id={`popover-positioned-left`}>
+                                        <Popover.Header as="h3">{emp.empName}</Popover.Header>
+                                        <Popover.Body>
+                                            <Row className="mt-4">
+                                                <Col>이메일</Col>
+                                                <Col>{emp.empEmail}</Col>
+                                            </Row>
+                                        </Popover.Body>
+                                    </Popover>
+                                }
+                            >
+                                <Button variant="secondary">
+                                    <FaMagnifyingGlass />
+                                </Button>
+                            </OverlayTrigger>
 
-
-
-
-
-
-
-
-
-
-
-
-                                    
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </Col>
-        </Row>
+                        </td>
+                    </tr>
+                    );
+})}
+                </tbody>
+            </Table>
+        </Col>
+    </Row >
 
 
     </>)

@@ -56,7 +56,7 @@ export default function Login() {
 
             loginAction(data);
 
-            connectToServer();
+            // connectToServer();
 
             navigate("/");
 
@@ -71,6 +71,7 @@ export default function Login() {
             }
             else {//500
                 await Swal.fire("일시적인 서버 오류입니다.\n잠시 후 실행해주세요");
+                // console.log("무슨에러? :", e);
             }
         }
     }, [emp, loginAction]);
