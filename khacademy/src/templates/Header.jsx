@@ -13,11 +13,11 @@ import { useCallback } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
-import { socketState } from "@utils/storage";
-import { heartbeatState } from "@utils/storage";    
+// import { socketState } from "@utils/storage";
+// import { heartbeatState } from "@utils/storage";    
 
-import { onlineState } from "@utils/storage";
-import { FaCircle } from "react-icons/fa6";
+// import { onlineState } from "@utils/storage";
+// import { FaCircle } from "react-icons/fa6";
 
 
 
@@ -25,11 +25,11 @@ export default function Header({ toggleSidebar }) {
 
     const { empName, empEmail } = useAtomValue(loginUserState) || {};
 
-    const [socket, setSocket] = useAtom(socketState);
+    // const [socket, setSocket] = useAtom(socketState);
 
-    const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
+    // const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
 
-    const [online, setOnline] = useAtom(onlineState);
+    // const [online, setOnline] = useAtom(onlineState);
 
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
@@ -43,16 +43,16 @@ export default function Header({ toggleSidebar }) {
 
     const logout = useCallback(async () => {
 
-        if (heartbeatInterval) {
-            clearInterval(heartbeatInterval);
-            setHeartbeatInterval(null);
-        }
-        console.log("heartbeat전송 끝");
+        // if (heartbeatInterval) {
+        //     clearInterval(heartbeatInterval);
+        //     setHeartbeatInterval(null);
+        // }
+        // console.log("heartbeat전송 끝");
 
-        if (socket) {
-            await socket.deactivate();
-            setSocket(null);
-        }
+        // if (socket) {
+        //     await socket.deactivate();
+        //     setSocket(null);
+        // }
 
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
@@ -67,13 +67,13 @@ export default function Header({ toggleSidebar }) {
         finally {
             logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
         }
-    }, [socket]);
+    }, []);
 
 
 
     // console.log(socket?.readyState);
 
-    console.log("online:", online);
+    // console.log("online:", online);
 
 
 
@@ -87,6 +87,7 @@ export default function Header({ toggleSidebar }) {
             >
                 ☰
             </button>
+
             <div className="header-logo">
                 LOGO
             </div>
@@ -166,11 +167,11 @@ export default function Header({ toggleSidebar }) {
 
                                 roundedCircle />
                         </OverlayTrigger>
-                        {online && (<>
+                        {/* {online && (<>
 
                             <FaCircle className="text-success"/>
                             <span>online</span>
-                        </>)}
+                        </>)} */}
                     </>)}
 
                 </div>
