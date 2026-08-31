@@ -23,28 +23,13 @@ export default function ({ children }) {
 
     const [users, setUsers] = useState([]);
 
-    
-
-    // console.log("로그인 중인 사용자 목록  : ", users);
 
 
+    console.log("로그인 중인 사용자 목록  : ", users);
 
-    useEffect(() => {
 
-        if (!isLogin) {
-            return;
-        }
 
-        const client = connectToServer();
 
-        setClient(client);
-
-        return () => {
-            disconnectFromServer(client);
-            setClient(null);
-        }
-
-    }, [isLogin]);
 
     const connectToServer = useCallback(() => {
 
@@ -57,6 +42,11 @@ export default function ({ children }) {
                 client.subscribe("/public/onlineUsers", (message) => {
                     const jsonArray = JSON.parse(message.body);
                     setUsers(jsonArray);
+                    console.log("구독명단 : ", jsonArray);
+                });
+
+                client.publish({
+                    destination: "/app/onlineUsers"
                 });
             },
 
@@ -73,6 +63,23 @@ export default function ({ children }) {
             client.deactivate();
         }
     }, []);
+
+    useEffect(() => {
+
+        if (!isLogin) {
+            return;
+        }
+
+        const client = connectToServer();
+
+        setClient(client);
+
+        return () => {
+            disconnectFromServer(client);
+            setClient(null);
+        }
+
+    }, [isLogin, connectToServer]);
 
 
 
