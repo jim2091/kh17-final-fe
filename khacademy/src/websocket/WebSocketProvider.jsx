@@ -1,26 +1,14 @@
 import { useAtomValue } from "jotai";
-import { useCallback, useContext, useEffect, useState, createContext } from "react";
+import { useContext, useEffect, useState, createContext } from "react";
 import { isLoginState } from "@utils/storage";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
+import { connectWebSocket, getWebSocketClient, onWebSocketConnect
+} from "@utils/websocket";
 
 const WebSocketContext = createContext(null);
 
-//현재 구독중인 사용자의 리스트를 알아내보자
 export default function ({ children }) {
 
-    //홈페이지에 들어오자마자 실행??? or 홈페이지에 들어왔고 로그인 하면 실행 ??? 
-    //후자..
-    //그럼 로그인 상태를 불러와야 겠네 
-    // useEffect(()=>{
-
-    // }, []);
-
-
     const isLogin = useAtomValue(isLoginState);
-
-    const [client, setClient] = useState(null);
-
     const [users, setUsers] = useState([]);
 
     const connectToServer = useCallback(() => {
@@ -44,14 +32,10 @@ export default function ({ children }) {
             debug: (str) => console.log(str)
         });
 
-        client.activate();
-
-        return client;
-    }, []);
-
-    const disconnectFromServer = useCallback((client) => {
-        if (client) {
-            client.deactivate();
+        //클린업 함수
+        return () => {
+            subscription?.unsubscribe();
+            setUsers([]);
         }
     }, []);
 
@@ -80,14 +64,17 @@ export default function ({ children }) {
 
 
 
+
     return (<>
         <WebSocketContext.Provider value={{ users }}>
-            {/* {console.log("Context에 전달하는 users:", users)} */}
             {children}
         </WebSocketContext.Provider>
     </>);
 }
 
+//커스텀 훅
+// 다른 하위 컴포넌트에서 const{ users } = useWebSocket();
+// 이렇게 하면 아까 구독을 통해 받은 사용자 목록을 받아서 쓸 수 있음
 export const useWebSocket = () => {
     return useContext(WebSocketContext);
 };
