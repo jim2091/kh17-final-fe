@@ -17,6 +17,8 @@ export const loginUserAtom = atomWithStorage("loginUser", {
   isLoggedIn: false
 });
 
+loginUserAtom.debugLabel = "loginUserAtom";
+
 // 칸반 컬럼 상태 목록 정의
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
@@ -72,7 +74,8 @@ export default function Task() {
     try {
       setLoading(true);
       const res = await apiClient.get(`/task/list/${pNo}`);
-      setTasks(res.data || []);
+      const taskList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setTasks(taskList);
     } catch (error) {
       console.error("조회 실패:", error);
       toast.error("업무 목록을 불러오지 못했습니다.");
@@ -84,12 +87,38 @@ export default function Task() {
   // 프로젝트 멤버 목록 서버 조회
   const fetchProjectMembers = async (pNo) => {
     try {
-      const res = await apiClient.get(`/projects/${pNo}/members`);
-      setProjectMembers(res.data || []);
+      const res = await apiClient.get(`/project/${pNo}/member`);
+      const memberList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setProjectMembers(memberList);
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
     }
   };
+
+  // 담당자 이름 반환 헬퍼 함수 (미배정 방지)
+  const getAssigneeName = (task) => {
+    if (task.assignedMemberName && task.assignedMemberName.trim()) {
+      return task.assignedMemberName;
+    }
+    if (task.assignedMemberNo) {
+      const found = projectMembers.find((m) => m.projectMemberNo === Number(task.assignedMemberNo));
+      if (found && found.empName) {
+        return found.empName;
+      }
+    }
+    return "미배정";
+  };
+
+  // 현재 주 담당자로 선택된 멤버 번호
+  const currentAssignedNo = editFormData.assignedMemberNo
+    ? Number(editFormData.assignedMemberNo)
+    : null;
+
+  // 협업자로 선택 가능한 사원만 실시간 필터링 (주 담당자 제외 + 이미 선택된 협업자 제외)
+  const availableCollaboratorMembers = projectMembers.filter((m) => {
+    if (currentAssignedNo && m.projectMemberNo === currentAssignedNo) return false;
+    return !editCollaborators.includes(m.projectMemberNo);
+  });
 
   // 초기 데이터 조회 및 웹소켓 연결
   useEffect(() => {
@@ -197,13 +226,21 @@ export default function Task() {
   // 업무 수정 입력 변경
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setEditFormData((prev) => {
+      const nextForm = { ...prev, [name]: value };
+
+      // 주 담당자로 지정된 인원은 협업자 목록에서 자동 제외 (중복 방지)
+      if (name === "assignedMemberNo" && value) {
+        const selectedAssignedNo = Number(value);
+        setEditCollaborators((collabs) =>
+          collabs.filter((id) => id !== selectedAssignedNo)
+        );
+      }
+      return nextForm;
+    });
   };
 
-  // 업무 협업자 선택 토글
+  // 업무 협업자 추가/제거 토글
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -399,6 +436,7 @@ export default function Task() {
                   columnTasks.map((task) => {
                     const isDraggingThis = draggedTaskId === task.taskNo;
                     const pClass = getPriorityBadge(task.taskPriority);
+                    const assigneeName = getAssigneeName(task);
 
                     return (
                       <div
@@ -435,7 +473,8 @@ export default function Task() {
 
                         <div className="card-bottom-info">
                           <div className="assignee-info">
-                            <span>{task.assignedMemberName || "미배정"}</span>
+                            <span className="avatar-circle-sm">{assigneeName.slice(0, 1)}</span>
+                            <span>{assigneeName}</span>
                           </div>
                           <span className="due-date-text">
                             {task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
@@ -453,7 +492,7 @@ export default function Task() {
 
       {/* 업무 드로어 배경 */}
       <div className={`drawer-backdrop ${drawerOpen ? "open" : ""}`} onClick={handleCloseDrawer} />
-      
+
       {/* 업무 드로어 본체 */}
       <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
         {drawerLoading && !selectedTask ? (
@@ -495,7 +534,7 @@ export default function Task() {
                       <span className="meta-label">담당자</span>
                       <div className="meta-user-val">
                         <span className="meta-bold-val">
-                          {selectedTask.assignedMemberName || "미입력"}
+                          {getAssigneeName(selectedTask)}
                         </span>
                         {selectedTask.assignedMemberDept && (
                           <span className="meta-sub-val">({selectedTask.assignedMemberDept})</span>
@@ -605,6 +644,7 @@ export default function Task() {
                   </div>
 
                   <div className="form-grid-row">
+                    {/* 주 담당자 선택 */}
                     <div className="form-group">
                       <label className="form-label">주 담당자</label>
                       <select
@@ -616,7 +656,7 @@ export default function Task() {
                         <option value="">담당자 미지정</option>
                         {projectMembers.map((m) => (
                           <option key={m.projectMemberNo} value={m.projectMemberNo}>
-                            {m.empName} ({m.empDeptNo || "부서미정"})
+                            {m.empName} ({m.empDeptNo || "부서미정"} / {m.empPositionNo || "직급미정"})
                           </option>
                         ))}
                       </select>
@@ -705,25 +745,58 @@ export default function Task() {
                     </div>
                   </div>
 
+                  {/* 협업자 선택 영역 */}
                   <div className="form-group full-width">
-                    <label className="form-label">함께할 협업자 (다중 선택)</label>
-                    <div className="collab-chips-box">
-                      {projectMembers.map((m) => {
-                        const isSelected = editCollaborators.includes(m.projectMemberNo);
-                        return (
-                          <button
-                            key={m.projectMemberNo}
-                            type="button"
-                            onClick={() => handleCollabToggle(m.projectMemberNo)}
-                            className={`collab-chip-btn ${isSelected ? "selected" : ""}`}
-                          >
-                            <span className="chip-avatar">{(m.empName || "사").slice(0, 1)}</span>
-                            <span className="chip-name">{m.empName}</span>
-                            {m.empDeptNo && <span className="chip-dept">({m.empDeptNo})</span>}
-                          </button>
-                        );
-                      })}
+                    <label className="form-label">
+                      함께할 협업자 ({editCollaborators.length}명 선택됨)
+                    </label>
+
+                    {/* 선택된 협업자 태그 목록 */}
+                    <div className="collab-chips-box" style={{ marginBottom: "8px" }}>
+                      {editCollaborators.length === 0 ? (
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                          지정된 협업자가 없습니다. 아래에서 추가하세요.
+                        </span>
+                      ) : (
+                        editCollaborators.map((memberNo) => {
+                          const member = projectMembers.find((m) => m.projectMemberNo === memberNo);
+                          if (!member) return null;
+                          return (
+                            <button
+                              key={member.projectMemberNo}
+                              type="button"
+                              onClick={() => handleCollabToggle(member.projectMemberNo)}
+                              className="collab-chip-btn selected"
+                              title="클릭하여 협업자에서 제외"
+                            >
+                              <span className="chip-avatar">{(member.empName || "사").slice(0, 1)}</span>
+                              <span className="chip-name">{member.empName}</span>
+                              {member.empDeptNo && <span className="chip-dept">({member.empDeptNo})</span>}
+                              <span style={{ marginLeft: "4px", fontSize: "11px", fontWeight: "bold" }}>✕</span>
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
+
+                    {/* 추가 가능한 사원만 필터링된 셀렉트 드롭다운 */}
+                    <select
+                      className="form-select"
+                      value=""
+                      onChange={(e) => {
+                        const selectedNo = Number(e.target.value);
+                        if (selectedNo) {
+                          handleCollabToggle(selectedNo);
+                        }
+                      }}
+                    >
+                      <option value="">+ 협업할 사원 추가 선택</option>
+                      {availableCollaboratorMembers.map((m) => (
+                        <option key={m.projectMemberNo} value={m.projectMemberNo}>
+                          {m.empName} ({m.empDeptNo || "부서미정"} / {m.empPositionNo || "직급미정"})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group full-width">

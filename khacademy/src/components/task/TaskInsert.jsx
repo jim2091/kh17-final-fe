@@ -39,9 +39,9 @@ export default function TaskInsert() {
   const findProjectMembers = async (pNo) => {
     try {
       setLoadingMembers(true);
-      // 백엔드 프로젝트 멤버 API 호출 (URL 규격 통일)
-      const res = await apiClient.get(`/projects/${pNo}/members`);
-      setProjectMembers(res.data || []);
+      const res = await apiClient.get(`/project/${pNo}/member`);
+      const memberList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setProjectMembers(memberList);
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
     } finally {
@@ -52,10 +52,18 @@ export default function TaskInsert() {
   // 폼 필드 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => {
+      const nextForm = { ...prev, [name]: value };
+
+      // 주 담당자로 지정된 인원은 협업자 목록에서 자동 제외 (중복 방지)
+      if (name === "assignedMemberNo" && value) {
+        const selectedAssignedNo = Number(value);
+        setSelectedCollaborators((collabs) =>
+          collabs.filter((id) => id !== selectedAssignedNo)
+        );
+      }
+      return nextForm;
+    });
   };
 
   // 협업자 다중 토글 핸들러
@@ -83,12 +91,10 @@ export default function TaskInsert() {
       return;
     }
 
-    // 👈 백엔드 TaskAddRequestVO 규격에 맞춘 Payload 정제
     const payload = {
       projectNo: Number(projectNo),
       taskTitle: formData.taskTitle.trim(),
       taskContent: formData.taskContent ? formData.taskContent.trim() : null,
-      // 0이나 빈 문자열은 반드시 null로 전송하여 ORA-02291 외래키 위반 방지
       assignedMemberNo:
         formData.assignedMemberNo && Number(formData.assignedMemberNo) > 0
           ? Number(formData.assignedMemberNo)
@@ -97,7 +103,6 @@ export default function TaskInsert() {
       taskPriority: formData.taskPriority || "보통",
       taskCategory: formData.taskCategory ? formData.taskCategory.trim() : null,
       taskProgress: Number(formData.taskProgress) || 0,
-      // Timestamp 파싱용 포맷 지정 (미입력 시 null)
       taskStart: formData.taskStart ? `${formData.taskStart} 00:00:00` : null,
       taskEnd: formData.taskEnd ? `${formData.taskEnd} 23:59:59` : null,
       collaboratorMemberNos: selectedCollaborators
@@ -108,7 +113,6 @@ export default function TaskInsert() {
       await apiClient.post("/task/", payload);
       toast.success("신규 업무가 성공적으로 등록되었습니다.");
       
-      // 👈 App.jsx 라우터 경로(/projects/:projectNo/task)와 일치시킴
       navigate(`/projects/${projectNo}/task`);
     } catch (error) {
       console.error("업무 등록 실패:", error);
@@ -117,6 +121,12 @@ export default function TaskInsert() {
       setSubmitting(false);
     }
   };
+
+  // 주 담당자로 이미 선택된 사원은 협업자 칩 목록에서 제외
+  const currentAssignedNo = formData.assignedMemberNo ? Number(formData.assignedMemberNo) : null;
+  const availableCollaboratorMembers = projectMembers.filter(
+    (m) => !currentAssignedNo || m.projectMemberNo !== currentAssignedNo
+  );
 
   return (
     <div className="task-create-container">
@@ -141,7 +151,7 @@ export default function TaskInsert() {
           <input
             type="text"
             name="taskTitle"
-            placeholder="어떤 업무인가요? (예: 그룹웨어 DB 스키마 설계 및 검증)"
+            placeholder="업무명 입력"
             value={formData.taskTitle}
             onChange={handleChange}
             className="form-input title-input"
@@ -150,7 +160,6 @@ export default function TaskInsert() {
           />
         </div>
 
-        {/* 2열 메타 정보 영역 */}
         <div className="form-grid-row">
           {/* 주 담당자 선택 */}
           <div className="form-group">
@@ -264,10 +273,10 @@ export default function TaskInsert() {
           <div className="collab-chips-box">
             {loadingMembers ? (
               <span className="loading-text">멤버 목록을 불러오는 중...</span>
-            ) : projectMembers.length === 0 ? (
-              <span className="empty-text">프로젝트에 등록된 다른 멤버가 없습니다.</span>
+            ) : availableCollaboratorMembers.length === 0 ? (
+              <span className="empty-text">선택 가능한 다른 멤버가 없습니다.</span>
             ) : (
-              projectMembers.map((m) => {
+              availableCollaboratorMembers.map((m) => {
                 const isSelected = selectedCollaborators.includes(m.projectMemberNo);
                 return (
                   <button

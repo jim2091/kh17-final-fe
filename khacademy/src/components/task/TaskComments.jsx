@@ -58,13 +58,27 @@ export default function TaskComments({ taskNo }) {
         taskNo: Number(taskNo),
         taskCommentContent: inputContent.trim(),
       });
-      
+
       setInputContent("");
       toast.success("댓글이 등록되었습니다.");
       fetchComments();
     } catch (error) {
       console.error("댓글 등록 실패:", error);
       toast.error("댓글 작성에 실패했습니다.");
+    }
+  };
+  const handleKeyDown = (e) => {
+    // 한글 등 조합 문자 입력 중 엔터 입력 시 중복 전송 방지
+    if (e.nativeEvent.isComposing) return;
+
+    // Shift 키 없이 순수 Enter만 눌렀을 때
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // textarea 기본 개행(줄바꿈) 방지
+
+      // 내용이 있을 때만 등록 실행
+      if (inputContent.trim()) {
+        handleAddComment(e);
+      }
     }
   };
 
@@ -128,9 +142,10 @@ export default function TaskComments({ taskNo }) {
         <textarea
           className="comment-textarea"
           rows="2"
-          placeholder="업무 피드백이나 진행 상황을 남겨주세요..."
+          placeholder="업무 피드백이나 진행상황 입력"
           value={inputContent}
           onChange={(e) => setInputContent(e.target.value)}
+          onKeyDown={handleKeyDown} 
         />
         <div className="comment-input-actions">
           <button type="submit" className="btn-comment-submit" disabled={!inputContent.trim()}>
