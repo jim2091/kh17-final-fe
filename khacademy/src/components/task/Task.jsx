@@ -1,10 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { atom, useAtomValue } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import { apiClient } from "@utils/reaxios";
 import "./Task.css";
 import TaskComments from "./TaskComments";
 
+// 로그인 사원 전역 상태 정의
+export const loginUserAtom = atomWithStorage("loginUser", {
+  empNo: null,
+  empName: "",
+  empDeptNo: "",
+  isLoggedIn: false
+});
+
+// 칸반 컬럼 상태 목록 정의
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
   { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
@@ -15,23 +28,27 @@ export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
 
+  // 전역 로그인 유저 상태 구독
+  const loginUser = useAtomValue(loginUserAtom);
+
+  // 업무 데이터 및 로딩 상태
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 프로젝트 전체 멤버 목록 (담당자/협업자 선택용)
+  // 프로젝트 참여 멤버 상태
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // DND 상태
+  // 칸반 드래그 앤 드롭 상태
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 드로어(Drawer) 상태
+  // 업무 드로어 기본 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
 
-  // 수정 모드 토글 및 폼 상태
+  // 업무 드로어 수정 폼 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -47,14 +64,10 @@ export default function Task() {
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  // 1. 초기 업무 목록 & 프로젝트 멤버 목록 조회
-  useEffect(() => {
-    if (projectNo) {
-      fetchTasks(projectNo);
-      fetchProjectMembers(projectNo);
-    }
-  }, [projectNo]);
+  // 웹소켓 클라이언트 참조
+  const stompClientRef = useRef(null);
 
+  // 업무 전체 목록 서버 조회
   const fetchTasks = async (pNo) => {
     try {
       setLoading(true);
@@ -68,6 +81,7 @@ export default function Task() {
     }
   };
 
+  // 프로젝트 멤버 목록 서버 조회
   const fetchProjectMembers = async (pNo) => {
     try {
       const res = await apiClient.get(`/projects/${pNo}/members`);
@@ -77,20 +91,61 @@ export default function Task() {
     }
   };
 
-  // 2. 카드 클릭 시 상세 드로어 열기
+  // 초기 데이터 조회 및 웹소켓 연결
+  useEffect(() => {
+    if (!projectNo) return;
+
+    fetchTasks(projectNo);
+    fetchProjectMembers(projectNo);
+
+    // 웹소켓 클라이언트 인스턴스 생성
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        // 프로젝트 공용 채널 구독
+        client.subscribe(`/public/projects/${projectNo}/kanban`, (message) => {
+          const event = JSON.parse(message.body);
+
+          // 본인이 보낸 이벤트는 선반영되었으므로 무시
+          if (Number(event.senderEmpNo) === Number(loginUser?.empNo)) return;
+
+          // 타 사용자의 카드 이동 이벤트 반영
+          if (event.eventType === "TASK_MOVED") {
+            const targetTaskId = Number(event.taskNo);
+            const nextStatus = event.nextStatus;
+
+            setTasks((prev) =>
+              prev.map((t) =>
+                t.taskNo === targetTaskId ? { ...t, taskStatus: nextStatus } : t
+              )
+            );
+          } else if (event.eventType === "TASK_UPDATED" || event.eventType === "TASK_CREATED") {
+            fetchTasks(projectNo);
+          }
+        });
+      }
+    });
+
+    client.activate();
+    stompClientRef.current = client;
+
+    return () => {
+      if (client) client.deactivate();
+    };
+  }, [projectNo, loginUser?.empNo]);
+
+  // 업무 드로어 열기 및 상세 조회
   const handleCardClick = async (taskNo) => {
     if (isDragging) return;
+    setIsEditing(false);
 
-    setIsEditing(false); // 새로 열릴 때는 항상 열람 모드
-
-    // 로컬 데이터 선반영
     const localTarget = tasks.find((t) => t.taskNo === taskNo);
     if (localTarget) {
       setSelectedTask(localTarget);
       setDrawerOpen(true);
     }
 
-    // 서버 단건 상세 비동기 조회
     try {
       setDrawerLoading(true);
       const res = await apiClient.get(`/task/${taskNo}`);
@@ -104,13 +159,14 @@ export default function Task() {
     }
   };
 
+  // 업무 드로어 닫기
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setSelectedTask(null);
     setIsEditing(false);
   };
 
-  // 수정 모드로 전환
+  // 업무 수정 모드 진입
   const handleStartEdit = () => {
     if (!selectedTask) return;
 
@@ -133,10 +189,12 @@ export default function Task() {
     setIsEditing(true);
   };
 
+  // 업무 수정 모드 취소
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
+  // 업무 수정 입력 변경
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({
@@ -145,6 +203,7 @@ export default function Task() {
     }));
   };
 
+  // 업무 협업자 선택 토글
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -153,6 +212,7 @@ export default function Task() {
     );
   };
 
+  // 업무 수정 내용 서버 저장
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -189,7 +249,6 @@ export default function Task() {
       await apiClient.put("/task/", payload);
       toast.success("업무 내용이 성공적으로 수정되었습니다.");
 
-      // 단건 상세 및 보드 목록 최신화
       const detailRes = await apiClient.get(`/task/${selectedTask.taskNo}`);
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
@@ -204,7 +263,7 @@ export default function Task() {
     }
   };
 
-  // 3. Drag & Drop 핸들러
+  // 칸반 드래그 시작
   const handleDragStart = (e, taskNo) => {
     setIsDragging(true);
     setDraggedTaskId(taskNo);
@@ -212,6 +271,7 @@ export default function Task() {
     e.dataTransfer.effectAllowed = "move";
   };
 
+  // 칸반 드래그 종료
   const handleDragEnd = () => {
     setTimeout(() => {
       setIsDragging(false);
@@ -219,17 +279,20 @@ export default function Task() {
     }, 150);
   };
 
+  // 칸반 드래그 영역 오버
   const handleDragOver = (e, columnId) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverCol !== columnId) setDragOverCol(columnId);
   };
 
+  // 칸반 드래그 영역 벗어남
   const handleDragLeave = (e, columnId) => {
     if (e.currentTarget.contains(e.relatedTarget)) return;
     if (dragOverCol === columnId) setDragOverCol(null);
   };
 
+  // 칸반 드롭 및 상태 변경
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
     setDragOverCol(null);
@@ -248,6 +311,8 @@ export default function Task() {
     if (!targetTask || targetTask.taskStatus === targetStatus) return;
 
     const backupTasks = [...tasks];
+
+    // 화면 즉시 선반영
     setTasks((prev) =>
       prev.map((t) =>
         t.taskNo === targetTaskId ? { ...t, taskStatus: targetStatus } : t
@@ -268,6 +333,7 @@ export default function Task() {
     }
   };
 
+  // 업무 우선순위 스타일 변환
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "긴급": return "badge-urgent";
@@ -277,6 +343,7 @@ export default function Task() {
     }
   };
 
+  // 업무 상태 텍스트 변환
   const getStatusLabel = (status) => {
     switch (status) {
       case "TODO": return "할 일 (To Do)";
@@ -290,7 +357,7 @@ export default function Task() {
 
   return (
     <div className="custom-kanban-page">
-      {/* 상단 헤더 */}
+      {/* 칸반 상단 헤더 */}
       <div className="kanban-title-bar">
         <div className="kanban-title-text">
           <h2>프로젝트 #{projectNo} 업무 보드</h2>
@@ -306,7 +373,7 @@ export default function Task() {
         </button>
       </div>
 
-      {/* 3단 칸반 그리드 */}
+      {/* 칸반 보드 카드 목록 */}
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
           const columnTasks = tasks.filter((t) => (t.taskStatus || "TODO") === col.id);
@@ -340,8 +407,9 @@ export default function Task() {
                         onDragStart={(e) => handleDragStart(e, task.taskNo)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleCardClick(task.taskNo)}
-                        className={`direct-task-card ${pClass} ${isDraggingThis ? "is-dragging" : ""
-                          }`}
+                        className={`direct-task-card ${pClass} ${
+                          isDraggingThis ? "is-dragging" : ""
+                        }`}
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
@@ -370,7 +438,7 @@ export default function Task() {
                             <span>{task.assignedMemberName || "미배정"}</span>
                           </div>
                           <span className="due-date-text">
-                            (대충달력){task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
+                            {task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
                           </span>
                         </div>
                       </div>
@@ -383,14 +451,16 @@ export default function Task() {
         })}
       </div>
 
-      {/* 우측 슬라이드 드로어 */}
+      {/* 업무 드로어 배경 */}
       <div className={`drawer-backdrop ${drawerOpen ? "open" : ""}`} onClick={handleCloseDrawer} />
+      
+      {/* 업무 드로어 본체 */}
       <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
         {drawerLoading && !selectedTask ? (
           <div className="drawer-loading">상세 정보를 불러오는 중...</div>
         ) : selectedTask ? (
           <div className="drawer-container">
-            {/* 드로어 헤더 */}
+            {/* 업무 드로어 헤더 */}
             <div className="drawer-header">
               <div className="drawer-header-left">
                 <span className="task-id-badge">TASK #{selectedTask.taskNo}</span>
@@ -411,9 +481,7 @@ export default function Task() {
               </button>
             </div>
 
-            {/* ========================================================
-                [MODE 1] 열람 모드 (View Mode)
-               ======================================================== */}
+            {/* 업무 드로어 열람 뷰 */}
             {!isEditing && (
               <>
                 <div className="drawer-body view-mode">
@@ -503,34 +571,23 @@ export default function Task() {
                     )}
                   </div>
 
-                  {/*  댓글 CRUD 컴포넌트 연동 지점 */}
-                  <TaskComments
-                    taskNo={selectedTask.taskNo}
-                    // 현재 프로젝트 멤버 목록의 첫 번째 유효한 projectMemberNo 전달 (또는 로그인 사용자 매핑)
-                    currentProjectMemberNo={
-                      projectMembers.length > 0 ? projectMembers[0].projectMemberNo : null
-                    }
-                    currentMemberName={
-                      projectMembers.length > 0 ? projectMembers[0].empName : "작성자"
-                    }
-                  />
+                  {/* 댓글 컴포넌트 연동 */}
+                  <TaskComments taskNo={selectedTask.taskNo} />
                 </div>
 
-                {/* 열람 모드 푸터 */}
+                {/* 업무 드로어 열람 하단 버튼 */}
                 <div className="drawer-footer">
                   <button className="btn-cancel" onClick={handleCloseDrawer}>
                     닫기
                   </button>
                   <button className="btn-edit-trigger" onClick={handleStartEdit}>
-                     수정하기
+                    수정하기
                   </button>
                 </div>
               </>
             )}
 
-            {/* ========================================================
-                [MODE 2] 수정 모드 (Edit Mode Form)
-               ======================================================== */}
+            {/* 업무 드로어 수정 뷰 */}
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
@@ -681,7 +738,7 @@ export default function Task() {
                   </div>
                 </div>
 
-                {/* 수정 모드 푸터 */}
+                {/* 업무 드로어 수정 하단 버튼 */}
                 <div className="drawer-footer">
                   <button
                     type="button"
