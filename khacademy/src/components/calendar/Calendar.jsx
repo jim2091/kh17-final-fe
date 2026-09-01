@@ -13,7 +13,7 @@ import { ko } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import { getWebSocketClient } from "../../utils/websocket";
+import { getWebSocketClient, onWebSocketConnect } from "../../utils/websocket";
 
 import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 // 참고
@@ -58,21 +58,26 @@ export default function Calendar() {
 
     //웹소켓으로 변동사항 받아서 실시간 화면 갱신
     useEffect(()=>{
-        const client = getWebSocketClient();//App.jsx에서 만든 공용 웹소켓 클라이언트를 가져와서
 
-        if(client == null) return;
-        if(client.connected === false) return;
+        let subscription = null;
 
-        const subscription = client.subscribe(
-            `/public/project/${projectNo}/schedule`,
-            (message) => {//구독한 채널로부터 메세지가 오면 실행되는 함수
-                const json = JSON.parse(message.body);
-                
-                console.log("일정 변경 알림 수신", json);
-
-                loadScheduleList();//일정 페이지를 갱신
-            }
-        );
+        onWebSocketConnect(() => {
+            const client = getWebSocketClient();//App.jsx에서 만든 공용 웹소켓 클라이언트를 가져와서
+    
+            if(client == null) return;
+            //if(client.connected === false) return;//이제 없어도 됨 onWebSocketConnect안에 들어가니까
+    
+            subscription = client.subscribe(
+                `/public/project/${projectNo}/schedule`,
+                (message) => {//구독한 채널로부터 메세지가 오면 실행되는 함수
+                    const json = JSON.parse(message.body);
+                    
+                    console.log("일정 변경 알림 수신", json);
+    
+                    loadScheduleList();//일정 페이지를 갱신
+                }
+            );
+        });
 
         //클린업 함수
         return () => {
@@ -80,7 +85,7 @@ export default function Calendar() {
             //우리는 App.jsx에서 공용 웹소켓에 연결하고 그게 계속 이어지는 형태
             //여기서 그 연결을 끊어버리면 안됨. 구독만 끊어주는 것.
             //구독을 만약 안끊으면 일정 페이지 들어올때마다 구독이 누적됨
-            subscription.unsubscribe();
+            subscription?.unsubscribe();
         }
     }, []);
 
