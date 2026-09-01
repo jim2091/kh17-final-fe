@@ -64,22 +64,54 @@ export default function ({ children }) {
         }
     }, []);
 
+    // useEffect(() => {
+        
+
+    //     if (!isLogin) {
+    //         return;
+    //     }
+
+    //     if(isLogin){
+
+    //         const client = connectToServer();
+    
+    //         setClient(client);
+    //         console.log("온라인 구독 실행!");
+
+    //     }
+    //     console.log("온라인상태 : ", isLogin);
+
+    //     return () => {
+    //         disconnectFromServer(client);
+    //         setClient(null);
+    //     }
+
+    // }, []);
+
     useEffect(() => {
 
-        if (!isLogin) {
-            return;
-        }
+    console.log("🔥 Provider useEffect 실행");
+    console.log("🔥 현재 isLogin :", isLogin);
 
-        const client = connectToServer();
+    if (!isLogin) {
+        console.log("❌ 로그인 상태가 아니어서 종료");
+        return;
+    }
 
-        setClient(client);
+    const client = connectToServer();
 
-        return () => {
-            disconnectFromServer(client);
-            setClient(null);
-        }
+    setClient(client);
 
-    }, [isLogin, connectToServer]);
+    console.log("🟢 온라인 구독 실행!");
+
+    return () => {
+        console.log("🔴 WebSocket 연결 해제");
+
+        disconnectFromServer(client);
+        setClient(null);
+    };
+
+}, [isLogin]);
 
 
 
