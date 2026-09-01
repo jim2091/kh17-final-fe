@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Send, Edit2, Trash2, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
-import apiClient from "../../utils/apiClient";
+import { apiClient } from "../../utils/reaxios";
 import "./TaskComments.css";
 
 export default function TaskComments({ taskNo, currentProjectMemberNo, currentMemberName }) {
