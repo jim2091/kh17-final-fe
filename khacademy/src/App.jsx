@@ -39,7 +39,6 @@ function App() {
   //공용 소켓 연결 테스트 코드.
   useEffect(() => {
     connectWebSocket();
-
     return () => {
       disconnectWebSocket();
     }

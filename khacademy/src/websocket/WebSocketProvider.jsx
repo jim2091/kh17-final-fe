@@ -23,14 +23,6 @@ export default function ({ children }) {
 
     const [users, setUsers] = useState([]);
 
-
-
-    console.log("로그인 중인 사용자 목록  : ", users);
-
-
-
-
-
     const connectToServer = useCallback(() => {
 
         const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
@@ -42,7 +34,6 @@ export default function ({ children }) {
                 client.subscribe("/public/onlineUsers", (message) => {
                     const jsonArray = JSON.parse(message.body);
                     setUsers(jsonArray);
-                    console.log("구독명단 : ", jsonArray);
                 });
 
                 client.publish({
@@ -64,37 +55,11 @@ export default function ({ children }) {
         }
     }, []);
 
-    // useEffect(() => {
-        
-
-    //     if (!isLogin) {
-    //         return;
-    //     }
-
-    //     if(isLogin){
-
-    //         const client = connectToServer();
     
-    //         setClient(client);
-    //         console.log("온라인 구독 실행!");
-
-    //     }
-    //     console.log("온라인상태 : ", isLogin);
-
-    //     return () => {
-    //         disconnectFromServer(client);
-    //         setClient(null);
-    //     }
-
-    // }, []);
-
     useEffect(() => {
 
-    console.log("🔥 Provider useEffect 실행");
-    console.log("🔥 현재 isLogin :", isLogin);
 
     if (!isLogin) {
-        console.log("❌ 로그인 상태가 아니어서 종료");
         return;
     }
 
@@ -102,10 +67,8 @@ export default function ({ children }) {
 
     setClient(client);
 
-    console.log("🟢 온라인 구독 실행!");
 
     return () => {
-        console.log("🔴 WebSocket 연결 해제");
 
         disconnectFromServer(client);
         setClient(null);

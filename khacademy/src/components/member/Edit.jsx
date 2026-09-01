@@ -56,6 +56,11 @@ export default function Edit() {
         newEmpPassword2: false,
     });
 
+    //프로필 사진 state
+    const [empProfile, setEmpProfile] = useState(null);
+    const empProfileRef = useRef();
+    
+
     //처음 내 정보 불러오기 
     useEffect(() => {
         loadData();
@@ -69,6 +74,21 @@ export default function Edit() {
     }, [emp]);
 
     // console.log("emp : ", emp);
+
+    const changeProfileImage = useCallback((e)=>{
+        const file = e.target.files[0];
+
+        setEmpProfile(file);
+
+        // if(file === null) {
+        //     empProfileRef.current.value = "";
+        // }
+
+        // console.log(file);
+    }, []);
+    const clearEmpProfile = useCallback(()=>{
+        setEmpProfile(null);
+    }, []);
 
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
@@ -213,6 +233,22 @@ export default function Edit() {
     }, [emp]);
 
     return (<>
+
+    {/* 프로필 사진 */}
+    <Row className="mt-5">
+
+        <div className="d-flex w-100">
+            <Form.Control type="file" accept="image/*" 
+        onChange={changeProfileImage} 
+        ref={empProfileRef}></Form.Control>
+        {empProfile !== null && (
+        <Button variant="secondary" onClick={clearEmpProfile}
+        className="ms-2">
+            <FaXmark/>
+        </Button>
+        )}
+        </div>
+    </Row>
 
         <Row className="mt-4">
             <Col>
