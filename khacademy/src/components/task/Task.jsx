@@ -5,7 +5,6 @@ import { apiClient } from "@utils/reaxios";
 import "./Task.css";
 import TaskComments from "./TaskComments";
 
-// 3단 컬럼 정의 (TODO, IN_PROGRESS, DONE)
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
   { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
@@ -32,7 +31,7 @@ export default function Task() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
 
-  // 👈 [핵심] 수정 모드 토글 및 폼 상태
+  // 수정 모드 토글 및 폼 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -111,7 +110,7 @@ export default function Task() {
     setIsEditing(false);
   };
 
-  // 👈 [핵심] 수정 모드로 전환
+  // 수정 모드로 전환
   const handleStartEdit = () => {
     if (!selectedTask) return;
 
@@ -127,21 +126,17 @@ export default function Task() {
       taskEnd: selectedTask.taskEnd ? String(selectedTask.taskEnd).slice(0, 10) : ""
     });
 
-    // 기존 협업자 번호 배열 세팅
     const existingCollabNos = (selectedTask.collaborators || []).map(
       (c) => c.projectMemberNo
     );
     setEditCollaborators(existingCollabNos);
-
-    setIsEditing(true); // 수정 모드 ON
+    setIsEditing(true);
   };
 
-  // 수정 취소
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
-  // 폼 입력 핸들러
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({
@@ -150,7 +145,6 @@ export default function Task() {
     }));
   };
 
-  // 협업자 토글 핸들러
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -159,7 +153,6 @@ export default function Task() {
     );
   };
 
-  // 👈 [핵심] 수정 사항 저장 (PUT /api/task/)
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -196,16 +189,12 @@ export default function Task() {
       await apiClient.put("/task/", payload);
       toast.success("업무 내용이 성공적으로 수정되었습니다.");
 
-      // 1) 단건 상세 최신화
+      // 단건 상세 및 보드 목록 최신화
       const detailRes = await apiClient.get(`/task/${selectedTask.taskNo}`);
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
       }
-
-      // 2) 칸반 보드 카드 목록 갱신
       fetchTasks(projectNo);
-
-      // 3) 열람 뷰로 복귀
       setIsEditing(false);
     } catch (error) {
       console.error("업무 수정 실패:", error);
@@ -381,7 +370,7 @@ export default function Task() {
                             <span>{task.assignedMemberName || "미배정"}</span>
                           </div>
                           <span className="due-date-text">
-                            📅 {task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
+                            (대충달력){task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
                           </span>
                         </div>
                       </div>
@@ -394,7 +383,7 @@ export default function Task() {
         })}
       </div>
 
-      {/* 우측 슬라이드 드로어 (열람/수정 2-in-1) */}
+      {/* 우측 슬라이드 드로어 */}
       <div className={`drawer-backdrop ${drawerOpen ? "open" : ""}`} onClick={handleCloseDrawer} />
       <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
         {drawerLoading && !selectedTask ? (
@@ -415,7 +404,7 @@ export default function Task() {
                     </span>
                   </>
                 )}
-                {isEditing && <span className="editing-badge">✏️ 편집 중</span>}
+                {isEditing && <span className="editing-badge">편집 중</span>}
               </div>
               <button className="drawer-close-btn" onClick={handleCloseDrawer}>
                 ✕
@@ -490,7 +479,6 @@ export default function Task() {
                       {selectedTask.collaborators && selectedTask.collaborators.length > 0 ? (
                         selectedTask.collaborators.map((c, idx) => (
                           <div key={idx} className="collab-chip">
-                            <span className="chip-icon">👤</span>
                             <span className="chip-name">{c.memberName || `멤버 #${c.projectMemberNo}`}</span>
                             {c.deptName && <span className="chip-dept">({c.deptName})</span>}
                           </div>
@@ -514,15 +502,27 @@ export default function Task() {
                       <span>최종수정: {String(selectedTask.taskUtime).replace("T", " ").slice(0, 19)}</span>
                     )}
                   </div>
+
+                  {/*  댓글 CRUD 컴포넌트 연동 지점 */}
+                  <TaskComments
+                    taskNo={selectedTask.taskNo}
+                    // 현재 프로젝트 멤버 목록의 첫 번째 유효한 projectMemberNo 전달 (또는 로그인 사용자 매핑)
+                    currentProjectMemberNo={
+                      projectMembers.length > 0 ? projectMembers[0].projectMemberNo : null
+                    }
+                    currentMemberName={
+                      projectMembers.length > 0 ? projectMembers[0].empName : "작성자"
+                    }
+                  />
                 </div>
 
-                {/* 열람 모드 푸터: [수정하기] 버튼 */}
+                {/* 열람 모드 푸터 */}
                 <div className="drawer-footer">
                   <button className="btn-cancel" onClick={handleCloseDrawer}>
                     닫기
                   </button>
                   <button className="btn-edit-trigger" onClick={handleStartEdit}>
-                    ✏️ 수정하기
+                     수정하기
                   </button>
                 </div>
               </>
@@ -534,7 +534,6 @@ export default function Task() {
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
-                  {/* 제목 수정 */}
                   <div className="form-group full-width">
                     <label className="form-label required">업무 제목</label>
                     <input
@@ -548,7 +547,6 @@ export default function Task() {
                     />
                   </div>
 
-                  {/* 2열 메타 수정 */}
                   <div className="form-grid-row">
                     <div className="form-group">
                       <label className="form-label">주 담당자</label>
@@ -609,7 +607,6 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 일정 및 진척도 수정 */}
                   <div className="form-grid-row">
                     <div className="form-group">
                       <label className="form-label">시작일</label>
@@ -651,7 +648,6 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 협업자 수정 (칩 선택) */}
                   <div className="form-group full-width">
                     <label className="form-label">함께할 협업자 (다중 선택)</label>
                     <div className="collab-chips-box">
@@ -673,7 +669,6 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 세부 설명 수정 */}
                   <div className="form-group full-width">
                     <label className="form-label">업무 세부 내용</label>
                     <textarea
@@ -686,7 +681,7 @@ export default function Task() {
                   </div>
                 </div>
 
-                {/* 수정 모드 푸터: [취소], [저장] */}
+                {/* 수정 모드 푸터 */}
                 <div className="drawer-footer">
                   <button
                     type="button"
@@ -705,36 +700,6 @@ export default function Task() {
           </div>
         ) : null}
       </aside>
-
-      {/* 우측 슬라이드 드로어 본문 내부 */}
-      <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
-        {selectedTask && (
-          <div className="drawer-container">
-            {/* 헤더 */}
-            <div className="drawer-header">...</div>
-
-            {/* 본문 */}
-            <div className="drawer-body">
-              {/* 기존 제목, 상태, 우선순위, 일정, 상세 설명 영역 */}
-              ...
-
-              {/* 💬 댓글 CRUD 컴포넌트 연동 지점 */}
-              <TaskComments
-                taskNo={selectedTask.taskNo}
-                currentProjectMemberNo={1} // 로그인 사용자의 projectMemberNo 전달
-                currentMemberName={"홍길동"}
-              />
-            </div>
-
-            {/* 하단 버튼 */}
-            <div className="drawer-footer">...</div>
-          </div>
-        )}
-      </aside>
     </div>
-
-
   );
-
-
 }
