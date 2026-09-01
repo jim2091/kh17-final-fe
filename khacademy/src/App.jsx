@@ -36,14 +36,15 @@ import EmpInactive from "./error/EmpInactive";
 
 function App() {
 
-  //공용 소켓 연결 테스트 코드.
-  useEffect(() => {
-    connectWebSocket();
+  // 여기서 하던걸 이제 WebSocketProvider로 이전
+  // //공용 소켓 연결 테스트 코드.
+  // useEffect(() => {
+  //   connectWebSocket();
 
-    return () => {
-      disconnectWebSocket();
-    }
-  }, []);
+  //   return () => {
+  //     disconnectWebSocket();
+  //   }
+  // }, []);
 
   return (
     <Routes>
