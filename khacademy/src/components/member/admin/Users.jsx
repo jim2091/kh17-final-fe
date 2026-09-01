@@ -183,13 +183,13 @@ export default function Users() {
                             
                     <tr key={emp.empNo}>
                         <td>{emp.empNo}</td>
-                        <td>{emp.empName}
+                        <td>
                             
                                 <span className="ms-2">
 
                                     <FaCircle className={online? "text-success" : ""}/>
                                 </span>
-                        </td>
+                        {emp.empName}</td>
                         <td>{emp.deptName}</td>
                         <td>{emp.positionName}</td>
                         <td>{emp.empState}</td>
