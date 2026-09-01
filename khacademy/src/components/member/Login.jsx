@@ -8,51 +8,48 @@ import { loginUserState } from "@utils/storage";
 import { useNavigate } from "react-router-dom";
 import { loginActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
-// import { socketState } from "@utils/storage";
-// import SockJS from "sockjs-client";
-// import { Client } from "@stomp/stompjs";
-// import { heartbeatState } from "@utils/storage";
-// import { onlineState } from "@utils/storage";
+
+import Card from 'react-bootstrap/Card';
+import './member.css';
+
 
 export default function Login() {
 
     //state
     const [emp, setEmp] = useState({
-        empEmail : "",
-        empPassword : ""
+        empEmail: "",
+        empPassword: ""
     });
 
-    //WebSocket state
-    // const [client, setClient] = useState(null);
-    // const[socket, setSocket] = useAtom(socketState);
+    //비밀번호 표시
+    const [showPassword, setShowPassword] = useState(false);
 
-    // const[heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
 
-    // const[online, setOnline] = useAtom(onlineState);
 
-    
+
+
     const loginAction = useSetAtom(loginActionState);
 
     const navigate = useNavigate();
 
     //입력
-    const changeStringValue = useCallback(e=>{
+    const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
-        setEmp(prev=>({
+        setEmp(prev => ({
             ...prev,
-            [name] : value
+            [name]: value
         }));
     }, []);
     //로그인
-    const sendLogin = useCallback(async ()=>{
+    const sendLogin = useCallback(async () => {
         //미입력 시 차단
-        if(emp.empEmail === "" && emp.empPassword === "") {
+        if (emp.empEmail === "" && emp.empPassword === "") {
             await Swal.fire("모든 정보를 입력하세요");
             return;
         }
 
         try {
-            const {data} = await authClient.post("/login", emp);
+            const { data } = await authClient.post("/login", emp);
 
             loginAction(data);
 
@@ -61,12 +58,12 @@ export default function Login() {
             navigate("/");
 
         }
-        catch(e){
-           
-            if(e.status === 403) {
+        catch (e) {
+
+            if (e.status === 403) {
                 navigate("/emp/inactive");
             }
-            else if(e.status === 404) {
+            else if (e.status === 404) {
                 await Swal.fire("정보가 일치하지 않습니다");
             }
             else {//500
@@ -76,82 +73,76 @@ export default function Login() {
         }
     }, [emp, loginAction]);
 
-    // console.log("socket : " , socket);
-
-    // const connectToServer = useCallback(()=>{
-    //     const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
-
-    //     const client = new Client({
-
-    //         webSocketFactory : () => socket,
-
-    //         onConnect: ()=>{
-                
-
-    //             setSocket(client);
-
-    //             client.subscribe("/public/online", (message)=>{
-
-    //                 const data = JSON.parse(message.body);
-
-    //                 console.log("온라인 상태 : ", data);
-
-    //                 setOnline(data);
-    //             });
-                
-
-    //             //10초마다 연결 확인
-    //             const intervalId = setInterval(()=>{
-    //                 if(client.connected){
-    //                     client.publish({
-    //                         destination: "/app/heartbeat",
-    //                         body:""
-    //                     });
-    //                     console.log("heartbeat 전송");
-    //                 }
-    //             }, 10000);
-
-    //             setHeartbeatInterval(intervalId);
-    //         },
-
-    //         debug:(str)=>console.log(str)
-
-    //     });
 
 
-    //     client.activate();
 
-    // }, []);
-
-    
     return (<>
 
-    <Row className="mt-4">
-            <Form.Label column sm={3}>이메일</Form.Label>
-            <Col sm={9}>
-                <Form.Control type="text" name="empEmail" value={emp.empEmail}
-                        onChange={changeStringValue} placeholder="User EMAIL"
-                        autoFocus/>
+
+
+<div className="spacing">
+
+
+        <Card className="bg-light w-80">
+            
+            <Card.Body>
+                <Row>
+                <Col>
+                    <span className="large-font ps-4 ">시작하기</span>
+                </Col>
+                <Col>
+                
+               
+                    <Row className="mt-4">
+                        
+                        {/* <Form.Label column sm={3}>이메일</Form.Label> */}
+                        <Col>
+                            <Form.Control type="text" size="lg" name="empEmail" value={emp.empEmail}
+                                onChange={changeStringValue} placeholder="이메일 입력"
+                                autoFocus />
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        {/* <Form.Label column sm={3}>비밀번호</Form.Label> */}
+                        <Col>
+                            <Form.Control type={showPassword? "text" : "password"} 
+                                size="lg" name="empPassword"
+                                value={emp.empPassword}
+                                onChange={changeStringValue} placeholder="비밀번호 입력" />
+                            <Form.Check type="checkbox" label="비밀번호 표시" 
+                            className="mt-2" checked={showPassword} 
+                            onClick={(e)=>setShowPassword(e.target.checked)}></Form.Check>
+                        </Col>
+                    </Row>
+
+
+                    <Row className="mt-5">
+                        <Col className="text-end">
+                            <Button variant="primary" size="lg" onClick={sendLogin}>
+                                <FaRightToBracket />
+                                <span className="ms-2 d-none d-md-inline">로그인</span>
+                            </Button>
+                        </Col>
+                    </Row>
+                    </Col>
+                 </Row>
+            </Card.Body>
+        </Card>
+        <Row className="mt-3">
+            <Col>
+                <Form.Select style={{ width: "100px" }}>
+                    <option>한국어</option>
+                </Form.Select>
+            </Col>
+
+            <Col className="text-end">
+                <span>도움말</span>
+                <span className="mx-3">개인정보처리방침</span>
+                <span>약관</span>
             </Col>
         </Row>
-        <Row className="mt-4">
-            <Form.Label column sm={3}>비밀번호</Form.Label>
-            <Col sm={9}>
-                <Form.Control type="password" name="empPassword" 
-                        value={emp.empPassword}
-                        onChange={changeStringValue} placeholder="User Password"/>
-            </Col>
-        </Row>
+        </div>
         
 
-        <Row className="mt-5">
-            <Col className="text-end">
-                <Button variant="success" size="lg" onClick={sendLogin}>
-                    <FaRightToBracket/>
-                    <span className="ms-2">로그인</span>
-                </Button>
-            </Col>
-        </Row>
-       
     </>)
 }
