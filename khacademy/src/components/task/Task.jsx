@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Task.css";
+import TaskComments from "./TaskComments";
 
 // 3단 컬럼 정의 (TODO, IN_PROGRESS, DONE)
 const COLUMNS = [
@@ -350,9 +351,8 @@ export default function Task() {
                         onDragStart={(e) => handleDragStart(e, task.taskNo)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleCardClick(task.taskNo)}
-                        className={`direct-task-card ${pClass} ${
-                          isDraggingThis ? "is-dragging" : ""
-                        }`}
+                        className={`direct-task-card ${pClass} ${isDraggingThis ? "is-dragging" : ""
+                          }`}
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
@@ -705,6 +705,36 @@ export default function Task() {
           </div>
         ) : null}
       </aside>
+
+      {/* 우측 슬라이드 드로어 본문 내부 */}
+      <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
+        {selectedTask && (
+          <div className="drawer-container">
+            {/* 헤더 */}
+            <div className="drawer-header">...</div>
+
+            {/* 본문 */}
+            <div className="drawer-body">
+              {/* 기존 제목, 상태, 우선순위, 일정, 상세 설명 영역 */}
+              ...
+
+              {/* 💬 댓글 CRUD 컴포넌트 연동 지점 */}
+              <TaskComments
+                taskNo={selectedTask.taskNo}
+                currentProjectMemberNo={1} // 로그인 사용자의 projectMemberNo 전달
+                currentMemberName={"홍길동"}
+              />
+            </div>
+
+            {/* 하단 버튼 */}
+            <div className="drawer-footer">...</div>
+          </div>
+        )}
+      </aside>
     </div>
+
+
   );
+
+
 }
