@@ -2,7 +2,7 @@ import { Button, Col, Form, Row, Table } from "react-bootstrap";
 import { FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import Nav from 'react-bootstrap/Nav';
 import { Link } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
@@ -96,6 +96,8 @@ export default function Users() {
 
     // }, []);
 
+
+
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
             <Nav.Item>
@@ -187,7 +189,7 @@ export default function Users() {
                             
                                 <span className="ms-2">
 
-                                    <FaCircle className={online? "text-success" : ""}/>
+                                    <FaCircle className={online? "text-success" : "text-secondary"}/>
                                 </span>
                         {emp.empName}</td>
                         <td>{emp.deptName}</td>
@@ -205,6 +207,23 @@ export default function Users() {
                                             <Row className="mt-4">
                                                 <Col>이메일</Col>
                                                 <Col>{emp.empEmail}</Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Col>생년월일</Col>
+                                                <Col>{emp.empBirth}</Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Col>연락처</Col>
+                                                <Col>{emp.empContact}</Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Col>주소</Col>
+                                                <Col>{emp.empAddress1}</Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Button>
+                                                    <span>사용자관리</span>
+                                                </Button>
                                             </Row>
                                         </Popover.Body>
                                     </Popover>

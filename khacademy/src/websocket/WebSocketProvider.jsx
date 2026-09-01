@@ -11,49 +11,25 @@ export default function ({ children }) {
     const isLogin = useAtomValue(isLoginState);
     const [users, setUsers] = useState([]);
 
-    //웹소켓 연결을 관리하는 useEffect
-    useEffect(() => {
-        if (!isLogin) {
-            return;
-        }
-        //로그인 상태이면 웹소켓 서버에 연결
-        connectWebSocket();
+    const connectToServer = useCallback(() => {
 
-        return () => {
-            //로그아웃 시
-            disconnectFromServer(client);
-        };
+        const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
 
-    }, [isLogin]);
+        const client = new Client({
+            webSocketFactory: () => socket,
 
-    //백엔드에서 온라인 사용자 변동을 실시간으로 전달받는 구독
-    useEffect(()=>{
-        if(!isLogin){//로그인 상태가 아니면
-            setUsers([]);//사용자들을 보여주지 않겠다
-            return;
-        }
+            onConnect: () => {
+                client.subscribe("/public/onlineUsers", (message) => {
+                    const jsonArray = JSON.parse(message.body);
+                    setUsers(jsonArray);
+                });
 
-        let subscription = null;
+                client.publish({
+                    destination: "/app/onlineUsers"
+                });
+            },
 
-        onWebSocketConnect(() => {//웹소켓 서버와 연결이 되면 이 콜백함수를 실행하겠다
-            //공용 웹소켓 클라이언트를 가져오고
-            const client = getWebSocketClient();
-            //없으면 때려치고
-            if(client == null) return;
-
-            subscription = client.subscribe(
-                "/public/onlineUsers",//여기 구독해서
-                (message) => {
-                    const json = JSON.parse(message.body);
-                    setUsers(json);
-                }
-            );
-
-            //현재 온라인 사용자 목록 요청
-            client.publish({
-                destination: "/app/onlineUsers"
-            });
-
+            debug: (str) => console.log(str)
         });
 
         //클린업 함수
@@ -61,8 +37,33 @@ export default function ({ children }) {
             subscription?.unsubscribe();
             setUsers([]);
         }
+    }, []);
 
-    }, [isLogin]);
+    
+    useEffect(() => {
+
+
+    if (!isLogin) {
+        return;
+    }
+
+    const client = connectToServer();
+
+    setClient(client);
+
+
+    return () => {
+
+        disconnectFromServer(client);
+        setClient(null);
+    };
+
+}, [isLogin]);
+
+
+
+
+
 
     return (<>
         <WebSocketContext.Provider value={{ users }}>
