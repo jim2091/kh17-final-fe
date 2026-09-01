@@ -98,22 +98,11 @@ export default function PublicProjectList() {
         //확인창
         const result = await Swal.fire({
             title:project.projectName,
-            icon:"info",
-            showCancelButton:true,
-            html: `
-                <div style="text-align:left">
-                    <p>
-                        <strong>프로젝트 목적</strong>
-                    </p>
-                    <p>${project.projectPurpose}</p>
-                    <hr>
-                    <p>
-                        참여상태 :
-                        ${joined ? "참여중" : "참여 가능"}
-                    </p>
-                </div>
-            `,
-            
+            text : joined
+                ? "이미 참여중인 프로젝트입니다."
+                : "이 프로젝트에 참가하시겠습니까?",
+            icon : "info",
+            showCancelButton : true,
             confirmButtonText:
                 joined ? "프로젝트 들어가기" : "참가하기",
             cancelButtonText:"닫기",
@@ -128,14 +117,16 @@ export default function PublicProjectList() {
             return;
         }
         try{
-            await apiClient.post(`/project/${projectNo}/join`)
+            await apiClient.post(`/project/${project.projectNo}/join`)
             
             toast.success("프로젝트에 참가했습니다.");
+
+            navigate(`/projects/${project.projectNo}/task`);
         }
         catch(e){
             toast.error("프로젝트 참가에 실패했습니다.");
         }
-    },[])
+    },[navigate,loadProjectList])
 
     //페이지 번호 생성
     const pageNumbers = [];
