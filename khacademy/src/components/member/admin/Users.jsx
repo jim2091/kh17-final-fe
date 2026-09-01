@@ -31,7 +31,7 @@ export default function Users() {
     // const [users, setUsers] = useState({});
 
 
-    
+
 
     // console.log("관리자 페이지로 가져온 로그인사용자명단 : ", users);
 
@@ -52,21 +52,21 @@ export default function Users() {
 
     useEffect(() => {
         loadData();
-        
-    
+
+
     }, []);
 
-    
+
 
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/admin/");
 
         setEmpList(data);
 
-        
+
         // console.log("전체 회원 목록 : ", data);
     }, []);
-    
+
     const { users } = useWebSocket();
 
     // setUsers(users);
@@ -112,7 +112,7 @@ export default function Users() {
                 </Nav.Link>
             </Nav.Item>
         </Nav>
-        <Col className="d-flex justify-content-between align-items-center">
+        <Col className="d-flex justify-content-between align-items-center p-5">
             <h1>회원관리</h1>
             <Button as={Link} to="/invite">
                 <FaPlus />
@@ -120,7 +120,7 @@ export default function Users() {
             </Button>
         </Col>
 
-        <Row className="mt-4">
+        <Row className="mt-4 p-5">
             <Col className="d-flex">
                 <div className="flex-fill">
                     <Form.Select name="deptNo" onClick={deptNameSearch} onChange={changeStringValue}>
@@ -163,11 +163,11 @@ export default function Users() {
 
         </Row>
 
-        <Row className="mt-5">
+        <Row className="p-5">
             <Col>
                 <Table responsive hover striped className="text-nowrap">
                     <thead>
-                        <tr>
+                        <tr className="text-center">
                             <th>회원번호</th>
                             <th>회원명</th>
                             <th>부서</th>
@@ -180,68 +180,68 @@ export default function Users() {
                         {empList.map((emp) => {
                             const online = users.some(user => user.empNo === emp.empNo);
 
-                            return(
+                            return (
 
-                            
-                    <tr key={emp.empNo}>
-                        <td>{emp.empNo}</td>
-                        <td>
-                            
-                                <span className="ms-2">
 
-                                    <FaCircle className={online? "text-success" : "text-secondary"}/>
-                                </span>
-                        {emp.empName}</td>
-                        <td>{emp.deptName}</td>
-                        <td>{emp.positionName}</td>
-                        <td>{emp.empState}</td>
-                        <td>
-                            <OverlayTrigger
-                                trigger="click"
-                                placement="left"
-                                rootClose={true}
-                                overlay={
-                                    <Popover id={`popover-positioned-left`}>
-                                        <Popover.Header as="h3">{emp.empName}</Popover.Header>
-                                        <Popover.Body>
-                                            <Row className="mt-4">
-                                                <Col>이메일</Col>
-                                                <Col>{emp.empEmail}</Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Col>생년월일</Col>
-                                                <Col>{emp.empBirth}</Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Col>연락처</Col>
-                                                <Col>{emp.empContact}</Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Col>주소</Col>
-                                                <Col>{emp.empAddress1}</Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Button>
-                                                    <span>사용자관리</span>
-                                                </Button>
-                                            </Row>
-                                        </Popover.Body>
-                                    </Popover>
-                                }
-                            >
-                                <Button variant="secondary">
-                                    <FaMagnifyingGlass />
-                                </Button>
-                            </OverlayTrigger>
+                                <tr key={emp.empNo}>
+                                    <td>{emp.empNo}</td>
+                                    <td>
 
-                        </td>
-                    </tr>
-                    );
-})}
-                </tbody>
-            </Table>
-        </Col>
-    </Row >
+                                        <FaCircle className={online ? "text-success" : "text-secondary"} />
+                                        <span className="ms-2">
+
+                                            {emp.empName}</span>
+                                    </td>
+                                    <td>{emp.deptName}</td>
+                                    <td>{emp.positionName}</td>
+                                    <td>{emp.empState}</td>
+                                    <td>
+                                        <OverlayTrigger
+                                            trigger="click"
+                                            placement="left"
+                                            rootClose={true}
+                                            overlay={
+                                                <Popover id={`popover-positioned-left`}>
+                                                    <Popover.Header as="h3">{emp.empName}</Popover.Header>
+                                                    <Popover.Body>
+                                                        <Row className="mt-4">
+                                                            <Col>이메일</Col>
+                                                            <Col>{emp.empEmail}</Col>
+                                                        </Row>
+                                                        <Row className="mt-4">
+                                                            <Col>생년월일</Col>
+                                                            <Col>{emp.empBirth}</Col>
+                                                        </Row>
+                                                        <Row className="mt-4">
+                                                            <Col>연락처</Col>
+                                                            <Col>{emp.empContact}</Col>
+                                                        </Row>
+                                                        <Row className="mt-4">
+                                                            <Col>주소</Col>
+                                                            <Col>{emp.empAddress1}</Col>
+                                                        </Row>
+                                                        <Row className="mt-4">
+                                                            <Button>
+                                                                <span>사용자관리</span>
+                                                            </Button>
+                                                        </Row>
+                                                    </Popover.Body>
+                                                </Popover>
+                                            }
+                                        >
+                                            <Button variant="secondary">
+                                                <FaMagnifyingGlass />
+                                            </Button>
+                                        </OverlayTrigger>
+
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </Table>
+            </Col>
+        </Row >
 
 
     </>)

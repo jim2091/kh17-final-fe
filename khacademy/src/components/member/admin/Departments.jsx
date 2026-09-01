@@ -8,6 +8,7 @@ import Modal from 'react-bootstrap/Modal';
 import { toast } from "react-toastify";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+// import "../member.css";
 
 function MyVerticallyCenteredModal(props) {
     const [dept, setDept] = useState({
@@ -137,7 +138,7 @@ export default function Departments() {
         deptBlock : "",
     });
 
-    const[showPopover, setShowPopover] = useState(false);
+    const[showPopover, setShowPopover] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -170,7 +171,7 @@ export default function Departments() {
 
         loadData();
 
-        setShowPopover(false);
+        setShowPopover(null);
         
     }, [selectedDept, loadData]);
 
@@ -188,7 +189,7 @@ export default function Departments() {
                 </Nav.Link>
             </Nav.Item>
         </Nav>
-        <Col className="d-flex justify-content-between align-items-center">
+        <Col className="d-flex justify-content-between align-items-center p-5">
             <h1>부서관리</h1>
             <Button variant="primary" onClick={() => setModalShow(true)}>
                 <FaPlus />추가
@@ -200,7 +201,7 @@ export default function Departments() {
             />
         </Col>
 
-        <Row className="mt-5">
+        <Row className="mt-5 p-5">
             <Col>
                 <Table responsive hover striped className="text-nowrap">
                     <thead>
@@ -215,7 +216,7 @@ export default function Departments() {
                     <tbody>
                         {deptList.map((dept) => (
                             <tr key={dept.deptNo}>
-                                <td>{dept.deptNo}</td>
+                                <td className="text-center">{dept.deptNo}</td>
                                 <td>{dept.deptName}</td>
                                 <td>{dept.deptInfo}</td>
                                 <td>{dept.deptBlock}</td>
@@ -223,9 +224,11 @@ export default function Departments() {
                                     <OverlayTrigger
                                         trigger="click"
                                         placement="left"
-                                        rootClose
-                                        show={showPopover}
-                                        onToggle={setShowPopover}
+                                        rootClose={true}
+                                        show={showPopover === dept.deptNo}
+                                        onToggle={(nextShow)=>{
+                                            setShowPopover(nextShow? dept.deptNo : null);
+                                        }}
                                         overlay={
                                             <Popover id={`popover-positioned-left`}>
                                                 <Popover.Header as="h3">{dept.deptName}</Popover.Header>
@@ -234,15 +237,15 @@ export default function Departments() {
                                                         <Form.Label column sm={3}>부서명</Form.Label>
                                                         <Col sm={9}>
                                                             <Form.Control type="text" name="deptName" value={selectedDept.deptName}
-                                                                onChange={changeStringValue} className="w-50 d-inline-block">
+                                                                onChange={changeStringValue} className="w-100">
                                                             </Form.Control>
                                                         </Col>
                                                     </Row>
                                                     <Row className="mt-4">
-                                                        <Form.Label column sm={3}>부서설명</Form.Label>
+                                                        <Form.Label column sm={3}>하는 일</Form.Label>
                                                         <Col sm={9}>
                                                             <Form.Control type="text" name="deptInfo" value={selectedDept.deptInfo}
-                                                                onChange={changeStringValue} className="w-50 d-inline-block">
+                                                                onChange={changeStringValue} className="w-100">
                                                             </Form.Control>
                                                         </Col>
                                                     </Row>
@@ -279,7 +282,12 @@ export default function Departments() {
                                             </Popover>
                                         }
                                     >
-                                        <Button variant="secondary" onClick={()=>{setData(dept); setShowPopover(true);}}>
+                                        <Button variant="secondary" onClick={()=>{
+                                            setData(dept);
+                                            setShowPopover(
+                                                showPopover === dept.deptNo? null : dept.deptNo
+                                            )
+                                        }}>
                                             <FaMagnifyingGlass />
                                         </Button>
                                     </OverlayTrigger>
