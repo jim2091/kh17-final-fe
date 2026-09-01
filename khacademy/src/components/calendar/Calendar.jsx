@@ -41,9 +41,13 @@ export default function Calendar() {
         loadScheduleList();
     }, []);
 
-    const loadScheduleList = useCallback(async () => {
+    const loadScheduleList = useCallback(async (showLoading = true) => {
         try {
-            setLoading(true);
+            //최초 로딩시에만 로딩화면 띄우도록 개선
+            if(showLoading === true) {
+                setLoading(true);
+            }
+
             const { data } = await apiClient.get(`/schedule/project/${projectNo}`);
             setScheduleList(data.scheduleList);
         }
@@ -52,7 +56,9 @@ export default function Calendar() {
             toast.error("일정을 불러오지 못했습니다.");
         }
         finally {
-            setLoading(false);
+            if(showLoading === true) {
+                setLoading(false);
+            }
         }
     }, []);
 
@@ -74,7 +80,8 @@ export default function Calendar() {
                     
                     console.log("일정 변경 알림 수신", json);
     
-                    loadScheduleList();//일정 페이지를 갱신
+                    loadScheduleList(false);//일정 페이지를 갱신
+                    //웹소켓으로 변동사항 받아서 갱신시에는 로딩화면 띄우지 않도록 false
                 }
             );
         });
@@ -260,7 +267,7 @@ export default function Calendar() {
 
             toast.success("일정이 등록되었습니다");
             closeInputModal();
-            loadScheduleList();
+            loadScheduleList(false);
         }
         catch (e) {
             console.error(e);
@@ -439,7 +446,7 @@ export default function Calendar() {
             toast.success("일정이 수정되었습니다.");
 
             //달력 목록 갱신
-            await loadScheduleList();
+            await loadScheduleList(false);
 
             //현재 상세 내용도 다시 조회
             const { data } = await apiClient.get(
@@ -495,7 +502,7 @@ export default function Calendar() {
             toast.success("일정이 삭제되었습니다");
 
             closeDetailModal();
-            loadScheduleList();
+            loadScheduleList(false);
         }
         catch (e) {
             console.error(e);
