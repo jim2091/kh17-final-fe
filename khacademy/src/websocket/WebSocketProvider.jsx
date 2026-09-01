@@ -64,8 +64,6 @@ export default function ({ children }) {
 
     }, [isLogin]);
 
-    //아까 publish도 언뜻 봤던거 같은데 지금은 백엔드에 따로 구현 안돼있는거 같아서 그냥 둘게요
-
     return (<>
         <WebSocketContext.Provider value={{ users }}>
             {children}
