@@ -8,11 +8,11 @@ import { loginUserState } from "@utils/storage";
 import { useNavigate } from "react-router-dom";
 import { loginActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
-import { socketState } from "@utils/storage";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
-import { heartbeatState } from "@utils/storage";
-import { onlineState } from "@utils/storage";
+// import { socketState } from "@utils/storage";
+// import SockJS from "sockjs-client";
+// import { Client } from "@stomp/stompjs";
+// import { heartbeatState } from "@utils/storage";
+// import { onlineState } from "@utils/storage";
 
 export default function Login() {
 
@@ -24,11 +24,11 @@ export default function Login() {
 
     //WebSocket state
     // const [client, setClient] = useState(null);
-    const[socket, setSocket] = useAtom(socketState);
+    // const[socket, setSocket] = useAtom(socketState);
 
-    const[heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
+    // const[heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
 
-    const[online, setOnline] = useAtom(onlineState);
+    // const[online, setOnline] = useAtom(onlineState);
 
     
     const loginAction = useSetAtom(loginActionState);
@@ -56,7 +56,7 @@ export default function Login() {
 
             loginAction(data);
 
-            connectToServer();
+            // connectToServer();
 
             navigate("/");
 
@@ -71,56 +71,57 @@ export default function Login() {
             }
             else {//500
                 await Swal.fire("일시적인 서버 오류입니다.\n잠시 후 실행해주세요");
+                // console.log("무슨에러? :", e);
             }
         }
     }, [emp, loginAction]);
 
     // console.log("socket : " , socket);
 
-    const connectToServer = useCallback(()=>{
-        const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
+    // const connectToServer = useCallback(()=>{
+    //     const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
 
-        const client = new Client({
+    //     const client = new Client({
 
-            webSocketFactory : () => socket,
+    //         webSocketFactory : () => socket,
 
-            onConnect: ()=>{
+    //         onConnect: ()=>{
                 
 
-                setSocket(client);
+    //             setSocket(client);
 
-                client.subscribe("/public/online", (message)=>{
+    //             client.subscribe("/public/online", (message)=>{
 
-                    const data = JSON.parse(message.body);
+    //                 const data = JSON.parse(message.body);
 
-                    console.log("온라인 상태 : ", data);
+    //                 console.log("온라인 상태 : ", data);
 
-                    setOnline(data);
-                });
+    //                 setOnline(data);
+    //             });
                 
 
-                //10초마다 연결 확인
-                const intervalId = setInterval(()=>{
-                    if(client.connected){
-                        client.publish({
-                            destination: "/app/heartbeat",
-                            body:""
-                        });
-                        console.log("heartbeat 전송");
-                    }
-                }, 10000);
+    //             //10초마다 연결 확인
+    //             const intervalId = setInterval(()=>{
+    //                 if(client.connected){
+    //                     client.publish({
+    //                         destination: "/app/heartbeat",
+    //                         body:""
+    //                     });
+    //                     console.log("heartbeat 전송");
+    //                 }
+    //             }, 10000);
 
-                setHeartbeatInterval(intervalId);
-            },
+    //             setHeartbeatInterval(intervalId);
+    //         },
 
-            debug:(str)=>console.log(str)
+    //         debug:(str)=>console.log(str)
 
-        });
+    //     });
 
 
-        client.activate();
+    //     client.activate();
 
-    }, []);
+    // }, []);
 
     
     return (<>

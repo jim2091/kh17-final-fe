@@ -26,6 +26,7 @@ export default defineConfig({
       "@templates": path("./src/templates"),
       "@utils": path("./src/utils"),
       "@guard": path("./src/guard"),
+      "@websocket":path("./src/websocket"),
     }
   },
   //라이브러리 구동에 필요한 값을 정의

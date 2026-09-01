@@ -308,8 +308,11 @@
     color: #212529;
 }
 
-.calendar-card .fc .fc-button:focus {
+.calendar-card .fc .fc-button:focus,
+.calendar-card .fc .fc-button:focus-visible {
+    outline: none;
     box-shadow: none;
+    border-color: #dee2e6;
 }
 
 
@@ -322,13 +325,16 @@
     border-color: #ced4da;
 
     color: #212529;
+
+    outline: none;
+    box-shadow: none;
 }
 
 
 /* 이전 / 다음 */
 
-.calendar-card .fc .fc-prev-button,
-.calendar-card .fc .fc-next-button {
+.calendar-card .fc .fc-prevCustom-button,
+.calendar-card .fc .fc-nextCustom-button {
     width: 38px;
     height: 38px;
 
@@ -350,7 +356,7 @@
 
 /* 오늘 버튼 */
 
-.calendar-card .fc .fc-today-button {
+.calendar-card .fc .fc-todayCustom-button {
     margin-left: 6px;
 
     background-color: #ffffff;
@@ -360,7 +366,7 @@
     color: #495057;
 }
 
-.calendar-card .fc .fc-today-button:hover {
+.calendar-card .fc .fc-todayCustom-button:hover {
     background-color: #f1f3f5;
 }
 
@@ -384,6 +390,34 @@
     border-color: #405edc;
 
     color: #ffffff;
+}
+
+/* 휠 이동 버튼 */
+.calendar-card .fc .fc-wheelMove-button {
+    min-width: 120px;
+    height: 60px;
+
+    margin-right: 18px;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+
+    background-color: #f8f9fb;
+
+    color: #7a8491;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: ns-resize;
+
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-card .fc .fc-wheelMove-button:hover {
+    background-color: #f8f9fb;
+    border-color: #c8ced6;
 }
 
 
@@ -1468,8 +1502,8 @@
         font-size: 15px;
     }
 
-    .calendar-card .fc .fc-prev-button,
-    .calendar-card .fc .fc-next-button {
+    .calendar-card .fc .fc-prevCustom-button,
+    .calendar-card .fc .fc-nextCustom-button {
         width: 40px;
         height: 40px;
     }
@@ -1510,12 +1544,16 @@
 
 /*
     사이드바까지 포함했을 때 공간이 부족해지는 시점부터
-    오른쪽 패널을 달력 아래로 이동
+    오른쪽 패널 숨김
 */
 @media (max-width: 1300px) {
 
     .calendar-main {
         grid-template-columns: 1fr;
+    }
+
+    .calendar-side {
+        display: none;
     }
 
 }
@@ -1545,9 +1583,25 @@
     }
 
 
-    /* =========================
-       Toolbar
-    ========================= */
+    /* 기존 작은 화면 설정 */
+    .calendar-card .fc .fc-daygrid-day-frame {
+        min-height: 90px;
+    }
+
+    .calendar-card .fc .fc-daygrid-day-number {
+        font-size: 13px;
+    }
+
+    .calendar-card .fc .fc-daygrid-event {
+        font-size: 12px;
+    }
+}
+
+/* =====================================================
+    Calendar Toolbar Responsive
+===================================================== */
+/* 얘도 원래 900으로 하려했는데 보니까 900 이전에 깨지길래 따로 뺌 */
+@media (max-width: 1000px) {
 
     .calendar-card .fc .fc-toolbar {
         display: grid;
@@ -1562,8 +1616,7 @@
         margin-bottom: 20px;
     }
 
-
-    /* 이전 / 다음 */
+    /* 이전 / 다음 / 오늘 */
     .calendar-card .fc .fc-toolbar-chunk:nth-child(1) {
         grid-column: 1;
         grid-row: 1;
@@ -1571,7 +1624,6 @@
         display: flex;
         align-items: center;
     }
-
 
     /* 날짜 제목 */
     .calendar-card .fc .fc-toolbar-chunk:nth-child(2) {
@@ -1584,8 +1636,7 @@
         min-width: 0;
     }
 
-
-    /* View / 일정등록 */
+    /* 월 / 주 / 목록 / 일정등록 */
     .calendar-card .fc .fc-toolbar-chunk:nth-child(3) {
         grid-column: 1 / -1;
         grid-row: 2;
@@ -1597,8 +1648,6 @@
         gap: 6px;
     }
 
-
-    /* 기간 제목 줄바꿈 방지 */
     .calendar-card .fc-moveMonth-button {
         white-space: nowrap;
 
@@ -1606,16 +1655,14 @@
         padding: 5px 8px !important;
     }
 
-
-    /* 버튼도 살짝 축소 */
     .calendar-card .fc .fc-button {
         padding: 7px 10px;
 
         font-size: 13px;
     }
 
-    .calendar-card .fc .fc-prev-button,
-    .calendar-card .fc .fc-next-button {
+    .calendar-card .fc .fc-prevCustom-button,
+    .calendar-card .fc .fc-nextCustom-button {
         width: 36px;
         height: 36px;
     }
@@ -1623,24 +1670,6 @@
     .calendar-card .fc .fc-addSchedule-button {
         padding-left: 13px;
         padding-right: 13px;
-    }
-
-
-    /* 기존 작은 화면 설정 */
-    .calendar-card .fc .fc-toolbar-title {
-        font-size: 19px;
-    }
-
-    .calendar-card .fc .fc-daygrid-day-frame {
-        min-height: 90px;
-    }
-
-    .calendar-card .fc .fc-daygrid-day-number {
-        font-size: 13px;
-    }
-
-    .calendar-card .fc .fc-daygrid-event {
-        font-size: 12px;
     }
 }
 
@@ -1674,4 +1703,11 @@
         width: 44px;
     }
 
+}
+
+
+@media (max-width: 1300px) {
+    .calendar-card .fc .fc-wheelMove-button {
+        display: none;
+    }
 }

@@ -2,10 +2,32 @@
     width: 230px;
     flex-shrink: 0;
 
-    padding: 22px 18px;
+    overflow: hidden;
 
     border-right: 1px solid #e5e7eb;
     background-color: #f9fafb;
+
+    transition: width 0.2s ease;
+}
+
+.sidebar-inner {
+    width: 230px;
+    height: 100%;
+
+    padding: 22px 18px;
+
+    box-sizing: border-box;
+
+    transition: transform 0.2s ease;
+}
+
+.sidebar.closed {
+    width: 0;
+    border-right: 0;
+}
+
+.sidebar.closed .sidebar-inner {
+    transform: translateX(-100%);
 }
 
 .sidebar-create {
@@ -77,9 +99,12 @@
 
 @media (min-width: 1600px) {
 
-    .sidebar {
+    .sidebar:not(.closed){
         width: 240px;
+    }
 
+    .sidebar-inner {
+        width: 240px;
         padding: 24px 20px;
     }
 
@@ -110,7 +135,7 @@
     태블릿 / 모바일
 ===================================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
 
     .sidebar {
         position: fixed;
@@ -123,16 +148,33 @@
 
         width: 230px;
 
-        padding: 20px 16px;
-
         transform: translateX(-100%);
         transition: transform 0.2s ease;
+
+        overflow: visible;
 
         box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
     }
 
+    .sidebar-inner {
+        transform: none;
+    }
+
+
+    /* 작은 화면 - 열림 */
     .sidebar.open {
+        width: 230px;
         transform: translateX(0);
+    }
+
+    /* 작은 화면 - 닫힘 */
+    .sidebar.closed {
+        width: 230px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.closed .sidebar-inner {
+        transform: none;
     }
 
     .sidebar-backdrop {

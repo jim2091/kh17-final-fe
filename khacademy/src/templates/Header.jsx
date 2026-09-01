@@ -6,32 +6,32 @@ import Image from 'react-bootstrap/Image';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 
-
-
-
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+
 import { loginUserState } from "@utils/storage";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback } from "react";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
-import { socketState } from "@utils/storage";
-import { heartbeatState } from "@utils/storage";    
-
-import { onlineState } from "@utils/storage";
+import { useWebSocket } from "@websocket/WebSocketProvider";
 import { FaCircle } from "react-icons/fa6";
+// import { socketState } from "@utils/storage";
+// import { heartbeatState } from "@utils/storage";    
+
+// import { onlineState } from "@utils/storage";
+// import { FaCircle } from "react-icons/fa6";
 
 
 
-export default function Header({ openSidebar }) {
+export default function Header({ toggleSidebar }) {
 
     const { empName, empEmail } = useAtomValue(loginUserState) || {};
 
-    const [socket, setSocket] = useAtom(socketState);
+    // const [socket, setSocket] = useAtom(socketState);
 
-    const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
+    // const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
 
-    const [online, setOnline] = useAtom(onlineState);
+    // const [online, setOnline] = useAtom(onlineState);
 
     //읽기전용 atom을 불러오는법
     //const [isLogin] = useAtom(isLoginState);
@@ -42,19 +42,21 @@ export default function Header({ openSidebar }) {
 
     const logoutAction = useSetAtom(logoutActionState);
 
+    const { users } = useWebSocket();
+
 
     const logout = useCallback(async () => {
 
-        if (heartbeatInterval) {
-            clearInterval(heartbeatInterval);
-            setHeartbeatInterval(null);
-        }
-        console.log("heartbeat전송 끝");
+        // if (heartbeatInterval) {
+        //     clearInterval(heartbeatInterval);
+        //     setHeartbeatInterval(null);
+        // }
+        // console.log("heartbeat전송 끝");
 
-        if (socket) {
-            await socket.deactivate();
-            setSocket(null);
-        }
+        // if (socket) {
+        //     await socket.deactivate();
+        //     setSocket(null);
+        // }
 
         try {
             //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
@@ -69,13 +71,14 @@ export default function Header({ openSidebar }) {
         finally {
             logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
         }
-    }, [socket]);
+    }, []);
 
 
+    const online = users.some(user=>user.empName === empName);
 
     // console.log(socket?.readyState);
 
-    console.log("online:", online);
+    // console.log("online:", online);
 
 
 
@@ -85,10 +88,11 @@ export default function Header({ openSidebar }) {
             <button
                 type="button"
                 className="header-menu-button"
-                onClick={openSidebar}
+                onClick={toggleSidebar}
             >
                 ☰
             </button>
+
             <div className="header-logo">
                 LOGO
             </div>
@@ -168,11 +172,10 @@ export default function Header({ openSidebar }) {
 
                                 roundedCircle />
                         </OverlayTrigger>
-                        {online && (<>
 
-                            <FaCircle className="text-success"/>
+
+                            <FaCircle className={online ? "text-success" : ""}/>
                             <span>online</span>
-                        </>)}
                     </>)}
 
                 </div>

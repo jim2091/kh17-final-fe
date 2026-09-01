@@ -21,7 +21,7 @@ import Records from './components/records/Records';
 import Invite from './components/member/admin/Invite';
 import Mypage from "./components/member/Mypage";
 import Edit from "./components/member/Edit";
-import Login from './components/member/Login';
+import Login from "./components/member/Login";
 import Users from "./components/member/admin/Users";
 import Positions from "./components/member/admin/Positions";
 import Departments from "./components/member/admin/Departments";
