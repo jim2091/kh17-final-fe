@@ -101,15 +101,22 @@ export default function Task() {
     }
   }, [projectNo, fetchTasks, fetchProjectMembers]);
 
+
+
+
   // 공용 WebSocketProvider를 통한 실시간 변경 감지 및 반영
   useEffect(() => {
     if (!projectNo) return;
 
     let subscription = null;
+    let unregisterWebSocketConnect = null;
 
-    onWebSocketConnect(() => {
-      const client = getWebSocketClient();
-      if (!client) return;
+    // 1. 구독 실행 내부 함수 정의 (이름: doSubscribe)
+    const doSubscribe = (client) => {
+      if (!client || !client.connected) return;
+
+      // 기존 구독이 있다면 먼저 정리
+      subscription?.unsubscribe();
 
       subscription = client.subscribe(
         `/public/projects/${projectNo}/kanban`,
@@ -147,15 +154,29 @@ export default function Task() {
           }
         }
       );
+    };
+
+    // 2. 이미 웹소켓이 연결되어 있는 상태라면 즉시 구독 실행
+    const client = getWebSocketClient();
+    if (client && client.connected) {
+      doSubscribe(client);
+    }
+
+    // 3. 소켓이 새로 연결되거나 재접속될 때를 대비한 리스너 등록
+    unregisterWebSocketConnect = onWebSocketConnect(() => {
+      const currentClient = getWebSocketClient();
+      doSubscribe(currentClient);
     });
 
+    // 4. 언마운트 및 projectNo 변경 시 구독 및 리스너 정리
     return () => {
       subscription?.unsubscribe();
+      if (typeof unregisterWebSocketConnect === "function") {
+        unregisterWebSocketConnect();
+      }
     };
   }, [projectNo, loginUser?.empNo, fetchTasks]);
 
-
-  
 
   // 담당자 이름 반환 헬퍼 함수 (미배정 방지)
   const getAssigneeName = (task) => {
