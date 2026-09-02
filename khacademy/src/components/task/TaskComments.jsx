@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { MessageSquare, Send, Edit2, Trash2, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import { apiClient } from "@utils/reaxios";
 import "./TaskComments.css";
 
@@ -12,8 +13,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
   const [editingCommentNo, setEditingCommentNo] = useState(null);
   const [editInputContent, setEditInputContent] = useState("");
 
-  // localStorage의 모든 항목을 전수 조사하여 empNo 추출
-  const detectEmpNo = () => {
+  // 로그인한 사번 추출
+  const getLoginEmpNo = () => {
     if (loginUser && loginUser.empNo) {
       return Number(loginUser.empNo);
     }
@@ -32,7 +33,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     return Number(localStorage.getItem("empNo") || 0);
   };
 
-  const detectedEmpNo = detectEmpNo();
+  const currentEmpNo = getLoginEmpNo();
 
   // 댓글 목록 조회
   const fetchComments = useCallback(async (isSilent = false) => {
@@ -71,7 +72,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     };
   }, [taskNo, fetchComments]);
 
-  // 댓글 신규 등록
+  // 댓글 등록
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!inputContent.trim()) return;
@@ -110,7 +111,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     setEditInputContent("");
   };
 
-  // 수정 저장
+  // 수정 내용 서버 저장
   const handleSaveEdit = async (commentNo) => {
     if (!editInputContent.trim()) {
       toast.warn("수정할 댓글 내용을 입력해주세요.");
@@ -133,29 +134,46 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
-  // 삭제
+  // 댓글 삭제 (SweetAlert2 모달 적용)
   const handleDeleteComment = async (commentNo) => {
-    if (!window.confirm("이 댓글을 삭제하시겠습니까?")) return;
+    const result = await Swal.fire({
+      title: "댓글을 삭제하시겠습니까?",
+      text: "삭제된 댓글은 복구할 수 없습니다.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#94a3b8",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await apiClient.delete(
         `/task/comment/${commentNo}?projectNo=${projectNo || 0}&taskNo=${taskNo}`
       );
-      toast.success("댓글이 삭제되었습니다.");
+      Swal.fire({
+        title: "삭제 완료",
+        text: "댓글이 정상적으로 삭제되었습니다.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
       fetchComments(true);
     } catch (error) {
       console.error("댓글 삭제 실패:", error);
-      toast.error("댓글 삭제에 실패했습니다.");
+      Swal.fire({
+        title: "삭제 실패",
+        text: "댓글 삭제 중 오류가 발생했습니다.",
+        icon: "error",
+      });
     }
   };
 
   return (
     <div className="task-comment-container" style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #e2e8f0" }}>
-      {/* 상태 확인용 디버그 텍스트 */}
-      <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "8px" }}>
-        [식별 정보] 감지된 로그인 사번: {detectedEmpNo}
-      </div>
-
       <div className="comment-header" style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
         <MessageSquare size={16} />
         <span style={{ fontSize: "14px", fontWeight: "bold", color: "#1e293b" }}>
@@ -163,6 +181,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         </span>
       </div>
 
+      {/* 등록 폼 */}
       <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
         <textarea
           className="comment-textarea"
@@ -179,6 +198,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         </div>
       </form>
 
+      {/* 댓글 목록 */}
       <div className="comment-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {loading ? (
           <div className="comment-empty">댓글을 불러오는 중...</div>
@@ -188,8 +208,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
           comments.map((comment) => {
             const commentEmpNo = Number(comment.empNo || 0);
 
-            // 로그인된 사번과 댓글 작성자 사번 비교
-            const isMyComment = detectedEmpNo > 0 && commentEmpNo > 0 && detectedEmpNo === commentEmpNo;
+            // 로그인 사번과 댓글 작성자 사번 1:1 대조
+            const isMyComment = currentEmpNo > 0 && commentEmpNo > 0 && currentEmpNo === commentEmpNo;
             const isEditing = editingCommentNo === comment.taskCommentNo;
             const author = (comment.empName || comment.memberName || "사원").trim();
 
@@ -243,7 +263,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
                     )}
                   </div>
 
-                  {/* 본인 댓글일 때 수정/삭제 버튼 노출 */}
+                  {/* 본인 댓글에만 수정 및 삭제 버튼 노출 */}
                   {isMyComment && !isEditing && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <button
