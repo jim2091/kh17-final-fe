@@ -4,6 +4,7 @@ import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
 import { Row,Form, Col, Button, Spinner } from "react-bootstrap";
 import { FaAsterisk, FaPlus } from "react-icons/fa6";
+import Swal from "sweetalert2";
 
 export default function ProjectEdit() {
     
@@ -100,6 +101,36 @@ export default function ProjectEdit() {
         }
 
     }, [project.projectDeadline]);
+
+    //공개범위 변경
+    const changeVisibility = useCallback(async(e)=>{
+        const value = e.target.value;
+
+        //비공개->공개
+        if(project.projectVisibility === "private" &&
+            value === "public"
+        ){
+            const result = await Swal.fire({
+                icon : "warning",
+                title : "공개 프로젝트로 변경하시겠습니까?",
+                text : "공개로 변경하면 모든 사원에게 조회가 됩니다.",
+                showCancelButton : true,
+                confirmButtonText : "변경",
+                cancelButtonText : "취소"
+            })
+
+            //취소
+            if(result.isConfirmed === false){
+                return;
+            }
+        }
+
+        //공개범위 변경
+        setProject(prev => ({
+            ...prev,
+            projectVisibility : value
+        }));
+    },[project.projectVisibility]);
 
     //전체 입력 가능 여부
     const valid = useMemo(()=>{
@@ -268,7 +299,7 @@ export default function ProjectEdit() {
                         name="projectVisibility"
                         value="public"
                         checked={project.projectVisibility === "public"}
-                        onChange={changeStringValue}
+                        onChange={changeVisibility}
                     />
 
                     <Form.Check
@@ -278,7 +309,7 @@ export default function ProjectEdit() {
                         name="projectVisibility"
                         value="private"
                         checked={project.projectVisibility === "private"}
-                        onChange={changeStringValue}
+                        onChange={changeVisibility}
                     />
                 </Col>
             </Row>
