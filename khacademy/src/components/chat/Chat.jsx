@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import { apiClient } from "../../utils/reaxios";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
 import { useAtomValue } from "jotai";
 import { loginUserState } from "@utils/storage";
 import Swal from "sweetalert2";
@@ -18,14 +16,17 @@ import "./Chat.css";
 export default function Chat() {
     //● state
     const {projectNo} = useParams(); 
+    const loginUser = useAtomValue(loginUserState);
+
     const [channels, setChannels] = useState([]);
-    const [unreadCounts, setUnreadCounts] = useState([]);
+    const [unreadCounts, setUnreadCounts] = useState({});
     const [selectedChannel, setSelectedChannel] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const loginUser = useAtomValue(loginUserState);
     const [last, setLast] = useState(true);//과거 메세지가 더 있는지 여부(true/false)
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    //채널 구독 effect에서 channels를 연관항목에 넣지 않고 현재 채널을 알기 위한 Ref
+    const selectedChannelRef = useRef(null);
 
 
     //● 채널 목록 불러오기
@@ -40,11 +41,6 @@ export default function Chat() {
             console.error(e);
         }
     }, [projectNo]);
-
-    useEffect(() => {
-        loadChannelList();
-    }, [loadChannelList]);
-
 
     //● 채널별 안 읽은 메세지 수 조회
     const loadUnreadCount = useCallback(async () => {
@@ -69,8 +65,9 @@ export default function Chat() {
     }, [projectNo]);
 
     useEffect(() => {
+        loadChannelList();
         loadUnreadCount();
-    }, [loadUnreadCount]);
+    }, [loadChannelList, loadUnreadCount]);
 
 
     //● 채널 선택
@@ -102,27 +99,38 @@ export default function Chat() {
         }
     }, []);
 
-
-    //● 채널 메세지 읽음 처리
-    // const readChannelMessage = useCallback(async(channelNo) => {
-    //     try {
-    //         await apiClient.post(
-    //             `/message/${channelNo}/read`
-    //         );
-
-    //         //console.log("메세지 읽음 처리 성공!");
-    //     }
-    //     catch(e) {
-    //         console.log("메세지 읽음 처리 실패", e);
-    //     }
-    // }, []);
-
-
-    //● 채널 변경시 해당 채널에 대한 메세지 조회
+    //● 채널 변경시 해당 채널에 대한 메세지 조회 후 읽음 처리
     useEffect(() => {
         if (!selectedChannel) return;
 
-        loadMessages(selectedChannel.chatChannelNo);
+        //loadMessages는 비동기 함수라 서버 읽음처리와 따로 실행하면
+        //채널에 들어갔을때 읽음처리가 먼저 수행되고 로드가 되서
+        //시점이 안맞아 반영이 안되는 문제가 생길 수 있음
+        //그래서 둘을 합쳐서 async함수로 만들고 await로 load가 끝난 후에
+        //읽음 처리가 실행되도록 만듬
+        const enterChannel = async () => {
+            //1. 먼저 메시지 조회
+            await loadMessages(selectedChannel.chatChannelNo);
+
+            //2. 조회가 끝난 뒤 읽음 처러
+            onWebSocketConnect(() => {
+                const client = getWebSocketClient();
+                if(client === null) return;
+
+                client.publish({
+                    destination: `/app/${selectedChannel.chatChannelNo}/read`
+                });
+
+                // 채널별 안읽은 메세지 수도 0으로
+                setUnreadCounts(prev => ({
+                    ...prev,
+                    [selectedChannel.chatChannelNo]: 0
+                }));
+            });
+        };
+
+        enterChannel();
+
     }, [selectedChannel, loadMessages]);
 
 
@@ -172,7 +180,11 @@ export default function Chat() {
         //(1) 메세지를 전송할 수 있는 상태인지 검증
         if (!selectedChannel) return;//채널을 선택하지 않았으면 전송하지 않음
         if(input.trim() === "") return;//입력값이 비어있으면 전송하지 않음
-        if (!client) return;//WebSocket 연결이 안됐으면 전송하지 않음
+        
+        const client = getWebSocketClient();
+        if(client === null || client.connected === false) {
+            return;//WebSocket 연결이 안됐으면 전송하지 않음
+        }
 
         //(2) 메세지 전송을 위한 JSON 데이터 생성
         const json = { content : input };
@@ -185,11 +197,11 @@ export default function Chat() {
         //(3) 메세지 입력창 비우기
         setInput("");
 
-    }, [client, input, selectedChannel]);
+    }, [input, selectedChannel]);
 
 
     //● 메세지 삭제 
-    const handelDelete = async(message) => {
+    const handleDelete = async(message) => {
 
         const result = await Swal.fire({
             title: "메세지를 삭제하시겠습니까?",
@@ -215,7 +227,7 @@ export default function Chat() {
 
 
     //● 메세지 수정
-    const handelEdit = async(message) => {
+    const handleEdit = async(message) => {
         const content = window.prompt(
             "메시지를 수정하세요.",
             message.content
@@ -238,39 +250,155 @@ export default function Chat() {
         }
     };
 
+    // 구독 관리 effect
+    useEffect(()=>{
+        if(channels.length === 0) return;
+        const subscriptions = [];
+
+        onWebSocketConnect(() => {
+            const client = getWebSocketClient();
+
+            if(client === null) return;
+
+            //각 채널의 구독 관리(/chat, /read, /update, /delete)
+            channels.forEach(channel => {
+                const channelNo = channel.chatChannelNo;
+
+                // /chat 구독
+                const chatSubscription = client.subscribe(
+                    `/public/${channelNo}/chat`,
+                    (message) => {
+                        const json = JSON.parse(message.body);
+
+                        console.log(`${channelNo} 채널 메세지 수신 : `, json);
+
+                        //현재 보고 있는 채널의 메세지면
+                        if(
+                            selectedChannel && 
+                            selectedChannel.chatChannelNo === channelNo
+                        ){
+                            //messages에 추가하고
+                            setMessages(prev => [...prev, json]);
+                            //다른 사람이 보낸 message면 읽음처리도 해주고
+                            if(json.empNo !== loginUser.empNo) {
+                                client.publish({
+                                    destination: `/app/${channelNo}/read`
+                                });
+                            }
+                        }
+                        //현재 보고 있는 채널의 메세지가 아니면
+                        else {
+                            if(json.empNo !== loginUser.empNo) {
+                                //채널별 안읽은 메세지수 추가해주고
+                                setUnreadCounts(prev => ({
+                                    ...prev,
+                                    [channelNo] : (prev[channelNo] || 0) + 1
+                                }));
+                            }
+                        }
+                    }
+                );
+
+                subscriptions.push(chatSubscription);
+
+                
+                // /read 구독
+                const readSubscription = client.subscribe(
+                    `/public/${channelNo}/read`,
+                    (message) => {
+                        const json = JSON.parse(message.body);
+                        console.log(`${channelNo} 채널 읽음 처리 알림 : `, json);
     
-    // useEffect(()=>{
-    //     if(channels.length === 0) return;
-    //     const subscription = [];
+                        //현재 보고 있는 채널의 메세지면
+                        if(
+                            selectedChannel &&
+                            selectedChannel.chatChannelNo === channelNo
+                        ) {
+                            setMessages(prev => 
+                                prev.map(message => {
+                                    const unread = json.messages.find(
+                                        item => item.messageNo === message.no
+                                    );
 
-    //     onWebSocketConnect(() => {
-    //         const client = getWebSocketClient();
+                                    if(unread) {
+                                        return {
+                                            ...message,
+                                            unreadCount: unread.unreadCount
+                                        };
+                                    }
+                                    return message;
+                                })
+                            );
+                        }
+                    }
+                );
 
-    //         if(client === null) return;
+                subscriptions.push(readSubscription);
+    
+                // /update 구독
+                const updateSubscription = client.subscribe(
+                    `/public/${channelNo}/update`,
+                    (message) => {
+                        const json = JSON.parse(message.body);
+    
+                        console.log("메세지 수정 알림 : ", json);
+    
+                        setMessages(prev => 
+                            prev.map(message => {
+                                if(message.no === json.messageNo) {
+                                    return {
+                                        ...message,
+                                        content: json.content,
+                                        utime: json.utime
+                                    };
+                                }
 
-    //         //각 채널의 chat 구독 관리
-    //         channels.forEach(channel => {
-    //             const channelNo = channel.channelNo;
+                                return message;
+                            })
+                        );
+                    }
+                );
 
-    //             const chatSubscription = client.subscribe(
-    //                 `/public/${channelNo}/chat`,
-    //                 (message) => {
-    //                     const json = JSON.parse(message.body);
+                subscriptions.push(updateSubscription);
 
-    //                     console.log(`${channelNo} 채널 메세지 수신 : `, json);
 
-    //                     //현재 보고 있는 채널
-    //                     if(
-    //                         selectedChannel && 
-    //                         selectedChannel.chatChannelNo === channelNo
-    //                     ){
-    //                         setMessages(prev => [...prev, json]);
-    //                     }
-    //                 }
-    //             );
-    //         })
-    //     });
-    // })
+                // /delete 구독
+                const deleteSubscription = client.subscribe(
+                    `/public/${channelNo}/delete`,
+                    (message) => {
+                        const json = JSON.parse(message.body);
+
+                        console.log("메세지 삭제 알림 : ", json);
+
+                        setMessages(prev => 
+                            prev.map(message => {
+                                if(message.no === json.messageNo) {
+                                    return {
+                                        ...message,
+                                        deleted: "Y"
+                                    };
+                                }
+
+                                return message;
+                            })
+                        );
+                    }
+                );
+
+                subscriptions.push(deleteSubscription);
+
+            });
+
+        });
+
+        //클린업함수. 구독 해제
+        return () => {
+            subscriptions.forEach(subscription => {
+                subscription.unsubscribe();
+            });
+        };
+
+    }, [channels, loginUser]);
 
     //● view
     return(<>
@@ -295,8 +423,8 @@ export default function Chat() {
                 <MessageArea 
                     messages={messages}
                     onLoadMore={loadMoreMessages}
-                    onEdit={handelEdit}
-                    onDelete={handelDelete}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                 />
 
                 <MessageInput 
