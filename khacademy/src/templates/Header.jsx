@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import "./Header.css";
-import { Button, Col, Row } from 'react-bootstrap';
+import { Button, Card, Col, Row } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -74,7 +74,7 @@ export default function Header({ toggleSidebar }) {
     }, []);
 
 
-    const online = users.some(user=>user.empName === empName);
+    const online = users.some(user => user.empName === empName);
 
     // console.log(socket?.readyState);
 
@@ -123,59 +123,81 @@ export default function Header({ toggleSidebar }) {
                         <OverlayTrigger trigger="click" placement="bottom" rootClose={true}
                             overlay={
                                 <Popover id="popover-positioned-bottom">
-                                    <Popover.Header as="h3">프로필</Popover.Header>
                                     <Popover.Body>
+                                        <Card>
+                                            <Card.Body>
+                                                <Row className="align-items-center">
+                                                    <Col xs="auto">
+                                                        <Link to="/me">
+                                                            <Image src="https://placehold.co/50x50"
+                                                                // roundedCircle 
+                                                                className="rounded-3" />
+                                                        </Link>
+                                                    </Col>
+                                                    <Col>
+                                                        <Link to="/me" className="text-decoration-none">
+                                                            <div>{empName}</div>
+                                                        </Link>
+                                                        <Link to="/me" className="text-decoration-none">
+                                                            <div>{empEmail}</div>
+                                                        </Link>
+                                                    </Col>
+                                                </Row>
 
-                                        <Row className="align-items-center">
-                                            <Col xs="auto">
-                                                <Link to="/me">
-                                                    <Image src="https://placehold.co/50x50"
-                                                        roundedCircle />
-                                                </Link>
-                                            </Col>
-                                            <Col>
-                                                <Link to="/me">
-                                                    <div>{empName}</div>
-                                                </Link>
-                                                <Link to="/me">
-                                                    <div>{empEmail}</div>
-                                                </Link>
-                                            </Col>
-                                        </Row>
-                                        <Row className="mt-2">
-                                            {isAdmin === true && (<>
-                                                <Row>
-                                                    <strong>
-                                                        <Button as={Link} to="/invite" >사용자 초대하기</Button>
-                                                    </strong>
-                                                </Row>
+                                            </Card.Body>
+                                        </Card>
+
+
+                                        <Card className="mt-2">
+                                            <Card.Body>
                                                 <Row className="mt-2">
-                                                    <strong>
-                                                        <Button as={Link} to="/users" >관리</Button>
-                                                    </strong>
+                                                    {isAdmin === true && (<>
+                                                        <div>
+                                                            <strong>
+                                                                <Button as={Link} to="/invite"
+                                                                    className="w-100">
+                                                                    사용자 초대하기
+                                                                </Button>
+                                                            </strong>
+                                                        </div>
+                                                        <div className="mt-2">
+                                                            <strong>
+                                                                <Button as={Link} to="/users"
+                                                                    className="w-100">
+                                                                    관리
+                                                                </Button>
+                                                            </strong>
+                                                        </div>
+                                                    </>)}
+                                                    <div className="mt-2">
+                                                        <strong>
+                                                            <Button onClick={logout}
+                                                                className="w-100">
+                                                                로그아웃
+                                                            </Button>
+                                                        </strong>
+                                                    </div>
                                                 </Row>
-                                            </>)}
-                                            <Row className="mt-2">
-                                                <strong>
-                                                    <Button onClick={logout} >로그아웃</Button>
-                                                </strong>
-                                            </Row>
-                                        </Row>
+
+                                            </Card.Body>
+                                        </Card>
+
 
 
                                     </Popover.Body>
                                 </Popover>
                             }
                         >
+                            <div className="position-relative d-inline-block">
 
-                            <Image src="https://placehold.co/50x50"
-
-                                roundedCircle />
+                                <Image src="https://placehold.co/50x50"
+                                    roundedCircle />
+                                <FaCircle className={`position-absolute bottom-0 end-0 
+                                    ${online ? "text-success" : "text-secondary"}`} />
+                            </div>
                         </OverlayTrigger>
 
 
-                            <FaCircle className={online ? "text-success" : ""}/>
-                            <span>online</span>
                     </>)}
 
                 </div>

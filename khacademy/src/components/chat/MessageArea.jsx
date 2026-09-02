@@ -144,7 +144,7 @@ export default function MessageArea(
                         >
                             <div className="message-inner">
 
-                                {/* 다른 사람이 보낸 메시지만 이름 표시 */}
+                                {/* 다른 사람이 보낸 메시지만 프로필 표시 */}
                                 {!isMine && (
                                     <div className="profile-wrapper">
                                         {/* 프로필 이미지 자리 */}

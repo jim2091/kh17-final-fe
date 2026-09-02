@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom";
-import { getWebSocketClient } from "@utils/websocket";
+import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import { apiClient } from "../../utils/reaxios";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
@@ -23,7 +23,6 @@ export default function Chat() {
     const [selectedChannel, setSelectedChannel] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [client, setClient] = useState(null);
     const loginUser = useAtomValue(loginUserState);
     const [last, setLast] = useState(true);//과거 메세지가 더 있는지 여부(true/false)
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -239,445 +238,39 @@ export default function Chat() {
         }
     };
 
+    
+    // useEffect(()=>{
+    //     if(channels.length === 0) return;
+    //     const subscription = [];
 
-    //● Websocket 연결 함수
-    //● Websocket 연결 함수
-const connetToServer = useCallback(() => {
+    //     onWebSocketConnect(() => {
+    //         const client = getWebSocketClient();
 
-    //(1) 연결(socket) 생성
-    const socket = new SockJS(
-        `${import.meta.env.VITE_SERVER_URL}/ws`
-    );
+    //         if(client === null) return;
 
-    //(2) 연결을 관리할 도구(client) 생성
-    const client = new Client({
-        webSocketFactory: () => socket,
+    //         //각 채널의 chat 구독 관리
+    //         channels.forEach(channel => {
+    //             const channelNo = channel.channelNo;
 
-        //- 웹소켓 연결 성공
-        onConnect: () => {
-
-            console.log("WebSocket 연결 성공!");
-
-            //==================================================
-            // [1] 모든 채널의 메세지 구독
-            //==================================================
-            channels.forEach(channel => {
-
-                const channelNo = channel.chatChannelNo;
-
-                client.subscribe(
-                    `/public/${channelNo}/chat`,
-
-                    (message) => {
-
-                        const json = JSON.parse(message.body);
-
-                        console.log(
-                            `채널 ${channelNo} 메세지 수신 : `,
-                            json
-                        );
-
-                        //==================================================
-                        // 현재 선택된 채널인지 확인
-                        //==================================================
-                        if(
-                            selectedChannel &&
-                            selectedChannel.chatChannelNo === channelNo
-                        ) {
-
-                            // 현재 보고 있는 채널
-                            // → 메세지 화면에 추가
-                            setMessages(prev => [
-                                ...prev,
-                                json
-                            ]);
-
-                            // 다른 사람이 보낸 메세지라면 읽음 처리
-                            if(json.empNo !== loginUser.empNo) {
-
-                                client.publish({
-                                    destination: `/app/${channelNo}/read`
-                                });
-
-                            }
-
-                        }
-                        else {
-
-                            //==================================================
-                            // 다른 채널에서 온 메세지
-                            // → 해당 채널 unreadCount + 1
-                            //==================================================
-
-                            if(json.empNo !== loginUser.empNo) {
-
-                                setUnreadCounts(prev => ({
-                                    ...prev,
-                                    [channelNo]:
-                                        (prev[channelNo] || 0) + 1
-                                }));
-
-                            }
-
-                        }
-                    }
-                );
-
-
-                //==================================================
-                // [2] 읽음 처리 알림 구독
-                //==================================================
-                client.subscribe(
-                    `/public/${channelNo}/read`,
-
-                    (message) => {
-
-                        const json = JSON.parse(message.body);
-
-                        console.log(
-                            `채널 ${channelNo} 읽음 처리 알림 : `,
-                            json
-                        );
-
-                        // 현재 채널의 메시지 unreadCount 갱신
-                        if(
-                            selectedChannel &&
-                            selectedChannel.chatChannelNo === channelNo
-                        ) {
-
-                            setMessages(prev =>
-                                prev.map(message => {
-
-                                    const unread = json.messages.find(
-                                        item =>
-                                            item.messageNo === message.no
-                                    );
-
-                                    if(unread) {
-
-                                        return {
-                                            ...message,
-                                            unreadCount:
-                                                unread.unreadCount
-                                        };
-
-                                    }
-
-                                    return message;
-                                })
-                            );
-
-                        }
-
-                        // 채널 목록 unreadCount
-                        // 해당 채널을 읽었으므로 0
-                        setUnreadCounts(prev => ({
-                            ...prev,
-                            [channelNo]: 0
-                        }));
-
-                    }
-                );
-
-
-                //==================================================
-                // [3] 메세지 수정 알림
-                //==================================================
-                client.subscribe(
-                    `/public/${channelNo}/update`,
-
-                    (message) => {
-
-                        const json = JSON.parse(message.body);
-
-                        console.log(
-                            "메세지 수정 알림 : ",
-                            json
-                        );
-
-                        setMessages(prev =>
-                            prev.map(message => {
-
-                                if(
-                                    message.no === json.messageNo
-                                ) {
-
-                                    return {
-                                        ...message,
-                                        content: json.content,
-                                        utime: json.utime
-                                    };
-
-                                }
-
-                                return message;
-
-                            })
-                        );
-
-                    }
-                );
-
-
-                //==================================================
-                // [4] 메세지 삭제 알림
-                //==================================================
-                client.subscribe(
-                    `/public/${channelNo}/delete`,
-
-                    (message) => {
-
-                        const json = JSON.parse(message.body);
-
-                        console.log(
-                            "메세지 삭제 알림 : ",
-                            json
-                        );
-
-                        setMessages(prev =>
-                            prev.map(message => {
-
-                                if(
-                                    message.no === json.messageNo
-                                ) {
-
-                                    return {
-                                        ...message,
-                                        deleted: "Y"
-                                    };
-
-                                }
-
-                                return message;
-
-                            })
-                        );
-
-                    }
-                );
-
-            });
-
-
-            //==================================================
-            // [5] 현재 채널 입장 → 읽음 처리
-            //==================================================
-            if(selectedChannel) {
-
-                client.publish({
-                    destination:
-                        `/app/${selectedChannel.chatChannelNo}/read`
-                });
-
-            }
-
-        },
-
-        //- 디버깅
-        debug: (str) => console.log(str)
-    });
-
-    //(3) 클라이언트 활성화
-    client.activate();
-
-    return client;
-
-}, [channels, selectedChannel, loginUser]);
-
-
-
-
-
-
-    // const connetToServer = useCallback(() => {
-    //     //(1) 연결(socket) 생성
-    //     const socket = new SockJS(
-    //         `${import.meta.env.VITE_SERVER_URL}/ws`
-    //     );
-
-    //     //(2) 연결을 관리할 도구(client) 생성
-    //     const client = new Client({
-    //         //- 연결 객체를 생성하는 함수
-    //         webSocketFactory: () => socket,
-
-    //         //- 웹소켓 연결 성공
-    //         onConnect: () => {
-    //             const channelNo = selectedChannel.chatChannelNo;
-
-    //             //console.log("WebSocket 연결 성공!", channelNo);
-
-    //             //[1] 채팅 메세지 구독
-    //             client.subscribe(
+    //             const chatSubscription = client.subscribe(
     //                 `/public/${channelNo}/chat`,
-
     //                 (message) => {
     //                     const json = JSON.parse(message.body);
-    //                     //console.log("실시간 메시지:", json);
 
-    //                     //(1) 메세지를 화면에 추가
-    //                     setMessages(prev => [
-    //                         ...prev,
-    //                         json
-    //                     ]);
+    //                     console.log(`${channelNo} 채널 메세지 수신 : `, json);
 
-    //                     //(2) 다른 사람이 보낸 메세지라면 읽음 처리
-    //                     //- 새 메세지를 포함해서 현재 채널을 읽음 : /read 사용
-    //                     if(json.empNo !== loginUser.empNo) {
-    //                         client.publish({
-    //                             destination: `/app/${channelNo}/read`
-    //                         });
+    //                     //현재 보고 있는 채널
+    //                     if(
+    //                         selectedChannel && 
+    //                         selectedChannel.chatChannelNo === channelNo
+    //                     ){
+    //                         setMessages(prev => [...prev, json]);
     //                     }
     //                 }
     //             );
-
-    //             //[2] 메세지 읽음 처리 알림 구독
-    //             //- React : "나 이 채널 들어와서 메세지들 전부 읽었어"라고 서버로 Send
-    //             //- 메시지 전송 → 서버가 unreadCount 계산 → /chat으로 전달
-    //             //- 채널 입장 → React가 /read로 서버에 알림 → 서버가 DB 읽음 처리 → 최신 unreadCount들을 /read로 다시 방송 → React가 화면 숫자 갱신
-    //             client.subscribe(
-    //                 `/public/${channelNo}/read`,
-    //                 (message) => {
-
-    //                     const json = JSON.parse(message.body);
-
-    //                     console.log("읽음 처리 알림:", json);
-
-    //                     setMessages(prev =>
-    //                         prev.map(message => {
-
-    //                             const unread = json.messages.find(
-    //                                 item => item.messageNo === message.no
-    //                             );
-
-    //                             if(unread) {
-    //                                 return {
-    //                                     ...message,
-    //                                     unreadCount: unread.unreadCount
-    //                                 };
-    //                             }
-    //                             //- 과거 메세지 : DB에서 unreadCount 조회
-    //                             //- 새 메시지 : WebSocket chat에서 unreadCount 전달
-    //                             //- 읽음 처리 : WebSocket read에서 최신 unreadCount 전달
-    //                             return message;
-    //                         })
-    //                     );
-    //                 }
-    //             );
-
-    //             //[3] 메세지 수정 알림 구독
-    //             client.subscribe(
-    //                 `/public/${channelNo}/update`,
-    //                 (message) => {
-    //                     const json = JSON.parse(message.body);
-
-    //                     console.log("메세지 수정 알림 : ", json);
-
-    //                     setMessages(prev =>
-    //                         prev.map(message => {
-                                
-    //                             if(message.no === json.messageNo) {
-    //                                 return {
-    //                                     ...message,
-    //                                     content: json.content,
-    //                                     utime: json.utime
-    //                                 };
-    //                             }
-    //                             return message;
-    //                         })
-    //                     );
-    //                 }
-    //             );
-
-    //             //[4] 메세지 삭제 알림 구독
-    //             client.subscribe(
-    //                 `/public/${channelNo}/delete`,
-    //                 (message) => {
-
-    //                     const json = JSON.parse(message.body);
-
-    //                     console.log("메세지 삭제 알림 : ", json);
-
-    //                     setMessages(prev =>
-    //                         prev.map(message => {
-
-    //                             if(message.no === json.messageNo) {
-    //                                 return {
-    //                                     ...message,
-    //                                     deleted: "Y"
-    //                                 };
-    //                             }
-
-    //                             return message;
-    //                         })
-    //                     );
-    //                 }
-    //             );
-
-    //             //[5] 내가 채널에 들어왔다는 것을 서버에 전달
-    //             //- 채널 입장 시 기본 메세지 전부 읽음 : /read 사용
-    //             client.publish({
-    //                 destination: `/app/${channelNo}/read`
-    //             });
-    //         },
-
-    //         //- 디버깅 설정(옵션)
-    //         debug: (str) => console.log(str)
+    //         })
     //     });
-
-    //     //(3) 클라이언트 활성화
-    //     client.activate();
-        
-    //     return client;
-    // }, [selectedChannel, loadMessages]);
-
-
-    //● Websocket 연결 종료 함수
-    const disconnectFromServer = useCallback((client) => {
-        if(client) {
-            client.deactivate();
-        }
-    }, []);
-
-
-    //● WebSocket 연결 및 해제
-    useEffect(() => {
-
-        if(channels.length === 0) return;
-
-        const client = connetToServer();
-
-        setClient(client);
-
-        return () => {
-
-            disconnectFromServer(client);
-            setClient(null);
-
-        };
-
-    }, [channels, connetToServer, disconnectFromServer]);
-
-
-
-
-
-
-
-
-    // useEffect(() => {
-    //     if (selectedChannel === null) return;
-
-    //     //(1) 최초 실행
-    //     const client = connetToServer();
-    //     setClient(client);
-
-    //     //(2) 페이지 이탈 또는 채널 변경 시
-    //     return() => {
-    //         disconnectFromServer(client);
-    //         setClient(null);
-    //     }
-    // }, [selectedChannel, connetToServer, disconnectFromServer]);
-
+    // })
 
     //● view
     return(<>

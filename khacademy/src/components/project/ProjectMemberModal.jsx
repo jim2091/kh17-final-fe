@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { Badge, Button, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
 
 export default function ProjectMemberModal({
-    show,onHide,projectNo,project
+    show,onHide,projectNo,project,loadProject
 }){
     //프로젝트 멤버 목록
     const [memberList,setMemberList] = useState([]);
@@ -48,6 +48,7 @@ export default function ProjectMemberModal({
         }
     },[show,loadMemberList]);
 
+    //역할 변경
     const changeMemberRole = useCallback(async (member,role)=>{
         //역활과 같으면 처리하지 않음
         if(member.projectMemberRole === role){
@@ -82,6 +83,38 @@ export default function ProjectMemberModal({
             toast.error("프로젝트 권한 변경이 실패했습니다.");
         }
     },[projectNo,loadMemberList]);
+
+    //owner 변경
+    const changeOwner = useCallback(async(member)=>{
+        const result = await Swal.fire({
+            icon : "warning",
+            title : "owner를 변경하시겠습니까?",
+            text : `${member.empName}님에게 owner 권한을 이전합니다.`,
+            showCancelButton : true,
+            confirmButtonText : "변경",
+            cancelButtonText : "취소"
+        });
+
+        if(result.isConfirmed === false){
+            return;
+        }
+
+        try{
+            await apiClient.patch(
+                `/project/${projectNo}/owner/${member.projectMemberNo}`
+            );
+
+            toast.success("owner가 변경되었습니다.");
+
+            //목록 다시 조회
+            loadMemberList();
+            //프로젝트 정보 다시 조회
+            loadProject();
+        }
+        catch(e){
+            toast.error("owner 변경에 실패했습니다.");
+        }
+    },[projectNo,loadProject,loadMemberList])
     return(
         <Modal show={show} onHide={onHide} centered size="lg">
             <Modal.Header closeButton>
@@ -128,7 +161,7 @@ export default function ProjectMemberModal({
                                         )}
                                     </div>
                                     {/* 권한 */}
-                                    <div>
+                                    <div className="d-flex align-items-center gap-2">
                                         {/* owner */}
                                         {member.projectMemberRole === "owner" ? (
                                             <Badge bg="primary">
@@ -152,6 +185,14 @@ export default function ProjectMemberModal({
                                                 {member.projectMemberRole.toUpperCase()}
                                            </Badge>
                                         )}
+
+                                        {/* owner위임 */}
+                                        {isOwner && member.projectMemberRole !== "owner" &&(
+                                            <Button size="sm" variant="outline-danger"
+                                                    onClick={()=> changeOwner(member)}>
+                                                owner 위임
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </ListGroup.Item>
@@ -161,7 +202,7 @@ export default function ProjectMemberModal({
             </Modal.Body>
 
             <Modal.Footer>
-                {/* OWㅜ */}
+                {/* OWNER */}
                 {canInvite && (
                     <Button variant="primary"
                         onClick={()=>{

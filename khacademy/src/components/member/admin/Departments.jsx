@@ -6,12 +6,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
 import Modal from 'react-bootstrap/Modal';
 import { toast } from "react-toastify";
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
+// import "../member.css";
 
 function MyVerticallyCenteredModal(props) {
     const [dept, setDept] = useState({
-        deptName : "",
-        deptInfo : "", 
-        deptBlock : "",
+        deptName: "",
+        deptInfo: "",
+        deptBlock: "",
     });
 
     const changeStringValue = useCallback(e => {
@@ -23,10 +26,10 @@ function MyVerticallyCenteredModal(props) {
     }, []);
 
     const navigate = useNavigate();
-    const sendData = useCallback(async()=>{
+    const sendData = useCallback(async () => {
         await apiClient.post("/dept/add", dept);
         toast.success("부서가 추가되었습니다.");
-        
+
         setDept({
             deptName: "",
             deptInfo: "",
@@ -41,13 +44,13 @@ function MyVerticallyCenteredModal(props) {
 
     }, [dept, props]);
 
-   
 
 
-  return (
-    <Modal
-      {...props}
-      onHide={() => {
+
+    return (
+        <Modal
+            {...props}
+            onHide={() => {
                 setDept({
                     deptName: "",
                     deptInfo: "",
@@ -56,59 +59,59 @@ function MyVerticallyCenteredModal(props) {
 
                 props.onHide();
             }}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">
-          부서 추가
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Row className="mt-4">
-            <Form.Label column sm={3}>부서명</Form.Label>
-            <Col sm={9}>
-                <Form.Control type="text" name="deptName" value={dept.deptName} 
-                onChange={changeStringValue} className="w-50 d-inline-block">
-                </Form.Control>
-            </Col>
-        </Row>
-        <Row className="mt-4">
-            <Form.Label column sm={3}>부서설명</Form.Label>
-            <Col sm={9}>
-                <Form.Control type="text" name="deptInfo" value={dept.deptInfo}
-                onChange={changeStringValue} className="w-50 d-inline-block">
-                </Form.Control>
-            </Col>
-        </Row>
-        <Row className="mt-4">
-            <Form.Label column sm={3}>활성화여부</Form.Label>
-            <Col sm={9}>
-                <Form.Check type="radio"
-                 name="deptBlock" 
-                 value="Y"
-                className="d-inline-block" 
-                label="Y"
-                checked={dept.deptBlock === "Y"}
-                onChange={changeStringValue}
-                >
-                </Form.Check>
-                <Form.Check type="radio"
-                 name="deptBlock" 
-                 value="N"
-                className="d-inline-block" 
-                label="N"
-                checked={dept.deptBlock === "N"}
-                onChange={changeStringValue}
-                >
-                </Form.Check>
-                </Col>
-        </Row>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={sendData}>Add</Button>
-        <Button onClick={()=>{
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    부서 추가
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Row className="mt-4">
+                    <Form.Label column sm={3}>부서명</Form.Label>
+                    <Col sm={9}>
+                        <Form.Control type="text" name="deptName" value={dept.deptName}
+                            onChange={changeStringValue} className="w-50 d-inline-block">
+                        </Form.Control>
+                    </Col>
+                </Row>
+                <Row className="mt-4">
+                    <Form.Label column sm={3}>부서설명</Form.Label>
+                    <Col sm={9}>
+                        <Form.Control type="text" name="deptInfo" value={dept.deptInfo}
+                            onChange={changeStringValue} className="w-50 d-inline-block">
+                        </Form.Control>
+                    </Col>
+                </Row>
+                <Row className="mt-4">
+                    <Form.Label column sm={3}>활성화여부</Form.Label>
+                    <Col sm={9}>
+                        <Form.Check type="radio"
+                            name="deptBlock"
+                            value="Y"
+                            className="d-inline-block"
+                            label="Y"
+                            checked={dept.deptBlock === "Y"}
+                            onChange={changeStringValue}
+                        >
+                        </Form.Check>
+                        <Form.Check type="radio"
+                            name="deptBlock"
+                            value="N"
+                            className="d-inline-block"
+                            label="N"
+                            checked={dept.deptBlock === "N"}
+                            onChange={changeStringValue}
+                        >
+                        </Form.Check>
+                    </Col>
+                </Row>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={sendData}>Add</Button>
+                <Button onClick={() => {
                     setDept({
                         deptName: "",
                         deptInfo: "",
@@ -116,9 +119,9 @@ function MyVerticallyCenteredModal(props) {
                     });
                     props.onHide();
                 }}>Close</Button>
-      </Modal.Footer>
-    </Modal>
-  );
+            </Modal.Footer>
+        </Modal>
+    );
 }
 
 export default function Departments() {
@@ -126,6 +129,16 @@ export default function Departments() {
     const [deptList, setDeptList] = useState([]);
 
     const [modalShow, setModalShow] = useState(false);
+
+    const [selectedDept, setSelectedDept] = useState({
+
+        deptNo : null,
+        deptName : "",
+        deptInfo : "",
+        deptBlock : "",
+    });
+
+    const[showPopover, setShowPopover] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -140,6 +153,27 @@ export default function Departments() {
     // if (deptList === null) {
     //     return (<h1>로딩중인 화면</h1>);
     // }
+    const changeStringValue = useCallback(e => {
+        const { name, value } = e.target;
+        setSelectedDept(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }, []);
+
+    const setData = useCallback((dept)=>{
+
+        setSelectedDept(dept);
+    }, []);
+
+    const changeData = useCallback(async()=>{
+        await apiClient.put("/dept/edit", selectedDept);
+
+        loadData();
+
+        setShowPopover(null);
+        
+    }, [selectedDept, loadData]);
 
     return (<>
         <Nav variant="tabs" defaultActiveKey="/users">
@@ -155,7 +189,7 @@ export default function Departments() {
                 </Nav.Link>
             </Nav.Item>
         </Nav>
-        <Col className="d-flex justify-content-between align-items-center">
+        <Col className="d-flex justify-content-between align-items-center p-5">
             <h1>부서관리</h1>
             <Button variant="primary" onClick={() => setModalShow(true)}>
                 <FaPlus />추가
@@ -167,7 +201,7 @@ export default function Departments() {
             />
         </Col>
 
-        <Row className="mt-5">
+        <Row className="mt-5 p-5">
             <Col>
                 <Table responsive hover striped className="text-nowrap">
                     <thead>
@@ -182,12 +216,81 @@ export default function Departments() {
                     <tbody>
                         {deptList.map((dept) => (
                             <tr key={dept.deptNo}>
-                                <td>{dept.deptNo}</td>
+                                <td className="text-center">{dept.deptNo}</td>
                                 <td>{dept.deptName}</td>
                                 <td>{dept.deptInfo}</td>
                                 <td>{dept.deptBlock}</td>
                                 <td>
-                                    <FaMagnifyingGlass />
+                                    <OverlayTrigger
+                                        trigger="click"
+                                        placement="left"
+                                        rootClose={true}
+                                        show={showPopover === dept.deptNo}
+                                        onToggle={(nextShow)=>{
+                                            setShowPopover(nextShow? dept.deptNo : null);
+                                        }}
+                                        overlay={
+                                            <Popover id={`popover-positioned-left`}>
+                                                <Popover.Header as="h3">{dept.deptName}</Popover.Header>
+                                                <Popover.Body>
+                                                    <Row className="mt-4">
+                                                        <Form.Label column sm={3}>부서명</Form.Label>
+                                                        <Col sm={9}>
+                                                            <Form.Control type="text" name="deptName" value={selectedDept.deptName}
+                                                                onChange={changeStringValue} className="w-100">
+                                                            </Form.Control>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row className="mt-4">
+                                                        <Form.Label column sm={3}>하는 일</Form.Label>
+                                                        <Col sm={9}>
+                                                            <Form.Control type="text" name="deptInfo" value={selectedDept.deptInfo}
+                                                                onChange={changeStringValue} className="w-100">
+                                                            </Form.Control>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row className="mt-4">
+                                                        <Form.Label column sm={3}>활성화여부</Form.Label>
+                                                        <Col sm={9}>
+                                                            <Form.Check type="radio"
+                                                                name="deptBlock"
+                                                                value="Y"
+                                                                className="d-inline-block"
+                                                                label="Y"
+                                                                checked={selectedDept.deptBlock === "Y"}
+                                                                onChange={changeStringValue}
+                                                            >
+                                                            </Form.Check>
+                                                            <Form.Check type="radio"
+                                                                name="deptBlock"
+                                                                value="N"
+                                                                className="d-inline-block"
+                                                                label="N"
+                                                                checked={selectedDept.deptBlock === "N"}
+                                                                onChange={changeStringValue}
+                                                            >
+                                                            </Form.Check>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row className="mt-4">
+                                                        <Button onClick={changeData}>
+                                                            <span>수정</span>
+                                                        </Button>
+                                                    </Row>
+
+                                                </Popover.Body>
+                                            </Popover>
+                                        }
+                                    >
+                                        <Button variant="secondary" onClick={()=>{
+                                            setData(dept);
+                                            setShowPopover(
+                                                showPopover === dept.deptNo? null : dept.deptNo
+                                            )
+                                        }}>
+                                            <FaMagnifyingGlass />
+                                        </Button>
+                                    </OverlayTrigger>
                                 </td>
                             </tr>
                         ))}
@@ -195,6 +298,6 @@ export default function Departments() {
                 </Table>
             </Col>
         </Row>
-        
+
     </>)
 }

@@ -87,10 +87,13 @@ export default function ProjectHeader({project, loadProject}) {
                         onClick={()=> setShowMember(true)}>
                         멤버관리
                 </Button>
-                <ProjectMemberModal show={showMember}
+                <ProjectMemberModal 
+                    show={showMember}
                     onHide={()=>setShowMember(false)}
                     projectNo={projectNo}
-                    project = {project}/>
+                    project = {project}
+                    loadProject = {loadProject}
+                />
                 {/* 상태 */}
                 <Badge
                     bg={project.projectStatus === "active" ? "success" : "secondary"}>

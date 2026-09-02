@@ -87,8 +87,8 @@ export default function Login() {
             
             <Card.Body>
                 <Row>
-                <Col>
-                    <span className="large-font ps-4 ">시작하기</span>
+                <Col className="d-none d-md-inline">
+                    <span className="large-font ps-4">시작하기</span>
                 </Col>
                 <Col>
                 
