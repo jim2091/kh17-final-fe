@@ -16,7 +16,7 @@ import Notes from './components/notes/Notes';
 import Files from './components/files/Files';
 import Records from './components/records/Records';
 
-
+import Search from "./components/search/Search";
 
 import Invite from './components/member/admin/Invite';
 import Mypage from "./components/member/Mypage";
@@ -54,6 +54,8 @@ function App() {
 
         {/* 임시 메인 화면 */}
         <Route path="/" element={<div>메인화면입니다</div>} />
+        {/* 통합 검색 */}
+        <Route path="/search" element={<Search />} />
         {/* 내 프로젝트 목록 */}
         <Route path="/projects/my" element={<MyProjectList />} />
         {/* 새 프로젝트 등록 */}

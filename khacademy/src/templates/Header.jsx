@@ -9,7 +9,8 @@ import Popover from 'react-bootstrap/Popover';
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 import { loginUserState } from "@utils/storage";
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
@@ -80,6 +81,20 @@ export default function Header({ toggleSidebar }) {
 
     // console.log("online:", online);
 
+    const navigate = useNavigate();
+    const [keyword, setKeyword] = useState("");
+
+    const handleSearch = (e) => {
+
+    if (e.key !== "Enter") return;
+
+    const value = keyword.trim();
+
+    if (!value) return;
+
+    navigate(`/search?keyword=${encodeURIComponent(value)}`);
+
+    };
 
 
     return (<>
@@ -101,6 +116,9 @@ export default function Header({ toggleSidebar }) {
                 <input
                     type="text"
                     placeholder="검색어를 입력하세요"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onKeyDown={handleSearch}
                 />
             </div>
 
