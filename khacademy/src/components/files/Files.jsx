@@ -5,12 +5,17 @@ import "./Files.css";
 
 export default function Files({ source = "파일함" }) {
 
+    // ==================================================
+    // 프로젝트 번호
+    // ==================================================
+
     const { projectNo } = useParams();
 
-    // 프로젝트 정보
-    const [project, setProject] = useState(null);
 
+    // ==================================================
     // 파일 목록
+    // ==================================================
+
     const [files, setFiles] = useState([]);
 
     // 현재 로그인 사용자
@@ -21,7 +26,6 @@ export default function Files({ source = "파일함" }) {
 
     // 상태
     const [loading, setLoading] = useState(false);
-    const [projectLoading, setProjectLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
     // 이미지 미리보기
@@ -33,56 +37,19 @@ export default function Files({ source = "파일함" }) {
 
 
     // ==================================================
-    // 프로젝트 정보 조회
-    // ==================================================
-
-    const fetchProject = async () => {
-
-        if (!projectNo) {
-            setProjectLoading(false);
-            return;
-        }
-
-        try {
-
-            setProjectLoading(true);
-
-            const response =
-                await apiClient.get(
-                    `/project/${projectNo}`
-                );
-
-            console.log(
-                "프로젝트 정보:",
-                response.data
-            );
-
-            setProject(response.data);
-
-        } catch (error) {
-
-            console.error(
-                "프로젝트 정보 조회 실패:",
-                error
-            );
-
-            setProject(null);
-
-        } finally {
-
-            setProjectLoading(false);
-
-        }
-    };
-
-
-    // ==================================================
     // 파일 목록 조회
     // ==================================================
 
     const fetchFiles = async (searchKeyword = "") => {
 
+        // 프로젝트 번호가 없는 경우
         if (!projectNo) {
+
+            console.error(
+                "프로젝트 번호가 없습니다."
+            );
+
+            setFiles([]);
             return;
         }
 
@@ -90,9 +57,11 @@ export default function Files({ source = "파일함" }) {
 
             setLoading(true);
 
+            // 프로젝트별 파일 목록 조회
             let url =
                 `/attach/list/${projectNo}`;
 
+            // 검색어가 있는 경우
             if (searchKeyword.trim()) {
 
                 url +=
@@ -104,6 +73,11 @@ export default function Files({ source = "파일함" }) {
 
             const response =
                 await apiClient.get(url);
+
+            console.log(
+                "프로젝트 번호:",
+                projectNo
+            );
 
             console.log(
                 "파일 목록:",
@@ -132,11 +106,16 @@ export default function Files({ source = "파일함" }) {
                 error
             );
 
-            setFiles([]);
+            console.error(
+                "서버 응답:",
+                error.response?.data
+            );
 
+            setFiles([]);
             setLoginUser("");
 
             alert(
+                error.response?.data?.message ||
                 "파일 목록을 불러오는 중 오류가 발생했습니다."
             );
 
@@ -149,12 +128,11 @@ export default function Files({ source = "파일함" }) {
 
 
     // ==================================================
-    // 프로젝트 번호 변경
+    // 프로젝트 번호 변경 시 파일 목록 조회
     // ==================================================
 
     useEffect(() => {
 
-        fetchProject();
         fetchFiles();
 
     }, [projectNo]);
@@ -190,28 +168,14 @@ export default function Files({ source = "파일함" }) {
 
     const handleUploadClick = () => {
 
+        if (uploading) {
+            return;
+        }
+
         if (!projectNo) {
 
             alert(
                 "프로젝트 정보가 없습니다."
-            );
-
-            return;
-        }
-
-        if (projectLoading) {
-
-            alert(
-                "프로젝트 정보를 불러오는 중입니다."
-            );
-
-            return;
-        }
-
-        if (!project) {
-
-            alert(
-                "프로젝트 정보를 확인할 수 없습니다."
             );
 
             return;
@@ -235,6 +199,7 @@ export default function Files({ source = "파일함" }) {
             return;
         }
 
+        // 프로젝트 번호 확인
         if (!projectNo) {
 
             alert(
@@ -246,37 +211,53 @@ export default function Files({ source = "파일함" }) {
             return;
         }
 
-        if (!project) {
+        const formData =
+            new FormData();
 
-            alert(
-                "프로젝트 정보를 확인할 수 없습니다."
-            );
 
-            e.target.value = "";
-
-            return;
-        }
-
-        const formData = new FormData();
+        // ==================================================
+        // 프로젝트 번호
+        // ==================================================
 
         formData.append(
             "projectNo",
             projectNo
         );
 
+
+        // ==================================================
+        // 파일
+        // ==================================================
+
         formData.append(
             "attach",
             file
         );
+
+
+        // ==================================================
+        // 출처
+        // ==================================================
 
         formData.append(
             "source",
             source
         );
 
+
         try {
 
             setUploading(true);
+
+            console.log(
+                "업로드 프로젝트 번호:",
+                projectNo
+            );
+
+            console.log(
+                "업로드 파일:",
+                file.name
+            );
 
             const response =
                 await apiClient.post(
@@ -289,7 +270,13 @@ export default function Files({ source = "파일함" }) {
                 response.data
             );
 
+
+            // ==================================================
+            // 업로드 후 현재 프로젝트 파일 목록 새로 조회
+            // ==================================================
+
             await fetchFiles(keyword);
+
 
             alert(
                 "파일이 업로드되었습니다."
@@ -420,7 +407,6 @@ export default function Files({ source = "파일함" }) {
         const type =
             getFileType(file.attachName);
 
-        // 이미지만 미리보기
         if (type !== "image") {
             return;
         }
@@ -515,14 +501,12 @@ export default function Files({ source = "파일함" }) {
                 `/attach/${attachNo}`
             );
 
-            // 현재 미리보기 중인 파일이면 닫기
             if (
                 previewFile?.attachNo === attachNo
             ) {
                 closePreview();
             }
 
-            // 화면에서도 즉시 삭제
             setFiles((prev) =>
                 prev.filter(
                     (file) =>
@@ -646,10 +630,8 @@ export default function Files({ source = "파일함" }) {
         const type =
             getFileType(file.attachName);
 
-        // ==========================================
-        // 이미지
-        // ==========================================
 
+        // 이미지
         if (type === "image") {
 
             return (
@@ -679,10 +661,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // PDF
-        // ==========================================
-
         if (type === "pdf") {
 
             return (
@@ -694,10 +673,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // Word
-        // ==========================================
-
         if (type === "word") {
 
             return (
@@ -709,10 +685,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // Excel
-        // ==========================================
-
         if (type === "excel") {
 
             return (
@@ -724,10 +697,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // PowerPoint
-        // ==========================================
-
         if (type === "powerpoint") {
 
             return (
@@ -739,10 +709,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // ZIP
-        // ==========================================
-
         if (type === "zip") {
 
             return (
@@ -754,10 +721,7 @@ export default function Files({ source = "파일함" }) {
         }
 
 
-        // ==========================================
         // 일반 파일
-        // ==========================================
-
         return (
             <div className="files-icon files-icon-default">
 
@@ -913,8 +877,9 @@ export default function Files({ source = "파일함" }) {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
                 strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
             >
 
                 <path d="M6 6l12 12" />
@@ -937,9 +902,7 @@ export default function Files({ source = "파일함" }) {
 
             <div className="files-container">
 
-                {/* ==========================================
-                    검색 + 업로드
-                ========================================== */}
+                {/* 검색 + 업로드 */}
 
                 <div className="files-toolbar">
 
@@ -947,7 +910,7 @@ export default function Files({ source = "파일함" }) {
 
                         <input
                             type="text"
-                            placeholder="파일명 검색으로 프로젝트 파일 검색 가능"
+                            placeholder="파일명 검색"
                             value={keyword}
                             onChange={(e) =>
                                 setKeyword(
@@ -978,11 +941,7 @@ export default function Files({ source = "파일함" }) {
                         onClick={
                             handleUploadClick
                         }
-                        disabled={
-                            uploading ||
-                            projectLoading ||
-                            !projectNo
-                        }
+                        disabled={uploading}
                     >
 
                         <UploadIcon />
@@ -1008,9 +967,7 @@ export default function Files({ source = "파일함" }) {
                 </div>
 
 
-                {/* ==========================================
-                    파일 목록
-                ========================================== */}
+                {/* 파일 목록 */}
 
                 <div className="files-list">
 
@@ -1151,7 +1108,9 @@ export default function Files({ source = "파일함" }) {
 
                                     <div className="files-col-uploader">
 
-                                        {file.empName || "-"}
+                                        {file.empName ||
+                                            file.attachUploader ||
+                                            "-"}
 
                                     </div>
 
@@ -1208,7 +1167,8 @@ export default function Files({ source = "파일함" }) {
 
                                     <div className="files-col-delete">
 
-                                        {loginUser === file.attachUploader && (
+                                        {loginUser ===
+                                            file.attachUploader && (
 
                                             <button
                                                 type="button"
@@ -1265,9 +1225,7 @@ export default function Files({ source = "파일함" }) {
 
                     <div className="files-preview-modal">
 
-                        {/* ==========================================
-                            미리보기 헤더
-                        ========================================== */}
+                        {/* 미리보기 헤더 */}
 
                         <div className="files-preview-header">
 
@@ -1345,9 +1303,7 @@ export default function Files({ source = "파일함" }) {
                         </div>
 
 
-                        {/* ==========================================
-                            이미지 영역
-                        ========================================== */}
+                        {/* 이미지 영역 */}
 
                         <div className="files-preview-body">
 
@@ -1387,9 +1343,13 @@ export default function Files({ source = "파일함" }) {
                                                 rx="2"
                                             />
 
-                                            <path d="M8 15l2.5-3 2 2 2-2.5L17 15" />
+                                            <path
+                                                d="M8 15l2.5-3 2 2 2-2.5L17 15"
+                                            />
 
-                                            <path d="M8 8h.01" />
+                                            <path
+                                                d="M8 8h.01"
+                                            />
 
                                         </svg>
 
