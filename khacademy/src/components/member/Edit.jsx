@@ -34,6 +34,7 @@ export default function Edit() {
         empPost: "",
         empAddress1: "",
         empAddress2: "",
+        
     });
 
     //피드백을 위한 state
@@ -71,7 +72,7 @@ export default function Edit() {
         // console.log("data : ", data);
 
         setEmp(data);
-    }, [emp]);
+    }, []);
 
     // console.log("emp : ", emp);
 
@@ -80,12 +81,9 @@ export default function Edit() {
 
         setEmpProfile(file);
 
-        // if(file === null) {
-        //     empProfileRef.current.value = "";
-        // }
-
-        // console.log(file);
+        
     }, []);
+
     const clearEmpProfile = useCallback(()=>{
         setEmpProfile(null);
     }, []);
@@ -99,7 +97,6 @@ export default function Edit() {
         }));
     }, []);
 
-    // console.log("emp : ", emp);
     const checkEmpBirth = useCallback(e => {
         const clazz = "is-valid";
         setResult(prev => ({ ...prev, empBirth: clazz }));
@@ -212,9 +209,21 @@ export default function Edit() {
     //최종 수정
     const navigate = useNavigate();
     const sendData = useCallback(async () => {
-        try {
-            const copy = { ...emp };
-            const { data } = await apiClient.put("/member/", copy);
+        console.log("전송할 emp =", emp);
+    console.log("prevEmpPassword =", emp.prevEmpPassword);
+    console.log("newEmpPassword1 =", emp.newEmpPassword1);
+    console.log("newEmpPassword2 =", emp.newEmpPassword2);
+    
+    try {
+            const form = new FormData();
+            form.append("emp", new Blob(
+                [JSON.stringify(emp)],
+                {type : "application/json" }
+            ));
+            form.append("empProfile", empProfile);
+            // const copy = { ...emp };
+            const { data } = await apiClient.put("/member/", form);
+            console.log("data : ", data);
             if (data.status === true) {
                 toast.success(data.message);
                 navigate("/me");
@@ -238,9 +247,9 @@ export default function Edit() {
     <Row className="mt-5">
 
         <div className="d-flex w-100">
-            <Form.Control type="file" accept="image/*" 
+            <Form.Control type="file" accept="image/*" name="empProfile"
         onChange={changeProfileImage} 
-        ref={empProfileRef}></Form.Control>
+        ref={empProfileRef} className="w-50"></Form.Control>
         {empProfile !== null && (
         <Button variant="secondary" onClick={clearEmpProfile}
         className="ms-2">
