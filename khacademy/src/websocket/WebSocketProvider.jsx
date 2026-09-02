@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import { useContext, useEffect, useState, createContext } from "react";
 import { isLoginState } from "@utils/storage";
-import { connectWebSocket, getWebSocketClient, onWebSocketConnect
+import { connectWebSocket, getWebSocketClient, onWebSocketConnect, disconnectWebSocket
 } from "@utils/websocket";
 
 const WebSocketContext = createContext(null);
@@ -21,7 +21,7 @@ export default function ({ children }) {
 
         return () => {
             //로그아웃 시
-            disconnectFromServer(client);
+            disconnectWebSocket();
         };
 
     }, [isLogin]);
