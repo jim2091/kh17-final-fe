@@ -101,12 +101,13 @@ export default function Users() {
 
 
             <div className="tabs">
+                <span className="tab" onClick={loadData}>전체</span>
                 {tabs.map((tab)=>(
-                    <span
-                        key={tab}
-                        className="tab"
-                        onClick={()=> searchInitial(tab)}
-                    >{tab}</span>
+                    <div key={tab}
+                            className="tab"
+                            onClick={()=> searchInitial(tab)}>
+                        <span>{tab}</span>
+                    </div>
                 ))}
                 
 
