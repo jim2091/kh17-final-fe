@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button, Col, Row, Table, Form } from "react-bootstrap";
+import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
@@ -176,19 +176,7 @@ export default function Departments() {
     }, [selectedDept, loadData]);
 
     return (<>
-        <Nav variant="tabs" defaultActiveKey="/users">
-            <Nav.Item>
-                <Nav.Link as={Link} to="/users">사용자관리</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-                <Nav.Link as={Link} to="/departments" eventKey="link-1">부서관리</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-                <Nav.Link as={Link} to="/positions" eventKey="link-2">
-                    직급관리
-                </Nav.Link>
-            </Nav.Item>
-        </Nav>
+       
         <Col className="d-flex justify-content-between align-items-center p-5">
             <h1>부서관리</h1>
             <Button variant="primary" onClick={() => setModalShow(true)}>
@@ -201,27 +189,16 @@ export default function Departments() {
             />
         </Col>
 
-        <Row className="mt-5 p-5">
-            <Col>
-                <Table responsive hover striped className="text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>부서번호</th>
-                            <th>부서명</th>
-                            <th>설명</th>
-                            <th>활성화여부</th>
-                            <th>수정</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {deptList.map((dept) => (
-                            <tr key={dept.deptNo}>
-                                <td className="text-center">{dept.deptNo}</td>
-                                <td>{dept.deptName}</td>
-                                <td>{dept.deptInfo}</td>
-                                <td>{dept.deptBlock}</td>
-                                <td>
-                                    <OverlayTrigger
+        {deptList.map((dept)=>(
+            <Card className="mt-2 card">
+                <Card.Body>
+                    <Row>
+                        <Col>{dept.deptNo}</Col>
+                        <Col>{dept.deptName}</Col>
+                        <Col>{dept.deptInfo}</Col>
+                        <Col>{dept.deptBlock}</Col>
+                        <Col>
+                        <OverlayTrigger
                                         trigger="click"
                                         placement="left"
                                         rootClose={true}
@@ -291,13 +268,13 @@ export default function Departments() {
                                             <FaMagnifyingGlass />
                                         </Button>
                                     </OverlayTrigger>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </Col>
-        </Row>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+        ))}
+
+        
 
     </>)
 }

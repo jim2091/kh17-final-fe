@@ -86,6 +86,7 @@ apiClient.interceptors.response.use(
     catch(refreshError) {
         //로그인 페이지로 강제이동(리액트스럽게는 어려움)
         moveToLoginPage();
+        console.log("refreshError발동 refreshError : ", refreshError);
         return Promise.reject(refreshError);//새로운 에러로 갈아끼우고 통과시켜~
     }
   }

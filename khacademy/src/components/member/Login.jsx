@@ -111,7 +111,8 @@ export default function Login() {
                                 onChange={changeStringValue} placeholder="비밀번호 입력" />
                             <Form.Check type="checkbox" label="비밀번호 표시" 
                             className="mt-2" checked={showPassword} 
-                            onClick={(e)=>setShowPassword(e.target.checked)}></Form.Check>
+                            onClick={(e)=>setShowPassword(e.target.checked)}
+                            readOnly></Form.Check>
                         </Col>
                     </Row>
 

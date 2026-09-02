@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button, Col, Row, Table, Form } from "react-bootstrap";
+import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
@@ -131,13 +131,13 @@ export default function Positions() {
 
     const [selectedPosition, setSelectedPosition] = useState({
 
-        positionNo : null,
-        positionName : "",
-        positionInfo : "",
-        positionBlock : "",
+        positionNo: null,
+        positionName: "",
+        positionInfo: "",
+        positionBlock: "",
     });
 
-    const[showPopover, setShowPopover] = useState(null);
+    const [showPopover, setShowPopover] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -157,33 +157,21 @@ export default function Positions() {
         }));
     }, []);
 
-    const setData = useCallback((position)=>{
+    const setData = useCallback((position) => {
 
         setSelectedPosition(position);
     }, []);
 
-    const changeData = useCallback(async()=>{
+    const changeData = useCallback(async () => {
         await apiClient.put("/position/edit", selectedPosition);
 
         loadData();
 
         setShowPopover(null);
-        
+
     }, [selectedPosition, loadData]);
     return (<>
-        <Nav variant="tabs" defaultActiveKey="/users">
-            <Nav.Item>
-                <Nav.Link as={Link} to="/users">사용자관리</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-                <Nav.Link as={Link} to="/departments" eventKey="link-1">부서관리</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-                <Nav.Link as={Link} to="/positions" eventKey="link-2">
-                    직급관리
-                </Nav.Link>
-            </Nav.Item>
-        </Nav>
+
         <Col className="d-flex justify-content-between align-items-center p-5">
             <h1>직급관리</h1>
             <Button variant="primary" onClick={() => setModalShow(true)}>
@@ -195,103 +183,92 @@ export default function Positions() {
                 onAdd={loadData}
             />
         </Col>
-        <Row className="p-5">
-            <Col>
-                <Table responsive hover striped className="text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>직급번호</th>
-                            <th>직급명</th>
-                            <th>설명</th>
-                            <th>활성화여부</th>
-                            <th>수정</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {positionList.map((position) => (
 
-                            <tr key={position.positionNo}>
-                                <td>{position.positionNo}</td>
-                                <td>{position.positionName}</td>
-                                <td>{position.positionInfo}</td>
-                                <td>{position.positionBlock}</td>
-                                <td>
-                                    <OverlayTrigger
-                                        trigger="click"
-                                        placement="left"
-                                        rootClose={true}
-                                        show={showPopover === position.positionNo}
-                                        onToggle={(nextShow)=>{
-                                            setShowPopover(nextShow? position.positionNo : null);
-                                        }}
-                                        overlay={
-                                            <Popover id={`popover-positioned-left`}>
-                                                <Popover.Header as="h3">{position.positionName}</Popover.Header>
-                                                <Popover.Body>
-                                                    <Row className="mt-4">
-                                                        <Form.Label column sm={3}>직급명</Form.Label>
-                                                        <Col sm={9}>
-                                                            <Form.Control type="text" name="positionName" value={selectedPosition.positionName}
-                                                                onChange={changeStringValue} className="w-100">
-                                                            </Form.Control>
-                                                        </Col>
-                                                    </Row>
-                                                    <Row className="mt-4">
-                                                        <Form.Label column sm={3}>하는 일</Form.Label>
-                                                        <Col sm={9}>
-                                                            <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
-                                                                onChange={changeStringValue} className="w-100">
-                                                            </Form.Control>
-                                                        </Col>
-                                                    </Row>
-                                                    <Row className="mt-4">
-                                                        <Form.Label column sm={3}>활성화여부</Form.Label>
-                                                        <Col sm={9}>
-                                                            <Form.Check type="radio"
-                                                                name="positionBlock"
-                                                                value="Y"
-                                                                className="d-inline-block"
-                                                                label="Y"
-                                                                checked={selectedPosition.positionBlock === "Y"}
-                                                                onChange={changeStringValue}
-                                                            >
-                                                            </Form.Check>
-                                                            <Form.Check type="radio"
-                                                                name="positionBlock"
-                                                                value="N"
-                                                                className="d-inline-block"
-                                                                label="N"
-                                                                checked={selectedPosition.positionBlock === "N"}
-                                                                onChange={changeStringValue}
-                                                            >
-                                                            </Form.Check>
-                                                        </Col>
-                                                    </Row>
-                                                    <Row className="mt-4">
-                                                        <Button onClick={changeData}>
-                                                            <span>수정</span>
-                                                        </Button>
-                                                    </Row>
+        {positionList.map((position) => (
+            <Card className="mt-2 card">
+                <Card.Body>
+                    <Row>
+                        <Col>{position.positionNo}</Col>
+                        <Col>{position.positionName}</Col>
+                        <Col>{position.positionInfo}</Col>
+                        <Col>{position.positionBlock}</Col>
+                        <Col>
+                            <OverlayTrigger
+                                trigger="click"
+                                placement="left"
+                                rootClose={true}
+                                show={showPopover === position.positionNo}
+                                onToggle={(nextShow) => {
+                                    setShowPopover(nextShow ? position.positionNo : null);
+                                }}
+                                overlay={
+                                    <Popover id={`popover-positioned-left`}>
+                                        <Popover.Header as="h3">{position.positionName}</Popover.Header>
+                                        <Popover.Body>
+                                            <Row className="mt-4">
+                                                <Form.Label column sm={3}>직급명</Form.Label>
+                                                <Col sm={9}>
+                                                    <Form.Control type="text" name="positionName" value={selectedPosition.positionName}
+                                                        onChange={changeStringValue} className="w-100">
+                                                    </Form.Control>
+                                                </Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Form.Label column sm={3}>하는 일</Form.Label>
+                                                <Col sm={9}>
+                                                    <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
+                                                        onChange={changeStringValue} className="w-100">
+                                                    </Form.Control>
+                                                </Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Form.Label column sm={3}>활성화여부</Form.Label>
+                                                <Col sm={9}>
+                                                    <Form.Check type="radio"
+                                                        name="positionBlock"
+                                                        value="Y"
+                                                        className="d-inline-block"
+                                                        label="Y"
+                                                        checked={selectedPosition.positionBlock === "Y"}
+                                                        onChange={changeStringValue}
+                                                    >
+                                                    </Form.Check>
+                                                    <Form.Check type="radio"
+                                                        name="positionBlock"
+                                                        value="N"
+                                                        className="d-inline-block"
+                                                        label="N"
+                                                        checked={selectedPosition.positionBlock === "N"}
+                                                        onChange={changeStringValue}
+                                                    >
+                                                    </Form.Check>
+                                                </Col>
+                                            </Row>
+                                            <Row className="mt-4">
+                                                <Button onClick={changeData}>
+                                                    <span>수정</span>
+                                                </Button>
+                                            </Row>
 
-                                                </Popover.Body>
-                                            </Popover>
-                                        }
-                                    >
-                                        <Button variant="secondary" onClick={()=>{
-                                            setData(position);
-                                            setShowPopover(
-                                                showPopover === position.positionNo? null : position.positionNo
-                                            )
-                                        }}>
-                                            <FaMagnifyingGlass />
-                                        </Button>
-                                    </OverlayTrigger>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </Col>
-        </Row>
+                                        </Popover.Body>
+                                    </Popover>
+                                }
+                            >
+                                <Button variant="secondary" onClick={() => {
+                                    setData(position);
+                                    setShowPopover(
+                                        showPopover === position.positionNo ? null : position.positionNo
+                                    )
+                                }}>
+                                    <FaMagnifyingGlass />
+                                </Button>
+                            </OverlayTrigger>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+        ))}
+
+
     </>)
 }
