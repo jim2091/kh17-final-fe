@@ -46,7 +46,7 @@ export default function ProjectHeader({project, loadProject}) {
             
             toast.success("프로젝트가 삭제되었습니다.");
 
-            navigate("/projects");
+            navigate("/projects/my");
         }
 
         catch(e){
