@@ -1,10 +1,8 @@
 import { useAtomValue } from "jotai";
-import { useContext, useEffect, useState, createContext, useCallback } from "react";
+import { useContext, useEffect, useState, createContext } from "react";
 import { isLoginState } from "@utils/storage";
 import { connectWebSocket, getWebSocketClient, onWebSocketConnect
 } from "@utils/websocket";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs"
 
 const WebSocketContext = createContext(null);
 
@@ -13,25 +11,49 @@ export default function ({ children }) {
     const isLogin = useAtomValue(isLoginState);
     const [users, setUsers] = useState([]);
 
-    const connectToServer = useCallback(() => {
+    //웹소켓 연결을 관리하는 useEffect
+    useEffect(() => {
+        if (!isLogin) {
+            return;
+        }
+        //로그인 상태이면 웹소켓 서버에 연결
+        connectWebSocket();
 
-        const socket = new SockJS(`${import.meta.env.VITE_SERVER_URL}/ws`);
+        return () => {
+            //로그아웃 시
+            disconnectFromServer(client);
+        };
 
-        const client = new Client({
-            webSocketFactory: () => socket,
+    }, [isLogin]);
 
-            onConnect: () => {
-                client.subscribe("/public/onlineUsers", (message) => {
-                    const jsonArray = JSON.parse(message.body);
-                    setUsers(jsonArray);
-                });
+    //백엔드에서 온라인 사용자 변동을 실시간으로 전달받는 구독
+    useEffect(()=>{
+        if(!isLogin){//로그인 상태가 아니면
+            setUsers([]);//사용자들을 보여주지 않겠다
+            return;
+        }
 
-                client.publish({
-                    destination: "/app/onlineUsers"
-                });
-            },
+        let subscription = null;
 
-            debug: (str) => console.log(str)
+        onWebSocketConnect(() => {//웹소켓 서버와 연결이 되면 이 콜백함수를 실행하겠다
+            //공용 웹소켓 클라이언트를 가져오고
+            const client = getWebSocketClient();
+            //없으면 때려치고
+            if(client == null) return;
+
+            subscription = client.subscribe(
+                "/public/onlineUsers",//여기 구독해서
+                (message) => {
+                    const json = JSON.parse(message.body);
+                    setUsers(json);
+                }
+            );
+
+            //현재 온라인 사용자 목록 요청
+            client.publish({
+                destination: "/app/onlineUsers"
+            });
+
         });
 
         //클린업 함수
@@ -39,33 +61,10 @@ export default function ({ children }) {
             subscription?.unsubscribe();
             setUsers([]);
         }
-    }, []);
 
-    
-    useEffect(() => {
+    }, [isLogin]);
 
-
-    if (!isLogin) {
-        return;
-    }
-
-    const client = connectToServer();
-
-    setClient(client);
-
-
-    return () => {
-
-        disconnectFromServer(client);
-        setClient(null);
-    };
-
-}, [isLogin]);
-
-
-
-
-
+    //아까 publish도 언뜻 봤던거 같은데 지금은 백엔드에 따로 구현 안돼있는거 같아서 그냥 둘게요
 
     return (<>
         <WebSocketContext.Provider value={{ users }}>
