@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { atom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { apiClient } from "@utils/reaxios";
 import "./Task.css";
 import TaskComments from "./TaskComments";
+import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 
 // 로그인 사원 전역 상태 정의
 export const loginUserAtom = atomWithStorage("loginUser", {
@@ -66,13 +65,11 @@ export default function Task() {
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  // 웹소켓 클라이언트 참조
-  const stompClientRef = useRef(null);
-
   // 업무 전체 목록 서버 조회
-  const fetchTasks = async (pNo) => {
+  const fetchTasks = useCallback(async (pNo, showLoading = true) => {
+    if (!pNo) return;
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await apiClient.get(`/task/list/${pNo}`);
       const taskList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setTasks(taskList);
@@ -80,12 +77,13 @@ export default function Task() {
       console.error("조회 실패:", error);
       toast.error("업무 목록을 불러오지 못했습니다.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, []);
 
   // 프로젝트 멤버 목록 서버 조회
-  const fetchProjectMembers = async (pNo) => {
+  const fetchProjectMembers = useCallback(async (pNo) => {
+    if (!pNo) return;
     try {
       const res = await apiClient.get(`/project/${pNo}/member`);
       const memberList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -93,7 +91,92 @@ export default function Task() {
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
     }
-  };
+  }, []);
+
+  // 초기 데이터 로드 (화면 진입 및 프로젝트 변경 시)
+  useEffect(() => {
+    if (projectNo) {
+      fetchTasks(projectNo, true);
+      fetchProjectMembers(projectNo);
+    }
+  }, [projectNo, fetchTasks, fetchProjectMembers]);
+
+
+
+
+  // 공용 WebSocketProvider를 통한 실시간 변경 감지 및 반영
+  useEffect(() => {
+    if (!projectNo) return;
+
+    let subscription = null;
+    let unregisterWebSocketConnect = null;
+
+    // 1. 구독 실행 내부 함수 정의 (이름: doSubscribe)
+    const doSubscribe = (client) => {
+      if (!client || !client.connected) return;
+
+      // 기존 구독이 있다면 먼저 정리
+      subscription?.unsubscribe();
+
+      subscription = client.subscribe(
+        `/public/projects/${projectNo}/kanban`,
+        (message) => {
+          const event = JSON.parse(message.body);
+
+          // 본인이 보낸 이벤트는 선반영되었으므로 무시
+          if (Number(event.senderEmpNo) === Number(loginUser?.empNo)) {
+            return;
+          }
+
+          console.log("실시간 칸반 이벤트 수신:", event);
+
+          switch (event.eventType) {
+            case "TASK_MOVED":
+              // 카드 상태만 즉시 업데이트하여 깜빡임 및 API 재호출 방지
+              setTasks((prev) =>
+                prev.map((t) =>
+                  t.taskNo === Number(event.taskNo)
+                    ? { ...t, taskStatus: event.nextStatus }
+                    : t
+                )
+              );
+              break;
+
+            case "TASK_CREATED":
+            case "TASK_UPDATED":
+            case "TASK_DELETED":
+              // 등록, 수정, 삭제 시 로딩 화면 없이 조용히 최신 데이터 갱신
+              fetchTasks(projectNo, false);
+              break;
+
+            default:
+              break;
+          }
+        }
+      );
+    };
+
+    // 2. 이미 웹소켓이 연결되어 있는 상태라면 즉시 구독 실행
+    const client = getWebSocketClient();
+    if (client && client.connected) {
+      doSubscribe(client);
+    }
+
+    // 3. 소켓이 새로 연결되거나 재접속될 때를 대비한 리스너 등록
+    unregisterWebSocketConnect = onWebSocketConnect(() => {
+      const currentClient = getWebSocketClient();
+      doSubscribe(currentClient);
+    });
+
+    // 4. 언마운트 및 projectNo 변경 시 구독 및 리스너 정리
+    return () => {
+      subscription?.unsubscribe();
+      if (typeof unregisterWebSocketConnect === "function") {
+        unregisterWebSocketConnect();
+      }
+    };
+  }, [projectNo, loginUser?.empNo, fetchTasks]);
+
 
   // 담당자 이름 반환 헬퍼 함수 (미배정 방지)
   const getAssigneeName = (task) => {
@@ -119,50 +202,6 @@ export default function Task() {
     if (currentAssignedNo && m.projectMemberNo === currentAssignedNo) return false;
     return !editCollaborators.includes(m.projectMemberNo);
   });
-
-  // 초기 데이터 조회 및 웹소켓 연결
-  useEffect(() => {
-    if (!projectNo) return;
-
-    fetchTasks(projectNo);
-    fetchProjectMembers(projectNo);
-
-    // 웹소켓 클라이언트 인스턴스 생성
-    const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      reconnectDelay: 5000,
-      onConnect: () => {
-        // 프로젝트 공용 채널 구독
-        client.subscribe(`/public/projects/${projectNo}/kanban`, (message) => {
-          const event = JSON.parse(message.body);
-
-          // 본인이 보낸 이벤트는 선반영되었으므로 무시
-          if (Number(event.senderEmpNo) === Number(loginUser?.empNo)) return;
-
-          // 타 사용자의 카드 이동 이벤트 반영
-          if (event.eventType === "TASK_MOVED") {
-            const targetTaskId = Number(event.taskNo);
-            const nextStatus = event.nextStatus;
-
-            setTasks((prev) =>
-              prev.map((t) =>
-                t.taskNo === targetTaskId ? { ...t, taskStatus: nextStatus } : t
-              )
-            );
-          } else if (event.eventType === "TASK_UPDATED" || event.eventType === "TASK_CREATED") {
-            fetchTasks(projectNo);
-          }
-        });
-      }
-    });
-
-    client.activate();
-    stompClientRef.current = client;
-
-    return () => {
-      if (client) client.deactivate();
-    };
-  }, [projectNo, loginUser?.empNo]);
 
   // 업무 드로어 열기 및 상세 조회
   const handleCardClick = async (taskNo) => {
@@ -229,7 +268,6 @@ export default function Task() {
     setEditFormData((prev) => {
       const nextForm = { ...prev, [name]: value };
 
-      // 주 담당자로 지정된 인원은 협업자 목록에서 자동 제외 (중복 방지)
       if (name === "assignedMemberNo" && value) {
         const selectedAssignedNo = Number(value);
         setEditCollaborators((collabs) =>
@@ -290,7 +328,7 @@ export default function Task() {
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
       }
-      fetchTasks(projectNo);
+      fetchTasks(projectNo, false);
       setIsEditing(false);
     } catch (error) {
       console.error("업무 수정 실패:", error);
@@ -445,9 +483,7 @@ export default function Task() {
                         onDragStart={(e) => handleDragStart(e, task.taskNo)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleCardClick(task.taskNo)}
-                        className={`direct-task-card ${pClass} ${
-                          isDraggingThis ? "is-dragging" : ""
-                        }`}
+                        className={`direct-task-card ${pClass} ${isDraggingThis ? "is-dragging" : ""}`}
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
