@@ -396,16 +396,31 @@
 }
 
 
-/* 프로젝트 hover */
-
 .search-project-result-item:hover {
     background: #f7f7f7;
 }
 
 
-/* 프로젝트 클릭 효과 */
-
 .search-project-result-item:active {
+    background: #f0f0f0;
+}
+
+
+/* ==========================================
+   업무 검색 결과
+========================================== */
+
+.search-task-result-item {
+    cursor: pointer;
+}
+
+
+.search-task-result-item:hover {
+    background: #f7f7f7;
+}
+
+
+.search-task-result-item:active {
     background: #f0f0f0;
 }
 

@@ -61,7 +61,7 @@ export default function Search() {
 
 
     /*
-     * 프로젝트 상세 페이지 이동
+     * 페이지 이동
      */
     const navigate = useNavigate();
 
@@ -74,10 +74,11 @@ export default function Search() {
 
 
     /*
-     * URL filter
-     *
-     * filter가 없으면 전체 검색
+     * ==========================================
+     * URL에서 필터 가져오기
+     * ==========================================
      */
+
     const getFiltersFromUrl = () => {
 
         const filterParam =
@@ -117,10 +118,13 @@ export default function Search() {
 
 
     /*
+     * ==========================================
      * 선택된 필터
+     * ==========================================
      *
      * 최초에는 전체 검색
      */
+
     const [filters, setFilters] =
         useState(() => {
 
@@ -128,16 +132,30 @@ export default function Search() {
                 searchParams.get("filter");
 
 
+            /*
+             * filter 없음
+             * → 전체
+             */
             if (!filterParam) {
+
                 return ["all"];
+
             }
 
 
+            /*
+             * 전체
+             */
             if (filterParam === "all") {
+
                 return ["all"];
+
             }
 
 
+            /*
+             * 개별 필터
+             */
             const parsedFilters =
                 filterParam
                     .split(",")
@@ -147,8 +165,8 @@ export default function Search() {
 
 
             /*
-             * 이상한 filter가 들어온 경우
-             * 전체 검색으로 처리
+             * 이상한 filter
+             * → 전체
              */
             if (parsedFilters.length === 0) {
 
@@ -163,8 +181,11 @@ export default function Search() {
 
 
     /*
+     * ==========================================
      * 검색 결과
+     * ==========================================
      */
+
     const [result, setResult] = useState({
 
         keyword: "",
@@ -187,15 +208,21 @@ export default function Search() {
 
 
     /*
+     * ==========================================
      * 로딩
+     * ==========================================
      */
+
     const [loading, setLoading] =
         useState(false);
 
 
     /*
+     * ==========================================
      * 오류
+     * ==========================================
      */
+
     const [error, setError] =
         useState("");
 
@@ -313,7 +340,7 @@ export default function Search() {
         if (filterKey === "all") {
 
             /*
-             * 현재 전체가 체크되어 있으면
+             * 전체가 체크되어 있으면
              * 전체 해제
              */
             if (isAllSelected) {
@@ -326,7 +353,6 @@ export default function Search() {
              * 전체를 체크하면
              *
              * 다른 필터는 전부 해제
-             *
              * 전체만 체크
              */
             else {
@@ -347,7 +373,7 @@ export default function Search() {
         else {
 
             /*
-             * 현재 전체가 체크되어 있다면
+             * 전체가 체크되어 있다면
              *
              * 전체 해제
              * 클릭한 항목만 체크
@@ -456,7 +482,7 @@ export default function Search() {
 
         /*
          * 아무것도 선택하지 않았다면
-         * filter는 URL에서 제거
+         * filter 제거
          */
         setSearchParams(params);
 
@@ -621,6 +647,57 @@ export default function Search() {
         (result.records?.length || 0) +
         (result.notes?.length || 0) +
         (result.files?.length || 0);
+
+
+    /*
+     * ==========================================
+     * 프로젝트 이동
+     * ==========================================
+     */
+
+    const handleProjectClick = (
+        projectNo
+    ) => {
+
+        navigate(
+            `/projects/${projectNo}`
+        );
+
+    };
+
+
+    /*
+     * ==========================================
+     * 업무 이동
+     * ==========================================
+     *
+     * 업무는 프로젝트 내부에 있으므로
+     *
+     * /projects/{projectNo}/task
+     *
+     * 로 이동
+     */
+
+    const handleTaskClick = (
+        projectNo
+    ) => {
+
+        if (!projectNo) {
+
+            console.warn(
+                "업무의 projectNo가 없습니다."
+            );
+
+            return;
+
+        }
+
+
+        navigate(
+            `/projects/${projectNo}/task`
+        );
+
+    };
 
 
     /*
@@ -974,8 +1051,8 @@ export default function Search() {
                                                         project.projectNo
                                                     }
                                                     onClick={() =>
-                                                        navigate(
-                                                            `/projects/${project.projectNo}`
+                                                        handleProjectClick(
+                                                            project.projectNo
                                                         )
                                                     }
                                                     role="button"
@@ -983,12 +1060,11 @@ export default function Search() {
                                                     onKeyDown={(e) => {
 
                                                         if (
-                                                            e.key ===
-                                                            "Enter"
+                                                            e.key === "Enter"
                                                         ) {
 
-                                                            navigate(
-                                                                `/projects/${project.projectNo}`
+                                                            handleProjectClick(
+                                                                project.projectNo
                                                             );
 
                                                         }
@@ -1056,10 +1132,30 @@ export default function Search() {
                                             (task) => (
 
                                                 <div
-                                                    className="search-result-item"
+                                                    className="search-result-item search-task-result-item"
                                                     key={
                                                         task.taskNo
                                                     }
+                                                    onClick={() =>
+                                                        handleTaskClick(
+                                                            task.projectNo
+                                                        )
+                                                    }
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onKeyDown={(e) => {
+
+                                                        if (
+                                                            e.key === "Enter"
+                                                        ) {
+
+                                                            handleTaskClick(
+                                                                task.projectNo
+                                                            );
+
+                                                        }
+
+                                                    }}
                                                 >
 
                                                     <div className="search-task-icon">
