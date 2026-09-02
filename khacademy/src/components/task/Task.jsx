@@ -1,24 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import { Paperclip, Download, FileText } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
+import { isLoginState } from "@utils/storage";
 import "./Task.css";
 import TaskComments from "./TaskComments";
-import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 
-// 로그인 사원 전역 상태 정의
-export const loginUserAtom = atomWithStorage("loginUser", {
-  empNo: null,
-  empName: "",
-  empDeptNo: "",
-  isLoggedIn: false
-});
-
-loginUserAtom.debugLabel = "loginUserAtom";
-
-// 칸반 컬럼 상태 목록 정의
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
   { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
@@ -28,28 +19,24 @@ const COLUMNS = [
 export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
+  const isLogin = useAtomValue(isLoginState);
 
-  // 전역 로그인 유저 상태 구독
-  const loginUser = useAtomValue(loginUserAtom);
-
-  // 업무 데이터 및 로딩 상태
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // 프로젝트 참여 멤버 상태
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // 칸반 드래그 앤 드롭 상태
+  // 칸반 드래그 앤 드롭
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 업무 드로어 기본 상태
+  // 드로어 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
+  const [taskFiles, setTaskFiles] = useState([]);
 
-  // 업무 드로어 수정 폼 상태
+  // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -65,11 +52,27 @@ export default function Task() {
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  // 업무 전체 목록 서버 조회
-  const fetchTasks = useCallback(async (pNo, showLoading = true) => {
-    if (!pNo) return;
+  const stompClientRef = useRef(null);
+
+  // 현재 로그인 사원의 projectMemberNo 계산
+  const storedUser = JSON.parse(
+    localStorage.getItem("user") ||
+    localStorage.getItem("loginUser") ||
+    "{}"
+  );
+  const myEmpNo = Number(
+    storedUser?.empNo || 
+    localStorage.getItem("empNo") || 
+    sessionStorage.getItem("empNo") || 
+    0
+  );
+
+  const currentProjectMember = projectMembers.find((m) => Number(m.empNo) === myEmpNo);
+  const currentProjectMemberNo = currentProjectMember?.projectMemberNo || null;
+
+  const fetchTasks = async (pNo) => {
     try {
-      if (showLoading) setLoading(true);
+      setLoading(true);
       const res = await apiClient.get(`/task/list/${pNo}`);
       const taskList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setTasks(taskList);
@@ -77,13 +80,11 @@ export default function Task() {
       console.error("조회 실패:", error);
       toast.error("업무 목록을 불러오지 못했습니다.");
     } finally {
-      if (showLoading) setLoading(false);
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // 프로젝트 멤버 목록 서버 조회
-  const fetchProjectMembers = useCallback(async (pNo) => {
-    if (!pNo) return;
+  const fetchProjectMembers = async (pNo) => {
     try {
       const res = await apiClient.get(`/project/${pNo}/member`);
       const memberList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -91,94 +92,19 @@ export default function Task() {
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
     }
-  }, []);
+  };
 
-  // 초기 데이터 로드 (화면 진입 및 프로젝트 변경 시)
-  useEffect(() => {
-    if (projectNo) {
-      fetchTasks(projectNo, true);
-      fetchProjectMembers(projectNo);
+  const fetchTaskFiles = async (taskNo) => {
+    try {
+      const res = await apiClient.get(`/task/file/${taskNo}`);
+      const files = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setTaskFiles(files);
+    } catch (error) {
+      console.warn("업무 첨부파일 목록 조회 실패:", error);
+      setTaskFiles([]);
     }
-  }, [projectNo, fetchTasks, fetchProjectMembers]);
+  };
 
-
-
-
-  // 공용 WebSocketProvider를 통한 실시간 변경 감지 및 반영
-  useEffect(() => {
-    if (!projectNo) return;
-
-    let subscription = null;
-    let unregisterWebSocketConnect = null;
-
-    // 1. 구독 실행 내부 함수 정의 (이름: doSubscribe)
-    const doSubscribe = (client) => {
-      if (!client || !client.connected) return;
-
-      // 기존 구독이 있다면 먼저 정리
-      subscription?.unsubscribe();
-
-      subscription = client.subscribe(
-        `/public/projects/${projectNo}/kanban`,
-        (message) => {
-          const event = JSON.parse(message.body);
-
-          // 본인이 보낸 이벤트는 선반영되었으므로 무시
-          if (Number(event.senderEmpNo) === Number(loginUser?.empNo)) {
-            return;
-          }
-
-          console.log("실시간 칸반 이벤트 수신:", event);
-
-          switch (event.eventType) {
-            case "TASK_MOVED":
-              // 카드 상태만 즉시 업데이트하여 깜빡임 및 API 재호출 방지
-              setTasks((prev) =>
-                prev.map((t) =>
-                  t.taskNo === Number(event.taskNo)
-                    ? { ...t, taskStatus: event.nextStatus }
-                    : t
-                )
-              );
-              break;
-
-            case "TASK_CREATED":
-            case "TASK_UPDATED":
-            case "TASK_DELETED":
-              // 등록, 수정, 삭제 시 로딩 화면 없이 조용히 최신 데이터 갱신
-              fetchTasks(projectNo, false);
-              break;
-
-            default:
-              break;
-          }
-        }
-      );
-    };
-
-    // 2. 이미 웹소켓이 연결되어 있는 상태라면 즉시 구독 실행
-    const client = getWebSocketClient();
-    if (client && client.connected) {
-      doSubscribe(client);
-    }
-
-    // 3. 소켓이 새로 연결되거나 재접속될 때를 대비한 리스너 등록
-    unregisterWebSocketConnect = onWebSocketConnect(() => {
-      const currentClient = getWebSocketClient();
-      doSubscribe(currentClient);
-    });
-
-    // 4. 언마운트 및 projectNo 변경 시 구독 및 리스너 정리
-    return () => {
-      subscription?.unsubscribe();
-      if (typeof unregisterWebSocketConnect === "function") {
-        unregisterWebSocketConnect();
-      }
-    };
-  }, [projectNo, loginUser?.empNo, fetchTasks]);
-
-
-  // 담당자 이름 반환 헬퍼 함수 (미배정 방지)
   const getAssigneeName = (task) => {
     if (task.assignedMemberName && task.assignedMemberName.trim()) {
       return task.assignedMemberName;
@@ -192,18 +118,54 @@ export default function Task() {
     return "미배정";
   };
 
-  // 현재 주 담당자로 선택된 멤버 번호
   const currentAssignedNo = editFormData.assignedMemberNo
     ? Number(editFormData.assignedMemberNo)
     : null;
 
-  // 협업자로 선택 가능한 사원만 실시간 필터링 (주 담당자 제외 + 이미 선택된 협업자 제외)
   const availableCollaboratorMembers = projectMembers.filter((m) => {
     if (currentAssignedNo && m.projectMemberNo === currentAssignedNo) return false;
     return !editCollaborators.includes(m.projectMemberNo);
   });
 
-  // 업무 드로어 열기 및 상세 조회
+  useEffect(() => {
+    if (!projectNo) return;
+
+    fetchTasks(projectNo);
+    fetchProjectMembers(projectNo);
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe(`/public/projects/${projectNo}/kanban`, (message) => {
+          const event = JSON.parse(message.body);
+
+          if (myEmpNo > 0 && Number(event.senderEmpNo) === myEmpNo) return;
+
+          if (event.eventType === "TASK_MOVED") {
+            const targetTaskId = Number(event.taskNo);
+            const nextStatus = event.nextStatus;
+
+            setTasks((prev) =>
+              prev.map((t) =>
+                t.taskNo === targetTaskId ? { ...t, taskStatus: nextStatus } : t
+              )
+            );
+          } else if (event.eventType === "TASK_UPDATED" || event.eventType === "TASK_CREATED") {
+            fetchTasks(projectNo);
+          }
+        });
+      }
+    });
+
+    client.activate();
+    stompClientRef.current = client;
+
+    return () => {
+      if (client) client.deactivate();
+    };
+  }, [projectNo, myEmpNo]);
+
   const handleCardClick = async (taskNo) => {
     if (isDragging) return;
     setIsEditing(false);
@@ -213,6 +175,8 @@ export default function Task() {
       setSelectedTask(localTarget);
       setDrawerOpen(true);
     }
+
+    fetchTaskFiles(taskNo);
 
     try {
       setDrawerLoading(true);
@@ -227,14 +191,13 @@ export default function Task() {
     }
   };
 
-  // 업무 드로어 닫기
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
     setSelectedTask(null);
+    setTaskFiles([]);
     setIsEditing(false);
   };
 
-  // 업무 수정 모드 진입
   const handleStartEdit = () => {
     if (!selectedTask) return;
 
@@ -257,12 +220,10 @@ export default function Task() {
     setIsEditing(true);
   };
 
-  // 업무 수정 모드 취소
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
-  // 업무 수정 입력 변경
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
@@ -278,7 +239,6 @@ export default function Task() {
     });
   };
 
-  // 업무 협업자 추가/제거 토글
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -287,7 +247,6 @@ export default function Task() {
     );
   };
 
-  // 업무 수정 내용 서버 저장
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -328,7 +287,7 @@ export default function Task() {
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
       }
-      fetchTasks(projectNo, false);
+      fetchTasks(projectNo);
       setIsEditing(false);
     } catch (error) {
       console.error("업무 수정 실패:", error);
@@ -338,7 +297,6 @@ export default function Task() {
     }
   };
 
-  // 칸반 드래그 시작
   const handleDragStart = (e, taskNo) => {
     setIsDragging(true);
     setDraggedTaskId(taskNo);
@@ -346,7 +304,6 @@ export default function Task() {
     e.dataTransfer.effectAllowed = "move";
   };
 
-  // 칸반 드래그 종료
   const handleDragEnd = () => {
     setTimeout(() => {
       setIsDragging(false);
@@ -354,20 +311,17 @@ export default function Task() {
     }, 150);
   };
 
-  // 칸반 드래그 영역 오버
   const handleDragOver = (e, columnId) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverCol !== columnId) setDragOverCol(columnId);
   };
 
-  // 칸반 드래그 영역 벗어남
   const handleDragLeave = (e, columnId) => {
     if (e.currentTarget.contains(e.relatedTarget)) return;
     if (dragOverCol === columnId) setDragOverCol(null);
   };
 
-  // 칸반 드롭 및 상태 변경
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
     setDragOverCol(null);
@@ -387,7 +341,6 @@ export default function Task() {
 
     const backupTasks = [...tasks];
 
-    // 화면 즉시 선반영
     setTasks((prev) =>
       prev.map((t) =>
         t.taskNo === targetTaskId ? { ...t, taskStatus: targetStatus } : t
@@ -408,7 +361,6 @@ export default function Task() {
     }
   };
 
-  // 업무 우선순위 스타일 변환
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "긴급": return "badge-urgent";
@@ -418,7 +370,6 @@ export default function Task() {
     }
   };
 
-  // 업무 상태 텍스트 변환
   const getStatusLabel = (status) => {
     switch (status) {
       case "TODO": return "할 일 (To Do)";
@@ -428,11 +379,18 @@ export default function Task() {
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
   if (loading) return <div className="kanban-loading">칸반 보드를 불러오는 중...</div>;
 
   return (
     <div className="custom-kanban-page">
-      {/* 칸반 상단 헤더 */}
       <div className="kanban-title-bar">
         <div className="kanban-title-text">
           <h2>프로젝트 #{projectNo} 업무 보드</h2>
@@ -448,7 +406,6 @@ export default function Task() {
         </button>
       </div>
 
-      {/* 칸반 보드 카드 목록 */}
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
           const columnTasks = tasks.filter((t) => (t.taskStatus || "TODO") === col.id);
@@ -487,9 +444,7 @@ export default function Task() {
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
-                          <span className={`priority-tag ${pClass}`}>
-                            {task.taskPriority || "보통"}
-                          </span>
+                          <span className={`priority-tag ${pClass}`}>{task.taskPriority || "보통"}</span>
                         </div>
 
                         <div className="card-main-title">{task.taskTitle}</div>
@@ -500,10 +455,7 @@ export default function Task() {
                             <span>{task.taskProgress || 0}%</span>
                           </div>
                           <div className="progress-track">
-                            <div
-                              className="progress-bar"
-                              style={{ width: `${task.taskProgress || 0}%` }}
-                            />
+                            <div className="progress-bar" style={{ width: `${task.taskProgress || 0}%` }} />
                           </div>
                         </div>
 
@@ -526,16 +478,13 @@ export default function Task() {
         })}
       </div>
 
-      {/* 업무 드로어 배경 */}
       <div className={`drawer-backdrop ${drawerOpen ? "open" : ""}`} onClick={handleCloseDrawer} />
 
-      {/* 업무 드로어 본체 */}
       <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
         {drawerLoading && !selectedTask ? (
           <div className="drawer-loading">상세 정보를 불러오는 중...</div>
         ) : selectedTask ? (
           <div className="drawer-container">
-            {/* 업무 드로어 헤더 */}
             <div className="drawer-header">
               <div className="drawer-header-left">
                 <span className="task-id-badge">TASK #{selectedTask.taskNo}</span>
@@ -556,7 +505,6 @@ export default function Task() {
               </button>
             </div>
 
-            {/* 업무 드로어 열람 뷰 */}
             {!isEditing && (
               <>
                 <div className="drawer-body view-mode">
@@ -569,9 +517,7 @@ export default function Task() {
                     <div className="meta-card-item">
                       <span className="meta-label">담당자</span>
                       <div className="meta-user-val">
-                        <span className="meta-bold-val">
-                          {getAssigneeName(selectedTask)}
-                        </span>
+                        <span className="meta-bold-val">{getAssigneeName(selectedTask)}</span>
                         {selectedTask.assignedMemberDept && (
                           <span className="meta-sub-val">({selectedTask.assignedMemberDept})</span>
                         )}
@@ -606,17 +552,13 @@ export default function Task() {
                       <span className="section-highlight-val">{selectedTask.taskProgress || 0}%</span>
                     </div>
                     <div className="view-progress-track">
-                      <div
-                        className="view-progress-fill"
-                        style={{ width: `${selectedTask.taskProgress || 0}%` }}
-                      />
+                      <div className="view-progress-fill" style={{ width: `${selectedTask.taskProgress || 0}%` }} />
                     </div>
                   </div>
 
                   <div className="view-section">
                     <span className="section-title">
-                      함께하는 협업자 (
-                      {selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
+                      함께하는 협업자 ({selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
                     </span>
                     <div className="collab-tag-list">
                       {selectedTask.collaborators && selectedTask.collaborators.length > 0 ? (
@@ -639,6 +581,42 @@ export default function Task() {
                     </div>
                   </div>
 
+                  {/* 본체 첨부파일 목록 */}
+                  <div className="view-section">
+                    <span className="section-title">
+                      <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                      업무 첨부파일 ({taskFiles.length}개)
+                    </span>
+                    <div className="task-file-list-box">
+                      {taskFiles.length === 0 ? (
+                        <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
+                      ) : (
+                        taskFiles.map((file) => (
+                          <div key={file.attachNo} className="task-file-item">
+                            <div className="task-file-info">
+                              <span className={`task-role-badge role-${file.fileRole?.toLowerCase()}`}>
+                                {file.fileRole === "PROGRESS" ? "진행/시안" : file.fileRole === "DELIVERABLE" ? "최종산출물" : "참고자료"}
+                              </span>
+                              <FileText size={14} className="file-icon" />
+                              <span className="task-file-name" title={file.attachName}>
+                                {file.attachName}
+                              </span>
+                              <span className="task-file-size">({formatFileSize(file.attachSize)})</span>
+                            </div>
+                            <a
+                              href={`/api/attach/download/${file.attachNo}`}
+                              className="btn-file-download"
+                              download
+                              title="다운로드"
+                            >
+                              <Download size={13} /> 다운로드
+                            </a>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
                   <div className="view-timestamps">
                     <span>등록일시: {selectedTask.taskCtime ? String(selectedTask.taskCtime).replace("T", " ").slice(0, 19) : "-"}</span>
                     {selectedTask.taskUtime && (
@@ -646,23 +624,21 @@ export default function Task() {
                     )}
                   </div>
 
-                  {/* 댓글 컴포넌트 연동 */}
-                  <TaskComments taskNo={selectedTask.taskNo} />
+                  {/* 댓글 컴포넌트 연동 (currentProjectMemberNo 전달) */}
+                  <TaskComments 
+                    taskNo={selectedTask.taskNo} 
+                    projectNo={projectNo} 
+                    currentProjectMemberNo={currentProjectMemberNo}
+                  />
                 </div>
 
-                {/* 업무 드로어 열람 하단 버튼 */}
                 <div className="drawer-footer">
-                  <button className="btn-cancel" onClick={handleCloseDrawer}>
-                    닫기
-                  </button>
-                  <button className="btn-edit-trigger" onClick={handleStartEdit}>
-                    수정하기
-                  </button>
+                  <button className="btn-cancel" onClick={handleCloseDrawer}>닫기</button>
+                  <button className="btn-edit-trigger" onClick={handleStartEdit}>수정하기</button>
                 </div>
               </>
             )}
 
-            {/* 업무 드로어 수정 뷰 */}
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
@@ -680,7 +656,6 @@ export default function Task() {
                   </div>
 
                   <div className="form-grid-row">
-                    {/* 주 담당자 선택 */}
                     <div className="form-group">
                       <label className="form-label">주 담당자</label>
                       <select
@@ -781,13 +756,11 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 협업자 선택 영역 */}
                   <div className="form-group full-width">
                     <label className="form-label">
                       함께할 협업자 ({editCollaborators.length}명 선택됨)
                     </label>
 
-                    {/* 선택된 협업자 태그 목록 */}
                     <div className="collab-chips-box" style={{ marginBottom: "8px" }}>
                       {editCollaborators.length === 0 ? (
                         <span style={{ fontSize: "12px", color: "#94a3b8" }}>
@@ -815,7 +788,6 @@ export default function Task() {
                       )}
                     </div>
 
-                    {/* 추가 가능한 사원만 필터링된 셀렉트 드롭다운 */}
                     <select
                       className="form-select"
                       value=""
@@ -847,7 +819,6 @@ export default function Task() {
                   </div>
                 </div>
 
-                {/* 업무 드로어 수정 하단 버튼 */}
                 <div className="drawer-footer">
                   <button
                     type="button"
