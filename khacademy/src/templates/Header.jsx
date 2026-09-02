@@ -47,19 +47,9 @@ export default function Header({ toggleSidebar }) {
 
     const logout = useCallback(async () => {
 
-        // if (heartbeatInterval) {
-        //     clearInterval(heartbeatInterval);
-        //     setHeartbeatInterval(null);
-        // }
-        // console.log("heartbeat전송 끝");
-
-        // if (socket) {
-        //     await socket.deactivate();
-        //     setSocket(null);
-        // }
+        
 
         try {
-            //await axios.delete("/service/auth/logout");//쿠키 삭제 요청
             await authClient.delete("/logout");//쿠키 삭제 요청
 
 
@@ -193,7 +183,7 @@ export default function Header({ toggleSidebar }) {
                                 <Image src="https://placehold.co/50x50"
                                     roundedCircle />
                                 <FaCircle className={`position-absolute bottom-0 end-0 
-                                    ${online ? "text-success" : "text-secondary"}`} />
+                                    ${online ? "text-info" : "text-secondary"}`} />
                             </div>
                         </OverlayTrigger>
 

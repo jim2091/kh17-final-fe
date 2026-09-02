@@ -8,3 +8,41 @@
 .large-font{
     font-size: 50px;
 }
+.card{
+    border-radius: 5px;
+}
+.card:hover {
+    background-color: #cce0f3;
+}
+
+.tabs {
+    display: flex;
+
+    padding: 0 0px;
+
+    border-bottom: 1px solid #e5e7eb;
+    background-color: white;
+}
+.tab {
+
+    padding: 10px 17px;
+
+    color: #6b7280;
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+    color: #111827;
+}
+
+.tab.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+
+    font-weight: 600;
+}
