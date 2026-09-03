@@ -222,3 +222,147 @@
   background-color: #2563eb;
   color: #ffffff;
 }
+
+/* 댓글 이미지 갤러리 */
+.comment-files-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comment-image-card {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.comment-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.comment-thumbnail-img:hover {
+  transform: scale(1.05);
+}
+
+.btn-img-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+/* 업무 본체 이미지 그리드 */
+.task-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.task-img-card {
+  position: relative;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.task-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.task-img-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+}
+
+.task-img-name {
+  color: #ffffff;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-img-trash {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* 이미지 모달 팝업 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.image-preview-modal .modal-content {
+  position: relative;
+  max-width: 85vw;
+  max-height: 85vh;
+}
+
+.image-preview-modal img {
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-weight: bold;
+}
