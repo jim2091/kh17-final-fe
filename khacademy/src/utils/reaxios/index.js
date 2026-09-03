@@ -47,6 +47,9 @@ export const apiClient = axios.create({
 //   error=>error
 // );
 
+
+let refreshPromise = null;
+
 // 응답에 대한 인터셉터
 apiClient.interceptors.response.use(
     response => response,
@@ -78,10 +81,21 @@ apiClient.interceptors.response.use(
         console.log("retry 표식을 남겼음");
 
         console.log("액세스 토큰 만료됨 → 갱신 요청 시작");
+
         try {
-            await authClient.post("/refresh");
-            //현재 화면은 로그인상태이므로 갱신이 필요하지 않음(필요하다면 해도 됨)
-            return apiClient(originalRequest);//apiClient에 원래요청을 다시보낸 결과를 반환
+            //이미 다른 요청이 토큰 갱신 중이면
+            //새 refresh 요청을 보내지 않고 기존 요청을 기다림
+            if(refreshPromise === null) {
+                refreshPromise = authClient
+                    .post("/refresh")
+                    .finally(()=>{
+                        refreshPromise = null;
+                    });
+            }
+            await refreshPromise;
+            
+            //갱신 완료 후 원래 요청 재시도
+            return apiClient(originalRequest);
         }
         catch (refreshError) {
             //로그인 페이지로 강제이동(리액트스럽게는 어려움)

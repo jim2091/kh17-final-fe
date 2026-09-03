@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import { apiClient } from "../../utils/reaxios";
 import { useAtomValue } from "jotai";
@@ -16,6 +16,13 @@ import "./Chat.css";
 export default function Chat() {
     //● state
     const {projectNo} = useParams(); 
+    const {project} = useOutletContext();
+
+    const isClosed = project?.projectStatus === "closed";
+    const isManagerOrOwner = 
+        project?.projectMemberRole === "owner"
+        || project?.projectMemberRole === "manager";
+    const canManageCannel = isManagerOrOwner && !isClosed;
     const loginUser = useAtomValue(loginUserState);
 
     const [channels, setChannels] = useState([]);
@@ -418,6 +425,8 @@ export default function Chat() {
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 unreadCounts={unreadCounts}
+                canManageCannel={canManageCannel}
+                loadChannelList={loadChannelList}
             />
 
             {sidebarOpen && (

@@ -16,7 +16,7 @@ export default function ChatHeader(
             <div className="chat-header-text">
                 <div className="chat-header-title">
                     {selectedChannel
-                        ? `# ${selectedChannel.chatChannelName}`
+                        ? `${selectedChannel.chatChannelName}`
                         : "채널을 선택하세요"}
                 </div>
 
