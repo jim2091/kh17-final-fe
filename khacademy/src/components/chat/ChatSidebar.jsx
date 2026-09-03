@@ -1,3 +1,5 @@
+import { useCallback, useState } from "react";
+import { useParams } from "react-router-dom";
 
 export default function ChatSidebar(
     { 
@@ -11,6 +13,23 @@ export default function ChatSidebar(
         loadChannelList
     }
 ) {
+    const {projectNo} = useParams();
+    const [channelModal, setChannelModal] = useState(false);
+    const [channelModalMode, setChannelModalMode] = useState("create");
+    const [channelName, setChannelName] = useState("");
+    const [targetChannel, setTargetChannel] =useState(null);
+    const [channelMenuNo, setChannelMenuNo] = useState(null);
+    const [saving, setSaving] = useState(false);
+
+    const openCreateModal = useCallback(()=>{
+        setChannelModalMode("create")
+        setTargetChannel(null);
+        setChannelName("");
+        setChannelModal(true);
+    }, []);
+
+
+
 
     return(<>
         <div className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
