@@ -1,5 +1,9 @@
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { apiClient } from "../../utils/reaxios";
+import Swal from "sweetalert2";
+import { FiPlus } from "react-icons/fi";
 
 export default function ChatSidebar(
     { 
@@ -15,6 +19,7 @@ export default function ChatSidebar(
 ) {
     const {projectNo} = useParams();
     const [channelModal, setChannelModal] = useState(false);
+    //모달 하나로 등록/수정 다 처리 예정
     const [channelModalMode, setChannelModalMode] = useState("create");
     const [channelName, setChannelName] = useState("");
     const [targetChannel, setTargetChannel] =useState(null);
@@ -22,14 +27,107 @@ export default function ChatSidebar(
     const [saving, setSaving] = useState(false);
 
     const openCreateModal = useCallback(()=>{
-        setChannelModalMode("create")
+        setChannelModalMode("create");
         setTargetChannel(null);
         setChannelName("");
         setChannelModal(true);
     }, []);
 
+    const editCreateModal = useCallback((channel) => {
+        setChannelModalMode("edit");
+        setTargetChannel(channel);
+        // #은 서버에서 달아주므로 입력창에서는 #이 달린 이름을 불러오고 제거해줌
+        setChannelName(channel.chatChannelName.replace(/^#/, ""));
+        setChannelMenuNo(null);
+        setChannelModal(true);
+    }, []);
+    
+    const saveChannel = async() => {
+        const name = channelName.trim();
 
+        if(name === "") {
+            toast.warning("채널명을 입력해주세요");
+            return;
+        }
 
+        try {
+            if(saving === true) return;
+            setSaving(true);
+
+            //등록
+            if(channelModalMode === "create") {
+                await apiClient.post("/channel/", {
+                    projectNo: Number(projectNo),
+                    chatChannelName: name
+                });
+
+                toast.success("채널을 생성했습니다");
+            }
+            //수정
+            else {
+                await apiClient.put(`/channel/${targetChannel.chatChannelNo}`,{
+                    projectNo: Number(projectNo),
+                    chatChannelName: name
+                });
+
+                toast.success("채널명을 수정했습니다");
+            }
+
+            setChannelModal(false);
+
+            //바뀌었으니 다시 로드 한 번 해주고
+            await loadChannelList();
+        }
+        catch(e) {
+            console.error(e);
+            toast.error(
+                channelModalMode === "create"
+                    ? "채널 생성에 실패했습니다"
+                    : "채널 수정에 실패했습니다"
+            );
+        }
+        finally {
+            setSaving(false);
+        }
+    };
+
+    const deleteChannel = async(channel) => {
+        setChannelMenuNo(null);
+
+        const result = await Swal.fire({
+            title: "채널을 삭제하시겠습니까?", 
+            text : `${channel.chatChannelName} 채널의 메시지도 함께 삭제될 수 있습니다 이거 나중에 로직 고칠건데 끝나가는 시점에 이 메시지가 보인다면 제게 알려주세요`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "삭제",
+            cancelButtonText: "취소"
+        });
+        if(result.isConfirmed === false) return;
+
+        try {
+            await apiClient.delete(
+                `/channel/${channel.chatChannelNo}`,
+                {
+                    data: {
+                        projectNo: Number(projectNo)
+                    }
+                }
+            );
+
+            toast.success("채널을 삭제했습니다")
+
+            //현재 보고 있던 채널을 삭제했다면 새 목록 로딩 후 첫 번째 채널을 다시 선택하도록 초기화
+            if(selectedChannel?.chatChannelNo === channel.chatChannelNo) {
+                setSelectedChannel(null);
+            }
+            
+            await loadChannelList();
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("채널 삭제에 실패했습니다");
+        }
+    };
 
     return(<>
         <div className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
@@ -37,14 +135,27 @@ export default function ChatSidebar(
                 <div className="sidebar-title">
                     채널
                 </div>
+                
+                <div className="sidebar-header-actions">
+                    {canManageChannel && (
+                        <button
+                            type="button"
+                            className="channel-add-button"
+                            onClick={openCreateModal}
+                            title="채널 생성"
+                        >
+                            <FiPlus />
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        className="sidebar-close"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        ×
+                    </button>
+                </div>
 
-                <button
-                    type="button"
-                    className="sidebar-close"
-                    onClick={() => setSidebarOpen(false)}
-                >
-                    ×
-                </button>
             </div>
 
             <div className="channel-list">
