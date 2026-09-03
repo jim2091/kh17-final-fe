@@ -17,6 +17,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
   const [editingCommentNo, setEditingCommentNo] = useState(null);
   const [editInputContent, setEditInputContent] = useState("");
 
+  // 로그인 사번 추출
   const getLoginEmpNo = () => {
     if (loginUser && loginUser.empNo) {
       return Number(loginUser.empNo);
@@ -38,12 +39,68 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
 
   const currentEmpNo = getLoginEmpNo();
 
+  // 이미지 파일 판별
   const isImageFile = (file) => {
     if (file.attachType && file.attachType.startsWith("image/")) return true;
     const name = file.attachName || "";
     return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
   };
 
+  // 확장자명 추출 및 전용 색상 배지 렌더러
+  const renderFileTypeBadge = (file) => {
+    const name = file.attachName || "";
+    const rawExt = name.includes(".") ? name.split(".").pop().trim() : "FILE";
+    const extUpper = rawExt.toUpperCase();
+    const extLower = rawExt.toLowerCase();
+
+    let bgColor = "#f1f5f9";
+    let textColor = "#475569";
+
+    if (["pdf"].includes(extLower)) {
+      bgColor = "#fee2e2";
+      textColor = "#dc2626";
+    } else if (["doc", "docx", "hwp", "hwpx", "txt"].includes(extLower)) {
+      bgColor = "#e0e7ff";
+      textColor = "#4338ca";
+    } else if (["xls", "xlsx", "csv"].includes(extLower)) {
+      bgColor = "#dcfce7";
+      textColor = "#15803d";
+    } else if (["ppt", "pptx"].includes(extLower)) {
+      bgColor = "#ffedd5";
+      textColor = "#ea580c";
+    } else if (["zip", "rar", "7z", "tar", "gz"].includes(extLower)) {
+      bgColor = "#fef3c7";
+      textColor = "#d97706";
+    }
+
+    return (
+      <span
+        style={{
+          backgroundColor: bgColor,
+          color: textColor,
+          padding: "2px 6px",
+          borderRadius: "4px",
+          fontSize: "10.5px",
+          fontWeight: "bold",
+          letterSpacing: "0.02em",
+          flexShrink: 0
+        }}
+      >
+        {extUpper}
+      </span>
+    );
+  };
+
+  // 파일 크기 포맷 변환
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  // 각 댓글별 첨부파일 조회
   const fetchCommentFiles = async (commentList) => {
     const fileMap = {};
     await Promise.all(
@@ -59,6 +116,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     setCommentFilesMap(fileMap);
   };
 
+  // 댓글 목록 조회
   const fetchComments = useCallback(async (isSilent = false) => {
     if (!taskNo || isNaN(Number(taskNo))) {
       setLoading(false);
@@ -97,6 +155,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     };
   }, [taskNo, fetchComments]);
 
+  // 댓글 및 파일 등록
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!inputContent.trim() && !selectedFile) return;
@@ -143,16 +202,19 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
+  // 수정 모드 진입
   const handleStartEdit = (comment) => {
     setEditingCommentNo(comment.taskCommentNo);
     setEditInputContent(comment.taskCommentContent === "(파일 첨부)" ? "" : comment.taskCommentContent);
   };
 
+  // 수정 취소
   const handleCancelEdit = () => {
     setEditingCommentNo(null);
     setEditInputContent("");
   };
 
+  // 수정 내용 서버 저장
   const handleSaveEdit = async (commentNo) => {
     const trimmed = editInputContent.trim();
     const targetFiles = commentFilesMap[commentNo] || [];
@@ -178,6 +240,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
+  // 댓글 삭제
   const handleDeleteComment = async (commentNo) => {
     const result = await Swal.fire({
       title: "댓글을 삭제하시겠습니까?",
@@ -215,6 +278,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
+  // 파일 다운로드
   const handleDownloadFile = (attachNo) => {
     window.open(`http://localhost:8080/api/attach/${attachNo}`, "_blank");
   };
@@ -228,6 +292,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         </span>
       </div>
 
+      {/* 댓글 작성 폼 */}
       <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
         <textarea
           className="comment-textarea"
@@ -281,6 +346,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         </div>
       </form>
 
+      {/* 댓글 목록 */}
       <div className="comment-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {loading ? (
           <div className="comment-empty">댓글을 불러오는 중...</div>
@@ -450,52 +516,115 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
                   </div>
                 ) : (
                   <>
+                    {/* 일반 텍스트 본문 */}
                     {comment.taskCommentContent && comment.taskCommentContent !== "(파일 첨부)" && (
                       <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
                         {comment.taskCommentContent}
                       </div>
                     )}
 
+                    {/* 댓글 첨부파일 영역 */}
                     {files.length > 0 && (
-                      <div className="comment-files-wrapper">
-                        {/* 이미지 갤러리 (개별 삭제 버튼 제거) */}
-                        <div className="comment-image-gallery">
-                          {files.filter(isImageFile).map((file) => {
-                            const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
-                            return (
-                              <div key={file.attachNo} className="comment-image-card">
-                                <img
-                                  src={fileUrl}
-                                  alt={file.attachName}
-                                  className="comment-thumbnail-img"
-                                  onClick={() => setPreviewModalUrl(fileUrl)}
-                                  title="클릭하여 원본 보기"
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
+                      <div className="comment-files-wrapper" style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {/* 1. 이미지 파일 썸네일 그리드 */}
+                        {files.some(isImageFile) && (
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "6px" }}>
+                            {files.filter(isImageFile).map((file) => {
+                              const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
+                              return (
+                                <div
+                                  key={file.attachNo}
+                                  style={{
+                                    position: "relative",
+                                    borderRadius: "6px",
+                                    overflow: "hidden",
+                                    border: "1px solid #cbd5e1",
+                                    aspectRatio: "1/1",
+                                    backgroundColor: "#000"
+                                  }}
+                                >
+                                  <img
+                                    src={fileUrl}
+                                    alt={file.attachName}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
+                                    onClick={() => setPreviewModalUrl(fileUrl)}
+                                    title={`${file.attachName} (클릭하여 확대)`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadFile(file.attachNo)}
+                                    style={{
+                                      position: "absolute",
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      backgroundColor: "rgba(15, 23, 42, 0.65)",
+                                      color: "#ffffff",
+                                      border: "none",
+                                      fontSize: "10px",
+                                      padding: "3px 4px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    <Download size={11} style={{ marginRight: "2px" }} /> 다운로드
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
 
-                        {/* 일반 문서 목록 (개별 삭제 버튼 제거, 다운로드 버튼 유지) */}
-                        <div className="comment-doc-list">
-                          {files.filter((f) => !isImageFile(f)).map((file) => (
-                            <div key={file.attachNo} className="comment-file-chip">
-                              <FileText size={13} className="file-icon" />
+                        {/* 2. 일반 문서 파일 목록 (확장자 배지 + 다운로드 버튼) */}
+                        {files.filter((f) => !isImageFile(f)).map((file) => (
+                          <div
+                            key={file.attachNo}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              backgroundColor: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "6px",
+                              padding: "6px 10px"
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                              {renderFileTypeBadge(file)}
                               <span
-                                className="file-link"
-                                onClick={() => handleDownloadFile(file.attachNo)}
-                                title="다운로드"
+                                style={{ fontSize: "12px", fontWeight: "600", color: "#1e293b", maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                                title={file.attachName}
                               >
-                                {file.attachName} ({(file.attachSize / 1024).toFixed(1)} KB)
+                                {file.attachName}
                               </span>
-                              <Download
-                                size={13}
-                                className="download-icon"
-                                onClick={() => handleDownloadFile(file.attachNo)}
-                              />
+                              <span style={{ fontSize: "10.5px", color: "#94a3b8" }}>
+                                ({formatFileSize(file.attachSize)})
+                              </span>
                             </div>
-                          ))}
-                        </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadFile(file.attachNo)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                                padding: "3px 7px",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "4px",
+                                fontSize: "10.5px",
+                                fontWeight: "600",
+                                color: "#334155",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <Download size={11} /> 다운로드
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </>
@@ -506,6 +635,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         )}
       </div>
 
+      {/* 이미지 확대 모달 */}
       {previewModalUrl && (
         <div className="image-preview-modal" onClick={() => setPreviewModalUrl(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

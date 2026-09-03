@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import { Paperclip, Download, Trash2, FileText, Upload } from "lucide-react";
+import { 
+  Paperclip, 
+  Download, 
+  FileText 
+} from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
 import "./Task.css";
 import TaskComments from "./TaskComments";
+import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 
+// 칸반 컬럼 기준 정의
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
   { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
@@ -19,25 +23,46 @@ const COLUMNS = [
 export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
+
   const isLogin = useAtomValue(isLoginState);
 
+  // 로컬 스토리지에 저장된 로그인 유저 정보 추출
+  const getDynamicLoginUser = () => {
+    try {
+      const keys = ["로그인 유저의 정보", "user", "loginUser"];
+      for (const k of keys) {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (parsed && (parsed.empNo || parsed.memberNo)) return parsed;
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const loginUser = getDynamicLoginUser();
+  const currentEmpNo = Number(loginUser?.empNo || loginUser?.memberNo || 0);
+
+  // 업무 목록 및 프로젝트 멤버 상태
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // 칸반 드래그 앤 드롭
+  // 드래그 앤 드롭 상태
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 드로어 상태
+  // 드로어 열림 및 상세 데이터 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
-  const [taskFiles, setTaskFiles] = useState([]);
-  const taskFileInputRef = useRef(null);
 
-  // 수정 모드 상태
+  // 업무 첨부파일 상태
+  const [taskFiles, setTaskFiles] = useState([]);
+
+  // 업무 수정 폼 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -53,27 +78,72 @@ export default function Task() {
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  const stompClientRef = useRef(null);
+  // 이미지 파일 식별
+  const isImageAttach = (file) => {
+    if (file.attachType && file.attachType.startsWith("image/")) return true;
+    const name = file.attachName || "";
+    return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
+  };
 
-  // 현재 로그인 사원의 projectMemberNo 계산
-  const storedUser = JSON.parse(
-    localStorage.getItem("user") ||
-    localStorage.getItem("loginUser") ||
-    "{}"
-  );
-  const myEmpNo = Number(
-    storedUser?.empNo ||
-    localStorage.getItem("empNo") ||
-    sessionStorage.getItem("empNo") ||
-    0
-  );
+  // 실제 파일 확장자명을 그대로 추출하여 색상과 함께 렌더링하는 배지 함수
+  const renderFileTypeBadge = (file) => {
+    const name = file.attachName || "";
+    const rawExt = name.includes(".") ? name.split(".").pop().trim() : "FILE";
+    const extUpper = rawExt.toUpperCase();
+    const extLower = rawExt.toLowerCase();
 
-  const currentProjectMember = projectMembers.find((m) => Number(m.empNo) === myEmpNo);
-  const currentProjectMemberNo = currentProjectMember?.projectMemberNo || null;
+    let bgColor = "#f1f5f9";
+    let textColor = "#475569";
 
-  const fetchTasks = async (pNo) => {
+    if (["pdf"].includes(extLower)) {
+      bgColor = "#fee2e2";
+      textColor = "#dc2626";
+    } else if (["doc", "docx", "hwp", "hwpx", "txt"].includes(extLower)) {
+      bgColor = "#e0e7ff";
+      textColor = "#4338ca";
+    } else if (["xls", "xlsx", "csv"].includes(extLower)) {
+      bgColor = "#dcfce7";
+      textColor = "#15803d";
+    } else if (["ppt", "pptx"].includes(extLower)) {
+      bgColor = "#ffedd5";
+      textColor = "#ea580c";
+    } else if (["zip", "rar", "7z", "tar", "gz"].includes(extLower)) {
+      bgColor = "#fef3c7";
+      textColor = "#d97706";
+    }
+
+    return (
+      <span
+        style={{
+          backgroundColor: bgColor,
+          color: textColor,
+          padding: "2px 6px",
+          borderRadius: "4px",
+          fontSize: "11px",
+          fontWeight: "bold",
+          letterSpacing: "0.02em",
+          flexShrink: 0
+        }}
+      >
+        {extUpper}
+      </span>
+    );
+  };
+
+  // 파일 크기 포맷 변환
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  // 전체 업무 목록 조회
+  const fetchTasks = useCallback(async (pNo, showLoading = true) => {
+    if (!pNo) return;
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await apiClient.get(`/task/list/${pNo}`);
       const taskList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setTasks(taskList);
@@ -81,11 +151,13 @@ export default function Task() {
       console.error("조회 실패:", error);
       toast.error("업무 목록을 불러오지 못했습니다.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchProjectMembers = async (pNo) => {
+  // 프로젝트 참여 멤버 목록 조회
+  const fetchProjectMembers = useCallback(async (pNo) => {
+    if (!pNo) return;
     try {
       const res = await apiClient.get(`/project/${pNo}/member`);
       const memberList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -93,9 +165,11 @@ export default function Task() {
     } catch (error) {
       console.warn("프로젝트 멤버 목록 로딩 실패:", error);
     }
-  };
+  }, []);
 
-  const fetchTaskFiles = async (taskNo) => {
+  // 업무 본체 첨부파일 목록 조회
+  const fetchTaskFiles = useCallback(async (taskNo) => {
+    if (!taskNo) return;
     try {
       const res = await apiClient.get(`/task/file/${taskNo}`);
       const files = Array.isArray(res.data) ? res.data : (res.data?.data || []);
@@ -104,49 +178,123 @@ export default function Task() {
       console.warn("업무 첨부파일 목록 조회 실패:", error);
       setTaskFiles([]);
     }
-  };
+  }, []);
 
-  // 업무 본체 파일 업로드 핸들러
-  const handleUploadTaskFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedTask) return;
+  useEffect(() => {
+    if (projectNo) {
+      fetchTasks(projectNo, true);
+      fetchProjectMembers(projectNo);
+    }
+  }, [projectNo, fetchTasks, fetchProjectMembers]);
 
-    const formData = new FormData();
-    formData.append("file", file);
+  // 상세 드로어 닫기
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setSelectedTask(null);
+    setTaskFiles([]);
+    setIsEditing(false);
+  }, []);
 
-    try {
-      await apiClient.post(
-        `/task/file/${selectedTask.taskNo}?projectNo=${projectNo || 0}`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+  // 실시간 웹소켓 이벤트 수신 및 동기화
+  useEffect(() => {
+    if (!projectNo) return;
+
+    let subscription = null;
+    let unregisterWebSocketConnect = null;
+
+    const doSubscribe = (client) => {
+      if (!client || !client.connected) return;
+
+      subscription?.unsubscribe();
+
+      subscription = client.subscribe(
+        `/public/projects/${projectNo}/kanban`,
+        (message) => {
+          const event = JSON.parse(message.body);
+
+          if (currentEmpNo > 0 && Number(event.senderEmpNo) === currentEmpNo) {
+            return;
+          }
+
+          switch (event.eventType) {
+            case "TASK_MOVED":
+              setTasks((prev) =>
+                prev.map((t) =>
+                  t.taskNo === Number(event.taskNo)
+                    ? { ...t, taskStatus: event.nextStatus }
+                    : t
+                )
+              );
+              setSelectedTask((prev) =>
+                prev && prev.taskNo === Number(event.taskNo)
+                  ? { ...prev, taskStatus: event.nextStatus }
+                  : prev
+              );
+              break;
+
+            case "TASK_CREATED":
+              fetchTasks(projectNo, false);
+              break;
+
+            case "TASK_UPDATED":
+              fetchTasks(projectNo, false);
+              setSelectedTask((prev) => {
+                if (prev && prev.taskNo === Number(event.taskNo)) {
+                  apiClient.get(`/task/${event.taskNo}`).then((res) => {
+                    if (res.data) setSelectedTask(res.data);
+                  });
+                }
+                return prev;
+              });
+              break;
+
+            case "TASK_DELETED":
+              fetchTasks(projectNo, false);
+              setSelectedTask((prev) => {
+                if (prev && prev.taskNo === Number(event.taskNo)) {
+                  toast.info("현재 열람 중인 업무가 삭제되었습니다.");
+                  handleCloseDrawer();
+                }
+                return prev;
+              });
+              break;
+
+            case "COMMENT_ADDED":
+            case "COMMENT_UPDATED":
+            case "COMMENT_DELETED":
+              window.dispatchEvent(
+                new CustomEvent("task-comment-changed", {
+                  detail: { taskNo: Number(event.taskNo) }
+                })
+              );
+              break;
+
+            default:
+              break;
+          }
+        }
       );
-      toast.success("업무 첨부파일이 등록되었습니다.");
-      if (taskFileInputRef.current) taskFileInputRef.current.value = "";
-      fetchTaskFiles(selectedTask.taskNo);
-    } catch (error) {
-      console.error("업무 파일 업로드 실패:", error);
-      toast.error("업무 파일 업로드에 실패했습니다.");
+    };
+
+    const client = getWebSocketClient();
+    if (client && client.connected) {
+      doSubscribe(client);
     }
-  };
 
-  // 업무 본체 파일 삭제 핸들러
-  const handleDeleteTaskFile = async (attachNo) => {
-    if (!window.confirm("해당 첨부파일을 삭제하시겠습니까?")) return;
-    try {
-      await apiClient.delete(`/task/file/${selectedTask.taskNo}/${attachNo}`);
-      toast.success("파일이 삭제되었습니다.");
-      fetchTaskFiles(selectedTask.taskNo);
-    } catch (error) {
-      console.error("업무 파일 삭제 실패:", error);
-      toast.error("파일 삭제에 실패했습니다.");
-    }
-  };
+    unregisterWebSocketConnect = onWebSocketConnect(() => {
+      const currentClient = getWebSocketClient();
+      doSubscribe(currentClient);
+    });
 
-  // 파일 다운로드 핸들러
-  const handleDownloadFile = (attachNo) => {
-    window.open(`http://localhost:8080/api/attach/${attachNo}`, "_blank");
-  };
+    return () => {
+      subscription?.unsubscribe();
+      if (typeof unregisterWebSocketConnect === "function") {
+        unregisterWebSocketConnect();
+      }
+    };
+  }, [projectNo, currentEmpNo, fetchTasks, handleCloseDrawer]);
 
+  // 담당자 명칭 반환 처리
   const getAssigneeName = (task) => {
     if (task.assignedMemberName && task.assignedMemberName.trim()) {
       return task.assignedMemberName;
@@ -160,6 +308,7 @@ export default function Task() {
     return "미배정";
   };
 
+  // 주 담당자 제외 협업자 선택 필터
   const currentAssignedNo = editFormData.assignedMemberNo
     ? Number(editFormData.assignedMemberNo)
     : null;
@@ -169,45 +318,7 @@ export default function Task() {
     return !editCollaborators.includes(m.projectMemberNo);
   });
 
-  useEffect(() => {
-    if (!projectNo) return;
-
-    fetchTasks(projectNo);
-    fetchProjectMembers(projectNo);
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      reconnectDelay: 5000,
-      onConnect: () => {
-        client.subscribe(`/public/projects/${projectNo}/kanban`, (message) => {
-          const event = JSON.parse(message.body);
-
-          if (myEmpNo > 0 && Number(event.senderEmpNo) === myEmpNo) return;
-
-          if (event.eventType === "TASK_MOVED") {
-            const targetTaskId = Number(event.taskNo);
-            const nextStatus = event.nextStatus;
-
-            setTasks((prev) =>
-              prev.map((t) =>
-                t.taskNo === targetTaskId ? { ...t, taskStatus: nextStatus } : t
-              )
-            );
-          } else if (event.eventType === "TASK_UPDATED" || event.eventType === "TASK_CREATED") {
-            fetchTasks(projectNo);
-          }
-        });
-      }
-    });
-
-    client.activate();
-    stompClientRef.current = client;
-
-    return () => {
-      if (client) client.deactivate();
-    };
-  }, [projectNo, myEmpNo]);
-
+  // 카드 클릭 시 상세 드로어 열기
   const handleCardClick = async (taskNo) => {
     if (isDragging) return;
     setIsEditing(false);
@@ -227,19 +338,13 @@ export default function Task() {
         setSelectedTask(res.data);
       }
     } catch (error) {
-      console.warn("단건 상세 API 호출 실패 (로컬 데이터 유지):", error);
+      console.warn("단건 상세 로딩 실패:", error);
     } finally {
       setDrawerLoading(false);
     }
   };
 
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setSelectedTask(null);
-    setTaskFiles([]);
-    setIsEditing(false);
-  };
-
+  // 수정 모드 진입
   const handleStartEdit = () => {
     if (!selectedTask) return;
 
@@ -262,15 +367,16 @@ export default function Task() {
     setIsEditing(true);
   };
 
+  // 수정 취소
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
+  // 폼 입력 변경 핸들러
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
       const nextForm = { ...prev, [name]: value };
-
       if (name === "assignedMemberNo" && value) {
         const selectedAssignedNo = Number(value);
         setEditCollaborators((collabs) =>
@@ -281,6 +387,7 @@ export default function Task() {
     });
   };
 
+  // 협업자 다중 토글 핸들러
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -289,6 +396,43 @@ export default function Task() {
     );
   };
 
+  // 수정 모드에서 업무 첨부파일 삭제
+  const handleDeleteTaskFile = async (attachNo) => {
+    if (!window.confirm("이 첨부파일을 삭제하시겠습니까?")) return;
+    try {
+      await apiClient.delete(`/task/file/${selectedTask.taskNo}/${attachNo}`);
+      toast.success("파일이 삭제되었습니다.");
+      fetchTaskFiles(selectedTask.taskNo);
+    } catch (error) {
+      console.error("파일 삭제 실패:", error);
+      toast.error("파일 삭제에 실패했습니다.");
+    }
+  };
+
+  // 수정 모드에서 새 업무 첨부파일 추가
+  const handleUploadNewTaskFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await apiClient.post(
+        `/task/file/${selectedTask.taskNo}?projectNo=${projectNo || 0}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success("새 첨부파일이 등록되었습니다.");
+      fetchTaskFiles(selectedTask.taskNo);
+      e.target.value = "";
+    } catch (error) {
+      console.error("파일 업로드 실패:", error);
+      toast.error("파일 업로드에 실패했습니다.");
+    }
+  };
+
+  // 업무 수정 제출
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -329,7 +473,7 @@ export default function Task() {
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
       }
-      fetchTasks(projectNo);
+      fetchTasks(projectNo, false);
       setIsEditing(false);
     } catch (error) {
       console.error("업무 수정 실패:", error);
@@ -339,6 +483,7 @@ export default function Task() {
     }
   };
 
+  // 드래그 시작
   const handleDragStart = (e, taskNo) => {
     setIsDragging(true);
     setDraggedTaskId(taskNo);
@@ -346,6 +491,7 @@ export default function Task() {
     e.dataTransfer.effectAllowed = "move";
   };
 
+  // 드래그 종료
   const handleDragEnd = () => {
     setTimeout(() => {
       setIsDragging(false);
@@ -353,17 +499,20 @@ export default function Task() {
     }, 150);
   };
 
+  // 드래그 오버
   const handleDragOver = (e, columnId) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverCol !== columnId) setDragOverCol(columnId);
   };
 
+  // 드래그 리브
   const handleDragLeave = (e, columnId) => {
     if (e.currentTarget.contains(e.relatedTarget)) return;
     if (dragOverCol === columnId) setDragOverCol(null);
   };
 
+  // 카드 드롭 처리
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
     setDragOverCol(null);
@@ -403,6 +552,7 @@ export default function Task() {
     }
   };
 
+  // 우선순위 뱃지 클래스 매핑
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "긴급": return "badge-urgent";
@@ -412,6 +562,7 @@ export default function Task() {
     }
   };
 
+  // 상태 텍스트 레이블 매핑
   const getStatusLabel = (status) => {
     switch (status) {
       case "TODO": return "할 일 (To Do)";
@@ -419,14 +570,6 @@ export default function Task() {
       case "DONE": return "완료 (Done)";
       default: return status;
     }
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   if (loading) return <div className="kanban-loading">칸반 보드를 불러오는 중...</div>;
@@ -486,7 +629,9 @@ export default function Task() {
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
-                          <span className={`priority-tag ${pClass}`}>{task.taskPriority || "보통"}</span>
+                          <span className={`priority-tag ${pClass}`}>
+                            {task.taskPriority || "보통"}
+                          </span>
                         </div>
 
                         <div className="card-main-title">{task.taskTitle}</div>
@@ -497,7 +642,10 @@ export default function Task() {
                             <span>{task.taskProgress || 0}%</span>
                           </div>
                           <div className="progress-track">
-                            <div className="progress-bar" style={{ width: `${task.taskProgress || 0}%` }} />
+                            <div
+                              className="progress-bar"
+                              style={{ width: `${task.taskProgress || 0}%` }}
+                            />
                           </div>
                         </div>
 
@@ -547,6 +695,7 @@ export default function Task() {
               </button>
             </div>
 
+            {/* 열람 모드 (조회 모드: 첨부파일 다운로드 전용) */}
             {!isEditing && (
               <>
                 <div className="drawer-body view-mode">
@@ -559,7 +708,9 @@ export default function Task() {
                     <div className="meta-card-item">
                       <span className="meta-label">담당자</span>
                       <div className="meta-user-val">
-                        <span className="meta-bold-val">{getAssigneeName(selectedTask)}</span>
+                        <span className="meta-bold-val">
+                          {getAssigneeName(selectedTask)}
+                        </span>
                         {selectedTask.assignedMemberDept && (
                           <span className="meta-sub-val">({selectedTask.assignedMemberDept})</span>
                         )}
@@ -594,13 +745,17 @@ export default function Task() {
                       <span className="section-highlight-val">{selectedTask.taskProgress || 0}%</span>
                     </div>
                     <div className="view-progress-track">
-                      <div className="view-progress-fill" style={{ width: `${selectedTask.taskProgress || 0}%` }} />
+                      <div
+                        className="view-progress-fill"
+                        style={{ width: `${selectedTask.taskProgress || 0}%` }}
+                      />
                     </div>
                   </div>
 
                   <div className="view-section">
                     <span className="section-title">
-                      함께하는 협업자 ({selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
+                      함께하는 협업자 (
+                      {selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
                     </span>
                     <div className="collab-tag-list">
                       {selectedTask.collaborators && selectedTask.collaborators.length > 0 ? (
@@ -623,114 +778,119 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 본체 첨부파일 섹션 (fileRole 제거, 업로드/삭제 핸들러 연결) */}
+                  {/* 조회 모드 첨부파일 목록 (동적 확장자 배지 적용) */}
                   <div className="view-section">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span className="section-title" style={{ margin: 0 }}>
-                        <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
-                        업무 첨부파일 ({taskFiles.length}개)
-                      </span>
-                      <input
-                        type="file"
-                        ref={taskFileInputRef}
-                        style={{ display: "none" }}
-                        onChange={handleUploadTaskFile}
-                      />
-                      <button
-                        type="button"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          background: "#ffffff",
-                          border: "1px solid #cbd5e1",
-                          borderRadius: "6px",
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          cursor: "pointer"
-                        }}
-                        onClick={() => taskFileInputRef.current?.click()}
-                      >
-                        <Upload size={12} /> 파일 올리기
-                      </button>
-                    </div>
+                    <span className="section-title">
+                      <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                      업무 첨부파일 ({taskFiles.length}개)
+                    </span>
 
-                    <div className="task-file-list-box">
+                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
-                          {/* 1. 이미지 파일 그리드 미리보기 */}
-                          {taskFiles.some((f) => /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName)) && (
-                            <div className="task-image-grid">
-                              {taskFiles
-                                .filter((f) => /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName))
-                                .map((file) => (
-                                  <div key={file.attachNo} className="task-img-card">
+                          {/* 이미지 썸네일 그리드 */}
+                          {taskFiles.some(isImageAttach) && (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", marginBottom: "4px" }}>
+                              {taskFiles.filter(isImageAttach).map((file) => {
+                                const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
+                                return (
+                                  <div
+                                    key={file.attachNo}
+                                    style={{
+                                      position: "relative",
+                                      borderRadius: "6px",
+                                      overflow: "hidden",
+                                      border: "1px solid #cbd5e1",
+                                      aspectRatio: "1/1",
+                                      backgroundColor: "#000"
+                                    }}
+                                  >
                                     <img
-                                      src={`http://localhost:8080/api/attach/${file.attachNo}`}
+                                      src={fileUrl}
                                       alt={file.attachName}
-                                      className="task-preview-img"
-                                      onClick={() => handleDownloadFile(file.attachNo)}
-                                      title="클릭 시 다운로드"
+                                      style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
+                                      onClick={() => window.open(fileUrl, "_blank")}
+                                      title={`${file.attachName} (클릭하여 확대)`}
                                     />
-                                    <div className="task-img-overlay">
-                                      <span className="task-img-name">{file.attachName}</span>
-                                      <button
-                                        type="button"
-                                        className="btn-img-trash"
-                                        onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                        title="삭제"
-                                      >
-                                        <Trash2 size={12} />
-                                      </button>
-                                    </div>
+                                    <a
+                                      href={fileUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        position: "absolute",
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        backgroundColor: "rgba(15, 23, 42, 0.65)",
+                                        color: "#ffffff",
+                                        fontSize: "10px",
+                                        padding: "3px 4px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        textDecoration: "none"
+                                      }}
+                                    >
+                                      <Download size={11} style={{ marginRight: "2px" }} /> 다운로드
+                                    </a>
                                   </div>
-                                ))}
+                                );
+                              })}
                             </div>
                           )}
 
-                          {/* 2. 일반 문서 파일 목록 행 */}
-                          <div className="task-doc-column">
-                            {taskFiles
-                              .filter((f) => !/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName))
-                              .map((file) => (
-                                <div key={file.attachNo} className="task-file-item">
-                                  <div className="task-file-info">
-                                    <FileText size={14} className="file-icon" />
-                                    <span
-                                      className="task-file-name"
-                                      title={file.attachName}
-                                      style={{ cursor: "pointer" }}
-                                      onClick={() => handleDownloadFile(file.attachNo)}
-                                    >
-                                      {file.attachName}
-                                    </span>
-                                    <span className="task-file-size">({formatFileSize(file.attachSize)})</span>
-                                  </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <button
-                                      type="button"
-                                      className="btn-file-download"
-                                      onClick={() => handleDownloadFile(file.attachNo)}
-                                      title="다운로드"
-                                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
-                                    >
-                                      <Download size={13} />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                      title="파일 삭제"
-                                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "#ef4444" }}
-                                    >
-                                      <Trash2 size={13} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
+                          {/* 일반 문서 목록: 확장자명이 들어간 동적 배지 렌더링 */}
+                          {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
+                            <div
+                              key={file.attachNo}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                padding: "8px 12px"
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                                {renderFileTypeBadge(file)}
+                                <span
+                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                                  title={file.attachName}
+                                >
+                                  {file.attachName}
+                                </span>
+                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                  ({formatFileSize(file.attachSize)})
+                                </span>
+                              </div>
+
+                              <a
+                                href={`http://localhost:8080/api/attach/${file.attachNo}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-file-download"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  padding: "4px 8px",
+                                  backgroundColor: "#f1f5f9",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "4px",
+                                  fontSize: "11px",
+                                  fontWeight: "600",
+                                  color: "#334155",
+                                  textDecoration: "none"
+                                }}
+                              >
+                                <Download size={12} /> 다운로드
+                              </a>
+                            </div>
+                          ))}
                         </>
                       )}
                     </div>
@@ -743,22 +903,26 @@ export default function Task() {
                     )}
                   </div>
 
-                  {/* 댓글 컴포넌트 연동 (loginUser 및 프로젝트 정보 전달) */}
-                  <TaskComments
-                    taskNo={selectedTask.taskNo}
-                    projectNo={projectNo}
-                    currentProjectMemberNo={currentProjectMemberNo}
-                    loginUser={storedUser}
+                  {/* 댓글 컴포넌트 */}
+                  <TaskComments 
+                    taskNo={selectedTask.taskNo} 
+                    projectNo={projectNo} 
+                    loginUser={loginUser}
                   />
                 </div>
 
                 <div className="drawer-footer">
-                  <button className="btn-cancel" onClick={handleCloseDrawer}>닫기</button>
-                  <button className="btn-edit-trigger" onClick={handleStartEdit}>수정하기</button>
+                  <button className="btn-cancel" onClick={handleCloseDrawer}>
+                    닫기
+                  </button>
+                  <button className="btn-edit-trigger" onClick={handleStartEdit}>
+                    수정하기
+                  </button>
                 </div>
               </>
             )}
 
+            {/* 수정 모드 (수정 모드: 파일 추가 및 삭제 허용) */}
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
@@ -787,7 +951,7 @@ export default function Task() {
                         <option value="">담당자 미지정</option>
                         {projectMembers.map((m) => (
                           <option key={m.projectMemberNo} value={m.projectMemberNo}>
-                            {m.empName} ({m.empDeptNo || "부서미정"} / {m.empPositionNo || "직급미정"})
+                            {m.empName} ({m.empDeptNo || "부서미정"})
                           </option>
                         ))}
                       </select>
@@ -876,6 +1040,7 @@ export default function Task() {
                     </div>
                   </div>
 
+                  {/* 협업자 선택 영역 */}
                   <div className="form-group full-width">
                     <label className="form-label">
                       함께할 협업자 ({editCollaborators.length}명 선택됨)
@@ -921,7 +1086,7 @@ export default function Task() {
                       <option value="">+ 협업할 사원 추가 선택</option>
                       {availableCollaboratorMembers.map((m) => (
                         <option key={m.projectMemberNo} value={m.projectMemberNo}>
-                          {m.empName} ({m.empDeptNo || "부서미정"} / {m.empPositionNo || "직급미정"})
+                          {m.empName} ({m.empDeptNo || "부서미정"} / {m.projectMemberJob || "역할미정"})
                         </option>
                       ))}
                     </select>
@@ -934,8 +1099,142 @@ export default function Task() {
                       value={editFormData.taskContent}
                       onChange={handleEditChange}
                       className="form-textarea"
-                      rows={6}
+                      rows={5}
                     />
+                  </div>
+
+                  {/* 수정 모드 전용 파일 관리 영역 (동적 확장자 배지 + 삭제 버튼) */}
+                  <div className="form-group full-width" style={{ marginTop: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <label className="form-label" style={{ margin: 0 }}>업무 첨부파일 관리</label>
+                      <label
+                        htmlFor="task-file-upload-input"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          padding: "4px 8px",
+                          backgroundColor: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "4px",
+                          color: "#334155",
+                          cursor: "pointer",
+                          fontWeight: "600"
+                        }}
+                      >
+                        <Paperclip size={12} /> 새 파일 추가
+                      </label>
+                      <input
+                        id="task-file-upload-input"
+                        type="file"
+                        style={{ display: "none" }}
+                        onChange={handleUploadNewTaskFile}
+                      />
+                    </div>
+
+                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                      {taskFiles.length === 0 ? (
+                        <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
+                      ) : (
+                        <>
+                          {/* 이미지 파일 목록 (썸네일 + 삭제) */}
+                          {taskFiles.some(isImageAttach) && (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
+                              {taskFiles.filter(isImageAttach).map((file) => (
+                                <div
+                                  key={file.attachNo}
+                                  style={{
+                                    position: "relative",
+                                    borderRadius: "6px",
+                                    overflow: "hidden",
+                                    border: "1px solid #cbd5e1",
+                                    aspectRatio: "1/1"
+                                  }}
+                                >
+                                  <img
+                                    src={`http://localhost:8080/api/attach/${file.attachNo}`}
+                                    alt={file.attachName}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTaskFile(file.attachNo)}
+                                    style={{
+                                      position: "absolute",
+                                      top: "3px",
+                                      right: "3px",
+                                      backgroundColor: "rgba(239, 68, 68, 0.9)",
+                                      border: "none",
+                                      borderRadius: "50%",
+                                      width: "20px",
+                                      height: "20px",
+                                      color: "#ffffff",
+                                      fontSize: "11px",
+                                      fontWeight: "bold",
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center"
+                                    }}
+                                    title="삭제"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* 일반 문서 파일 목록 (실제 확장자 배지 + 삭제 버튼) */}
+                          {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
+                            <div
+                              key={file.attachNo}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                backgroundColor: "#ffffff",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                padding: "8px 12px"
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                                {renderFileTypeBadge(file)}
+                                <span
+                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                                >
+                                  {file.attachName}
+                                </span>
+                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                  ({formatFileSize(file.attachSize)})
+                                </span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTaskFile(file.attachNo)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  border: "none",
+                                  background: "transparent",
+                                  color: "#ef4444",
+                                  cursor: "pointer",
+                                  padding: "4px",
+                                  fontSize: "14px",
+                                  fontWeight: "bold"
+                                }}
+                                title="파일 삭제"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
