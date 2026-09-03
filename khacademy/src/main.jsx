@@ -35,20 +35,25 @@ import { DevTools } from "jotai-devtools";
 import "jotai-devtools/styles.css";
 import { Provider } from "jotai";
 import WebSocketProvider from "./websocket/WebSocketProvider.jsx";
+import AuthInitializer from "./guard/AuthInitializer.jsx";
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
   <BrowserRouter>
     {/* jotai 적용 범위 설정 */}
     <Provider>
-      <WebSocketProvider>
+      {/* 웹소켓 연결 들어가기 전에 로그인 되어 있고 accessToken도 정상인지 체크 */}
+      <AuthInitializer>
+        <WebSocketProvider>
 
-        {/* 개발 모드일 때만 표시되도록 조건 설정 */}
-        { import.meta.env.DEV && (
-          <DevTools position="bottom-right"/>
-        )}
-        <App />
-      </WebSocketProvider>
+          {/* 개발 모드일 때만 표시되도록 조건 설정 */}
+          { import.meta.env.DEV && (
+            <DevTools position="bottom-right"/>
+          )}
+          <App />
+        </WebSocketProvider>
+
+      </AuthInitializer>
 
     </Provider>
   </BrowserRouter>

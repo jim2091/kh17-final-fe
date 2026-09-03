@@ -34,7 +34,7 @@ export default function ({ children }) {
         }
 
         let subscription = null;
-
+        
         onWebSocketConnect(() => {//웹소켓 서버와 연결이 되면 이 콜백함수를 실행하겠다
             //공용 웹소켓 클라이언트를 가져오고
             const client = getWebSocketClient();
