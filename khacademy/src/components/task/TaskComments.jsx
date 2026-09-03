@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { MessageSquare, Send, Edit2, Trash2, Check, X } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { MessageSquare, Send, Edit2, Trash2, Check, X, Paperclip, FileText, Download } from "lucide-react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { apiClient } from "@utils/reaxios";
@@ -7,13 +7,16 @@ import "./TaskComments.css";
 
 export default function TaskComments({ taskNo, projectNo, loginUser }) {
   const [comments, setComments] = useState([]);
+  const [commentFilesMap, setCommentFilesMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [inputContent, setInputContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewModalUrl, setPreviewModalUrl] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [editingCommentNo, setEditingCommentNo] = useState(null);
   const [editInputContent, setEditInputContent] = useState("");
 
-  // 로그인한 사번 추출
   const getLoginEmpNo = () => {
     if (loginUser && loginUser.empNo) {
       return Number(loginUser.empNo);
@@ -35,7 +38,27 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
 
   const currentEmpNo = getLoginEmpNo();
 
-  // 댓글 목록 조회
+  const isImageFile = (file) => {
+    if (file.attachType && file.attachType.startsWith("image/")) return true;
+    const name = file.attachName || "";
+    return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
+  };
+
+  const fetchCommentFiles = async (commentList) => {
+    const fileMap = {};
+    await Promise.all(
+      commentList.map(async (c) => {
+        try {
+          const res = await apiClient.get(`/task/file/comment/${c.taskCommentNo}`);
+          fileMap[c.taskCommentNo] = res.data || [];
+        } catch (err) {
+          fileMap[c.taskCommentNo] = [];
+        }
+      })
+    );
+    setCommentFilesMap(fileMap);
+  };
+
   const fetchComments = useCallback(async (isSilent = false) => {
     if (!taskNo || isNaN(Number(taskNo))) {
       setLoading(false);
@@ -47,6 +70,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
       const res = await apiClient.get(`/task/comment/list/${taskNo}`);
       const commentData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setComments(commentData);
+      await fetchCommentFiles(commentData);
     } catch (error) {
       console.error("댓글 로딩 실패:", error);
       if (!isSilent) toast.error("댓글 목록을 불러오지 못했습니다.");
@@ -59,6 +83,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     fetchComments(false);
     setEditingCommentNo(null);
     setInputContent("");
+    setSelectedFile(null);
 
     const handleRemoteCommentChange = (e) => {
       if (Number(e.detail?.taskNo) === Number(taskNo)) {
@@ -72,22 +97,41 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     };
   }, [taskNo, fetchComments]);
 
-  // 댓글 등록
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!inputContent.trim()) return;
+    if (!inputContent.trim() && !selectedFile) return;
 
     try {
-      await apiClient.post(`/task/comment/?projectNo=${projectNo || 0}`, {
+      const contentPayload = inputContent.trim() || "(파일 첨부)";
+
+      const res = await apiClient.post(`/task/comment/?projectNo=${projectNo || 0}`, {
         taskNo: Number(taskNo),
-        taskCommentContent: inputContent.trim(),
+        taskCommentContent: contentPayload,
       });
+
+      const newCommentNo = typeof res.data === "number"
+        ? res.data
+        : (res.data?.taskCommentNo || res.data?.data);
+
+      if (selectedFile && newCommentNo) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        await apiClient.post(
+          `/task/file/comment/${newCommentNo}?projectNo=${projectNo || 0}`,
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+      }
+
       setInputContent("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       toast.success("댓글이 등록되었습니다.");
       fetchComments(true);
     } catch (error) {
       console.error("댓글 등록 실패:", error);
-      toast.error("댓글 작성에 실패했습니다.");
+      toast.error("댓글 작성 또는 파일 업로드에 실패했습니다.");
     }
   };
 
@@ -95,25 +139,25 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (inputContent.trim()) handleAddComment();
+      if (inputContent.trim() || selectedFile) handleAddComment();
     }
   };
 
-  // 수정 모드 진입
   const handleStartEdit = (comment) => {
     setEditingCommentNo(comment.taskCommentNo);
-    setEditInputContent(comment.taskCommentContent);
+    setEditInputContent(comment.taskCommentContent === "(파일 첨부)" ? "" : comment.taskCommentContent);
   };
 
-  // 수정 취소
   const handleCancelEdit = () => {
     setEditingCommentNo(null);
     setEditInputContent("");
   };
 
-  // 수정 내용 서버 저장
   const handleSaveEdit = async (commentNo) => {
-    if (!editInputContent.trim()) {
+    const trimmed = editInputContent.trim();
+    const targetFiles = commentFilesMap[commentNo] || [];
+
+    if (!trimmed && targetFiles.length === 0) {
       toast.warn("수정할 댓글 내용을 입력해주세요.");
       return;
     }
@@ -122,7 +166,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
       await apiClient.put(`/task/comment/?projectNo=${projectNo || 0}`, {
         taskCommentNo: Number(commentNo),
         taskNo: Number(taskNo),
-        taskCommentContent: editInputContent.trim(),
+        taskCommentContent: trimmed || "(파일 첨부)",
       });
       setEditingCommentNo(null);
       setEditInputContent("");
@@ -134,11 +178,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
-  // 댓글 삭제 (SweetAlert2 모달 적용)
   const handleDeleteComment = async (commentNo) => {
     const result = await Swal.fire({
       title: "댓글을 삭제하시겠습니까?",
-      text: "삭제된 댓글은 복구할 수 없습니다.",
+      text: "첨부된 파일도 함께 삭제되며 복구할 수 없습니다.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
@@ -156,7 +199,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
       );
       Swal.fire({
         title: "삭제 완료",
-        text: "댓글이 정상적으로 삭제되었습니다.",
+        text: "댓글 및 첨부파일이 정상적으로 삭제되었습니다.",
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
@@ -172,6 +215,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
     }
   };
 
+  const handleDownloadFile = (attachNo) => {
+    window.open(`http://localhost:8080/api/attach/${attachNo}`, "_blank");
+  };
+
   return (
     <div className="task-comment-container" style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #e2e8f0" }}>
       <div className="comment-header" style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -181,7 +228,6 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
         </span>
       </div>
 
-      {/* 등록 폼 */}
       <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
         <textarea
           className="comment-textarea"
@@ -191,14 +237,50 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
           onChange={(e) => setInputContent(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+
+        {selectedFile && (
+          <div className="comment-selected-file-chip">
+            <FileText size={13} />
+            <span className="file-name">{selectedFile.name}</span>
+            <button
+              type="button"
+              className="btn-remove-chip"
+              onClick={() => {
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div className="comment-input-actions">
-          <button type="submit" className="btn-comment-submit" disabled={!inputContent.trim()}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setSelectedFile(e.target.files[0]);
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="btn-attach-clip"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Paperclip size={15} />
+            <span>파일 첨부</span>
+          </button>
+
+          <button type="submit" className="btn-comment-submit" disabled={!inputContent.trim() && !selectedFile}>
             <Send size={13} /> 등록
           </button>
         </div>
       </form>
 
-      {/* 댓글 목록 */}
       <div className="comment-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {loading ? (
           <div className="comment-empty">댓글을 불러오는 중...</div>
@@ -206,12 +288,11 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
           <div className="comment-empty">등록된 댓글이 없습니다.</div>
         ) : (
           comments.map((comment) => {
-            const commentEmpNo = Number(comment.empNo || 0);
-
-            // 로그인 사번과 댓글 작성자 사번 1:1 대조
+            const commentEmpNo = Number(comment.empNo || comment.writerEmpNo || 0);
             const isMyComment = currentEmpNo > 0 && commentEmpNo > 0 && currentEmpNo === commentEmpNo;
             const isEditing = editingCommentNo === comment.taskCommentNo;
             const author = (comment.empName || comment.memberName || "사원").trim();
+            const files = commentFilesMap[comment.taskCommentNo] || [];
 
             return (
               <div
@@ -263,7 +344,6 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
                     )}
                   </div>
 
-                  {/* 본인 댓글에만 수정 및 삭제 버튼 노출 */}
                   {isMyComment && !isEditing && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <button
@@ -369,15 +449,73 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
-                    {comment.taskCommentContent}
-                  </div>
+                  <>
+                    {comment.taskCommentContent && comment.taskCommentContent !== "(파일 첨부)" && (
+                      <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
+                        {comment.taskCommentContent}
+                      </div>
+                    )}
+
+                    {files.length > 0 && (
+                      <div className="comment-files-wrapper">
+                        {/* 이미지 갤러리 (개별 삭제 버튼 제거) */}
+                        <div className="comment-image-gallery">
+                          {files.filter(isImageFile).map((file) => {
+                            const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
+                            return (
+                              <div key={file.attachNo} className="comment-image-card">
+                                <img
+                                  src={fileUrl}
+                                  alt={file.attachName}
+                                  className="comment-thumbnail-img"
+                                  onClick={() => setPreviewModalUrl(fileUrl)}
+                                  title="클릭하여 원본 보기"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* 일반 문서 목록 (개별 삭제 버튼 제거, 다운로드 버튼 유지) */}
+                        <div className="comment-doc-list">
+                          {files.filter((f) => !isImageFile(f)).map((file) => (
+                            <div key={file.attachNo} className="comment-file-chip">
+                              <FileText size={13} className="file-icon" />
+                              <span
+                                className="file-link"
+                                onClick={() => handleDownloadFile(file.attachNo)}
+                                title="다운로드"
+                              >
+                                {file.attachName} ({(file.attachSize / 1024).toFixed(1)} KB)
+                              </span>
+                              <Download
+                                size={13}
+                                className="download-icon"
+                                onClick={() => handleDownloadFile(file.attachNo)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             );
           })
         )}
       </div>
+
+      {previewModalUrl && (
+        <div className="image-preview-modal" onClick={() => setPreviewModalUrl(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <img src={previewModalUrl} alt="확대 보기" />
+            <button type="button" className="btn-close-modal" onClick={() => setPreviewModalUrl(null)}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

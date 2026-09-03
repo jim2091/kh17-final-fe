@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { Paperclip, Download, FileText } from "lucide-react";
+import { Paperclip, Download, Trash2, FileText, Upload } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
 import "./Task.css";
@@ -35,6 +35,7 @@ export default function Task() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [taskFiles, setTaskFiles] = useState([]);
+  const taskFileInputRef = useRef(null);
 
   // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false);
@@ -61,9 +62,9 @@ export default function Task() {
     "{}"
   );
   const myEmpNo = Number(
-    storedUser?.empNo || 
-    localStorage.getItem("empNo") || 
-    sessionStorage.getItem("empNo") || 
+    storedUser?.empNo ||
+    localStorage.getItem("empNo") ||
+    sessionStorage.getItem("empNo") ||
     0
   );
 
@@ -103,6 +104,47 @@ export default function Task() {
       console.warn("업무 첨부파일 목록 조회 실패:", error);
       setTaskFiles([]);
     }
+  };
+
+  // 업무 본체 파일 업로드 핸들러
+  const handleUploadTaskFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedTask) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await apiClient.post(
+        `/task/file/${selectedTask.taskNo}?projectNo=${projectNo || 0}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success("업무 첨부파일이 등록되었습니다.");
+      if (taskFileInputRef.current) taskFileInputRef.current.value = "";
+      fetchTaskFiles(selectedTask.taskNo);
+    } catch (error) {
+      console.error("업무 파일 업로드 실패:", error);
+      toast.error("업무 파일 업로드에 실패했습니다.");
+    }
+  };
+
+  // 업무 본체 파일 삭제 핸들러
+  const handleDeleteTaskFile = async (attachNo) => {
+    if (!window.confirm("해당 첨부파일을 삭제하시겠습니까?")) return;
+    try {
+      await apiClient.delete(`/task/file/${selectedTask.taskNo}/${attachNo}`);
+      toast.success("파일이 삭제되었습니다.");
+      fetchTaskFiles(selectedTask.taskNo);
+    } catch (error) {
+      console.error("업무 파일 삭제 실패:", error);
+      toast.error("파일 삭제에 실패했습니다.");
+    }
+  };
+
+  // 파일 다운로드 핸들러
+  const handleDownloadFile = (attachNo) => {
+    window.open(`http://localhost:8080/api/attach/${attachNo}`, "_blank");
   };
 
   const getAssigneeName = (task) => {
@@ -581,38 +623,115 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 본체 첨부파일 목록 */}
+                  {/* 본체 첨부파일 섹션 (fileRole 제거, 업로드/삭제 핸들러 연결) */}
                   <div className="view-section">
-                    <span className="section-title">
-                      <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
-                      업무 첨부파일 ({taskFiles.length}개)
-                    </span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <span className="section-title" style={{ margin: 0 }}>
+                        <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                        업무 첨부파일 ({taskFiles.length}개)
+                      </span>
+                      <input
+                        type="file"
+                        ref={taskFileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleUploadTaskFile}
+                      />
+                      <button
+                        type="button"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#ffffff",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "6px",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          cursor: "pointer"
+                        }}
+                        onClick={() => taskFileInputRef.current?.click()}
+                      >
+                        <Upload size={12} /> 파일 올리기
+                      </button>
+                    </div>
+
                     <div className="task-file-list-box">
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
-                        taskFiles.map((file) => (
-                          <div key={file.attachNo} className="task-file-item">
-                            <div className="task-file-info">
-                              <span className={`task-role-badge role-${file.fileRole?.toLowerCase()}`}>
-                                {file.fileRole === "PROGRESS" ? "진행/시안" : file.fileRole === "DELIVERABLE" ? "최종산출물" : "참고자료"}
-                              </span>
-                              <FileText size={14} className="file-icon" />
-                              <span className="task-file-name" title={file.attachName}>
-                                {file.attachName}
-                              </span>
-                              <span className="task-file-size">({formatFileSize(file.attachSize)})</span>
+                        <>
+                          {/* 1. 이미지 파일 그리드 미리보기 */}
+                          {taskFiles.some((f) => /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName)) && (
+                            <div className="task-image-grid">
+                              {taskFiles
+                                .filter((f) => /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName))
+                                .map((file) => (
+                                  <div key={file.attachNo} className="task-img-card">
+                                    <img
+                                      src={`http://localhost:8080/api/attach/${file.attachNo}`}
+                                      alt={file.attachName}
+                                      className="task-preview-img"
+                                      onClick={() => handleDownloadFile(file.attachNo)}
+                                      title="클릭 시 다운로드"
+                                    />
+                                    <div className="task-img-overlay">
+                                      <span className="task-img-name">{file.attachName}</span>
+                                      <button
+                                        type="button"
+                                        className="btn-img-trash"
+                                        onClick={() => handleDeleteTaskFile(file.attachNo)}
+                                        title="삭제"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
                             </div>
-                            <a
-                              href={`/api/attach/download/${file.attachNo}`}
-                              className="btn-file-download"
-                              download
-                              title="다운로드"
-                            >
-                              <Download size={13} /> 다운로드
-                            </a>
+                          )}
+
+                          {/* 2. 일반 문서 파일 목록 행 */}
+                          <div className="task-doc-column">
+                            {taskFiles
+                              .filter((f) => !/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(f.attachName))
+                              .map((file) => (
+                                <div key={file.attachNo} className="task-file-item">
+                                  <div className="task-file-info">
+                                    <FileText size={14} className="file-icon" />
+                                    <span
+                                      className="task-file-name"
+                                      title={file.attachName}
+                                      style={{ cursor: "pointer" }}
+                                      onClick={() => handleDownloadFile(file.attachNo)}
+                                    >
+                                      {file.attachName}
+                                    </span>
+                                    <span className="task-file-size">({formatFileSize(file.attachSize)})</span>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <button
+                                      type="button"
+                                      className="btn-file-download"
+                                      onClick={() => handleDownloadFile(file.attachNo)}
+                                      title="다운로드"
+                                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                                    >
+                                      <Download size={13} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteTaskFile(file.attachNo)}
+                                      title="파일 삭제"
+                                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "#ef4444" }}
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
                           </div>
-                        ))
+                        </>
                       )}
                     </div>
                   </div>
@@ -624,11 +743,12 @@ export default function Task() {
                     )}
                   </div>
 
-                  {/* 댓글 컴포넌트 연동 (currentProjectMemberNo 전달) */}
-                  <TaskComments 
-                    taskNo={selectedTask.taskNo} 
-                    projectNo={projectNo} 
+                  {/* 댓글 컴포넌트 연동 (loginUser 및 프로젝트 정보 전달) */}
+                  <TaskComments
+                    taskNo={selectedTask.taskNo}
+                    projectNo={projectNo}
                     currentProjectMemberNo={currentProjectMemberNo}
+                    loginUser={storedUser}
                   />
                 </div>
 
