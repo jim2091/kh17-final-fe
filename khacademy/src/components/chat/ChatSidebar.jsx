@@ -6,7 +6,9 @@ export default function ChatSidebar(
         setSelectedChannel,
         sidebarOpen,
         setSidebarOpen,
-        unreadCounts
+        unreadCounts,
+        canManageChannel,
+        loadChannelList
     }
 ) {
 
@@ -44,7 +46,6 @@ export default function ChatSidebar(
                                 }}
                                 >
                                     <div className="channel-item-left">
-                                        <span className="channel-prefix">#</span>
                                         <span className="channel-name">
                                             {channel.chatChannelName}
                                         </span>
