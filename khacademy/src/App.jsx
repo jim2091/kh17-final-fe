@@ -6,6 +6,7 @@ import MyProjectList from "./components/project/MyProjectList";
 import ProjectAdd from "./components/project/ProjectAdd";
 import ProjectEdit from "./components/project/ProjectEdit";
 import PublicProjectList from './components/project/PublicProjectList';
+import ProjectClose from './components/project/ProjectClose';
 import ArcheiveProjectList from './components/project/ArchiveProjectList';
 import ProjectLayout from './templates/ProjectLayout';
 import Chat from './components/chat/Chat';
@@ -64,6 +65,7 @@ function App() {
         <Route path="/projects/add" element={<ProjectAdd />} />
         {/* 프로젝트 수정 */}
         <Route path="/projects/:projectNo/edit" element={<ProjectEdit />} />
+        {/* 공개프로젝트 목록 */}
         <Route path="/projects/public" element={<PublicProjectList />} />
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
 
@@ -73,7 +75,7 @@ function App() {
         <Route path="/me" element={<Private><Mypage/></Private>} />
         {/* 내 정보 수정 페이지 */}
         <Route path="/edit" element={<Private><Edit/></Private>} />
-      <Route element={<AdminTabs />}>
+        <Route element={<AdminTabs />}>
         
         {/* 초대하기 화면 */}
         <Route path="invite" element={<Admin><Invite/></Admin>} />
@@ -101,6 +103,8 @@ function App() {
           <Route path="files" element={<Files />} />
 
           <Route path="records" element={<Records />} />
+
+          <Route path="close" element={<ProjectClose />}/>
 
         </Route>
       </Route>

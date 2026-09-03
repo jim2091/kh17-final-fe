@@ -21,12 +21,12 @@ export default function ProjectHeader({project, loadProject}) {
     //프로젝트 수정페이지 이동
     const moveEdit = useCallback(()=>{
         navigate(`/projects/${projectNo}/edit`);
-    },[projectNo])
+    },[projectNo,navigate])
 
     //프로젝트 종료페이지 이동
     const moveClose = useCallback(()=>{
         navigate(`/projects/${projectNo}/close`);
-    })
+    },[projectNo,navigate])
 
     //프로젝트 삭제
     const deleteProject = useCallback(async()=>{
@@ -54,7 +54,7 @@ export default function ProjectHeader({project, loadProject}) {
 
             toast.error("프로젝트 삭제에 실패했습니다.");
         }
-    },[projectNo])
+    },[projectNo,navigate])
 
     return (
         <div className="project-header">
