@@ -78,6 +78,11 @@ export default function Chat() {
         }
     }, [channels, selectedChannel]);
 
+    //현재 선택 채널 Ref 갱신
+    useEffect(() => {
+        selectedChannelRef.current = selectedChannel;
+    }, [selectedChannel]);
+
 
     //● 처음 메세지 조회
     const loadMessages = useCallback(async (channelNo) => {
@@ -272,10 +277,11 @@ export default function Chat() {
 
                         console.log(`${channelNo} 채널 메세지 수신 : `, json);
 
+                        const currentChannel = selectedChannelRef.current;
                         //현재 보고 있는 채널의 메세지면
                         if(
-                            selectedChannel && 
-                            selectedChannel.chatChannelNo === channelNo
+                            currentChannel && 
+                            currentChannel.chatChannelNo === channelNo
                         ){
                             //messages에 추가하고
                             setMessages(prev => [...prev, json]);
@@ -309,10 +315,11 @@ export default function Chat() {
                         const json = JSON.parse(message.body);
                         console.log(`${channelNo} 채널 읽음 처리 알림 : `, json);
     
+                        const currentChannel = selectedChannelRef.current;
                         //현재 보고 있는 채널의 메세지면
                         if(
-                            selectedChannel &&
-                            selectedChannel.chatChannelNo === channelNo
+                            currentChannel &&
+                            currentChannel.chatChannelNo === channelNo
                         ) {
                             setMessages(prev => 
                                 prev.map(message => {
@@ -413,10 +420,16 @@ export default function Chat() {
                 unreadCounts={unreadCounts}
             />
 
+            {sidebarOpen && (
+                <div
+                    className="chat-sidebar-backdrop"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             <div className="chat-main">
                 <ChatHeader 
                     selectedChannel={selectedChannel}
-                    sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                 />
 
