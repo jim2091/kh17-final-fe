@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
     useSearchParams,
@@ -79,16 +78,15 @@ export default function Search() {
         setSearchParams,
     ] = useSearchParams();
 
-
-    /*
-     * 페이지 이동
-     */
     const navigate = useNavigate();
 
 
     /*
+     * ==========================================
      * 검색어
+     * ==========================================
      */
+
     const keyword =
         searchParams.get("keyword") || "";
 
@@ -105,26 +103,16 @@ export default function Search() {
             searchParams.get("filter");
 
 
-        /*
-         * filter 없음
-         * → 전체
-         */
         if (!filterParam) {
             return ["all"];
         }
 
 
-        /*
-         * 전체
-         */
         if (filterParam === "all") {
             return ["all"];
         }
 
 
-        /*
-         * 개별 필터
-         */
         const parsedFilters =
             filterParam
                 .split(",")
@@ -133,17 +121,12 @@ export default function Search() {
                 );
 
 
-        /*
-         * 잘못된 필터
-         * → 전체
-         */
         if (parsedFilters.length === 0) {
             return ["all"];
         }
 
 
         return parsedFilters;
-
     };
 
 
@@ -175,6 +158,16 @@ export default function Search() {
 
     const [loading, setLoading] =
         useState(false);
+
+
+    /*
+     * ==========================================
+     * 프로젝트 참여 처리 중
+     * ==========================================
+     */
+
+    const [joiningProjectNo, setJoiningProjectNo] =
+        useState(null);
 
 
     /*
@@ -239,48 +232,27 @@ export default function Search() {
 
 
         /*
-         * ======================================
          * 전체
-         * ======================================
          */
 
         if (filterKey === "all") {
 
-            /*
-             * 전체가 체크되어 있으면
-             * 전체 해제
-             */
             if (isAllSelected) {
-
                 nextFilters = [];
-
             }
-
-            /*
-             * 전체를 체크하면
-             * 전체만 선택
-             */
             else {
-
                 nextFilters = ["all"];
-
             }
 
         }
 
 
         /*
-         * ======================================
          * 개별 필터
-         * ======================================
          */
 
         else {
 
-            /*
-             * 전체가 선택되어 있으면
-             * 전체 해제 후 현재 항목 선택
-             */
             if (isAllSelected) {
 
                 nextFilters = [
@@ -288,11 +260,6 @@ export default function Search() {
                 ];
 
             }
-
-            /*
-             * 이미 선택되어 있으면
-             * 해당 항목 제거
-             */
             else if (
                 filters.includes(filterKey)
             ) {
@@ -304,11 +271,6 @@ export default function Search() {
                     );
 
             }
-
-            /*
-             * 선택되어 있지 않으면
-             * 추가
-             */
             else {
 
                 nextFilters = [
@@ -321,25 +283,17 @@ export default function Search() {
         }
 
 
-        /*
-         * 상태 변경
-         */
         setFilters(nextFilters);
 
 
         /*
-         * ==========================================
          * URL 변경
-         * ==========================================
          */
 
         const params =
             new URLSearchParams();
 
 
-        /*
-         * 검색어 유지
-         */
         if (keyword) {
 
             params.set(
@@ -350,9 +304,6 @@ export default function Search() {
         }
 
 
-        /*
-         * 전체
-         */
         if (
             nextFilters.length === 1 &&
             nextFilters[0] === "all"
@@ -364,11 +315,6 @@ export default function Search() {
             );
 
         }
-
-
-        /*
-         * 개별 필터
-         */
         else if (
             nextFilters.length > 0
         ) {
@@ -381,12 +327,7 @@ export default function Search() {
         }
 
 
-        /*
-         * 아무것도 선택하지 않으면
-         * filter를 URL에서 제거
-         */
         setSearchParams(params);
-
     };
 
 
@@ -400,9 +341,6 @@ export default function Search() {
 
         const fetchSearch = async () => {
 
-            /*
-             * 검색어 없음
-             */
             if (!keyword.trim()) {
 
                 setResult({
@@ -413,13 +351,9 @@ export default function Search() {
                 setError("");
 
                 return;
-
             }
 
 
-            /*
-             * 필터 없음
-             */
             if (filters.length === 0) {
 
                 setResult({
@@ -436,7 +370,6 @@ export default function Search() {
                 setError("");
 
                 return;
-
             }
 
 
@@ -446,36 +379,24 @@ export default function Search() {
                 setError("");
 
 
-                /*
-                 * 전체
-                 */
                 const filterParam =
                     filters.includes("all")
                         ? "all"
                         : filters.join(",");
 
 
-                /*
-                 * 검색 API
-                 */
                 const response =
                     await apiClient.get(
                         "/search",
                         {
                             params: {
-                                keyword:
-                                    keyword,
-
-                                filter:
-                                    filterParam,
+                                keyword,
+                                filter: filterParam,
                             },
                         }
                     );
 
 
-                /*
-                 * 검색 결과 저장
-                 */
                 setResult(
                     response.data
                 );
@@ -487,7 +408,6 @@ export default function Search() {
                     "검색 실패:",
                     e
                 );
-
 
                 setError(
                     "검색 중 오류가 발생했습니다."
@@ -543,13 +463,125 @@ export default function Search() {
             );
 
             return;
-
         }
 
 
         navigate(
             `/projects/${projectNo}`
         );
+    };
+
+
+    /*
+     * ==========================================
+     * 프로젝트 참여
+     * ==========================================
+     */
+
+    const handleProjectJoin = async (
+        projectNo
+    ) => {
+
+        if (!projectNo) {
+
+            console.warn(
+                "프로젝트 번호가 없습니다."
+            );
+
+            return;
+        }
+
+
+        if (joiningProjectNo === projectNo) {
+            return;
+        }
+
+
+        /*
+         * 참여 확인
+         */
+
+        const confirmed =
+            window.confirm(
+                "정말 이 프로젝트에 참여하시겠습니까?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        try {
+
+            setJoiningProjectNo(
+                projectNo
+            );
+
+
+            await apiClient.post(
+                `/project/${projectNo}/join`
+            );
+
+
+            /*
+             * 검색 결과의 역할을
+             * 즉시 member로 변경
+             *
+             * 참여 인원도 +1
+             */
+
+            setResult((prev) => ({
+
+                ...prev,
+
+                projects:
+                    prev.projects?.map(
+                        (project) => {
+
+                            if (
+                                project.projectNo ===
+                                projectNo
+                            ) {
+
+                                return {
+                                    ...project,
+
+                                    projectRole:
+                                        "member",
+
+                                    memberCount:
+                                        (project.memberCount || 0) + 1,
+                                };
+
+                            }
+
+                            return project;
+
+                        }
+                    ) || [],
+
+            }));
+
+        }
+        catch (e) {
+
+            console.error(
+                "프로젝트 참여 실패:",
+                e
+            );
+
+            alert(
+                e?.response?.data?.message ||
+                "프로젝트 참여에 실패했습니다."
+            );
+
+        }
+        finally {
+
+            setJoiningProjectNo(null);
+
+        }
 
     };
 
@@ -571,12 +603,372 @@ export default function Search() {
             );
 
             return;
-
         }
 
 
         navigate(
             `/projects/${projectNo}/task`
+        );
+    };
+
+
+    /*
+     * ==========================================
+     * 파일 확장자
+     * ==========================================
+     */
+
+    const getExtension = (
+        fileName = ""
+    ) => {
+
+        const index =
+            fileName.lastIndexOf(".");
+
+
+        if (index === -1) {
+            return "";
+        }
+
+
+        return fileName
+            .substring(index + 1)
+            .toLowerCase();
+
+    };
+
+
+    /*
+     * ==========================================
+     * 파일 종류
+     * ==========================================
+     */
+
+    const getFileType = (
+        fileName = ""
+    ) => {
+
+        const extension =
+            getExtension(fileName);
+
+
+        /*
+         * 이미지
+         */
+
+        if (
+            [
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "webp",
+                "svg",
+                "bmp"
+            ].includes(extension)
+        ) {
+
+            return "image";
+
+        }
+
+
+        /*
+         * PDF
+         */
+
+        if (extension === "pdf") {
+            return "pdf";
+        }
+
+
+        /*
+         * Word
+         */
+
+        if (
+            ["doc", "docx"].includes(
+                extension
+            )
+        ) {
+
+            return "word";
+
+        }
+
+
+        /*
+         * Excel
+         */
+
+        if (
+            ["xls", "xlsx"].includes(
+                extension
+            )
+        ) {
+
+            return "excel";
+
+        }
+
+
+        /*
+         * PowerPoint
+         */
+
+        if (
+            ["ppt", "pptx"].includes(
+                extension
+            )
+        ) {
+
+            return "powerpoint";
+
+        }
+
+
+        /*
+         * ZIP
+         */
+
+        if (
+            ["zip", "rar", "7z"].includes(
+                extension
+            )
+        ) {
+
+            return "zip";
+
+        }
+
+
+        return "file";
+
+    };
+
+
+    /*
+     * ==========================================
+     * 파일 URL
+     * ==========================================
+     */
+
+    const getFileUrl = (
+        attachNo
+    ) => {
+
+        if (!attachNo) {
+            return "";
+        }
+
+
+        return `http://localhost:8080/api/attach/${attachNo}`;
+
+    };
+
+
+    /*
+     * ==========================================
+     * 검색 파일 아이콘
+     * ==========================================
+     */
+
+    const SearchFileIcon = ({
+        file
+    }) => {
+
+        const type =
+            getFileType(
+                file.attachName
+            );
+
+
+        /*
+         * 이미지 파일
+         */
+
+        if (type === "image") {
+
+            return (
+
+                <div className="search-file-thumbnail">
+
+                    <img
+                        src={getFileUrl(
+                            file.attachNo
+                        )}
+                        alt={
+                            file.attachName ||
+                            "이미지"
+                        }
+                        onError={(e) => {
+
+                            e.currentTarget.style.display =
+                                "none";
+
+                            if (
+                                e.currentTarget
+                                    .nextElementSibling
+                            ) {
+
+                                e.currentTarget
+                                    .nextElementSibling
+                                    .style.display =
+                                    "flex";
+
+                            }
+
+                        }}
+                    />
+
+
+                    <div className="search-file-thumbnail-fallback">
+
+                        <span>
+                            이미지 없음
+                        </span>
+
+                    </div>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * PDF
+         */
+
+        if (type === "pdf") {
+
+            return (
+
+                <div className="search-file-icon search-file-icon-pdf">
+
+                    <span>
+                        PDF
+                    </span>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * Word
+         */
+
+        if (type === "word") {
+
+            return (
+
+                <div className="search-file-icon search-file-icon-word">
+
+                    <span>
+                        W
+                    </span>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * Excel
+         */
+
+        if (type === "excel") {
+
+            return (
+
+                <div className="search-file-icon search-file-icon-excel">
+
+                    <span>
+                        X
+                    </span>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * PowerPoint
+         */
+
+        if (type === "powerpoint") {
+
+            return (
+
+                <div className="search-file-icon search-file-icon-powerpoint">
+
+                    <span>
+                        P
+                    </span>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * ZIP
+         */
+
+        if (type === "zip") {
+
+            return (
+
+                <div className="search-file-icon search-file-icon-zip">
+
+                    <span>
+                        ZIP
+                    </span>
+
+                </div>
+
+            );
+
+        }
+
+
+        /*
+         * 일반 파일
+         */
+
+        return (
+
+            <div className="search-file-icon search-file-icon-default">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                >
+
+                    <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+
+                    <path
+                        d="M14 2v6h6"
+                    />
+
+                </svg>
+
+            </div>
+
         );
 
     };
@@ -626,22 +1018,13 @@ export default function Search() {
 
                     <div className="search-filter-list">
 
-
-                        {/* =================================
-                            전체
-                        ================================= */}
-
-                        <label
-                            className="search-filter-item"
-                        >
+                        <label className="search-filter-item">
 
                             <input
                                 type="checkbox"
-
                                 checked={
                                     isAllSelected
                                 }
-
                                 onChange={() =>
                                     handleFilterChange(
                                         "all"
@@ -656,30 +1039,21 @@ export default function Search() {
                         </label>
 
 
-                        {/* =================================
-                            개별 필터
-                        ================================= */}
-
                         {FILTER_OPTIONS.map(
                             (option) => (
 
                                 <label
-                                    key={
-                                        option.key
-                                    }
-
+                                    key={option.key}
                                     className="search-filter-item"
                                 >
 
                                     <input
                                         type="checkbox"
-
                                         checked={
                                             isSelected(
                                                 option.key
                                             )
                                         }
-
                                         onChange={() =>
                                             handleFilterChange(
                                                 option.key
@@ -860,7 +1234,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="사용자"
-
                                         count={
                                             result.users?.length || 0
                                         }
@@ -871,7 +1244,6 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
-
                                                     key={
                                                         user.empNo
                                                     }
@@ -932,7 +1304,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="프로젝트"
-
                                         count={
                                             result.projects?.length || 0
                                         }
@@ -943,7 +1314,6 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item search-project-result-item"
-
                                                     key={
                                                         project.projectNo
                                                     }
@@ -955,7 +1325,6 @@ export default function Search() {
                                                     }
 
                                                     role="button"
-
                                                     tabIndex={0}
 
                                                     onKeyDown={(e) => {
@@ -980,15 +1349,38 @@ export default function Search() {
 
                                                     <div className="search-item-main">
 
-                                                        <div className="search-item-title">
+                                                        {/* 프로젝트명 */}
 
-                                                            {
-                                                                project.projectName ||
-                                                                "프로젝트 이름 없음"
-                                                            }
+                                                        <div className="search-project-title-row">
+
+                                                            <div className="search-item-title">
+
+                                                                {
+                                                                    project.projectName ||
+                                                                    "프로젝트 이름 없음"
+                                                                }
+
+                                                            </div>
+
+
+                                                            {/* 참여 인원 */}
+
+                                                            <span className="project-member-count">
+
+                                                                참여 :{" "}
+
+                                                                {
+                                                                    project.memberCount ?? 0
+                                                                }
+
+                                                                명
+
+                                                            </span>
 
                                                         </div>
 
+
+                                                        {/* 프로젝트 목적 */}
 
                                                         <div className="search-item-sub">
 
@@ -998,6 +1390,66 @@ export default function Search() {
                                                             }
 
                                                         </div>
+
+                                                    </div>
+
+
+                                                    {/* 프로젝트 참여 상태 */}
+
+                                                    <div
+                                                        className="search-project-action"
+
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
+                                                    >
+
+                                                        {project.projectRole === "owner" && (
+
+                                                            <span className="project-role owner">
+                                                                owner
+                                                            </span>
+
+                                                        )}
+
+
+                                                        {project.projectRole === "member" && (
+
+                                                            <span className="project-role member">
+                                                                참여 중
+                                                            </span>
+
+                                                        )}
+
+
+                                                        {!project.projectRole && (
+
+                                                            <button
+                                                                type="button"
+                                                                className="project-join-button"
+
+                                                                disabled={
+                                                                    joiningProjectNo ===
+                                                                    project.projectNo
+                                                                }
+
+                                                                onClick={() =>
+                                                                    handleProjectJoin(
+                                                                        project.projectNo
+                                                                    )
+                                                                }
+                                                            >
+
+                                                                {
+                                                                    joiningProjectNo ===
+                                                                    project.projectNo
+                                                                        ? "참여 중..."
+                                                                        : "참여"
+                                                                }
+
+                                                            </button>
+
+                                                        )}
 
                                                     </div>
 
@@ -1022,7 +1474,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="업무"
-
                                         count={
                                             result.tasks?.length || 0
                                         }
@@ -1033,7 +1484,6 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item search-task-result-item"
-
                                                     key={
                                                         task.taskNo
                                                     }
@@ -1045,7 +1495,6 @@ export default function Search() {
                                                     }
 
                                                     role="button"
-
                                                     tabIndex={0}
 
                                                     onKeyDown={(e) => {
@@ -1070,8 +1519,6 @@ export default function Search() {
 
                                                     <div className="search-item-main">
 
-                                                        {/* 프로젝트명 */}
-
                                                         <div className="search-item-project">
 
                                                             {
@@ -1082,8 +1529,6 @@ export default function Search() {
                                                         </div>
 
 
-                                                        {/* 업무 제목 */}
-
                                                         <div className="search-item-title">
 
                                                             {
@@ -1093,8 +1538,6 @@ export default function Search() {
 
                                                         </div>
 
-
-                                                        {/* 업무 내용 */}
 
                                                         <div className="search-item-sub">
 
@@ -1128,7 +1571,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="기록"
-
                                         count={
                                             result.records?.length || 0
                                         }
@@ -1142,7 +1584,6 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
-
                                                     key={
                                                         record.id ||
                                                         index
@@ -1183,7 +1624,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="노트"
-
                                         count={
                                             result.notes?.length || 0
                                         }
@@ -1197,7 +1637,6 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
-
                                                     key={
                                                         note.id ||
                                                         index
@@ -1238,7 +1677,6 @@ export default function Search() {
 
                                     <SearchSection
                                         title="파일"
-
                                         count={
                                             result.files?.length || 0
                                         }
@@ -1249,21 +1687,17 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item search-file-result-item"
-
                                                     key={
                                                         file.attachNo
                                                     }
                                                 >
 
-                                                    <div className="search-file-icon">
-                                                        📎
-                                                    </div>
+                                                    <SearchFileIcon
+                                                        file={file}
+                                                    />
 
 
                                                     <div className="search-item-main">
-
-
-                                                        {/* 프로젝트명 */}
 
                                                         <div className="search-item-project">
 
@@ -1275,8 +1709,6 @@ export default function Search() {
                                                         </div>
 
 
-                                                        {/* 파일명 */}
-
                                                         <div className="search-item-title">
 
                                                             {
@@ -1286,8 +1718,6 @@ export default function Search() {
 
                                                         </div>
 
-
-                                                        {/* 업로더 / 파일 타입 */}
 
                                                         <div className="search-item-sub">
 
@@ -1354,9 +1784,6 @@ function SearchSection({
 
         <section className="search-section">
 
-
-            {/* 섹션 제목 */}
-
             <div className="search-section-header">
 
                 <h2>
@@ -1369,8 +1796,6 @@ function SearchSection({
 
             </div>
 
-
-            {/* 결과 */}
 
             {count === 0 ? (
 
@@ -1393,4 +1818,3 @@ function SearchSection({
     );
 
 }
-

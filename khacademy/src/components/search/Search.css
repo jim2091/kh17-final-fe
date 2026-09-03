@@ -1,4 +1,3 @@
-
 /* ==========================================
    검색 페이지
 ========================================== */
@@ -22,168 +21,111 @@
 
 
 /* ==========================================
-   페이지 제목
+   페이지 헤더
 ========================================== */
 
 .search-page-header {
-    display: flex;
-    align-items: center;
-
     margin-bottom: 28px;
 }
+
 
 .search-page-title {
     margin: 0;
 
-    color: #222;
-
     font-size: 28px;
     font-weight: 700;
+
+    letter-spacing: -0.8px;
 }
 
 
 /* ==========================================
-   검색 본문
+   검색 전체 영역
 ========================================== */
 
 .search-content {
     display: flex;
-    align-items: flex-start;
 
     width: 100%;
 
-    gap: 40px;
+    min-width: 0;
+
+    border-top: 1px solid #222;
 }
 
 
 /* ==========================================
-   왼쪽 검색 필터
+   왼쪽 필터
 ========================================== */
 
 .search-filter {
-    width: 150px;
+    width: 190px;
 
     flex-shrink: 0;
+
+    padding: 28px 24px 0 0;
 
     box-sizing: border-box;
 }
 
+
 .search-filter-title {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+
+    font-size: 15px;
+    font-weight: 700;
 
     color: #222;
-
-    font-size: 13px;
-    font-weight: 700;
 }
+
 
 .search-filter-list {
     display: flex;
+
     flex-direction: column;
 
-    gap: 11px;
+    gap: 14px;
 }
 
 
-/* ==========================================
-   필터 항목
-========================================== */
-
 .search-filter-item {
     display: flex;
+
     align-items: center;
 
-    width: fit-content;
-    min-height: 18px;
+    gap: 9px;
 
-    gap: 8px;
-
-    margin: 0;
-    padding: 0;
+    width: 100%;
 
     cursor: pointer;
 
-    color: #666;
-
     font-size: 13px;
-    line-height: 1;
+
+    color: #555;
 
     user-select: none;
 }
 
-.search-filter-item span {
-    display: inline-block;
-
-    line-height: 18px;
-}
-
-
-/* ==========================================
-   체크박스
-========================================== */
 
 .search-filter-item input {
-    appearance: none;
-    -webkit-appearance: none;
-
-    position: relative;
-
-    width: 14px;
-    height: 14px;
-
-    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 
     margin: 0;
-    padding: 0;
 
-    box-sizing: border-box;
-
-    border: 1px solid #aaa;
-    border-radius: 3px;
-
-    background: #fff;
+    accent-color: #222;
 
     cursor: pointer;
 }
 
-.search-filter-item:hover input {
-    border-color: #555;
-}
 
-.search-filter-item input:checked {
-    border-color: #222;
-
-    background: #222;
+.search-filter-item span {
+    line-height: 16px;
 }
 
 
-/* 체크 표시 */
-
-.search-filter-item input:checked::after {
-    content: "";
-
-    position: absolute;
-
-    left: 3px;
-    top: 1px;
-
-    width: 4px;
-    height: 7px;
-
-    border: solid #fff;
-
-    border-width: 0 1.5px 1.5px 0;
-
-    transform: rotate(45deg);
-}
-
-
-/* 체크된 글자 */
-
-.search-filter-item:has(input:checked) {
+.search-filter-item:hover span {
     color: #222;
-
-    font-weight: 500;
 }
 
 
@@ -192,9 +134,13 @@
 ========================================== */
 
 .search-result {
+    min-width: 0;
+
     flex: 1;
 
-    min-width: 0;
+    padding-left: 30px;
+
+    border-left: 1px solid #e5e5e5;
 }
 
 
@@ -204,153 +150,135 @@
 
 .search-page-keyword {
     display: flex;
+
     align-items: center;
 
-    gap: 8px;
+    gap: 7px;
 
-    margin-bottom: 8px;
-
-    color: #777;
+    padding-top: 26px;
 
     font-size: 14px;
+
+    color: #666;
 }
+
 
 .search-page-keyword strong {
     color: #222;
 
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
 /* ==========================================
-   검색 결과 개수
+   검색 결과 요약
 ========================================== */
 
 .search-result-summary {
-    padding-bottom: 16px;
+    margin-top: 8px;
+
+    margin-bottom: 22px;
+
+    font-size: 13px;
 
     color: #777;
-
-    font-size: 14px;
 }
+
 
 .search-result-summary strong {
     color: #222;
 
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
 /* ==========================================
-   결과 전체
-========================================== */
-
-.search-result-list-container {
-    width: 100%;
-}
-
-
-/* ==========================================
-   검색 결과 섹션
+   결과 섹션
 ========================================== */
 
 .search-section {
-    width: 100%;
-
     margin-bottom: 30px;
 }
 
 
-/* ==========================================
-   섹션 헤더
-========================================== */
-
 .search-section-header {
     display: flex;
+
     align-items: center;
 
-    gap: 8px;
+    gap: 7px;
 
-    margin-bottom: 10px;
+    height: 38px;
+
+    border-bottom: 1px solid #222;
 }
+
 
 .search-section-header h2 {
     margin: 0;
 
-    color: #222;
+    font-size: 16px;
 
-    font-size: 18px;
     font-weight: 700;
+
+    color: #222;
 }
+
 
 .search-section-header span {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    min-width: 22px;
-    height: 22px;
+    min-width: 20px;
+    height: 20px;
 
     padding: 0 6px;
 
     box-sizing: border-box;
 
-    border-radius: 11px;
+    border-radius: 10px;
 
     background: #f1f1f1;
 
-    color: #666;
-
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
+
+    color: #666;
 }
 
 
 /* ==========================================
-   결과 목록
+   검색 결과 리스트
 ========================================== */
 
 .search-result-list {
     width: 100%;
-
-    overflow: hidden;
-
-    box-sizing: border-box;
-
-    border: 1px solid #e5e5e5;
-    border-radius: 10px;
-
-    background: #fff;
 }
 
-
-/* ==========================================
-   결과 항목
-========================================== */
 
 .search-result-item {
     display: flex;
+
     align-items: center;
 
     width: 100%;
-    min-height: 70px;
+
+    min-height: 76px;
+
+    padding: 12px 8px;
 
     box-sizing: border-box;
 
-    padding: 14px 18px;
-
-    border-bottom: 1px solid #eee;
-
-    background: #fff;
+    border-bottom: 1px solid #eeeeee;
 
     transition:
-        background-color 0.15s ease,
-        box-shadow 0.15s ease;
+        background-color 0.15s ease;
+
+    cursor: pointer;
 }
 
-.search-result-item:last-child {
-    border-bottom: none;
-}
 
 .search-result-item:hover {
     background: #fafafa;
@@ -358,45 +286,166 @@
 
 
 /* ==========================================
-   클릭 가능한 결과
+   결과 공통 메인 영역
 ========================================== */
 
-.search-project-result-item,
-.search-task-result-item {
-    cursor: pointer;
-}
+.search-item-main {
+    min-width: 0;
 
-.search-project-result-item:hover,
-.search-task-result-item:hover {
-    background: #f7f7f7;
-}
+    flex: 1;
 
-.search-project-result-item:active,
-.search-task-result-item:active {
-    background: #f0f0f0;
+    margin-left: 14px;
 }
 
 
 /* ==========================================
-   결과 아이콘
+   기본 제목
 ========================================== */
 
-.search-user-avatar,
-.search-project-icon,
-.search-task-icon,
-.search-file-icon {
+.search-item-title {
+    overflow: hidden;
+
+    margin-bottom: 5px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    line-height: 20px;
+
+    color: #222;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.search-item-sub {
+    overflow: hidden;
+
+    font-size: 12px;
+
+    line-height: 18px;
+
+    color: #888;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.search-item-project {
+    overflow: hidden;
+
+    margin-bottom: 4px;
+
+    font-size: 11px;
+
+    line-height: 16px;
+
+    color: #888;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   프로젝트명 + 참여 인원
+========================================== */
+
+.search-project-title-row {
     display: flex;
+
+    align-items: center;
+
+    min-width: 0;
+
+    gap: 9px;
+}
+
+
+/*
+ * 프로젝트 제목은 남은 공간을 사용
+ */
+
+.search-project-title-row .search-item-title {
+    min-width: 0;
+
+    flex: 0 1 auto;
+
+    margin-bottom: 5px;
+}
+
+
+/*
+ * 참여 : n명
+ */
+
+.project-member-count {
+    flex-shrink: 0;
+
+    margin-bottom: 5px;
+
+    font-size: 11px;
+
+    line-height: 20px;
+
+    color: #999;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   사용자
+========================================== */
+
+.search-user-avatar {
+    display: flex;
+
     align-items: center;
     justify-content: center;
 
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
 
     flex-shrink: 0;
 
-    margin-right: 14px;
-
     border-radius: 50%;
+
+    background: #eeeeee;
+
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* ==========================================
+   프로젝트
+========================================== */
+
+.search-project-result-item {
+    min-width: 0;
+}
+
+
+.search-project-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
 
     background: #f1f1f1;
 
@@ -407,141 +456,318 @@
 }
 
 
-/* 사용자 */
+/* ==========================================
+   프로젝트 참여 영역
+========================================== */
 
-.search-user-avatar {
-    background: #f1f1f1;
+.search-project-action {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    margin-left: 20px;
 }
 
 
-/* 프로젝트 */
+.project-role {
+    display: inline-flex;
 
-.search-project-icon {
-    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
 
-    background: #f3f3f3;
+    min-width: 58px;
+    height: 30px;
+
+    padding: 0 12px;
+
+    box-sizing: border-box;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
 }
 
 
-/* 업무 */
+/* owner */
 
-.search-task-icon {
-    border-radius: 10px;
+.project-role.owner {
+    border: 1px solid #222;
 
-    background: #f3f3f3;
+    background: #222;
+
+    color: #fff;
 }
 
 
-/* 파일 */
+/* 참여 중 */
 
-.search-file-icon {
-    border-radius: 9px;
+.project-role.member {
+    border: 1px solid #ddd;
 
-    font-size: 18px;
+    background: #f5f5f5;
+
+    color: #555;
+}
+
+
+/* 참여 버튼 */
+
+.project-join-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 58px;
+    height: 30px;
+
+    padding: 0 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #222;
+
+    border-radius: 6px;
+
+    background: #fff;
+
+    color: #222;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.1s ease;
+}
+
+
+.project-join-button:hover {
+    border-color: #222;
+
+    background: #222;
+
+    color: #fff;
+}
+
+
+.project-join-button:active {
+    transform: translateY(1px);
+}
+
+
+.project-join-button:disabled {
+    opacity: 0.6;
+
+    cursor: wait;
 }
 
 
 /* ==========================================
-   결과 본문
+   업무
 ========================================== */
 
-.search-item-main {
-    flex: 1;
-
+.search-task-result-item {
     min-width: 0;
 }
 
 
-/* ==========================================
-   프로젝트명
-   업무 / 파일에서 사용
-========================================== */
+.search-task-icon {
+    display: flex;
 
-.search-item-project {
-    margin-bottom: 4px;
+    align-items: center;
+    justify-content: center;
 
-    overflow: hidden;
+    width: 42px;
+    height: 42px;
 
-    color: #777;
+    flex-shrink: 0;
 
-    font-size: 13px;
-    font-weight: 400;
+    border-radius: 8px;
 
-    line-height: 1.3;
+    background: #f1f1f1;
 
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 700;
 }
 
 
 /* ==========================================
-   결과 제목
-========================================== */
-
-.search-item-title {
-    margin: 0 0 5px;
-
-    overflow: hidden;
-
-    color: #222;
-
-    font-size: 15px;
-    font-weight: 600;
-
-    line-height: 1.4;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-
-/* ==========================================
-   결과 부가정보
-========================================== */
-
-.search-item-sub {
-    overflow: hidden;
-
-    color: #888;
-
-    font-size: 13px;
-
-    line-height: 1.4;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-
-/* ==========================================
-   업무 결과
-========================================== */
-
-.search-task-result-item {
-    align-items: flex-start;
-
-    padding-top: 15px;
-    padding-bottom: 15px;
-}
-
-.search-task-result-item .search-task-icon {
-    margin-top: 2px;
-}
-
-
-/* ==========================================
-   파일 결과
+   파일 검색 결과
 ========================================== */
 
 .search-file-result-item {
-    align-items: flex-start;
+    min-width: 0;
 
-    padding-top: 15px;
-    padding-bottom: 15px;
+    cursor: default;
 }
 
-.search-file-result-item .search-file-icon {
-    margin-top: 2px;
+
+.search-file-result-item:hover {
+    background: #fafafa;
+}
+
+
+/* ==========================================
+   이미지 파일 썸네일
+========================================== */
+
+.search-file-thumbnail {
+    position: relative;
+
+    width: 52px;
+    height: 52px;
+
+    flex: 0 0 52px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 7px;
+
+    background: #f7f7f7;
+}
+
+
+.search-file-thumbnail img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+/* 이미지 로딩 실패 시 */
+
+.search-file-thumbnail-fallback {
+    position: absolute;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f5f5;
+
+    color: #999;
+
+    font-size: 10px;
+    font-weight: 500;
+}
+
+
+/* ==========================================
+   일반 파일 아이콘
+========================================== */
+
+.search-file-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 52px;
+
+    flex: 0 0 52px;
+
+    box-sizing: border-box;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+.search-file-icon-pdf {
+    border: 1px solid #f0d0d0;
+
+    background: #fff5f5;
+
+    color: #d9534f;
+}
+
+
+.search-file-icon-word {
+    border: 1px solid #cfdcf5;
+
+    background: #f3f7ff;
+
+    color: #2b67c7;
+}
+
+
+.search-file-icon-excel {
+    border: 1px solid #cfe5d5;
+
+    background: #f3faf5;
+
+    color: #218838;
+}
+
+
+.search-file-icon-powerpoint {
+    border: 1px solid #ead8c9;
+
+    background: #fff8f2;
+
+    color: #d66a20;
+}
+
+
+.search-file-icon-zip {
+    border: 1px solid #e4d9c4;
+
+    background: #fbf8f1;
+
+    color: #9a7b35;
+}
+
+
+.search-file-icon-default {
+    border: 1px solid #e2e2e2;
+
+    background: #f7f7f7;
+
+    color: #777;
+}
+
+
+.search-file-icon-default svg {
+    width: 27px;
+    height: 27px;
 }
 
 
@@ -551,23 +777,65 @@
 
 .search-no-result {
     display: flex;
+
     align-items: center;
 
-    width: 100%;
-    height: 60px;
+    min-height: 64px;
+
+    padding: 0 8px;
 
     box-sizing: border-box;
 
-    padding: 0 18px;
-
-    border: 1px solid #e5e5e5;
-    border-radius: 10px;
-
-    background: #fff;
+    font-size: 13px;
 
     color: #999;
+}
 
-    font-size: 14px;
+
+/* ==========================================
+   검색 전 빈 화면
+========================================== */
+
+.search-empty-page {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 360px;
+
+    text-align: center;
+}
+
+
+.search-empty-icon {
+    margin-bottom: 18px;
+
+    font-size: 38px;
+
+    opacity: 0.6;
+}
+
+
+.search-empty-page h2 {
+    margin: 0 0 8px;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    color: #333;
+}
+
+
+.search-empty-page p {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #999;
 }
 
 
@@ -577,118 +845,85 @@
 
 .search-filter-empty {
     display: flex;
+
     flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 360px;
+
+    text-align: center;
+}
+
+
+.search-filter-empty-icon {
+    margin-bottom: 18px;
+
+    font-size: 32px;
+
+    color: #999;
+}
+
+
+.search-filter-empty h2 {
+    margin: 0 0 8px;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    color: #333;
+}
+
+
+.search-filter-empty p {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #999;
+}
+
+
+/* ==========================================
+   상태
+========================================== */
+
+.search-status {
+    display: flex;
 
     align-items: center;
     justify-content: center;
 
     min-height: 300px;
 
-    text-align: center;
-}
-
-.search-filter-empty-icon {
-    margin-bottom: 16px;
-
-    color: #aaa;
-
-    font-size: 36px;
-}
-
-.search-filter-empty h2 {
-    margin: 0 0 8px;
-
-    color: #333;
-
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.search-filter-empty p {
-    margin: 0;
-
-    color: #999;
-
-    font-size: 13px;
-}
-
-
-/* ==========================================
-   로딩
-========================================== */
-
-.search-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 250px;
+    font-size: 14px;
 
     color: #888;
-
-    font-size: 14px;
 }
 
-
-/* ==========================================
-   오류
-========================================== */
 
 .search-error {
-    margin-top: 25px;
-
-    padding: 18px;
-
-    border: 1px solid #f0d0d0;
-    border-radius: 10px;
-
-    background: #fff7f7;
-
-    color: #c44;
-
-    text-align: center;
-
-    font-size: 14px;
-}
-
-
-/* ==========================================
-   검색어 없음
-========================================== */
-
-.search-empty-page {
     display: flex;
-    flex-direction: column;
 
     align-items: center;
     justify-content: center;
 
-    min-height: 400px;
-
-    text-align: center;
-}
-
-.search-empty-icon {
-    margin-bottom: 18px;
-
-    font-size: 42px;
-}
-
-.search-empty-page h2 {
-    margin: 0 0 8px;
-
-    color: #222;
-
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.search-empty-page p {
-    margin: 0;
-
-    color: #999;
+    min-height: 300px;
 
     font-size: 14px;
+
+    color: #d9534f;
+}
+
+
+/* ==========================================
+   검색 결과 전체 컨테이너
+========================================== */
+
+.search-result-list-container {
+    width: 100%;
 }
 
 
@@ -696,46 +931,184 @@
    반응형
 ========================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
 
     .search-page {
-        padding: 20px;
+        padding: 24px 24px 40px;
     }
 
 
-    .search-page-header {
-        align-items: flex-start;
+    .search-filter {
+        width: 160px;
 
-        flex-direction: column;
+        padding-right: 18px;
+    }
 
-        gap: 8px;
+
+    .search-result {
+        padding-left: 22px;
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .search-page {
+        padding: 20px 16px 35px;
     }
 
 
     .search-content {
-        flex-direction: column;
-
-        gap: 20px;
+        display: block;
     }
 
 
     .search-filter {
         width: 100%;
+
+        padding: 18px 0;
+
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+
+    .search-filter-title {
+        margin-bottom: 12px;
     }
 
 
     .search-filter-list {
-        display: grid;
+        flex-direction: row;
 
-        grid-template-columns: repeat(2, 1fr);
+        flex-wrap: wrap;
 
-        gap: 10px;
+        gap: 10px 16px;
     }
 
 
-    .search-result-item {
-        padding: 12px;
+    .search-filter-item {
+        width: auto;
+    }
+
+
+    .search-result {
+        width: 100%;
+
+        padding-left: 0;
+
+        border-left: none;
+    }
+
+
+    .search-page-keyword {
+        padding-top: 20px;
+    }
+
+
+    .search-project-action {
+        margin-left: 10px;
+    }
+
+
+    .project-role,
+    .project-join-button {
+        min-width: 52px;
+        height: 28px;
+
+        padding: 0 9px;
+
+        font-size: 11px;
+    }
+
+
+    .search-file-thumbnail,
+    .search-file-icon {
+        width: 46px;
+        height: 46px;
+
+        flex-basis: 46px;
+    }
+
+
+    .search-item-main {
+        margin-left: 11px;
+    }
+
+
+    .search-item-title {
+        font-size: 13px;
+    }
+
+
+    .search-item-sub {
+        font-size: 11px;
+    }
+
+
+    .project-member-count {
+        font-size: 10px;
     }
 
 }
 
+
+@media (max-width: 480px) {
+
+    .search-page {
+        padding: 18px 12px 30px;
+    }
+
+
+    .search-page-title {
+        font-size: 24px;
+    }
+
+
+    .search-result-item {
+        min-height: 68px;
+
+        padding: 10px 4px;
+    }
+
+
+    .search-user-avatar,
+    .search-project-icon,
+    .search-task-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+
+    .search-file-thumbnail,
+    .search-file-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-basis: 42px;
+    }
+
+
+    .search-project-action {
+        margin-left: 6px;
+    }
+
+
+    .project-role,
+    .project-join-button {
+        min-width: 48px;
+        height: 27px;
+
+        padding: 0 7px;
+
+        font-size: 10px;
+    }
+
+
+    .project-member-count {
+        font-size: 9px;
+
+        gap: 4px;
+    }
+
+}
