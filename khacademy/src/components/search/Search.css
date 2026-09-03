@@ -1,3 +1,4 @@
+
 /* ==========================================
    검색 페이지
 ========================================== */
@@ -21,17 +22,15 @@
 
 
 /* ==========================================
-   페이지 헤더
+   페이지 제목
 ========================================== */
 
 .search-page-header {
     display: flex;
-
     align-items: center;
 
     margin-bottom: 28px;
 }
-
 
 .search-page-title {
     margin: 0;
@@ -49,12 +48,11 @@
 
 .search-content {
     display: flex;
-
     align-items: flex-start;
 
-    gap: 32px;
-
     width: 100%;
+
+    gap: 40px;
 }
 
 
@@ -68,13 +66,10 @@
     flex-shrink: 0;
 
     box-sizing: border-box;
-
-    padding: 0;
 }
 
-
 .search-filter-title {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 
     color: #222;
 
@@ -82,43 +77,44 @@
     font-weight: 700;
 }
 
-
 .search-filter-list {
     display: flex;
-
     flex-direction: column;
 
-    gap: 9px;
+    gap: 11px;
 }
 
 
 /* ==========================================
-   체크박스 항목
+   필터 항목
 ========================================== */
 
 .search-filter-item {
     display: flex;
-
     align-items: center;
 
-    gap: 7px;
-
     width: fit-content;
-
     min-height: 18px;
 
-    padding: 0;
+    gap: 8px;
+
     margin: 0;
+    padding: 0;
 
     cursor: pointer;
 
-    color: #555;
+    color: #666;
 
     font-size: 13px;
-
     line-height: 1;
 
     user-select: none;
+}
+
+.search-filter-item span {
+    display: inline-block;
+
+    line-height: 18px;
 }
 
 
@@ -130,47 +126,38 @@
     appearance: none;
     -webkit-appearance: none;
 
-    width: 13px;
-    height: 13px;
+    position: relative;
+
+    width: 14px;
+    height: 14px;
 
     flex-shrink: 0;
 
-    padding: 0;
     margin: 0;
+    padding: 0;
 
     box-sizing: border-box;
 
-    border: 1px solid #999;
-
-    border-radius: 2px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
 
     background: #fff;
 
     cursor: pointer;
-
-    position: relative;
 }
-
-
-/* hover */
 
 .search-filter-item:hover input {
     border-color: #555;
 }
 
-
-/* checked */
-
 .search-filter-item input:checked {
-    background: #222;
-
     border-color: #222;
+
+    background: #222;
 }
 
 
-/* ==========================================
-   체크 표시
-========================================== */
+/* 체크 표시 */
 
 .search-filter-item input:checked::after {
     content: "";
@@ -191,9 +178,7 @@
 }
 
 
-/* ==========================================
-   체크된 텍스트
-========================================== */
+/* 체크된 글자 */
 
 .search-filter-item:has(input:checked) {
     color: #222;
@@ -202,15 +187,8 @@
 }
 
 
-.search-filter-item span {
-    display: inline-block;
-
-    line-height: 1;
-}
-
-
 /* ==========================================
-   검색 결과 영역
+   오른쪽 검색 결과
 ========================================== */
 
 .search-result {
@@ -226,7 +204,6 @@
 
 .search-page-keyword {
     display: flex;
-
     align-items: center;
 
     gap: 8px;
@@ -237,7 +214,6 @@
 
     font-size: 14px;
 }
-
 
 .search-page-keyword strong {
     color: #222;
@@ -251,13 +227,12 @@
 ========================================== */
 
 .search-result-summary {
-    padding: 0 0 14px;
+    padding-bottom: 16px;
 
     color: #777;
 
     font-size: 14px;
 }
-
 
 .search-result-summary strong {
     color: #222;
@@ -267,7 +242,7 @@
 
 
 /* ==========================================
-   검색 결과 컨테이너
+   결과 전체
 ========================================== */
 
 .search-result-list-container {
@@ -276,24 +251,28 @@
 
 
 /* ==========================================
-   결과 섹션
+   검색 결과 섹션
 ========================================== */
 
 .search-section {
-    margin-bottom: 28px;
+    width: 100%;
+
+    margin-bottom: 30px;
 }
 
 
+/* ==========================================
+   섹션 헤더
+========================================== */
+
 .search-section-header {
     display: flex;
-
     align-items: center;
 
     gap: 8px;
 
     margin-bottom: 10px;
 }
-
 
 .search-section-header h2 {
     margin: 0;
@@ -304,10 +283,8 @@
     font-weight: 700;
 }
 
-
 .search-section-header span {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -330,38 +307,37 @@
 
 
 /* ==========================================
-   검색 결과 목록
+   결과 목록
 ========================================== */
 
 .search-result-list {
     width: 100%;
 
-    border: 1px solid #e5e5e5;
-
-    border-radius: 10px;
-
     overflow: hidden;
 
-    background: #fff;
-
     box-sizing: border-box;
+
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+
+    background: #fff;
 }
 
 
 /* ==========================================
-   검색 결과 항목
+   결과 항목
 ========================================== */
 
 .search-result-item {
     display: flex;
-
     align-items: center;
 
+    width: 100%;
     min-height: 70px;
 
-    padding: 12px 18px;
-
     box-sizing: border-box;
+
+    padding: 14px 18px;
 
     border-bottom: 1px solid #eee;
 
@@ -370,17 +346,11 @@
     transition:
         background-color 0.15s ease,
         box-shadow 0.15s ease;
-
-    cursor: default;
 }
-
 
 .search-result-item:last-child {
     border-bottom: none;
 }
-
-
-/* 기본 hover */
 
 .search-result-item:hover {
     background: #fafafa;
@@ -388,38 +358,20 @@
 
 
 /* ==========================================
-   프로젝트 검색 결과
+   클릭 가능한 결과
 ========================================== */
 
-.search-project-result-item {
-    cursor: pointer;
-}
-
-
-.search-project-result-item:hover {
-    background: #f7f7f7;
-}
-
-
-.search-project-result-item:active {
-    background: #f0f0f0;
-}
-
-
-/* ==========================================
-   업무 검색 결과
-========================================== */
-
+.search-project-result-item,
 .search-task-result-item {
     cursor: pointer;
 }
 
-
+.search-project-result-item:hover,
 .search-task-result-item:hover {
     background: #f7f7f7;
 }
 
-
+.search-project-result-item:active,
 .search-task-result-item:active {
     background: #f0f0f0;
 }
@@ -434,7 +386,6 @@
 .search-task-icon,
 .search-file-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -456,8 +407,35 @@
 }
 
 
+/* 사용자 */
+
+.search-user-avatar {
+    background: #f1f1f1;
+}
+
+
+/* 프로젝트 */
+
+.search-project-icon {
+    border-radius: 10px;
+
+    background: #f3f3f3;
+}
+
+
+/* 업무 */
+
+.search-task-icon {
+    border-radius: 10px;
+
+    background: #f3f3f3;
+}
+
+
+/* 파일 */
+
 .search-file-icon {
-    border-radius: 8px;
+    border-radius: 9px;
 
     font-size: 18px;
 }
@@ -468,49 +446,102 @@
 ========================================== */
 
 .search-item-main {
-    min-width: 0;
-
     flex: 1;
+
+    min-width: 0;
 }
 
 
-.search-item-title {
-    margin-bottom: 5px;
+/* ==========================================
+   프로젝트명
+   업무 / 파일에서 사용
+========================================== */
+
+.search-item-project {
+    margin-bottom: 4px;
 
     overflow: hidden;
 
-    white-space: nowrap;
+    color: #777;
 
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+
+/* ==========================================
+   결과 제목
+========================================== */
+
+.search-item-title {
+    margin: 0 0 5px;
+
+    overflow: hidden;
 
     color: #222;
 
     font-size: 15px;
     font-weight: 600;
+
+    line-height: 1.4;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
+
+/* ==========================================
+   결과 부가정보
+========================================== */
 
 .search-item-sub {
     overflow: hidden;
 
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-
     color: #888;
 
     font-size: 13px;
+
+    line-height: 1.4;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 
-.search-item-number {
-    flex-shrink: 0;
+/* ==========================================
+   업무 결과
+========================================== */
 
-    margin-left: 15px;
+.search-task-result-item {
+    align-items: flex-start;
 
-    color: #aaa;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
 
-    font-size: 12px;
+.search-task-result-item .search-task-icon {
+    margin-top: 2px;
+}
+
+
+/* ==========================================
+   파일 결과
+========================================== */
+
+.search-file-result-item {
+    align-items: flex-start;
+
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.search-file-result-item .search-file-icon {
+    margin-top: 2px;
 }
 
 
@@ -520,17 +551,16 @@
 
 .search-no-result {
     display: flex;
-
     align-items: center;
 
+    width: 100%;
     height: 60px;
-
-    padding: 0 18px;
 
     box-sizing: border-box;
 
-    border: 1px solid #e5e5e5;
+    padding: 0 18px;
 
+    border: 1px solid #e5e5e5;
     border-radius: 10px;
 
     background: #fff;
@@ -542,12 +572,11 @@
 
 
 /* ==========================================
-   검색 대상 미선택
+   필터 미선택
 ========================================== */
 
 .search-filter-empty {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -558,7 +587,6 @@
     text-align: center;
 }
 
-
 .search-filter-empty-icon {
     margin-bottom: 16px;
 
@@ -567,17 +595,14 @@
     font-size: 36px;
 }
 
-
 .search-filter-empty h2 {
     margin: 0 0 8px;
 
     color: #333;
 
     font-size: 18px;
-
     font-weight: 600;
 }
-
 
 .search-filter-empty p {
     margin: 0;
@@ -594,7 +619,6 @@
 
 .search-status {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -616,7 +640,6 @@
     padding: 18px;
 
     border: 1px solid #f0d0d0;
-
     border-radius: 10px;
 
     background: #fff7f7;
@@ -635,7 +658,6 @@
 
 .search-empty-page {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -646,13 +668,11 @@
     text-align: center;
 }
 
-
 .search-empty-icon {
     margin-bottom: 18px;
 
     font-size: 42px;
 }
-
 
 .search-empty-page h2 {
     margin: 0 0 8px;
@@ -660,10 +680,8 @@
     color: #222;
 
     font-size: 20px;
-
     font-weight: 600;
 }
-
 
 .search-empty-page p {
     margin: 0;
@@ -719,9 +737,5 @@
         padding: 12px;
     }
 
-
-    .search-item-number {
-        display: none;
-    }
-
 }
+
