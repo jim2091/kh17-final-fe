@@ -101,6 +101,19 @@ export default function MessageArea(
         }
     }, [onLoadMore]);
 
+    // 메세지 메뉴 닫힐 수 있게
+    useEffect(() => {
+        const closeMenu = () => {
+            setMenuMessageNo(null);
+        };
+
+        document.addEventListener("click", closeMenu);
+        
+        return () => {
+            document.removeEventListener("click", closeMenu);
+        };
+    }, []);
+
 
     //● view
     return (
@@ -174,7 +187,7 @@ export default function MessageArea(
                                         </div>
 
                                         {message.unreadCount > 0 && (
-                                            <span className="unread-count">
+                                            <span className="message-unread-count">
                                                 {message.unreadCount}
                                             </span>
                                         )}
@@ -199,7 +212,10 @@ export default function MessageArea(
                                         <div className="message-menu-wrapper">
                                             <button 
                                                 className="message-menu-button"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    //실제 메뉴 클릭했을 때 document까지 퍼지지 않게
+                                                    e.stopPropagation();
+
                                                     setMenuMessageNo(
                                                         menuMessageNo === message.no
                                                         ? null 
@@ -211,17 +227,23 @@ export default function MessageArea(
                                             </button>
                                             {/* 메뉴 */}
                                             {menuMessageNo === message.no && (
-                                                <div className="message-menu">
+                                                <div className="message-menu" onClick={(e) => e.stopPropagation()}>
                                                     <button
                                                         type="button"
-                                                        onClick={() => onEdit(message)}
+                                                        onClick={() => {
+                                                            onEdit(message);
+                                                            setMenuMessageNo(null);
+                                                        }}
                                                     >
                                                         <FaPenToSquare />
                                                         <span>수정</span>
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        onClick={() => onDelete(message)}
+                                                        onClick={() => {
+                                                            setMenuMessageNo(null);
+                                                            onDelete(message);
+                                                        }}
                                                     >
                                                         <FaTrashAlt />
                                                         <span>삭제</span>

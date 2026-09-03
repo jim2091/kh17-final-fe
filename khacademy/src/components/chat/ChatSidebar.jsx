@@ -11,11 +11,14 @@ export default function ChatSidebar(
 ) {
 
     return(<>
-        <aside className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
             <div className="sidebar-header">
-                <h2>채널</h2>
+                <div className="sidebar-title">
+                    채널
+                </div>
 
                 <button
+                    type="button"
                     className="sidebar-close"
                     onClick={() => setSidebarOpen(false)}
                 >
@@ -23,25 +26,39 @@ export default function ChatSidebar(
                 </button>
             </div>
 
-            {channels?.map(channel => (
-                <div 
-                    key={channel.chatChannelNo}
-                    onClick={() => {
-                        setSelectedChannel(channel);
-                        setSidebarOpen(false);
-                    }}
-                >
-                    <span>
-                        {channel.chatChannelName}
-                    </span>
+            <div className="channel-list">
+                {channels?.map(channel => {
+                    const active = 
+                        selectedChannel?.chatChannelNo === channel.chatChannelNo;
+                    
+                        return (
+                            <button
+                                type="button"
+                                key={channel.chatChannelNo}
+                                className={
+                                    active ? "channel-item active" : "channel-item"
+                                }
+                                onClick={() => {
+                                    setSelectedChannel(channel)
+                                    setSidebarOpen(false)
+                                }}
+                                >
+                                    <div className="channel-item-left">
+                                        <span className="channel-prefix">#</span>
+                                        <span className="channel-name">
+                                            {channel.chatChannelName}
+                                        </span>
+                                    </div>
 
-                    {unreadCounts?.[channel.chatChannelNo] > 0 && (
-                        <span className="unread-count">
-                            {unreadCounts[channel.chatChannelNo]}
-                        </span>
-                    )}
-                </div>
-            ))}
-        </aside>
+                                    {unreadCounts?.[channel.chatChannelNo] > 0 && (
+                                        <span className="channel-unread-badge">
+                                            {unreadCounts[channel.chatChannelNo]}
+                                        </span>
+                                    )}
+                                </button>
+                        );
+                })}
+            </div>
+        </div>
     </>)
 }
