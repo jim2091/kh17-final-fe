@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
     useSearchParams,
@@ -48,6 +49,25 @@ const FILTER_KEYS = FILTER_OPTIONS.map(
 
 /*
  * ==========================================
+ * 빈 결과 객체
+ * ==========================================
+ */
+
+const EMPTY_RESULT = {
+    keyword: "",
+    filter: "all",
+
+    users: [],
+    projects: [],
+    tasks: [],
+    records: [],
+    notes: [],
+    files: [],
+};
+
+
+/*
+ * ==========================================
  * Search
  * ==========================================
  */
@@ -86,12 +106,11 @@ export default function Search() {
 
 
         /*
-         * filter가 없으면 전체
+         * filter 없음
+         * → 전체
          */
         if (!filterParam) {
-
             return ["all"];
-
         }
 
 
@@ -99,20 +118,31 @@ export default function Search() {
          * 전체
          */
         if (filterParam === "all") {
-
             return ["all"];
-
         }
 
 
         /*
          * 개별 필터
          */
-        return filterParam
-            .split(",")
-            .filter((filter) =>
-                FILTER_KEYS.includes(filter)
-            );
+        const parsedFilters =
+            filterParam
+                .split(",")
+                .filter((filter) =>
+                    FILTER_KEYS.includes(filter)
+                );
+
+
+        /*
+         * 잘못된 필터
+         * → 전체
+         */
+        if (parsedFilters.length === 0) {
+            return ["all"];
+        }
+
+
+        return parsedFilters;
 
     };
 
@@ -121,63 +151,10 @@ export default function Search() {
      * ==========================================
      * 선택된 필터
      * ==========================================
-     *
-     * 최초에는 전체 검색
      */
 
     const [filters, setFilters] =
-        useState(() => {
-
-            const filterParam =
-                searchParams.get("filter");
-
-
-            /*
-             * filter 없음
-             * → 전체
-             */
-            if (!filterParam) {
-
-                return ["all"];
-
-            }
-
-
-            /*
-             * 전체
-             */
-            if (filterParam === "all") {
-
-                return ["all"];
-
-            }
-
-
-            /*
-             * 개별 필터
-             */
-            const parsedFilters =
-                filterParam
-                    .split(",")
-                    .filter((filter) =>
-                        FILTER_KEYS.includes(filter)
-                    );
-
-
-            /*
-             * 이상한 filter
-             * → 전체
-             */
-            if (parsedFilters.length === 0) {
-
-                return ["all"];
-
-            }
-
-
-            return parsedFilters;
-
-        });
+        useState(() => getFiltersFromUrl());
 
 
     /*
@@ -186,25 +163,8 @@ export default function Search() {
      * ==========================================
      */
 
-    const [result, setResult] = useState({
-
-        keyword: "",
-
-        filter: "all",
-
-        users: [],
-
-        projects: [],
-
-        tasks: [],
-
-        records: [],
-
-        notes: [],
-
-        files: [],
-
-    });
+    const [result, setResult] =
+        useState(EMPTY_RESULT);
 
 
     /*
@@ -235,64 +195,11 @@ export default function Search() {
 
     useEffect(() => {
 
-        const filterParam =
-            searchParams.get("filter");
+        setFilters(
+            getFiltersFromUrl()
+        );
 
-
-        /*
-         * URL에 filter가 없으면
-         * 전체 검색
-         */
-        if (!filterParam) {
-
-            setFilters(["all"]);
-
-            return;
-
-        }
-
-
-        /*
-         * 전체
-         */
-        if (filterParam === "all") {
-
-            setFilters(["all"]);
-
-            return;
-
-        }
-
-
-        /*
-         * 개별 필터
-         */
-        const parsedFilters =
-            filterParam
-                .split(",")
-                .filter((filter) =>
-                    FILTER_KEYS.includes(filter)
-                );
-
-
-        /*
-         * 유효한 필터가 없으면
-         * 전체 검색
-         */
-        if (parsedFilters.length === 0) {
-
-            setFilters(["all"]);
-
-            return;
-
-        }
-
-
-        setFilters(parsedFilters);
-
-    }, [
-        searchParams
-    ]);
+    }, [searchParams]);
 
 
     /*
@@ -351,9 +258,7 @@ export default function Search() {
 
             /*
              * 전체를 체크하면
-             *
-             * 다른 필터는 전부 해제
-             * 전체만 체크
+             * 전체만 선택
              */
             else {
 
@@ -373,10 +278,8 @@ export default function Search() {
         else {
 
             /*
-             * 전체가 체크되어 있다면
-             *
-             * 전체 해제
-             * 클릭한 항목만 체크
+             * 전체가 선택되어 있으면
+             * 전체 해제 후 현재 항목 선택
              */
             if (isAllSelected) {
 
@@ -386,10 +289,9 @@ export default function Search() {
 
             }
 
-
             /*
-             * 이미 체크되어 있으면
-             * 해당 항목만 해제
+             * 이미 선택되어 있으면
+             * 해당 항목 제거
              */
             else if (
                 filters.includes(filterKey)
@@ -403,10 +305,9 @@ export default function Search() {
 
             }
 
-
             /*
-             * 체크되어 있지 않으면
-             * 기존 선택에 추가
+             * 선택되어 있지 않으면
+             * 추가
              */
             else {
 
@@ -427,9 +328,9 @@ export default function Search() {
 
 
         /*
-         * ======================================
+         * ==========================================
          * URL 변경
-         * ======================================
+         * ==========================================
          */
 
         const params =
@@ -481,8 +382,8 @@ export default function Search() {
 
 
         /*
-         * 아무것도 선택하지 않았다면
-         * filter 제거
+         * 아무것도 선택하지 않으면
+         * filter를 URL에서 제거
          */
         setSearchParams(params);
 
@@ -500,31 +401,16 @@ export default function Search() {
         const fetchSearch = async () => {
 
             /*
-             * 검색어가 없는 경우
+             * 검색어 없음
              */
             if (!keyword.trim()) {
 
                 setResult({
-
-                    keyword: "",
-
-                    filter: "all",
-
-                    users: [],
-
-                    projects: [],
-
-                    tasks: [],
-
-                    records: [],
-
-                    notes: [],
-
-                    files: [],
-
+                    ...EMPTY_RESULT,
                 });
 
                 setLoading(false);
+                setError("");
 
                 return;
 
@@ -532,31 +418,22 @@ export default function Search() {
 
 
             /*
-             * 아무 필터도 없는 경우
+             * 필터 없음
              */
             if (filters.length === 0) {
 
                 setResult({
 
+                    ...EMPTY_RESULT,
+
                     keyword,
 
                     filter: "",
 
-                    users: [],
-
-                    projects: [],
-
-                    tasks: [],
-
-                    records: [],
-
-                    notes: [],
-
-                    files: [],
-
                 });
 
                 setLoading(false);
+                setError("");
 
                 return;
 
@@ -566,7 +443,6 @@ export default function Search() {
             try {
 
                 setLoading(true);
-
                 setError("");
 
 
@@ -580,25 +456,26 @@ export default function Search() {
 
 
                 /*
-                 * API 호출
+                 * 검색 API
                  */
                 const response =
                     await apiClient.get(
                         "/search",
                         {
                             params: {
-
                                 keyword:
                                     keyword,
 
                                 filter:
                                     filterParam,
-
                             },
                         }
                     );
 
 
+                /*
+                 * 검색 결과 저장
+                 */
                 setResult(
                     response.data
                 );
@@ -659,6 +536,17 @@ export default function Search() {
         projectNo
     ) => {
 
+        if (!projectNo) {
+
+            console.warn(
+                "프로젝트 번호가 없습니다."
+            );
+
+            return;
+
+        }
+
+
         navigate(
             `/projects/${projectNo}`
         );
@@ -670,12 +558,6 @@ export default function Search() {
      * ==========================================
      * 업무 이동
      * ==========================================
-     *
-     * 업무는 프로젝트 내부에 있으므로
-     *
-     * /projects/{projectNo}/task
-     *
-     * 로 이동
      */
 
     const handleTaskClick = (
@@ -732,11 +614,10 @@ export default function Search() {
 
 
                 {/* =================================
-                    왼쪽 필터
+                    왼쪽 검색 필터
                 ================================= */}
 
                 <aside className="search-filter">
-
 
                     <div className="search-filter-title">
                         검색대상
@@ -756,9 +637,11 @@ export default function Search() {
 
                             <input
                                 type="checkbox"
+
                                 checked={
                                     isAllSelected
                                 }
+
                                 onChange={() =>
                                     handleFilterChange(
                                         "all"
@@ -784,16 +667,19 @@ export default function Search() {
                                     key={
                                         option.key
                                     }
+
                                     className="search-filter-item"
                                 >
 
                                     <input
                                         type="checkbox"
+
                                         checked={
                                             isSelected(
                                                 option.key
                                             )
                                         }
+
                                         onChange={() =>
                                             handleFilterChange(
                                                 option.key
@@ -974,6 +860,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="사용자"
+
                                         count={
                                             result.users?.length || 0
                                         }
@@ -984,34 +871,42 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
+
                                                     key={
                                                         user.empNo
                                                     }
                                                 >
 
                                                     <div className="search-user-avatar">
+
                                                         {
                                                             user.empName?.charAt(
                                                                 0
                                                             ) || "?"
                                                         }
+
                                                     </div>
 
 
                                                     <div className="search-item-main">
 
                                                         <div className="search-item-title">
+
                                                             {
                                                                 user.empName ||
                                                                 "이름 없음"
                                                             }
+
                                                         </div>
 
+
                                                         <div className="search-item-sub">
+
                                                             {
                                                                 user.empEmail ||
                                                                 ""
                                                             }
+
                                                         </div>
 
                                                     </div>
@@ -1037,6 +932,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="프로젝트"
+
                                         count={
                                             result.projects?.length || 0
                                         }
@@ -1047,16 +943,21 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item search-project-result-item"
+
                                                     key={
                                                         project.projectNo
                                                     }
+
                                                     onClick={() =>
                                                         handleProjectClick(
                                                             project.projectNo
                                                         )
                                                     }
+
                                                     role="button"
+
                                                     tabIndex={0}
+
                                                     onKeyDown={(e) => {
 
                                                         if (
@@ -1080,26 +981,24 @@ export default function Search() {
                                                     <div className="search-item-main">
 
                                                         <div className="search-item-title">
+
                                                             {
-                                                                project.projectName
+                                                                project.projectName ||
+                                                                "프로젝트 이름 없음"
                                                             }
+
                                                         </div>
 
+
                                                         <div className="search-item-sub">
+
                                                             {
                                                                 project.projectPurpose ||
                                                                 ""
                                                             }
+
                                                         </div>
 
-                                                    </div>
-
-
-                                                    <div className="search-item-number">
-                                                        #
-                                                        {
-                                                            project.projectNo
-                                                        }
                                                     </div>
 
                                                 </div>
@@ -1123,6 +1022,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="업무"
+
                                         count={
                                             result.tasks?.length || 0
                                         }
@@ -1133,16 +1033,21 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item search-task-result-item"
+
                                                     key={
                                                         task.taskNo
                                                     }
+
                                                     onClick={() =>
                                                         handleTaskClick(
                                                             task.projectNo
                                                         )
                                                     }
+
                                                     role="button"
+
                                                     tabIndex={0}
+
                                                     onKeyDown={(e) => {
 
                                                         if (
@@ -1165,27 +1070,41 @@ export default function Search() {
 
                                                     <div className="search-item-main">
 
-                                                        <div className="search-item-title">
+                                                        {/* 프로젝트명 */}
+
+                                                        <div className="search-item-project">
+
                                                             {
-                                                                task.taskTitle
+                                                                task.projectName ||
+                                                                "프로젝트 없음"
                                                             }
+
                                                         </div>
 
+
+                                                        {/* 업무 제목 */}
+
+                                                        <div className="search-item-title">
+
+                                                            {
+                                                                task.taskTitle ||
+                                                                "업무 이름 없음"
+                                                            }
+
+                                                        </div>
+
+
+                                                        {/* 업무 내용 */}
+
                                                         <div className="search-item-sub">
+
                                                             {
                                                                 task.taskContent ||
                                                                 ""
                                                             }
+
                                                         </div>
 
-                                                    </div>
-
-
-                                                    <div className="search-item-number">
-                                                        #
-                                                        {
-                                                            task.taskNo
-                                                        }
                                                     </div>
 
                                                 </div>
@@ -1209,6 +1128,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="기록"
+
                                         count={
                                             result.records?.length || 0
                                         }
@@ -1222,6 +1142,7 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
+
                                                     key={
                                                         record.id ||
                                                         index
@@ -1231,10 +1152,12 @@ export default function Search() {
                                                     <div className="search-item-main">
 
                                                         <div className="search-item-title">
+
                                                             {
                                                                 record.title ||
                                                                 "기록"
                                                             }
+
                                                         </div>
 
                                                     </div>
@@ -1260,6 +1183,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="노트"
+
                                         count={
                                             result.notes?.length || 0
                                         }
@@ -1273,6 +1197,7 @@ export default function Search() {
 
                                                 <div
                                                     className="search-result-item"
+
                                                     key={
                                                         note.id ||
                                                         index
@@ -1282,10 +1207,12 @@ export default function Search() {
                                                     <div className="search-item-main">
 
                                                         <div className="search-item-title">
+
                                                             {
                                                                 note.title ||
                                                                 "노트"
                                                             }
+
                                                         </div>
 
                                                     </div>
@@ -1311,6 +1238,7 @@ export default function Search() {
 
                                     <SearchSection
                                         title="파일"
+
                                         count={
                                             result.files?.length || 0
                                         }
@@ -1320,7 +1248,8 @@ export default function Search() {
                                             (file) => (
 
                                                 <div
-                                                    className="search-result-item"
+                                                    className="search-result-item search-file-result-item"
+
                                                     key={
                                                         file.attachNo
                                                     }
@@ -1333,23 +1262,47 @@ export default function Search() {
 
                                                     <div className="search-item-main">
 
-                                                        <div className="search-item-title">
+
+                                                        {/* 프로젝트명 */}
+
+                                                        <div className="search-item-project">
+
                                                             {
-                                                                file.attachName
+                                                                file.projectName ||
+                                                                "프로젝트 없음"
                                                             }
+
                                                         </div>
 
+
+                                                        {/* 파일명 */}
+
+                                                        <div className="search-item-title">
+
+                                                            {
+                                                                file.attachName ||
+                                                                "파일 이름 없음"
+                                                            }
+
+                                                        </div>
+
+
+                                                        {/* 업로더 / 파일 타입 */}
 
                                                         <div className="search-item-sub">
 
                                                             {file.empName && (
+
                                                                 <>
+
                                                                     {
                                                                         file.empName
                                                                     }
 
                                                                     {" · "}
+
                                                                 </>
+
                                                             )}
 
                                                             {
@@ -1359,14 +1312,6 @@ export default function Search() {
 
                                                         </div>
 
-                                                    </div>
-
-
-                                                    <div className="search-item-number">
-                                                        #
-                                                        {
-                                                            file.attachNo
-                                                        }
                                                     </div>
 
                                                 </div>
@@ -1389,6 +1334,7 @@ export default function Search() {
         </div>
 
     );
+
 }
 
 
@@ -1409,6 +1355,8 @@ function SearchSection({
         <section className="search-section">
 
 
+            {/* 섹션 제목 */}
+
             <div className="search-section-header">
 
                 <h2>
@@ -1421,6 +1369,8 @@ function SearchSection({
 
             </div>
 
+
+            {/* 결과 */}
 
             {count === 0 ? (
 
@@ -1443,3 +1393,4 @@ function SearchSection({
     );
 
 }
+
