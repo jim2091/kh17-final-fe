@@ -1,4 +1,4 @@
-import { Button, Col, Form, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { loginUserState } from "@utils/storage";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { apiClient } from "@utils/reaxios";
@@ -14,8 +14,12 @@ export default function Mypage() {
     }, []);
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/member/me");
+        
         setEmp(data);
     }, [empNo]);
+    console.log("내정보 : ", emp);
+
+    const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`;
 
     const unionAddress = useMemo(() => {
         if (emp === null) return "";
@@ -31,6 +35,11 @@ export default function Mypage() {
 
 
     return (<>
+    <Row>
+            <Card>
+                <Card.Img src={emp.attachNo === null ? NoImage : profileUrl}></Card.Img>
+            </Card>
+        </Row>
         <Row>
             <Col>
                 {emp.empName} 님의 정보
