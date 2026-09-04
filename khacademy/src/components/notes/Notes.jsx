@@ -9,8 +9,8 @@ import dayjs from "dayjs";
 
 export default function Notes() {
 
-    const {projectNo} =useParams();
-    const {project, loadProject} = useOutletContext();
+    const { projectNo } = useParams();
+    const { project, loadProject } = useOutletContext();
 
     const [noteList, setNoteList] = useState([]);
     const [last, setLast] = useState(false);
@@ -28,55 +28,64 @@ export default function Notes() {
     });
 
     //초기 목록 로딩
-    useEffect(()=>{
+    useEffect(() => {
         loadNoteList(true);
     }, []);
 
-    const loadNoteList = useCallback(async(
+    const truncateContent = useCallback((content) => {
+        if (!content) return "";
+        // 20자 이상인 경우 10자까지만 자르고 뒤에 ... 붙이기
+        if (content.length >= 20) {
+            return content.slice(0, 10) + "...";
+        }
+        return content;
+    }, []);
+
+    const loadNoteList = useCallback(async (
         //gpt가 알려준 더보기와 새 검색 한꺼번에 처리하는 형태
         reset = false,
         searchCondition = search
     ) => {
-        try{
-            if(loading === true) return;
+        try {
+            if (loading === true) return;
             setLoading(true);
 
-            const lastNoteNo = 
+            const lastNoteNo =
                 reset === true || noteList.length === 0
                     ? null : noteList[noteList.length - 1].noteNo;
 
-            const {data} = await apiClient.post(
+            const { data } = await apiClient.post(
                 `/note/project/${projectNo}/list`,
                 {
-                    lastNo : lastNoteNo,
-                    size : size,
+                    lastNo: lastNoteNo,
+                    size: size,
                     type: searchCondition.type,
                     keyword: searchCondition.keyword
                 }
             );
 
             //새 검색이면 기존 목록 '교체'
-            if(reset === true){
+            if (reset === true) {
                 setNoteList(data.noteList);
             }
             //더보기면 기존 목록 뒤에 '추가'
             else {
-                setNoteList(prev=>([...prev, ...data.noteList]));
+                setNoteList(prev => ([...prev, ...data.noteList]));
             }
             setLast(data.last);
         }
-        catch(e){
+        catch (e) {
             console.error(e);
             toast.error("목록을 불러오지 못했습니다");
         }
-        finally{
+        finally {
             setLoading(false);
         }
     }, [size, search, noteList]);
 
     //검색버튼 누르면 searchInput의 사용자가 입력한 조건을 search로 넘기고
     //검색 정보와 함께 로드
-    const searchNote = useCallback(()=>{
+    const searchNote = useCallback(() => {
         const condition = {
             type: searchInput.type,
             keyword: searchInput.keyword.trim()
@@ -88,8 +97,8 @@ export default function Notes() {
         loadNoteList(true, condition);
     }, [searchInput, loadNoteList]);
 
-    const formatNoteDate = useCallback((value)=>{
-        if(!value) return "";
+    const formatNoteDate = useCallback((value) => {
+        if (!value) return "";
 
         return dayjs(value).format("YYYY.MM.DD HH:mm");
     }, []);
@@ -124,8 +133,8 @@ export default function Notes() {
                     className="notes-search-type"
                     value={searchInput.type}
                     //이거 따로 만들어봐야 여기밖에 못쓰니 바로 씀
-                    onChange={(e)=>{
-                        setSearchInput(prev=>({
+                    onChange={(e) => {
+                        setSearchInput(prev => ({
                             ...prev,
                             type: e.target.value
                         }));
@@ -140,8 +149,8 @@ export default function Notes() {
                     type="text"
                     className="notes-search-input"
                     value={searchInput.keyword}
-                    onChange={(e)=>{
-                        setSearchInput(prev=>({
+                    onChange={(e) => {
+                        setSearchInput(prev => ({
                             ...prev,
                             keyword: e.target.value
                         }));
@@ -174,13 +183,13 @@ export default function Notes() {
 
                 <div className="notes-list">
 
-                    {noteList.map(note=>(
+                    {noteList.map(note => (
                         <div className="notes-item" key={note.noteNo}>
                             <div className="notes-item-top">
                                 <div className="notes-item-title">
                                     {note.noteTitle}
                                 </div>
-                                
+
                                 <div className="notes-item-date">
                                     {note.noteUtime && "수정 "}
                                     {formatNoteDate(
@@ -190,7 +199,7 @@ export default function Notes() {
                             </div>
 
                             <div className="notes-item-preview">
-                                {note.noteContent}이걸 어캐 조금만 보여줄까
+                                {truncateContent(note.noteContent)}
                             </div>
                         </div>
                     ))}
@@ -206,8 +215,8 @@ export default function Notes() {
                             //onClick={loadNoteList}
                             //때문에 파라미터 넣는 콜백 쓸때는 원치않는게 그자리에 들어가는 문제가
                             //생기지 않기 위해 아래처럼 쓰는게 안전함
-                            onClick={()=>loadNoteList()}
-                            disabled={loading}    
+                            onClick={() => loadNoteList()}
+                            disabled={loading}
                         >
                             더 보기
                         </Button>

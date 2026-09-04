@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
-import { 
-  Paperclip, 
-  Download, 
-  FileText 
+import {
+  Paperclip,
+  Download,
+  FileText
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
@@ -13,7 +13,6 @@ import "./Task.css";
 import TaskComments from "./TaskComments";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 
-// 칸반 컬럼 기준 정의
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
   { id: "IN_PROGRESS", title: "In Progress", colorClass: "col-progress" },
@@ -26,7 +25,6 @@ export default function Task() {
 
   const isLogin = useAtomValue(isLoginState);
 
-  // 로컬 스토리지에 저장된 로그인 유저 정보 추출
   const getDynamicLoginUser = () => {
     try {
       const keys = ["로그인 유저의 정보", "user", "loginUser"];
@@ -37,32 +35,27 @@ export default function Task() {
           if (parsed && (parsed.empNo || parsed.memberNo)) return parsed;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
     return null;
   };
 
   const loginUser = getDynamicLoginUser();
   const currentEmpNo = Number(loginUser?.empNo || loginUser?.memberNo || 0);
 
-  // 업무 목록 및 프로젝트 멤버 상태
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // 드래그 앤 드롭 상태
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 드로어 열림 및 상세 데이터 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
 
-  // 업무 첨부파일 상태
   const [taskFiles, setTaskFiles] = useState([]);
 
-  // 업무 수정 폼 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -71,21 +64,56 @@ export default function Task() {
     taskStatus: "TODO",
     taskPriority: "보통",
     taskCategory: "",
-    taskProgress: 0,
     taskStart: "",
     taskEnd: ""
   });
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  // 이미지 파일 식별
+  // 시작일과 마감일을 대조하여 D-Day 뱃지 정보 반환
+  const getTaskDeadlineBadge = (task) => {
+    if (!task.taskEnd) return null;
+
+    if (task.taskStatus === "DONE") {
+      return { text: "완료", className: "dday-done" };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 시작일이 설정되어 있고 오늘보다 미래인 경우 뱃지 미노출
+    if (task.taskStart) {
+      const startDate = new Date(task.taskStart);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate.getTime() > today.getTime()) {
+        return null;
+      }
+    }
+
+    const endDate = new Date(task.taskEnd);
+    endDate.setHours(0, 0, 0, 0);
+
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      // 숫자 카운트(+N일)를 없애고 단일 뱃지로 노출
+      return { text: "기한 초과", className: "dday-overdue" };
+    } else if (diffDays === 0) {
+      return { text: "오늘 마감", className: "dday-today" };
+    } else if (diffDays <= 3) {
+      return { text: `D-${diffDays}`, className: "dday-urgent" };
+    } else {
+      return { text: `D-${diffDays}`, className: "dday-normal" };
+    }
+  };
+
   const isImageAttach = (file) => {
     if (file.attachType && file.attachType.startsWith("image/")) return true;
     const name = file.attachName || "";
     return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
   };
 
-  // 실제 파일 확장자명을 그대로 추출하여 색상과 함께 렌더링하는 배지 함수
   const renderFileTypeBadge = (file) => {
     const name = file.attachName || "";
     const rawExt = name.includes(".") ? name.split(".").pop().trim() : "FILE";
@@ -130,7 +158,6 @@ export default function Task() {
     );
   };
 
-  // 파일 크기 포맷 변환
   const formatFileSize = (bytes) => {
     if (!bytes || bytes === 0) return "0 B";
     const k = 1024;
@@ -139,7 +166,6 @@ export default function Task() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
-  // 전체 업무 목록 조회
   const fetchTasks = useCallback(async (pNo, showLoading = true) => {
     if (!pNo) return;
     try {
@@ -155,7 +181,6 @@ export default function Task() {
     }
   }, []);
 
-  // 프로젝트 참여 멤버 목록 조회
   const fetchProjectMembers = useCallback(async (pNo) => {
     if (!pNo) return;
     try {
@@ -167,7 +192,6 @@ export default function Task() {
     }
   }, []);
 
-  // 업무 본체 첨부파일 목록 조회
   const fetchTaskFiles = useCallback(async (taskNo) => {
     if (!taskNo) return;
     try {
@@ -187,7 +211,6 @@ export default function Task() {
     }
   }, [projectNo, fetchTasks, fetchProjectMembers]);
 
-  // 상세 드로어 닫기
   const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
     setSelectedTask(null);
@@ -195,7 +218,6 @@ export default function Task() {
     setIsEditing(false);
   }, []);
 
-  // 실시간 웹소켓 이벤트 수신 및 동기화
   useEffect(() => {
     if (!projectNo) return;
 
@@ -294,7 +316,6 @@ export default function Task() {
     };
   }, [projectNo, currentEmpNo, fetchTasks, handleCloseDrawer]);
 
-  // 담당자 명칭 반환 처리
   const getAssigneeName = (task) => {
     if (task.assignedMemberName && task.assignedMemberName.trim()) {
       return task.assignedMemberName;
@@ -308,7 +329,6 @@ export default function Task() {
     return "미배정";
   };
 
-  // 주 담당자 제외 협업자 선택 필터
   const currentAssignedNo = editFormData.assignedMemberNo
     ? Number(editFormData.assignedMemberNo)
     : null;
@@ -318,7 +338,6 @@ export default function Task() {
     return !editCollaborators.includes(m.projectMemberNo);
   });
 
-  // 카드 클릭 시 상세 드로어 열기
   const handleCardClick = async (taskNo) => {
     if (isDragging) return;
     setIsEditing(false);
@@ -344,7 +363,6 @@ export default function Task() {
     }
   };
 
-  // 수정 모드 진입
   const handleStartEdit = () => {
     if (!selectedTask) return;
 
@@ -355,7 +373,6 @@ export default function Task() {
       taskStatus: selectedTask.taskStatus || "TODO",
       taskPriority: selectedTask.taskPriority || "보통",
       taskCategory: selectedTask.taskCategory || "",
-      taskProgress: selectedTask.taskProgress || 0,
       taskStart: selectedTask.taskStart ? String(selectedTask.taskStart).slice(0, 10) : "",
       taskEnd: selectedTask.taskEnd ? String(selectedTask.taskEnd).slice(0, 10) : ""
     });
@@ -367,12 +384,10 @@ export default function Task() {
     setIsEditing(true);
   };
 
-  // 수정 취소
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
-  // 폼 입력 변경 핸들러
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => {
@@ -387,7 +402,6 @@ export default function Task() {
     });
   };
 
-  // 협업자 다중 토글 핸들러
   const handleCollabToggle = (memberNo) => {
     setEditCollaborators((prev) =>
       prev.includes(memberNo)
@@ -396,7 +410,6 @@ export default function Task() {
     );
   };
 
-  // 수정 모드에서 업무 첨부파일 삭제
   const handleDeleteTaskFile = async (attachNo) => {
     if (!window.confirm("이 첨부파일을 삭제하시겠습니까?")) return;
     try {
@@ -409,7 +422,6 @@ export default function Task() {
     }
   };
 
-  // 수정 모드에서 새 업무 첨부파일 추가
   const handleUploadNewTaskFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -432,7 +444,6 @@ export default function Task() {
     }
   };
 
-  // 업무 수정 제출
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -458,7 +469,6 @@ export default function Task() {
       taskStatus: editFormData.taskStatus || "TODO",
       taskPriority: editFormData.taskPriority || "보통",
       taskCategory: editFormData.taskCategory ? editFormData.taskCategory.trim() : null,
-      taskProgress: Number(editFormData.taskProgress) || 0,
       taskStart: editFormData.taskStart ? `${editFormData.taskStart} 00:00:00` : null,
       taskEnd: editFormData.taskEnd ? `${editFormData.taskEnd} 23:59:59` : null,
       collaboratorMemberNos: editCollaborators
@@ -483,7 +493,6 @@ export default function Task() {
     }
   };
 
-  // 드래그 시작
   const handleDragStart = (e, taskNo) => {
     setIsDragging(true);
     setDraggedTaskId(taskNo);
@@ -491,7 +500,6 @@ export default function Task() {
     e.dataTransfer.effectAllowed = "move";
   };
 
-  // 드래그 종료
   const handleDragEnd = () => {
     setTimeout(() => {
       setIsDragging(false);
@@ -499,20 +507,17 @@ export default function Task() {
     }, 150);
   };
 
-  // 드래그 오버
   const handleDragOver = (e, columnId) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverCol !== columnId) setDragOverCol(columnId);
   };
 
-  // 드래그 리브
   const handleDragLeave = (e, columnId) => {
     if (e.currentTarget.contains(e.relatedTarget)) return;
     if (dragOverCol === columnId) setDragOverCol(null);
   };
 
-  // 카드 드롭 처리
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
     setDragOverCol(null);
@@ -544,7 +549,7 @@ export default function Task() {
         targetStatus: targetStatus,
         projectNo: Number(projectNo)
       });
-      toast.success(`[${targetStatus}] 상태로 이동되었습니다.`);
+      toast.success(`[${getStatusLabel(targetStatus)}] 상태로 이동되었습니다.`);
     } catch (error) {
       console.error("이동 실패:", error);
       toast.error("이동에 실패하여 복구합니다.");
@@ -552,7 +557,6 @@ export default function Task() {
     }
   };
 
-  // 우선순위 뱃지 클래스 매핑
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case "긴급": return "badge-urgent";
@@ -562,7 +566,6 @@ export default function Task() {
     }
   };
 
-  // 상태 텍스트 레이블 매핑
   const getStatusLabel = (status) => {
     switch (status) {
       case "TODO": return "할 일 (To Do)";
@@ -617,6 +620,7 @@ export default function Task() {
                     const isDraggingThis = draggedTaskId === task.taskNo;
                     const pClass = getPriorityBadge(task.taskPriority);
                     const assigneeName = getAssigneeName(task);
+                    const ddayBadge = getTaskDeadlineBadge(task);
 
                     return (
                       <div
@@ -636,27 +640,22 @@ export default function Task() {
 
                         <div className="card-main-title">{task.taskTitle}</div>
 
-                        <div className="card-progress-box">
-                          <div className="progress-labels">
-                            <span>진행률</span>
-                            <span>{task.taskProgress || 0}%</span>
-                          </div>
-                          <div className="progress-track">
-                            <div
-                              className="progress-bar"
-                              style={{ width: `${task.taskProgress || 0}%` }}
-                            />
-                          </div>
-                        </div>
-
                         <div className="card-bottom-info">
                           <div className="assignee-info">
                             <span className="avatar-circle-sm">{assigneeName.slice(0, 1)}</span>
                             <span>{assigneeName}</span>
                           </div>
-                          <span className="due-date-text">
-                            {task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
-                          </span>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {ddayBadge && (
+                              <span className={`dday-badge ${ddayBadge.className}`}>
+                                {ddayBadge.text}
+                              </span>
+                            )}
+                            <span className="due-date-text">
+                              {task.taskEnd ? String(task.taskEnd).slice(5, 10) : "-"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -695,7 +694,6 @@ export default function Task() {
               </button>
             </div>
 
-            {/* 열람 모드 (조회 모드: 첨부파일 다운로드 전용) */}
             {!isEditing && (
               <>
                 <div className="drawer-body view-mode">
@@ -733,22 +731,19 @@ export default function Task() {
 
                     <div className="meta-card-item">
                       <span className="meta-label">마감일자</span>
-                      <span className="meta-text-val">
-                        {selectedTask.taskEnd ? String(selectedTask.taskEnd).slice(0, 10) : "미정"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="view-section">
-                    <div className="section-header-flex">
-                      <span className="section-title">진행률 (Progress)</span>
-                      <span className="section-highlight-val">{selectedTask.taskProgress || 0}%</span>
-                    </div>
-                    <div className="view-progress-track">
-                      <div
-                        className="view-progress-fill"
-                        style={{ width: `${selectedTask.taskProgress || 0}%` }}
-                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="meta-text-val">
+                          {selectedTask.taskEnd ? String(selectedTask.taskEnd).slice(0, 10) : "미정"}
+                        </span>
+                        {(() => {
+                          const badge = getTaskDeadlineBadge(selectedTask);
+                          return badge ? (
+                            <span className={`dday-badge ${badge.className}`}>
+                              {badge.text}
+                            </span>
+                          ) : null;
+                        })()}
+                      </div>
                     </div>
                   </div>
 
@@ -778,7 +773,6 @@ export default function Task() {
                     </div>
                   </div>
 
-                  {/* 조회 모드 첨부파일 목록 (동적 확장자 배지 적용) */}
                   <div className="view-section">
                     <span className="section-title">
                       <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
@@ -790,7 +784,6 @@ export default function Task() {
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
-                          {/* 이미지 썸네일 그리드 */}
                           {taskFiles.some(isImageAttach) && (
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", marginBottom: "4px" }}>
                               {taskFiles.filter(isImageAttach).map((file) => {
@@ -841,7 +834,6 @@ export default function Task() {
                             </div>
                           )}
 
-                          {/* 일반 문서 목록: 확장자명이 들어간 동적 배지 렌더링 */}
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
                             <div
                               key={file.attachNo}
@@ -903,10 +895,9 @@ export default function Task() {
                     )}
                   </div>
 
-                  {/* 댓글 컴포넌트 */}
-                  <TaskComments 
-                    taskNo={selectedTask.taskNo} 
-                    projectNo={projectNo} 
+                  <TaskComments
+                    taskNo={selectedTask.taskNo}
+                    projectNo={projectNo}
                     loginUser={loginUser}
                   />
                 </div>
@@ -922,7 +913,6 @@ export default function Task() {
               </>
             )}
 
-            {/* 수정 모드 (수정 모드: 파일 추가 및 삭제 허용) */}
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
@@ -1021,26 +1011,8 @@ export default function Task() {
                         className="form-input"
                       />
                     </div>
-
-                    <div className="form-group full-width-sm">
-                      <div className="label-with-val">
-                        <label className="form-label">진척도 (Progress)</label>
-                        <span className="progress-num-badge">{editFormData.taskProgress}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        name="taskProgress"
-                        min="0"
-                        max="100"
-                        step="5"
-                        value={editFormData.taskProgress}
-                        onChange={handleEditChange}
-                        className="form-range"
-                      />
-                    </div>
                   </div>
 
-                  {/* 협업자 선택 영역 */}
                   <div className="form-group full-width">
                     <label className="form-label">
                       함께할 협업자 ({editCollaborators.length}명 선택됨)
@@ -1103,7 +1075,6 @@ export default function Task() {
                     />
                   </div>
 
-                  {/* 수정 모드 전용 파일 관리 영역 (동적 확장자 배지 + 삭제 버튼) */}
                   <div className="form-group full-width" style={{ marginTop: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <label className="form-label" style={{ margin: 0 }}>업무 첨부파일 관리</label>
@@ -1138,7 +1109,6 @@ export default function Task() {
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
-                          {/* 이미지 파일 목록 (썸네일 + 삭제) */}
                           {taskFiles.some(isImageAttach) && (
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
                               {taskFiles.filter(isImageAttach).map((file) => (
@@ -1186,7 +1156,6 @@ export default function Task() {
                             </div>
                           )}
 
-                          {/* 일반 문서 파일 목록 (실제 확장자 배지 + 삭제 버튼) */}
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
                             <div
                               key={file.attachNo}
