@@ -453,18 +453,24 @@ export default function Search() {
      */
 
     const handleProjectClick = (
-        projectNo
+        projectNo,
+        projectRole
     ) => {
 
         if (!projectNo) {
-
             console.warn(
                 "프로젝트 번호가 없습니다."
             );
-
             return;
         }
 
+        // owner 또는 member만 프로젝트 이동 가능
+        if (
+            projectRole !== "owner" &&
+            projectRole !== "member"
+        ) {
+            return;
+        }
 
         navigate(
             `/projects/${projectNo}`
@@ -1313,28 +1319,42 @@ export default function Search() {
                                             (project) => (
 
                                                 <div
-                                                    className="search-result-item search-project-result-item"
-                                                    key={
-                                                        project.projectNo
-                                                    }
+                                                    className={`search-result-item search-project-result-item ${
+                                                        project.projectRole === "owner" ||
+                                                        project.projectRole === "member"
+                                                            ? "project-clickable"
+                                                            : "project-not-member"
+                                                    }`}
+                                                    key={project.projectNo}
 
                                                     onClick={() =>
                                                         handleProjectClick(
-                                                            project.projectNo
+                                                            project.projectNo,
+                                                            project.projectRole
                                                         )
                                                     }
 
                                                     role="button"
-                                                    tabIndex={0}
+                                                    tabIndex={
+                                                        project.projectRole === "owner" ||
+                                                        project.projectRole === "member"
+                                                            ? 0
+                                                            : -1
+                                                    }
 
                                                     onKeyDown={(e) => {
 
                                                         if (
-                                                            e.key === "Enter"
+                                                            e.key === "Enter" &&
+                                                            (
+                                                                project.projectRole === "owner" ||
+                                                                project.projectRole === "member"
+                                                            )
                                                         ) {
 
                                                             handleProjectClick(
-                                                                project.projectNo
+                                                                project.projectNo,
+                                                                project.projectRole
                                                             );
 
                                                         }
