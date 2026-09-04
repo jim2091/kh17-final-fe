@@ -19,7 +19,7 @@ export default function Mypage() {
         setEmp(data);
         
     }, []);
-    console.log("내정보 : ", emp);
+    // console.log("내정보 : ", emp);
 
     const profileUrl = emp.attachNo ? 
         `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}` : null;
