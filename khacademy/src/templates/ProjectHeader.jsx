@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { Badge, Button, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import ProjectMemberModal from "../components/project/ProjectMemberModal";
+import ProjectExpectedResultModal from "../components/project/ProjectExpectedResultModal";
 
 export default function ProjectHeader({project, loadProject}) {
     //프로젝트 번호
@@ -14,6 +15,9 @@ export default function ProjectHeader({project, loadProject}) {
                     
     //페이지 이동
     const navigate = useNavigate();
+
+    //기대결과 모달
+    const [showResult,setShowResult] = useState(false);
 
     //멤버 관리
     const [showMember, setShowMember] = useState(false);
@@ -84,6 +88,11 @@ export default function ProjectHeader({project, loadProject}) {
             {/* 오른쪽 영역 */}
             <div className="project-header-info">
                 <Button size="sm" variant="outline-secondary"
+                        onClick={()=> setShowResult(true)}>
+                        기대결과
+                </Button>
+
+                <Button size="sm" variant="outline-secondary"
                         onClick={()=> setShowMember(true)}>
                         멤버관리
                 </Button>
@@ -93,6 +102,12 @@ export default function ProjectHeader({project, loadProject}) {
                     projectNo={projectNo}
                     project = {project}
                     loadProject = {loadProject}
+                />
+                <ProjectExpectedResultModal 
+                    show={showResult} 
+                    onHide={()=>setShowResult(false)}
+                    projectNo={projectNo} 
+                    project={project}
                 />
                 {/* 상태 */}
                 <Badge
