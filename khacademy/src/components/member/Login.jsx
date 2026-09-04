@@ -41,7 +41,8 @@ export default function Login() {
         }));
     }, []);
     //로그인
-    const sendLogin = useCallback(async () => {
+    const sendLogin = useCallback(async (e) => {
+        e.preventDefault();
         //미입력 시 차단
         if (emp.empEmail === "" && emp.empPassword === "") {
             await Swal.fire("모든 정보를 입력하세요");
@@ -92,7 +93,7 @@ export default function Login() {
                 </Col>
                 <Col>
                 
-               
+               <Form autoComplete="off" onSubmit={sendLogin}>
                     <Row className="mt-4">
                         
                         {/* <Form.Label column sm={3}>이메일</Form.Label> */}
@@ -119,12 +120,16 @@ export default function Login() {
 
                     <Row className="mt-5">
                         <Col className="text-end">
-                            <Button variant="primary" size="lg" onClick={sendLogin}>
+                            <Button variant="primary" size="lg" 
+                            type="submit"
+                            // onClick={sendLogin}
+                            >
                                 <FaRightToBracket />
                                 <span className="ms-2 d-none d-md-inline">로그인</span>
                             </Button>
                         </Col>
                     </Row>
+                    </Form>
                     </Col>
                  </Row>
             </Card.Body>

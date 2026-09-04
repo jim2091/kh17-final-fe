@@ -1,26 +1,28 @@
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
-import { loginUserState } from "@utils/storage";
+// import { loginUserState } from "@utils/storage";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { apiClient } from "@utils/reaxios";
-import { useAtomValue } from "jotai";
+// import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
 import { FaPenToSquare } from "react-icons/fa6";
-import NoImage from "@assets/images/no-image.png";
+import NoImage from "@assets/noimages.png";
 
 export default function Mypage() {
-    const { empNo } = useAtomValue(loginUserState) || {};
-    const [emp, setEmp] = useState(null);
+    // const { attachNo } = useAtomValue(loginUserState) || {};
+    const [emp, setEmp] = useState("");
     useEffect(() => {
         loadData();
     }, []);
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/member/me");
-        
+
         setEmp(data);
-    }, [empNo]);
+        
+    }, []);
     console.log("내정보 : ", emp);
 
-    const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`;
+    const profileUrl = emp.attachNo ? 
+        `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}` : null;
 
     const unionAddress = useMemo(() => {
         if (emp === null) return "";
@@ -36,14 +38,20 @@ export default function Mypage() {
 
 
     return (<>
-    <Row>
-            <Card>
-                <Card.Img src={emp.attachNo === null ? NoImage : profileUrl}></Card.Img>
+    <div className="p-4">
+
+    
+        <Row>
+            <Card className="border-0" style={{ width: '18rem' }}>
+                <Card.Img variant="top" src={profileUrl === null ? NoImage : profileUrl}
+                    className="profile-img"
+                ></Card.Img>
             </Card>
         </Row>
+        
         <Row>
             <Col>
-                {emp.empName} 님의 정보
+                <span className="fs-3">{emp.empName} 님의 정보</span>
             </Col>
         </Row>
         <Row className="mt-4">
@@ -92,7 +100,7 @@ export default function Mypage() {
                 </Button>
             </Col>
         </Row>
-
+</div>
 
     </>)
 }

@@ -79,7 +79,7 @@ export default function Users() {
             <Row className="mt-4">
                 <Col className="d-flex">
                     <Form.Control name="keyword"
-                        placeholder="사원 검색"
+                        placeholder="검색"
                         onChange={changeStringValue}
                         className="w-25"
                     ></Form.Control>

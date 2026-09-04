@@ -9,46 +9,40 @@ import Popover from 'react-bootstrap/Popover';
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 import { loginUserState } from "@utils/storage";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
 import { useWebSocket } from "@websocket/WebSocketProvider";
 import { FaCircle } from "react-icons/fa6";
-// import { socketState } from "@utils/storage";
-// import { heartbeatState } from "@utils/storage";    
+import NoImage from "@assets/noimages.png";
+import "./Project.css";
 
-// import { onlineState } from "@utils/storage";
-// import { FaCircle } from "react-icons/fa6";
 
 
 
 export default function Header({ toggleSidebar }) {
 
-    const { empName, empEmail } = useAtomValue(loginUserState) || {};
+    const { attachNo, empName, empEmail } = useAtomValue(loginUserState) || {};
 
-    // const [socket, setSocket] = useAtom(socketState);
 
-    // const [heartbeatInterval, setHeartbeatInterval] = useAtom(heartbeatState);
-
-    // const [online, setOnline] = useAtom(onlineState);
+    const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/${attachNo}`;
 
     //읽기전용 atom을 불러오는법
-    //const [isLogin] = useAtom(isLoginState);
-    // console.log(isLoginState);
     const isLogin = useAtomValue(isLoginState);
-    // console.log("isLogin : ", isLogin);
     const isAdmin = useAtomValue(isAdminState);
 
     const logoutAction = useSetAtom(logoutActionState);
+
+    
 
     const { users } = useWebSocket();
 
 
     const logout = useCallback(async () => {
 
-        
+
 
         try {
             await authClient.delete("/logout");//쿠키 삭제 요청
@@ -67,22 +61,19 @@ export default function Header({ toggleSidebar }) {
 
     const online = users.some(user => user.empName === empName);
 
-    // console.log(socket?.readyState);
-
-    // console.log("online:", online);
 
     const navigate = useNavigate();
     const [keyword, setKeyword] = useState("");
 
     const handleSearch = (e) => {
 
-    if (e.key !== "Enter") return;
+        if (e.key !== "Enter") return;
 
-    const value = keyword.trim();
+        const value = keyword.trim();
 
-    if (!value) return;
+        if (!value) return;
 
-    navigate(`/search?keyword=${encodeURIComponent(value)}`);
+        navigate(`/search?keyword=${encodeURIComponent(value)}`);
 
     };
 
@@ -137,9 +128,9 @@ export default function Header({ toggleSidebar }) {
                                                 <Row className="align-items-center">
                                                     <Col xs="auto">
                                                         <Link to="/me">
-                                                            <Image src="https://placehold.co/50x50"
-                                                                // roundedCircle 
-                                                                className="rounded-3" />
+                                                            <Image className="header-img rounded-3"
+                                                             src={attachNo === null ? NoImage : profileUrl}
+                                                               />
                                                         </Link>
                                                     </Col>
                                                     <Col>
@@ -198,7 +189,8 @@ export default function Header({ toggleSidebar }) {
                         >
                             <div className="position-relative d-inline-block">
 
-                                <Image src="https://placehold.co/50x50"
+                                <Image className="header-img"
+                                 src={attachNo === null ? NoImage : profileUrl}
                                     roundedCircle />
                                 <FaCircle className={`position-absolute bottom-0 end-0 
                                     ${online ? "text-info" : "text-secondary"}`} />
