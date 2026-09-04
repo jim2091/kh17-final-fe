@@ -5,6 +5,7 @@ import { apiClient } from "@utils/reaxios";
 import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
 import { FaPenToSquare } from "react-icons/fa6";
+import NoImage from "@assets/images/no-image.png";
 
 export default function Mypage() {
     const { empNo } = useAtomValue(loginUserState) || {};

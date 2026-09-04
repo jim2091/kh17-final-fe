@@ -118,7 +118,7 @@ export default function Users() {
                 const online = users.some(user => user.empNo === emp.empNo);
 
                 return (
-                    <Card className={`mt-2 card ${online ? "" : "text-muted"}`}>
+                    <Card key={emp.empNo} className={`mt-2 card ${online ? "" : "text-muted"}`}>
                         <Card.Body>
                             <Row>
                                 <Col>{emp.empNo}</Col>
