@@ -13,14 +13,10 @@ import Chat from './components/chat/Chat';
 import Task from './components/task/Task';
 import TaskInsert from './components/task/TaskInsert';
 import Calendar from './components/calendar/Calendar';
-
 import Notes from './components/notes/Notes';
 import NoteInsert from './components/notes/NoteInsert';
 import NoteDetail from './components/notes/NoteDetail';
 import NoteEdit from './components/notes/NoteEdit';
-
-
-
 import Files from './components/files/Files';
 import Records from './components/records/Records';
 
@@ -111,7 +107,6 @@ function App() {
           <Route path="noteInsert" element={<NoteInsert />} />
           <Route path="note/insert" element={<NoteInsert />} />
 
-          {/* 👈 note/5 및 noteDetail/5 주소 모두 수용 */}
           <Route path="note/:noteNo" element={<NoteDetail />} />
           <Route path="noteDetail/:noteNo" element={<NoteDetail />} />
 
