@@ -1546,7 +1546,7 @@
     사이드바까지 포함했을 때 공간이 부족해지는 시점부터
     오른쪽 패널 숨김
 */
-@media (max-width: 1300px) {
+@media (max-width: 1500px) {
 
     .calendar-main {
         grid-template-columns: 1fr;
