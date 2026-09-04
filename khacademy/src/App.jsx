@@ -13,7 +13,14 @@ import Chat from './components/chat/Chat';
 import Task from './components/task/Task';
 import TaskInsert from './components/task/TaskInsert';
 import Calendar from './components/calendar/Calendar';
+
 import Notes from './components/notes/Notes';
+import NoteInsert from './components/notes/NoteInsert';
+import NoteDetail from './components/notes/NoteDetail';
+import NoteEdit from './components/notes/NoteEdit';
+
+
+
 import Files from './components/files/Files';
 import Records from './components/records/Records';
 
@@ -70,23 +77,23 @@ function App() {
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
 
         {/* 로그인 화면 */}
-        <Route path="/login" element={<Login/>} />
+        <Route path="/login" element={<Login />} />
         {/* 내 정보 페이지 */}
-        <Route path="/me" element={<Private><Mypage/></Private>} />
+        <Route path="/me" element={<Private><Mypage /></Private>} />
         {/* 내 정보 수정 페이지 */}
-        <Route path="/edit" element={<Private><Edit/></Private>} />
+        <Route path="/edit" element={<Private><Edit /></Private>} />
         <Route element={<AdminTabs />}>
-        
-        {/* 초대하기 화면 */}
-        <Route path="invite" element={<Admin><Invite/></Admin>} />
 
-        {/* 사용자 관리(관리자) */}
-        <Route path="users" element={<Admin><Users/></Admin>} />
-        {/* 부서관리(관리자) */}
-        <Route path="departments" element={<Admin><Departments/></Admin>} />
-        {/* 직급관리(관리자) */}
-        <Route path="positions" element={<Admin><Positions/></Admin>} />
-    </Route>
+          {/* 초대하기 화면 */}
+          <Route path="invite" element={<Admin><Invite /></Admin>} />
+
+          {/* 사용자 관리(관리자) */}
+          <Route path="users" element={<Admin><Users /></Admin>} />
+          {/* 부서관리(관리자) */}
+          <Route path="departments" element={<Admin><Departments /></Admin>} />
+          {/* 직급관리(관리자) */}
+          <Route path="positions" element={<Admin><Positions /></Admin>} />
+        </Route>
         {/* 프로젝트 내부 */}
         <Route path="/projects/:projectNo" element={<ProjectLayout />}>
           <Route index element={<Navigate to="task" replace />} />
@@ -95,17 +102,26 @@ function App() {
           <Route path="taskInsert" element={<TaskInsert />} />
 
           <Route path="chat" element={<Chat />} />
-
           <Route path="calendar" element={<Calendar />} />
 
+          {/* ----------------- [노트 라우트 설정] ----------------- */}
           <Route path="notes" element={<Notes />} />
+          <Route path="note" element={<Notes />} />
+
+          <Route path="noteInsert" element={<NoteInsert />} />
+          <Route path="note/insert" element={<NoteInsert />} />
+
+          {/* 👈 note/5 및 noteDetail/5 주소 모두 수용 */}
+          <Route path="note/:noteNo" element={<NoteDetail />} />
+          <Route path="noteDetail/:noteNo" element={<NoteDetail />} />
+
+          <Route path="noteEdit/:noteNo" element={<NoteEdit />} />
+          <Route path="note/:noteNo/edit" element={<NoteEdit />} />
+          {/* ----------------------------------------------------- */}
 
           <Route path="files" element={<Files />} />
-
           <Route path="records" element={<Records />} />
-
-          <Route path="close" element={<ProjectClose />}/>
-
+          <Route path="close" element={<ProjectClose />} />
         </Route>
       </Route>
 
