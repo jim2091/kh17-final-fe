@@ -1112,3 +1112,24 @@
     }
 
 }
+/* ==========================================
+   프로젝트 클릭 가능 여부
+========================================== */
+
+/* 참여 중인 프로젝트 */
+.search-project-result-item.project-clickable {
+    cursor: pointer;
+}
+
+.search-project-result-item.project-clickable:hover {
+    background: #fafafa;
+}
+
+/* 참여하지 않은 프로젝트 */
+.search-project-result-item.project-not-member {
+    cursor: default;
+}
+
+.search-project-result-item.project-not-member:hover {
+    background: transparent;
+}
