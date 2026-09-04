@@ -36,12 +36,13 @@ export default function Edit() {
         empAddress2: "",
         
     });
+    // console.log("emp : ", emp);
 
     //피드백을 위한 state
     const [result, setResult] = useState({
         prevEmpPassword: null,
-        newEmpPassword1: null,
-        newEmpPassword2: null,
+        newEmpPassword1: {clazz:null, code:null},
+        newEmpPassword2: {clazz:null, code:null},
         empBirth: null,
         empContact: null,
         empPost: null,
@@ -66,6 +67,7 @@ export default function Edit() {
     useEffect(() => {
         loadData();
     }, []);
+    
 
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/member/me");
@@ -86,6 +88,7 @@ export default function Edit() {
 
     const clearEmpProfile = useCallback(()=>{
         setEmpProfile(null);
+
     }, []);
 
     const changeStringValue = useCallback(e => {
@@ -96,6 +99,8 @@ export default function Edit() {
             [name]: value
         }));
     }, []);
+
+    
 
     const checkEmpBirth = useCallback(e => {
         const clazz = "is-valid";
@@ -123,6 +128,7 @@ export default function Edit() {
             empAddress2: clazz
         }));
     }, [emp]);
+
     const address2ref = useRef();
     //우편번호처리
     const addressSearch = useCallback((e) => {
@@ -181,22 +187,54 @@ export default function Edit() {
     ]);
 
     const checkEmpPassword = useCallback(e => {
-        const valid = emp.prevEmpPassword !== "" && emp.newEmpPassword1 !== "" && emp.newEmpPassword2 !== "";
+        const valid = !!emp.prevEmpPassword; 
         const clazz = valid ? "is-valid" : "is-invalid";
 
         setResult(prev => ({
             ...prev,
             prevEmpPassword: clazz,
-            newEmpPassword1: clazz,
-            newEmpPassword2: clazz,
         }));
 
     }, [emp]);
+    const checkNewEmpPassword = useCallback(e => {
+        const valid = (!!emp.newEmpPassword1 && !!emp.newEmpPassword2) ||
+             (!emp.newEmpPassword1 && !emp.newEmpPassword2); 
+             
+        if(valid){
+    
+            setResult(prev => ({
+                ...prev,
+                newEmpPassword1: {clazz : "is-valid", code : null},
+                newEmpPassword2: {clazz : "is-valid", code : null},
+            }));
+
+        }
+        if(valid === false){
+            setResult(prev => ({
+                ...prev,
+                newEmpPassword1: {clazz : "is-invalid", code : null},
+                newEmpPassword2: {clazz : "is-invalid", code : null},
+            }));
+        }
+
+        const confirm = emp.newEmpPassword1 === emp.newEmpPassword2;
+        if(confirm === false){
+            setResult(prev => ({
+                ...prev,
+                newEmpPassword1: {clazz : "is-invalid", code : "mismatch"},
+                newEmpPassword2: {clazz : "is-invalid", code : "mismatch"},
+            }));
+        }
+
+    }, [emp]);
+
+   
+    
 
     const allValid = useMemo(() => {
-        if (result.prevEmpPassword === "is-invalid") return false;
-        if (result.newEmpPassword1 === "is-invalid") return false;
-        if (result.newEmpPassword2 === "is-invalid") return false;
+        if (result.prevEmpPassword !== "is-valid") return false;
+        // if (result.newEmpPassword1 === "is-invalid") return false;
+        // if (result.newEmpPassword2 === "is-invalid") return false;
 
         if (result.empBirth === "is-invalid") return false;
         if (result.empContact === "is-invalid") return false;
@@ -209,10 +247,6 @@ export default function Edit() {
     //최종 수정
     const navigate = useNavigate();
     const sendData = useCallback(async () => {
-        console.log("전송할 emp =", emp);
-    console.log("prevEmpPassword =", emp.prevEmpPassword);
-    console.log("newEmpPassword1 =", emp.newEmpPassword1);
-    console.log("newEmpPassword2 =", emp.newEmpPassword2);
     
     try {
             const form = new FormData();
@@ -223,7 +257,7 @@ export default function Edit() {
             form.append("empProfile", empProfile);
             // const copy = { ...emp };
             const { data } = await apiClient.put("/member/", form);
-            console.log("data : ", data);
+            // console.log("data : ", data);
             if (data.status === true) {
                 toast.success(data.message);
                 navigate("/me");
@@ -313,7 +347,7 @@ export default function Edit() {
             </Form.Label>
             <Col sm={9}>
                 <Form.Control type="text" inputMode="tel" name="empContact"
-                    value={emp.empContact} onChange={changeStringValue}
+                    value={emp.empContact ?? ""} onChange={changeStringValue}
                     onBlur={checkEmpContact} className={result.empContact}
                 />
                 <div className="invalid-feedback">ex: 01012345678</div>
@@ -327,7 +361,7 @@ export default function Edit() {
                 <div className="d-flex">
                     <Form.Control type="text" inputMode="numeric"
                         name="empPost"
-                        value={emp.empPost} readOnly onClick={addressSearch}
+                        value={emp.empPost ?? ""} readOnly onClick={addressSearch}
                         className={`${result.empPost} w-auto d-inline-block`}
                         placeholder="우편번호"
                     />
@@ -352,7 +386,7 @@ export default function Edit() {
         <Row className="mt-4">
             <Col sm={{ span: 9, offset: 3 }}>
                 <Form.Control type="text" name="empAddress1"
-                    value={emp.empAddress1} readOnly onClick={addressSearch}
+                    value={emp.empAddress1 ?? ""} readOnly onClick={addressSearch}
                     className={result.empAddress1}
                     placeholder="기본주소"
                 />
@@ -361,7 +395,7 @@ export default function Edit() {
         <Row className="mt-4">
             <Col sm={{ span: 9, offset: 3 }}>
                 <Form.Control type="text" name="empAddress2"
-                    value={emp.empAddress2} onChange={changeStringValue}
+                    value={emp.empAddress2 ?? ""} onChange={changeStringValue}
                     onBlur={checkEmpAddress} className={result.empAddress2}
                     placeholder="상세주소"
                     ref={address2ref}
@@ -391,8 +425,9 @@ export default function Edit() {
                 )}
             </Form.Label>
             <Col sm={9}>
-                <Form.Control type={visible.prevEmpPassword ? "text" : "password"} name="prevEmpPassword"
-                    value={emp.prevEmpPassword} onChange={changeStringValue}
+                <Form.Control type={visible.prevEmpPassword ? "text" : "password"} 
+                    name="prevEmpPassword"
+                    value={emp.prevEmpPassword ?? ""} onChange={changeStringValue}
                     onBlur={checkEmpPassword} className={result.prevEmpPassword}
                 />
                 <div className="invalid-feedback">비밀번호는 필수 항목입니다</div>
@@ -415,10 +450,10 @@ export default function Edit() {
             </Form.Label>
             <Col sm={9}>
                 <Form.Control type={visible.newEmpPassword1 ? "text" : "password"} name="newEmpPassword1"
-                    value={emp.newEmpPassword1} onChange={changeStringValue}
-                    onBlur={checkEmpPassword} className={result.newEmpPassword1}
+                    value={emp.newEmpPassword1 ?? ""} onChange={changeStringValue}
+                    onBlur={checkNewEmpPassword} className={result.newEmpPassword1.clazz}
                 />
-                <div className="invalid-feedback">비밀번호는 필수 항목입니다</div>
+                <div className="invalid-feedback"></div>
             </Col>
         </Row>
         <Row className="mt-2">
@@ -438,10 +473,14 @@ export default function Edit() {
             </Form.Label>
             <Col sm={9}>
                 <Form.Control type={visible.newEmpPassword2 ? "text" : "password"} name="newEmpPassword2"
-                    value={emp.newEmpPassword2} onChange={changeStringValue}
-                    onBlur={checkEmpPassword} className={result.newEmpPassword2}
+                    value={emp.newEmpPassword2 ?? ""} onChange={changeStringValue}
+                    onBlur={checkNewEmpPassword} className={result.newEmpPassword2.clazz}
                 />
-                <div className="invalid-feedback">비밀번호는 필수 항목입니다</div>
+                <div className="invalid-feedback">
+                    {result.newEmpPassword2.code === "mismatch" && (<>
+                        비밀번호가 일치하지 않습니다.
+                    </>)}
+                </div>
             </Col>
         </Row>
 
