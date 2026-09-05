@@ -32,9 +32,9 @@ export default function Mypage() {
         return `[${emp.empPost}] ${emp.empAddress1} ${emp.empAddress2}`;
     }, [emp]);
 
-    if (emp === null) {
-        return (<h1>로딩중인 화면</h1>);
-    }
+    // if (emp === null) {
+    //     return (<h1>로딩중인 화면</h1>);
+    // }
 
 
     return (<>

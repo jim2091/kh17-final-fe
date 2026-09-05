@@ -327,26 +327,26 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info">이메일</Col>
+                <Col sm={3} className="fw-bold text-info text-center">이메일</Col>
                 <Col sm={9} className="text-secondary">
                     <span>{emp.empEmail}</span>
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info">부서</Col>
+                <Col sm={3} className="fw-bold text-info text-center">부서</Col>
                 <Col sm={9} className="text-secondary">
                     <span>{emp.deptName}</span>
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info">직급</Col>
+                <Col sm={3} className="fw-bold text-info text-center">직급</Col>
                 <Col sm={9} className="text-secondary">
                     <span>{emp.positionName}</span>
                 </Col>
             </Row>
 
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold text-info text-center">
                     <span>생년월일</span>
                 </Form.Label>
                 <Col sm={9}>
@@ -370,7 +370,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold text-info text-center">
                     <span>연락처</span>
                 </Form.Label>
                 <Col sm={9}>
@@ -382,7 +382,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold text-info text-center">
                     <span>주소</span>
                 </Form.Label>
                 <Col sm={9}>
@@ -439,7 +439,8 @@ export default function Edit() {
 
             <Row className="mt-4">
                 <Form.Label column sm={3} className="fw-bold text-info">
-                    <span>기존 비밀번호</span>
+                    <FaAsterisk className="text-danger"/>
+                    <span className="ms-2">기존 비밀번호</span>
                     {visible.prevEmpPassword === true ? (
                         <FaEye className="text-warning ms-4" onClick={e => {
                             setVisible(prev => ({ ...prev, prevEmpPassword: false }));
