@@ -144,9 +144,6 @@ export default function ProjectClose(){
             await apiClient.patch(`/project/${projectNo}/close`,requestData);
 
             toast.success("프로젝트가 종료되었습니다.");
-        
-            //프로젝트 정보 갱신
-            await loadProject();
 
             //아카이브러 이동
             navigate("/projects/archive");
@@ -156,7 +153,7 @@ export default function ProjectClose(){
             toast.error("프로젝트 종료에 실패했습니다.");
         }
 
-    },[close,resultList,projectNo,navigate,loadProject]);
+    },[close,resultList,projectNo,navigate]);
 
     //로딩화면
     if(loading === true){
@@ -218,14 +215,14 @@ export default function ProjectClose(){
                                                     size="sm"
                                                     variant={
                                                         result.projectResultStatus
-                                                        === "ACHIEVED"
+                                                        === "achieved"
                                                             ? "success"
                                                             : "outline-success"
                                                     }
                                                     onClick={() =>
                                                         changeResultStatus(
                                                             result.projectResultNo,
-                                                            "ACHIEVED"
+                                                            "achieved"
                                                         )
                                                     }
                                                 >
@@ -237,14 +234,14 @@ export default function ProjectClose(){
                                                     size="sm"
                                                     variant={
                                                         result.projectResultStatus
-                                                        === "UNACHIEVED"
+                                                        === "unachieved"
                                                             ? "danger"
                                                             : "outline-danger"
                                                     }
                                                     onClick={() =>
                                                         changeResultStatus(
                                                             result.projectResultNo,
-                                                            "UNACHIEVED"
+                                                            "unachieved"
                                                         )
                                                     }
                                                 >
