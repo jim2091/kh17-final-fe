@@ -50,3 +50,10 @@
     width: 200px;
     object-fit: cover;
 }
+.swal2-container {
+    z-index: 9999 !important;
+}
+.user-popover {
+    width: 400px;
+    max-width: 400px;
+}
