@@ -1,11 +1,11 @@
 import { Button, Col, Form, Row, Card } from "react-bootstrap";
-import { FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
+import { FaArrowDown, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
-import { useWebSocket } from "@websocket/WebSocketProvider";
+// import { useWebSocket } from "@websocket/WebSocketProvider";
 import "../member.css";
 import "@templates/project.css";
 import Swal from "sweetalert2";
@@ -20,7 +20,7 @@ export default function Users() {
 
     const [keyword, setKeyword] = useState("");
 
-    const [ selectedEmp, setSelectedEmp] = useState({});
+    const [selectedEmp, setSelectedEmp] = useState({});
 
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
@@ -28,7 +28,7 @@ export default function Users() {
 
     const deptNameSearch = useCallback(async () => {
 
-        const { data } = await apiClient.get("/dept/");
+        const { data } = await apiClient.get("/dept/search");
         setDeptList(data);
 
     }, [deptList]);
@@ -38,7 +38,7 @@ export default function Users() {
 
     const positionNameSearch = useCallback(async () => {
 
-        const { data } = await apiClient.get("/position/");
+        const { data } = await apiClient.get("/position/search");
         setPositionList(data);
 
     }, [positionList]);
@@ -65,7 +65,7 @@ export default function Users() {
         // console.log("전체 회원 목록 : ", data);
     }, []);
 
-    const { users } = useWebSocket();
+    // const { users } = useWebSocket();
 
     // setUsers(users);
     // console.log("empList : ", empList);
@@ -132,7 +132,7 @@ export default function Users() {
 
     }, [loadData]);
 
-    const changeData = useCallback(async (emp)=>{
+    const changeData = useCallback(async (emp) => {
         const result = await Swal.fire({
             title: "사원 정보를 수정하시겠습니까?",
             icon: "warning",
@@ -143,23 +143,44 @@ export default function Users() {
 
         if (result.isConfirmed === false) return;
 
-        try{
+        try {
             await apiClient.put(`/admin/memberEdit/${emp.empNo}`, {
-                empNo : emp.empNo,
-                empDeptNo : selectedEmp.empDeptNo,
-                empPositionNo : selectedEmp.empPositionNo,
+                empNo: emp.empNo,
+                empDeptNo: selectedEmp.empDeptNo,
+                empPositionNo: selectedEmp.empPositionNo,
             });
             toast.success("수정되었습니다.");
-            
+
             await loadData();
         }
-        catch(error){
+        catch (error) {
             console.log("error : ", error);
             toast.error("수정이 실패하였습니다. \n잠시 후 다시 시도해주세요.");
-            
+
         }
         setSelectedEmp({});
     }, [loadData, selectedEmp]);
+
+    const nameAsc = useCallback( async ()=>{
+        const { data } = await apiClient.get("/admin/nameAsc");
+
+        setEmpList(data);
+    }, []);
+    const emailAsc = useCallback( async ()=>{
+        const { data } = await apiClient.get("/admin/emailAsc");
+
+        setEmpList(data);
+    }, []);
+    const deptAsc = useCallback( async ()=>{
+        const { data } = await apiClient.get("/admin/deptAsc");
+
+        setEmpList(data);
+    }, []);
+    const positionAsc = useCallback( async ()=>{
+        const { data } = await apiClient.get("/admin/positionAsc");
+
+        setEmpList(data);
+    }, []);
 
 
     return (<>
@@ -187,7 +208,6 @@ export default function Users() {
                 </Button>
             </Col>
 
-
             <div className="tabs">
                 <span className="tab" onClick={loadData}>전체</span>
                 {tabs.map((tab) => (
@@ -197,28 +217,47 @@ export default function Users() {
                         <span>{tab}</span>
                     </div>
                 ))}
-
-
             </div>
-            <Row className="user-header py-2 fw-bold">
-                <Col className="text-nowrap">사번/이름</Col>
-                <Col className="text-nowrap">접속상태</Col>
-                <Col className="d-none d-md-block text-nowrap">이메일</Col>
-                <Col className="text-nowrap">부서</Col>
-                <Col className="text-nowrap">직급</Col>
-                <Col className="d-none d-md-block text-nowrap">생년월일</Col>
-                <Col className="d-none d-md-block text-nowrap">연락처</Col>
-                <Col className="d-none d-md-block text-nowrap">주소</Col>
-                <Col className="text-nowrap">회원상태</Col>
-            </Row>
+
+
+
+            <Card className="user-header fw-bold border-0">
+                <Card.Body>
+                    <Row>
+                        <Col className="text-nowrap" onClick={nameAsc}>
+                        <span>사번/이름</span>
+                        <FaArrowDown className="ms-2"/>
+                        </Col>
+                        <Col className="text-nowrap">접속상태</Col>
+                        <Col className="d-none d-md-block text-nowrap" onClick={emailAsc}>
+                        <span>이메일</span>
+                        <FaArrowDown className="ms-2"/>
+                        </Col>
+                        <Col className="text-nowrap" onClick={deptAsc}>
+                        <span>부서</span>
+                        <FaArrowDown className="ms-2"/>
+                        </Col>
+                        <Col className="text-nowrap" onClick={positionAsc}>
+                        <span>직급</span>
+                        <FaArrowDown className="ms-2"/>
+                        </Col>
+                        <Col className="d-none d-md-block text-nowrap">생년월일</Col>
+                        <Col className="d-none d-md-block text-nowrap">연락처</Col>
+                        <Col className="d-none d-md-block text-nowrap">주소</Col>
+                        <Col className="text-nowrap">회원상태</Col>
+                    </Row>
+                </Card.Body>
+            </Card>
 
 
             {empList.map((emp) => {
-                const online = users.some(user => user.empNo === emp.empNo);
+                // const online = users.some(user => user.empNo === emp.empNo);
 
                 return (
 
-                    <Card key={emp.empNo} className={`mt-2 card ${online ? "" : "text-muted"}`}>
+                    <Card key={emp.empNo} className="mt-2 card">
+                     {/* ${online ? "" : "text-muted"} */}
+                     
                         <OverlayTrigger
                             trigger="click"
                             placement="bottom"
@@ -238,7 +277,7 @@ export default function Users() {
                                                 <Form.Select onClick={deptNameSearch} name="empDeptNo"
                                                     className="w-100 d-inline-block"
                                                     value={selectedEmp.empDeptNo}
-                                                onChange={changeNumericValue}
+                                                    onChange={changeNumericValue}
                                                 >
                                                     <option value="">선택하세요</option>
                                                     {deptList.map(dept => (
@@ -256,7 +295,7 @@ export default function Users() {
                                                 <Form.Select onClick={positionNameSearch} name="empPositionNo"
                                                     className="w-100 d-inline-block"
                                                     value={selectedEmp.empPositionNo}
-                                                onChange={changeNumericValue}
+                                                    onChange={changeNumericValue}
                                                 >
                                                     <option value="">선택하세요</option>
                                                     {positionList.map(position => (
@@ -287,10 +326,10 @@ export default function Users() {
                                             <Col sm={2}>상태</Col>
                                             <Col sm={10}>{emp.empState}</Col>
                                         </Row>
-                                        
+
                                         <Row className="mt-4">
                                             <Col className="text-end">
-                                                <Button onClick={()=>changeData(emp)}>
+                                                <Button onClick={() => changeData(emp)}>
                                                     <span>수정하기</span>
                                                 </Button>
                                             </Col>
@@ -305,8 +344,10 @@ export default function Users() {
                                 <Row>
                                     <Col className="text-nowrap">{emp.empNo}/{emp.empName}</Col>
                                     <Col>
-                                        <FaCircle className={online ? "text-info" : "text-secondary"} />
-                                        <span className="ms-2">{online ? "online" : "offline"}</span>
+                                        {/* <FaCircle className={online ? "text-info" : "text-secondary"} />
+                                        <span className="ms-2">{online ? "online" : "offline"}</span> */}
+                                        <FaCircle/>
+                                        <span className="ms-2">offline</span>
                                     </Col>
                                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
                                     <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
