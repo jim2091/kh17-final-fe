@@ -71,6 +71,7 @@ function App() {
         <Route path="/projects/:projectNo/edit" element={<ProjectEdit />} />
         {/* 공개프로젝트 목록 */}
         <Route path="/projects/public" element={<PublicProjectList />} />
+        {/* 아카이브 목록 */}
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
 
         {/* 로그인 화면 */}

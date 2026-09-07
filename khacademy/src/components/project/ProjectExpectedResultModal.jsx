@@ -20,7 +20,8 @@ export default function ProjectExpectedResultModal({
 
     //현재 로그인 사용자가 owner인지
     const isOwner = project?.projectMemberRole === "owner";
-    
+    //읽기전용
+    const isClosed = project.projectStatus === "closed";
     //기대결과 목록 조회
     const loadResultList = useCallback(async()=>{
         try{
@@ -148,7 +149,7 @@ export default function ProjectExpectedResultModal({
 
             <Modal.Body>
                 {/* OWNER만 등록 가능 */}
-                    {isOwner && (
+                    {isOwner && isClosed === false &&(
 
                         <div className="d-flex gap-2 mb-4">
 
@@ -263,7 +264,7 @@ export default function ProjectExpectedResultModal({
 
 
                                             {/* OWNER만 수정/삭제 가능 */}
-                                            {isOwner && (
+                                            {isOwner && isClosed === false &&(
 
                                                 <div
                                                     className="

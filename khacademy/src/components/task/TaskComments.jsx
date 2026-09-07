@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { apiClient } from "@utils/reaxios";
 import "./TaskComments.css";
 
-export default function TaskComments({ taskNo, projectNo, loginUser }) {
+export default function TaskComments({ taskNo, projectNo, loginUser,isClosed }) {
   const [comments, setComments] = useState([]);
   const [commentFilesMap, setCommentFilesMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -158,6 +158,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
   // 댓글 및 파일 등록
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 댓글을 작성할 수 없습니다.");
+      return;
+    }
     if (!inputContent.trim() && !selectedFile) return;
 
     try {
@@ -204,6 +208,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
 
   // 수정 모드 진입
   const handleStartEdit = (comment) => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 댓글을 수정할 수 없습니다.")
+      return;
+    }
     setEditingCommentNo(comment.taskCommentNo);
     setEditInputContent(comment.taskCommentContent === "(파일 첨부)" ? "" : comment.taskCommentContent);
   };
@@ -216,6 +224,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
 
   // 수정 내용 서버 저장
   const handleSaveEdit = async (commentNo) => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 댓글을 수정할 수 없습니다.");
+      return;
+    }
     const trimmed = editInputContent.trim();
     const targetFiles = commentFilesMap[commentNo] || [];
 
@@ -242,6 +254,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
 
   // 댓글 삭제
   const handleDeleteComment = async (commentNo) => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 댓글을 삭제할 수 없습니다.");
+      return;
+    }
     const result = await Swal.fire({
       title: "댓글을 삭제하시겠습니까?",
       text: "첨부된 파일도 함께 삭제되며 복구할 수 없습니다.",
@@ -293,15 +309,16 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
       </div>
 
       {/* 댓글 작성 폼 */}
-      <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
-        <textarea
-          className="comment-textarea"
-          rows="2"
-          placeholder="업무 피드백을 입력하세요... (Enter: 등록, Shift+Enter: 줄바꿈)"
-          value={inputContent}
-          onChange={(e) => setInputContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
+      {isClosed === false &&(
+        <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
+          <textarea
+            className="comment-textarea"
+            rows="2"
+            placeholder="업무 피드백을 입력하세요... (Enter: 등록, Shift+Enter: 줄바꿈)"
+            value={inputContent}
+            onChange={(e) => setInputContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
 
         {selectedFile && (
           <div className="comment-selected-file-chip">
@@ -345,7 +362,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
           </button>
         </div>
       </form>
-
+      )}
       {/* 댓글 목록 */}
       <div className="comment-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {loading ? (
@@ -410,7 +427,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser }) {
                     )}
                   </div>
 
-                  {isMyComment && !isEditing && (
+                  {isMyComment && !isEditing && isClosed === false &&(
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <button
                         type="button"

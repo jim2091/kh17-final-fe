@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import {
@@ -22,6 +22,11 @@ const COLUMNS = [
 export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
+
+  //프로젝트 정보 받기-서준
+  const {project} = useOutletContext();
+  //종료여부
+  const isClosed = project.projectStatus === "closed";
 
   const isLogin = useAtomValue(isLoginState);
 
@@ -364,6 +369,10 @@ export default function Task() {
   };
 
   const handleStartEdit = () => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트의 업무는 수정 불가합니다.");
+      return;
+    }
     if (!selectedTask) return;
 
     setEditFormData({
@@ -411,6 +420,10 @@ export default function Task() {
   };
 
   const handleDeleteTaskFile = async (attachNo) => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 파일을 삭제할 수 없습니다.");
+      return;
+    }
     if (!window.confirm("이 첨부파일을 삭제하시겠습니까?")) return;
     try {
       await apiClient.delete(`/task/file/${selectedTask.taskNo}/${attachNo}`);
@@ -423,6 +436,10 @@ export default function Task() {
   };
 
   const handleUploadNewTaskFile = async (e) => {
+    if(isClosed){
+      toast.warning("종료된 프로젝트에서는 파일을 추가할 수 없습니다.");
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -446,6 +463,11 @@ export default function Task() {
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
+
+    if(isClosed){
+      toast.warning("종료된 프로젝트의 업무는 수정할 수 없습니다.");
+      return
+    }
 
     if (!editFormData.taskTitle.trim()) {
       toast.warn("업무 제목은 필수 입력 항목입니다.");
@@ -519,6 +541,10 @@ export default function Task() {
   };
 
   const handleDrop = async (e, targetStatus) => {
+    //드래그x
+    if(isClosed){
+      return;
+    }
     e.preventDefault();
     setDragOverCol(null);
 
@@ -585,13 +611,15 @@ export default function Task() {
           <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
         </div>
 
-        <button
-          type="button"
-          className="btn-create-task"
-          onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
-        >
-          <span className="plus-icon">+</span> 새 업무 등록
-        </button>
+        {isClosed === false &&(
+          <button
+            type="button"
+            className="btn-create-task"
+            onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
+          >
+            <span className="plus-icon">+</span> 새 업무 등록
+          </button>
+        )}
       </div>
 
       <div className="custom-kanban-board">
@@ -625,7 +653,7 @@ export default function Task() {
                     return (
                       <div
                         key={task.taskNo}
-                        draggable
+                        draggable={!isClosed}
                         onDragStart={(e) => handleDragStart(e, task.taskNo)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleCardClick(task.taskNo)}
@@ -899,6 +927,7 @@ export default function Task() {
                     taskNo={selectedTask.taskNo}
                     projectNo={projectNo}
                     loginUser={loginUser}
+                    isClosed={isClosed}
                   />
                 </div>
 
@@ -906,9 +935,11 @@ export default function Task() {
                   <button className="btn-cancel" onClick={handleCloseDrawer}>
                     닫기
                   </button>
-                  <button className="btn-edit-trigger" onClick={handleStartEdit}>
-                    수정하기
-                  </button>
+                  {isClosed === false &&(
+                    <button className="btn-edit-trigger" onClick={handleStartEdit}>
+                      수정하기
+                    </button>
+                  )}
                 </div>
               </>
             )}
