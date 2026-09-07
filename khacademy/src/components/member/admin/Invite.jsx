@@ -27,7 +27,7 @@ export default function invite() {
 
     const deptNameSearch = useCallback(async()=>{
 
-        const {data} = await apiClient.get("/dept/");
+        const {data} = await apiClient.get("/dept/search");
         setDeptList(data);
         
     }, [deptList]);
@@ -36,7 +36,7 @@ export default function invite() {
 
     const positionNameSearch = useCallback(async()=>{
 
-        const {data} = await apiClient.get("/position/");
+        const {data} = await apiClient.get("/position/search");
         setPositionList(data);
         
     }, [positionList]);

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
-import Nav from 'react-bootstrap/Nav';
-import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-import { Link, useNavigate } from "react-router-dom";
+import { FaPlus } from "react-icons/fa6";
 import { apiClient } from "@utils/reaxios";
 import Modal from 'react-bootstrap/Modal';
 import { toast } from "react-toastify";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import Swal from "sweetalert2";
 
 function MyVerticallyCenteredModal(props) {
     const [position, setPosition] = useState({
@@ -25,6 +24,7 @@ function MyVerticallyCenteredModal(props) {
     }, []);
 
     const sendData = useCallback(async () => {
+
         await apiClient.post("/position/add", position);
         toast.success("직급이 추가되었습니다.");
 
@@ -163,11 +163,29 @@ export default function Positions() {
     }, []);
 
     const changeData = useCallback(async () => {
-        await apiClient.put("/position/edit", selectedPosition);
+        const result = await Swal.fire({
+            title: "직급 정보를 수정하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "수정",
+            cancelButtonText: "취소"
+        });
 
-        loadData();
+        if (result.isConfirmed === false) return;
+        try{
 
-        setShowPopover(null);
+            await apiClient.put("/position/edit", selectedPosition);
+            toast.success("직급 정보가 수정되었습니다");
+    
+            loadData();
+    
+            setShowPopover(null);
+        }
+        catch(e){
+            console.log("e : ", e);
+            toast.error("수정에 실패하였습니다. \n 잠시후 다시 시도해주세요");
+        }
+        setSelectedPosition({});
 
     }, [selectedPosition, loadData]);
     return (<>
@@ -183,89 +201,104 @@ export default function Positions() {
                 onAdd={loadData}
             />
         </Col>
+        <Card className="user-header fw-bold border-0">
+            <Card.Body>
+                <Row>
+                    <Col sm={2} className="text-nowrap">직급번호</Col>
+                    <Col sm={2} className="text-nowrap">직급이름</Col>
+                    <Col className="text-nowrap">직급설명</Col>
+                    <Col className="text-nowrap">활성화상태</Col>
+
+                </Row>
+            </Card.Body>
+        </Card>
 
         {positionList.map((position) => (
             <Card key={position.positionNo} className="mt-2 card">
-                <Card.Body>
-                    <Row>
-                        <Col>{position.positionNo}</Col>
-                        <Col>{position.positionName}</Col>
-                        <Col>{position.positionInfo}</Col>
-                        <Col>{position.positionBlock}</Col>
-                        <Col>
-                            <OverlayTrigger
-                                trigger="click"
-                                placement="left"
-                                rootClose={true}
-                                show={showPopover === position.positionNo}
-                                onToggle={(nextShow) => {
-                                    setShowPopover(nextShow ? position.positionNo : null);
-                                }}
-                                overlay={
-                                    <Popover id={`popover-positioned-left`}>
-                                        <Popover.Header as="h3">{position.positionName}</Popover.Header>
-                                        <Popover.Body>
-                                            <Row className="mt-4">
-                                                <Form.Label column sm={3}>직급명</Form.Label>
-                                                <Col sm={9}>
-                                                    <Form.Control type="text" name="positionName" value={selectedPosition.positionName}
-                                                        onChange={changeStringValue} className="w-100">
-                                                    </Form.Control>
-                                                </Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Form.Label column sm={3}>하는 일</Form.Label>
-                                                <Col sm={9}>
-                                                    <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
-                                                        onChange={changeStringValue} className="w-100">
-                                                    </Form.Control>
-                                                </Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Form.Label column sm={3}>활성화여부</Form.Label>
-                                                <Col sm={9}>
-                                                    <Form.Check type="radio"
-                                                        name="positionBlock"
-                                                        value="Y"
-                                                        className="d-inline-block"
-                                                        label="Y"
-                                                        checked={selectedPosition.positionBlock === "Y"}
-                                                        onChange={changeStringValue}
-                                                    >
-                                                    </Form.Check>
-                                                    <Form.Check type="radio"
-                                                        name="positionBlock"
-                                                        value="N"
-                                                        className="d-inline-block"
-                                                        label="N"
-                                                        checked={selectedPosition.positionBlock === "N"}
-                                                        onChange={changeStringValue}
-                                                    >
-                                                    </Form.Check>
-                                                </Col>
-                                            </Row>
-                                            <Row className="mt-4">
-                                                <Button onClick={changeData}>
-                                                    <span>수정</span>
-                                                </Button>
-                                            </Row>
+                <OverlayTrigger
+                    trigger="click"
+                    placement="bottom"
+                    rootClose={true}
+                    show={showPopover === position.positionNo}
+                    onToggle={(nextShow) => {
+                        setShowPopover(nextShow ? position.positionNo : null);
+                    }}
+                    overlay={
+                        <Popover id={`popover-positioned-bottom`} className="user-popover">
+                            <Popover.Header as="h3">{position.positionName}</Popover.Header>
+                            <Popover.Body>
+                                <Row className="mt-4">
+                                    <Form.Label column sm={3}>직급명</Form.Label>
+                                    <Col sm={9}>
+                                        <Form.Control type="text" name="positionName" value={selectedPosition.positionName}
+                                            onChange={changeStringValue} className="w-100">
+                                        </Form.Control>
+                                    </Col>
+                                </Row>
+                                <Row className="mt-4">
+                                    <Form.Label column sm={3}>하는 일</Form.Label>
+                                    <Col sm={9}>
+                                        <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
+                                            onChange={changeStringValue} className="w-100">
+                                        </Form.Control>
+                                    </Col>
+                                </Row>
+                                <Row className="mt-4">
+                                    <Form.Label column sm={3}>활성화여부</Form.Label>
+                                    <Col sm={9}>
+                                        <Form.Check type="radio"
+                                            name="positionBlock"
+                                            value="Y"
+                                            className="d-inline-block"
+                                            label="Y"
+                                            checked={selectedPosition.positionBlock === "Y"}
+                                            onChange={changeStringValue}
+                                        >
+                                        </Form.Check>
+                                        <Form.Check type="radio"
+                                            name="positionBlock"
+                                            value="N"
+                                            className="d-inline-block"
+                                            label="N"
+                                            checked={selectedPosition.positionBlock === "N"}
+                                            onChange={changeStringValue}
+                                        >
+                                        </Form.Check>
+                                    </Col>
+                                </Row>
+                                <Row className="mt-4">
+                                    <Button onClick={changeData}>
+                                        <span>수정</span>
+                                    </Button>
+                                </Row>
 
-                                        </Popover.Body>
-                                    </Popover>
-                                }
-                            >
-                                <Button variant="secondary" onClick={() => {
+                            </Popover.Body>
+                        </Popover>
+                    }
+                >
+                    <Card.Body onClick={() => {
+                        setData(position);
+                        setShowPopover(
+                            showPopover === position.positionNo ? null : position.positionNo
+                        )
+                    }}>
+                        <Row>
+                            <Col sm={2} className="text-nowrap">{position.positionNo}</Col>
+                            <Col sm={2} className="text-nowrap">{position.positionName}</Col>
+                            <Col className="text-nowrap text-truncate">{position.positionInfo}</Col>
+                            <Col className="text-nowrap">{position.positionBlock}</Col>
+
+                            {/* <Button variant="secondary" onClick={() => {
                                     setData(position);
                                     setShowPopover(
                                         showPopover === position.positionNo ? null : position.positionNo
                                     )
                                 }}>
                                     <FaMagnifyingGlass />
-                                </Button>
-                            </OverlayTrigger>
-                        </Col>
-                    </Row>
-                </Card.Body>
+                                </Button> */}
+                        </Row>
+                    </Card.Body>
+                </OverlayTrigger>
             </Card>
         ))}
 
