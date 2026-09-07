@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
+import { toast } from "react-toastify";
 import { ArrowLeft, UploadCloud, X, Paperclip } from "lucide-react";
 import "./Notes.css";
 
@@ -18,23 +19,58 @@ export default function NoteInsert() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.warn("노트 제목을 입력해주세요.");
+      return;
+    }
 
     try {
       setSaving(true);
-      const formData = new FormData();
-      formData.append("projectNo", projectNo);
-      formData.append("noteTitle", title.trim());
-      formData.append("noteContent", content);
-      formData.append("noteCategory", category);
-      files.forEach((file) => formData.append("files", file));
 
-      const res = await apiClient.post("/note/", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      navigate(`/projects/${projectNo}/note/${res.data}`);
-    } catch (e) {
-      console.error(e);
+      // 1. 노트 본문 등록 (JSON 규격)
+      const notePayload = {
+        noteTitle: title.trim(),
+        noteContent: content,
+        noteCategory: category
+      };
+
+      const res = await apiClient.post(`/note/project/${projectNo}`, notePayload);
+
+      // [핵심] res.data 자체가 숫자(PK)일 때와 객체({ noteNo: X })일 때 모두 안전하게 추출
+      let newNoteNo = null;
+      if (typeof res.data === "number") {
+        newNoteNo = res.data;
+      } else if (res.data?.noteNo) {
+        newNoteNo = res.data.noteNo;
+      } else if (res.data?.data?.noteNo) {
+        newNoteNo = res.data.data.noteNo;
+      } else if (typeof res.data?.data === "number") {
+        newNoteNo = res.data.data;
+      }
+
+      // 2. newNoteNo를 바탕으로 첨부파일 순차 업로드
+      if (files.length > 0 && newNoteNo) {
+        for (const file of files) {
+          const formData = new FormData();
+          // 백엔드 NoteFileRestController: @RequestPart("file") 규격 일치
+          formData.append("file", file);
+
+          try {
+            await apiClient.post(
+              `/note/file/${newNoteNo}?projectNo=${projectNo || 0}`,
+              formData
+            );
+          } catch (fileErr) {
+            console.error("파일 업로드 개별 실패:", fileErr);
+          }
+        }
+      }
+
+      toast.success("노트가 성공적으로 등록되었습니다.");
+      navigate(`/projects/${projectNo}/note/${newNoteNo}`);
+    } catch (err) {
+      console.error("노트 등록 실패:", err);
+      toast.error("노트 등록에 실패했습니다.");
     } finally {
       setSaving(false);
     }
@@ -43,7 +79,11 @@ export default function NoteInsert() {
   return (
     <div className="notes-page-wrapper">
       <div className="notes-top-header">
-        <button className="btn-notes-outline" onClick={() => navigate(`/projects/${projectNo}/note`)}>
+        <button
+          type="button"
+          className="btn-notes-outline"
+          onClick={() => navigate(`/projects/${projectNo}/notes`)}
+        >
           <ArrowLeft size={15} /> 목록으로
         </button>
         <h2 style={{ fontSize: 18, fontWeight: 800 }}>새 노트 작성</h2>
@@ -76,12 +116,16 @@ export default function NoteInsert() {
           placeholder="본문 내용을 입력하세요..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          rows={12}
           required
         />
 
-        {/* 파일 첨부 드롭존 */}
+        {/* 파일 첨부 드롭존 영역 */}
         <div>
-          <div className="notes-upload-dropzone" onClick={() => fileInputRef.current?.click()}>
+          <div
+            className="notes-upload-dropzone"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <UploadCloud size={22} />
             <span>클릭하여 첨부할 파일을 선택하세요</span>
             <input
@@ -89,7 +133,9 @@ export default function NoteInsert() {
               multiple
               ref={fileInputRef}
               style={{ display: "none" }}
-              onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])}
+              onChange={(e) =>
+                setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])
+              }
             />
           </div>
 
@@ -98,8 +144,11 @@ export default function NoteInsert() {
               {files.map((file, idx) => (
                 <div key={idx} className="attached-chip">
                   <Paperclip size={12} />
-                  <span>{file.name}</span>
-                  <button type="button" onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}>
+                  <span>{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
+                  <button
+                    type="button"
+                    onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                  >
                     <X size={13} />
                   </button>
                 </div>
@@ -108,8 +157,12 @@ export default function NoteInsert() {
           )}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
-          <button type="button" className="btn-notes-outline" onClick={() => navigate(`/projects/${projectNo}/note`)}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+          <button
+            type="button"
+            className="btn-notes-outline"
+            onClick={() => navigate(`/projects/${projectNo}/notes`)}
+          >
             취소
           </button>
           <button type="submit" className="btn-notes-primary" disabled={saving}>
