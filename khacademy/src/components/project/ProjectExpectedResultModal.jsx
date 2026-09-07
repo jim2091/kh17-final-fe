@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
 import { Button, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
+import Swal from "sweetalert2";
 
 export default function ProjectExpectedResultModal({
     show, onHide,projectNo,project
@@ -18,7 +19,7 @@ export default function ProjectExpectedResultModal({
     const [loading,setLoading] = useState(false);
 
     //현재 로그인 사용자가 owner인지
-    const isOwner = project.projectMemberRole === "owner";
+    const isOwner = project?.projectMemberRole === "owner";
     
     //기대결과 목록 조회
     const loadResultList = useCallback(async()=>{
@@ -26,6 +27,8 @@ export default function ProjectExpectedResultModal({
             setLoading(true);
             
             const {data} = await apiClient.get(`/project/${projectNo}/result`);
+
+            setResultList(data);
         }
         catch(e){
             toast.error("기대결과 목록을 불러오지 못했습니다.");
@@ -99,7 +102,7 @@ export default function ProjectExpectedResultModal({
             setEditContent("");
 
             //목록 다시 조회
-            loadResultList();
+            await loadResultList();
         }
         catch(e){
             toast.error("기대 결과 수정에 실패했습니다.");
@@ -125,7 +128,7 @@ export default function ProjectExpectedResultModal({
                  
                     toast.success("기대결과가 삭제되었습니다.");
                 
-                    loadResultList();
+                    await loadResultList();
                 }
 
                 catch(e){
@@ -144,94 +147,225 @@ export default function ProjectExpectedResultModal({
             </Modal.Header>
 
             <Modal.Body>
-                {/* owner만 등록 가능 */}
-                {isOwner && (
-                    <div className="d-flex gap-2 mb-4">
-                        <Form.Control type="text"
-                            placeholder="기대결과를 입력하세요"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}/>
-                    
-                        <Button variant="primary" onClick={addResult}>
-                            추가
-                        </Button>
+                {/* OWNER만 등록 가능 */}
+                    {isOwner && (
+
+                        <div className="d-flex gap-2 mb-4">
+
+                            <Form.Control
+                                type="text"
+                                placeholder="기대결과를 입력하세요"
+                                value={content}
+                                onChange={(e) =>
+                                    setContent(
+                                        e.target.value
+                                    )
+                                }
+                            />
+
+                            <Button
+                                variant="primary"
+                                onClick={addResult}
+                            >
+                                추가
+                            </Button>
+
+                        </div>
+
+                    )}
 
                         {/* 로딩 */}
-                        {loading === true ? (
-                            <div className="text-center py-5">
-                                <Spinner animation="border"/>
-                                <div className="mt-2">
-                                    기대결과 불러오는 중입니다...
-                                </div>
-                            </div>
-                        ) : resultList.length === 0 ? (
-                            <div className="text-center text-muted py-5">
-                                등록된 기대결과가 없습니다.
-                            </div>
-                        ) :(
-                            <ListGroup>
+                    {loading === true ? (
 
-                                {resultList.map(result =>(
-                                    <ListGroup.Item key={result.projectResultNo}>
-                                        <div className="d-flex justify-content-between align-items-center gap-3">
+                        <div className="text-center py-5">
+
+                            <Spinner
+                                animation="border"
+                            />
+
+                            <div className="mt-2">
+                                기대결과 불러오는 중입니다...
+                            </div>
+
+                        </div>
+
+                    ) : resultList.length === 0 ? (
+
+                        /* 기대결과 없음 */
+                        <div className="text-center text-muted py-5">
+
+                            등록된 기대결과가 없습니다.
+
+                        </div>
+
+                    ) : (
+
+                        /* 기대결과 목록 */
+                        <ListGroup>
+
+                            {resultList.map(
+                                (result) => (
+
+                                    <ListGroup.Item
+                                        key={
+                                            result.projectResultNo
+                                        }
+                                    >
+
+                                        <div
+                                            className="
+                                                d-flex
+                                                justify-content-between
+                                                align-items-center
+                                                gap-3
+                                            "
+                                        >
+
                                             {/* 수정중 */}
-                                            {editNo === result.projectResultNo ? (
-                                                <Form.Control type="text" value={editContent}
-                                                    onChange={(e)=> setEditContent(e.target.value)}/>
-                                            ) :(
-                                                <div>
-                                                    {result.projectResultOrder}.
-                                                    {" "}
-                                                    {result.projectResultContent}
+                                            {
+                                                editNo
+                                                ===
+                                                result.projectResultNo
+                                                    ? (
+
+                                                        <Form.Control
+                                                            type="text"
+                                                            value={
+                                                                editContent
+                                                            }
+                                                            onChange={
+                                                                (e) =>
+                                                                    setEditContent(
+                                                                        e.target.value
+                                                                    )
+                                                            }
+                                                        />
+
+                                                    )
+                                                    : (
+
+                                                        <div>
+
+                                                            {
+                                                                result.projectResultOrder
+                                                            }.
+
+                                                            {" "}
+
+                                                            {
+                                                                result.projectResultContent
+                                                            }
+
+                                                        </div>
+
+                                                    )
+                                            }
+
+
+                                            {/* OWNER만 수정/삭제 가능 */}
+                                            {isOwner && (
+
+                                                <div
+                                                    className="
+                                                        d-flex
+                                                        gap-2
+                                                        flex-shrink-0
+                                                    "
+                                                >
+
+                                                    {
+                                                        editNo
+                                                        ===
+                                                        result.projectResultNo
+                                                            ? (
+                                                                <>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="success"
+                                                                        onClick={() =>
+                                                                            updateResult(
+                                                                                result.projectResultNo
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        저장
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="secondary"
+                                                                        onClick={
+                                                                            cancelEdit
+                                                                        }
+                                                                    >
+                                                                        취소
+                                                                    </Button>
+
+                                                                </>
+                                                            )
+                                                            : (
+                                                                <>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline-primary"
+                                                                        onClick={() =>
+                                                                            startEdit(
+                                                                                result
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        수정
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline-danger"
+                                                                        onClick={() =>
+                                                                            deleteResult(
+                                                                                result
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        삭제
+                                                                    </Button>
+
+                                                                </>
+                                                            )
+                                                    }
+
                                                 </div>
+
                                             )}
 
-                                                {/* owner 전용 */}
-                                                {isOwner && (
-                                                    <div className="d-flex gap-2 flex-shrink-0">
-                                                        {editNo === result.projectResultNo ? (
-                                                            <>
-                                                                <Button size="sm" variant="success"
-                                                                    onClick={()=>updateResult(result.projectResultNo)}>
-                                                                        저장
-                                                                </Button>
-                                                                
-                                                                <Button size="sm" variant="secondary"
-                                                                    onClick={cancelEdit}>
-                                                                        취소
-                                                                </Button>
-                                                            
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Button size="sm" variant="outline-primary"
-                                                                    onClick={()=>startEdit(result)}>
-                                                                        수정
-                                                                </Button>
-
-                                                                <Button size="sm" variant="outline-danger"
-                                                                    onClick={()=>deleteResult(result)}>
-                                                                        삭제
-                                                                </Button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                )}
                                         </div>
-                                            
-                                    </ListGroup.Item>
-                                ))}
-                            </ListGroup>
-                        )}
-                    </div>
-                )}
-            </Modal.Body>
 
-            <Modal.Footer>
-                <Button variant="secondary" onClick={onHide}>
-                    닫기
-                </Button>
-            </Modal.Footer>
-        </Modal>
-    </>)
-};
+                                    </ListGroup.Item>
+
+                                )
+                            )}
+
+                        </ListGroup>
+
+                    )}
+
+                </Modal.Body>
+
+
+                <Modal.Footer>
+
+                    <Button
+                        variant="secondary"
+                        onClick={onHide}
+                    >
+                        닫기
+                    </Button>
+
+                </Modal.Footer>
+
+            </Modal>
+
+        </>
+    );
+}
