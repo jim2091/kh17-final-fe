@@ -108,16 +108,40 @@ export default function ProjectClose(){
             return;
         }
 
-        const result = await Swal.fire({
-            icon : "warning",
-            title : "프로젝트를 종료하시겠습니까?",
-            text : "종료된 프로젝트는 아카이브로 이동합니다.",
-            showCancelButton : true,
-            confirmButtonText : "종료",
-            cancelButtonText : "취소"
-        });
+        //상태 확인
+        const hasUnachieved = resultList.some(result=>
+            result.projectResultStatus === "unachieved"
+        );
+        const hasPartial = resultList.some(result=>
+            result.projectResultStatus === "partial"
+        );
 
-        if(result.isConfirmed === false){
+        let confirmResult;
+
+        if(hasUnachieved || hasPartial){
+            confirmResult = await Swal.fire({
+                icon : "warning",
+                title : "미달성된 기대결과가 있습니다",
+                html : `기대결과가 부분달성 또는 미달성 상태입니다. <br/>
+                        그래도 프로젝트를 종료하시겠습니까?`,
+                showCancelButton : true,
+                confirmButtonText : "종료",
+                cancelButtonText : "취소",
+                confirmButtonColor : "#dc3545"
+            });
+        }
+        else{
+            const result = await Swal.fire({
+                icon : "warning",
+                title : "프로젝트를 종료하시겠습니까?",
+                text : "종료된 프로젝트는 아카이브로 이동합니다.",
+                showCancelButton : true,
+                confirmButtonText : "종료",
+                cancelButtonText : "취소"
+            });
+        }
+
+        if(!confirmResult.isConfirmed){
             return;
         }
 
@@ -206,13 +230,10 @@ export default function ProjectClose(){
                                             </div>
 
 
-                                            {/* 달성 / 미달성 */}
-                                            <div className=
-                                                "d-flex gap-2"
-                                            >
+                                            {/* 달성 / 부분 달성/미달성 */}
+                                            <div className="d-flex gap-2">
 
-                                                <Button
-                                                    size="sm"
+                                                <Button size="sm"
                                                     variant={
                                                         result.projectResultStatus
                                                         === "achieved"
@@ -228,10 +249,25 @@ export default function ProjectClose(){
                                                 >
                                                     달성
                                                 </Button>
+                                                
+                                                <Button size="sm"
+                                                    variant={
+                                                        result.projectResultStatus
+                                                        === "partial"
+                                                            ? "success"
+                                                            : "outline-warning"   
+                                                    }
+                                                    onClick={()=>
+                                                        changeResultStatus(
+                                                            result.projectResultNo,
+                                                            "partial"
+                                                        )
+                                                    }
+                                                >
+                                                    부분달성
+                                                </Button>
 
-
-                                                <Button
-                                                    size="sm"
+                                                <Button size="sm"
                                                     variant={
                                                         result.projectResultStatus
                                                         === "unachieved"
