@@ -16,6 +16,8 @@ export default function ProjectMemberModal({
     //owner여부
     const isOwner = role === "owner";
 
+    //프로젝트 상태
+    const isClosed = project?.projectStatus === "closed";
     //맴버 초대 가능 여부
     const canInvite = project.projectVisibility === "public" || 
                         role === "owner" ||
@@ -167,7 +169,7 @@ export default function ProjectMemberModal({
                                             <Badge bg="primary">
                                                 OWNER
                                             </Badge>
-                                        ) : isOwner ? (
+                                        ) : isOwner && isClosed === false ? (
                                             <Form.Select size="sm"
                                                 value={member.projectMemberRole}
                                                 onChange ={(e)=> changeMemberRole(member,e.target.value)}>
@@ -187,7 +189,8 @@ export default function ProjectMemberModal({
                                         )}
 
                                         {/* owner위임 */}
-                                        {isOwner && member.projectMemberRole !== "owner" &&(
+                                        {isOwner && isClosed === false && 
+                                                member.projectMemberRole !== "owner" &&(
                                             <Button size="sm" variant="outline-danger"
                                                     onClick={()=> changeOwner(member)}>
                                                 owner 위임
@@ -203,7 +206,7 @@ export default function ProjectMemberModal({
 
             <Modal.Footer>
                 {/* OWNER */}
-                {canInvite && (
+                {canInvite && isClosed === false && (
                     <Button variant="primary"
                         onClick={()=>{
                             toast.info("아직안됌")

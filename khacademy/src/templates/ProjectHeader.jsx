@@ -22,6 +22,11 @@ export default function ProjectHeader({project, loadProject}) {
     //멤버 관리
     const [showMember, setShowMember] = useState(false);
 
+    //상태 구분
+    const isActive = project.projectStatus === "active";
+    const isClosed = project.projectStatus === "closed";
+    const isOwner = project.projectMemberRole === "owner";
+
     //프로젝트 수정페이지 이동
     const moveEdit = useCallback(()=>{
         navigate(`/projects/${projectNo}/edit`);
@@ -59,6 +64,38 @@ export default function ProjectHeader({project, loadProject}) {
             toast.error("프로젝트 삭제에 실패했습니다.");
         }
     },[projectNo,navigate])
+
+    //프로젝트 재활성화
+    const activateProject = useCallback(async()=>{
+
+        const result = await Swal.fire({
+            icon : "question",
+            title : "프로젝트를 다시 시작하시겠습니까?",
+            text : "프로젝트가 활성화되어 다시 작업할 수 있습니다.",
+            showCancelButton : true,
+            confirmButtonText : "활성화",
+            cancelButtonText : "취소"
+        });
+
+        if(result.isConfirmed === false){
+            return;
+        }
+
+        try{
+            await apiClient.patch(`/project/${projectNo}/activate`);
+            toast.success("프로젝트가 다시 활성화되었습니다.");
+            //프로젝트 정보 다시 조회
+            await loadProject();
+    
+            //업무 화면으로 이동
+            navigate(`/projects/${projectNo}/task`);
+        }
+
+        catch(e){
+            toast.error("프로젝트 활성화에 실패했습니다.");
+        }
+
+    },[projectNo,loadProject,navigate]);
 
     return (
         <div className="project-header">
@@ -120,13 +157,31 @@ export default function ProjectHeader({project, loadProject}) {
                     {project.projectMemberRole}
                 </Badge>
 
-                {/* owner 전용 */}
-                {project.projectMemberRole === "owner" &&(
-                    <div className="d-flex me-2">
-                        <Button size="sm" variant="outline-primary" onClick={moveEdit}>수정</Button>
-                        <Button size="sm" variant="outline-warning" onClick={moveClose}>종료</Button>
-                        <Button size="sm" variant="outline-danger" onClick={deleteProject}>삭제</Button>
+                {/* active 프로젝트 owner */}
+                {isActive && isOwner && (
+                    <div className="d-flex me-2 gap-1">
+                        <Button size="sm" variant="outline-primary"
+                                onClick={moveEdit}>
+                            수정
+                        </Button>
+
+                        <Button size="sm" variant="outline-warning"
+                                onClick={moveClose}>
+                            종료
+                        </Button>
+
+                        <Button size="sm" variant="outline-danger"
+                                onClick={deleteProject}>
+                            삭제
+                        </Button>
                     </div>
+                )}
+                {/* closed 프로젝트 owner */}
+                {isClosed && isOwner && (
+                    <Button size="sm" variant="success"
+                            onClick={activateProject}>
+                        프로젝트 활성화
+                    </Button>
                 )}
             </div>
 
