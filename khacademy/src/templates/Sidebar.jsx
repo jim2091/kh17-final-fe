@@ -58,6 +58,15 @@ export default function Sidebar({
                     >
                         아카이브
                     </NavLink>
+                    <NavLink
+                        to="/members"
+                        className={({ isActive }) =>
+                            isActive ? "sidebar-link active" : "sidebar-link"
+                        }
+                        onClick={closeSidebar}
+                    >
+                        사용자 목록
+                    </NavLink>
 
                 </div>
             </div>
