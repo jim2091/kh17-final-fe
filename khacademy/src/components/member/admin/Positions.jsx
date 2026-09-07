@@ -185,7 +185,7 @@ export default function Positions() {
         </Col>
 
         {positionList.map((position) => (
-            <Card className="mt-2 card">
+            <Card key={position.positionNo} className="mt-2 card">
                 <Card.Body>
                     <Row>
                         <Col>{position.positionNo}</Col>

@@ -67,12 +67,49 @@
     color: #343a40;
 }
 
+/* 사이드바 헤더 버튼 영역 */
+.sidebar-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.channel-add-button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background-color: transparent;
+    color: #7a8491;
+    font-size: 18px;
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.channel-add-button:hover {
+    background-color: #e9edf2;
+    color: #343a40;
+}
+
 /* 사이드바 - 채널 목록 */
 .channel-list {
     display: flex;
     flex-direction: column;
 
     gap: 4px;
+}
+
+.channel-item-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .channel-item {
@@ -85,7 +122,7 @@
 
     gap: 8px;
 
-    padding: 10px 11px;
+    padding: 10px 38px 10px 11px;
 
     border: 0;
     border-radius: 8px;
@@ -107,24 +144,6 @@
     background-color: #e9efff;
     color: #376feb;
     font-weight: 600;
-}
-
-.channel-item-left {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.channel-prefix {
-    flex-shrink: 0;
-    color: #9aa1aa;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.channel-item.active .channel-prefix {
-    color: #6685e8;
 }
 
 .channel-name {
@@ -151,6 +170,135 @@
     font-size: 11px;
     font-weight: 700;
 }
+
+.channel-menu-wrapper {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+.channel-menu-button {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background-color: transparent;
+    color: #8b949e;
+    font-size: 17px;
+    cursor: pointer;
+    opacity: 0;
+    transition: 
+        opacity 0.15s ease,
+        background-color 0.15s ease
+        color 0.15s ease;
+}
+
+.channel-item-wrapper:hover .channel-menu-button {
+    opacity: 1;
+}
+
+.channel-menu-button:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: #495057;
+}
+
+.channel-menu {
+    position: absolute;
+    top: 32px;
+    right: 0;
+    z-index: 30;
+    min-width: 96px;
+    padding: 5px;
+    background-color: #ffffff;
+    border: 1px solid #e2e6ea;
+    border-radius: 9px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.channel-menu button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 6px;
+    background-color: transparent;
+    color: #495057;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.channel-menu button:hover {
+    background-color: #f5f6f8;
+}
+
+.chat-sidebar .channel-menu button:last-child:hover {
+    background-color: #fff1f1;
+    color: #dc3545;
+}
+
+/* 채널 등록/수정 모달 */
+.channel-modal-label {
+    margin-bottom: 7px;
+    color: #495057;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.channel-name-input {
+    width: 100%;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: 
+        border-color 0.15s ease
+        box-shadow 0.15s ease;
+}
+
+.channel-name-prefix {
+    flex-shrink: 0;
+    padding-left: 13px;
+    padding-right: 4px;
+    color: #7c8590;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.channel-name-input .form-control {
+    height: 100%;
+    padding-left: 4px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 15px;
+}
+
+.channel-name-input .form-control:focus {
+    box-shadow: none;
+}
+
+.channel-name-input:focus-within {
+    border-color: #86aaf8;
+    box-shadow: 0 0 0 3px rgba(55, 111, 235, 0.1);
+}
+
+.channel-modal-help {
+    margin-top: 7px;
+    color: #9098a1;
+    font-size: 12px;
+}
+
 
 /* chat-main */
 .chat-main {

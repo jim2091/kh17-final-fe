@@ -1,9 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
 import Swal from "sweetalert2";
 import { FiPlus } from "react-icons/fi";
+import { HiOutlineDotsHorizontal } from "react-icons/hi";
+import { FaPenToSquare } from "react-icons/fa6";
+import { Button, Form, FormGroup, Modal } from "react-bootstrap";
+import { FaTrashAlt } from "react-icons/fa";
 
 export default function ChatSidebar(
     { 
@@ -33,7 +37,7 @@ export default function ChatSidebar(
         setChannelModal(true);
     }, []);
 
-    const editCreateModal = useCallback((channel) => {
+    const openEditModal = useCallback((channel) => {
         setChannelModalMode("edit");
         setTargetChannel(channel);
         // #은 서버에서 달아주므로 입력창에서는 #이 달린 이름을 불러오고 제거해줌
@@ -129,13 +133,24 @@ export default function ChatSidebar(
         }
     };
 
+    useEffect(() => {
+        const closeChannelMenu = () => {
+            setChannelMenuNo(null);
+        };
+
+        document.addEventListener("click", closeChannelMenu);
+
+        return () => {
+            document.removeEventListener("click", closeChannelMenu);
+        };
+    }, []);
+
     return(<>
         <div className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
             <div className="sidebar-header">
                 <div className="sidebar-title">
                     채널
                 </div>
-                
                 <div className="sidebar-header-actions">
                     {canManageChannel && (
                         <button
@@ -163,10 +178,15 @@ export default function ChatSidebar(
                     const active = 
                         selectedChannel?.chatChannelNo === channel.chatChannelNo;
                     
-                        return (
+                    const isGeneral = channel.chatChannelName.toLowerCase() === "#general";
+
+                    return (
+                        <div
+                            className="channel-item-wrapper"
+                            key={channel.chatChannelNo}
+                        >
                             <button
                                 type="button"
-                                key={channel.chatChannelNo}
                                 className={
                                     active ? "channel-item active" : "channel-item"
                                 }
@@ -174,22 +194,130 @@ export default function ChatSidebar(
                                     setSelectedChannel(channel)
                                     setSidebarOpen(false)
                                 }}
-                                >
-                                    <div className="channel-item-left">
-                                        <span className="channel-name">
-                                            {channel.chatChannelName}
-                                        </span>
-                                    </div>
+                            >
+                    
+                                <span className="channel-name">
+                                    {channel.chatChannelName}
+                                </span>
 
-                                    {unreadCounts?.[channel.chatChannelNo] > 0 && (
-                                        <span className="channel-unread-badge">
-                                            {unreadCounts[channel.chatChannelNo]}
-                                        </span>
+                                {unreadCounts?.[channel.chatChannelNo] > 0 && (
+                                    <span className="channel-unread-badge">
+                                        {unreadCounts[channel.chatChannelNo]}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* 채팅채널 관리자도 아니고 general도 아닐 때 */}
+                            {canManageChannel && !isGeneral && (
+                                <div className="channel-menu-wrapper">
+                                    <button
+                                        type="button"
+                                        className="channel-menu-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setChannelMenuNo(
+                                                channelMenuNo === channel.chatChannelNo
+                                                 ? null
+                                                 : channel.chatChannelNo
+                                            );
+                                        }}
+                                    >
+                                        <HiOutlineDotsHorizontal />
+                                    </button>
+
+                                    {channelMenuNo === channel.chatChannelNo && (
+                                        <div className="channel-menu"
+                                            onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditModal(channel)}
+                                            >
+                                                <FaPenToSquare />
+                                                수정
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteChannel(channel)}
+                                            >
+                                                <FaTrashAlt />
+                                                삭제
+                                            </button>
+                                        </div>
                                     )}
-                                </button>
-                        );
+                                </div>
+                            )}
+
+                        </div>
+                    );
                 })}
             </div>
         </div>
+
+        {/* 등록/수정 모달 */}
+        <Modal
+            show={channelModal}
+            onHide={() => setChannelModal(false)}
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>
+                    {channelModalMode === "create"
+                        ? "채널 생성"
+                        : "채널 수정"}
+                </Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                <FormGroup>
+                    <Form.Label className="channel-modal-label">
+                        채널명
+                    </Form.Label>
+
+                    <div className="channel-name-input">
+                        <span className="channel-name-prefix">
+                            #
+                        </span>
+                        <Form.Control
+                            type="text"
+                            value={channelName}
+                            onChange={(e) => setChannelName(e.target.value)}
+                            placeholder="채널명을 입력하세요"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if(e.key === "Enter") {
+                                    saveChannel();
+                                }
+                            }}
+                        />
+                    </div>
+                </FormGroup>
+
+                <div className="channel-modal-help">
+                    프로젝트 구성원 모두가 이 채널을 사용할 수 있습니다
+                </div>
+            </Modal.Body>
+
+            <Modal.Footer>
+                <Button
+                    variant="secondary"
+                    onClick={() => setChannelModal(false)}
+                >
+                    취소
+                </Button>
+
+                <Button
+                    onClick={saveChannel}
+                    disabled={saving}
+                >
+                    {saving
+                        ? "저장 중..."
+                        : channelModalMode === "create"
+                            ? "생성"
+                            : "수정"}
+                </Button>
+            </Modal.Footer>
+        </Modal>
+
     </>)
 }

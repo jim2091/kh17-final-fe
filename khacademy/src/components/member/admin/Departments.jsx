@@ -190,7 +190,7 @@ export default function Departments() {
         </Col>
 
         {deptList.map((dept)=>(
-            <Card className="mt-2 card">
+            <Card key={dept.deptNo} className="mt-2 card">
                 <Card.Body>
                     <Row>
                         <Col>{dept.deptNo}</Col>

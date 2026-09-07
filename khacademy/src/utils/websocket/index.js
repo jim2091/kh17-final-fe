@@ -7,7 +7,7 @@ let client = null;
 //WebSocket 연결 완료를 기다리는 작업 목록
 const connectCallbacks = [];
 
-//SebSocket 서버 연결
+//WebSocket 서버 연결
 export const connectWebSocket = () => {
 
     //이미 연결된 Client가 존재하면 새로 만들지 않음

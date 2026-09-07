@@ -22,7 +22,7 @@ export default function Chat() {
     const isManagerOrOwner = 
         project?.projectMemberRole === "owner"
         || project?.projectMemberRole === "manager";
-    const canManageCannel = isManagerOrOwner && !isClosed;
+    const canManageChannel = isManagerOrOwner && !isClosed;
     const loginUser = useAtomValue(loginUserState);
 
     const [channels, setChannels] = useState([]);
@@ -425,7 +425,7 @@ export default function Chat() {
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 unreadCounts={unreadCounts}
-                canManageCannel={canManageCannel}
+                canManageChannel={canManageChannel}
                 loadChannelList={loadChannelList}
             />
 
