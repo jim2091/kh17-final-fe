@@ -57,3 +57,20 @@
     width: 400px;
     max-width: 400px;
 }
+.my-pagination .page-link {
+    color: #c7dbec !important;
+    background-color: #2563eb !important;
+    border-color: #0b5999 !important;
+}
+
+.my-pagination .page-item.active .page-link {
+    color: #012949 !important;
+    background-color: #2563eb!important;
+    border-color: #025497 !important;
+    font-weight: bold;
+}
+
+.my-pagination .page-link:hover {
+    color: white !important;
+    background-color: #70a5d1 !important;
+}

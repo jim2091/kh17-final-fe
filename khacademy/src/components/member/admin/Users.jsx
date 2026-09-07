@@ -1,16 +1,16 @@
 import { Button, Col, Form, Row, Card } from "react-bootstrap";
 import { FaArrowDown, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
-// import { useWebSocket } from "@websocket/WebSocketProvider";
 import "../member.css";
 import "@templates/project.css";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import NoImage from "@assets/noimages.png";
+import Pagination from 'react-bootstrap/Pagination';
 
 
 export default function Users() {
@@ -22,6 +22,12 @@ export default function Users() {
 
     const [selectedEmp, setSelectedEmp] = useState({});
 
+    const [page, setPage] = useState({
+        page: 1,
+        size: 10,
+    });
+
+    const [count, setCount] = useState(0);
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
     const [deptList, setDeptList] = useState([]);
@@ -47,32 +53,27 @@ export default function Users() {
         "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
 
 
+    // console.log("page : ", page);
+    const loadData = useCallback(async () => {
+
+        const { data } = await apiClient.post("/admin/", page);
+
+        setEmpList(data.list);
+        setCount(data.count);
+
+
+    }, [page]);
 
     useEffect(() => {
         loadData();
 
 
-    }, []);
+    }, [loadData]);
 
 
 
-    const loadData = useCallback(async () => {
-        const { data } = await apiClient.get("/admin/");
-
-        setEmpList(data);
 
 
-        // console.log("전체 회원 목록 : ", data);
-    }, []);
-
-    // const { users } = useWebSocket();
-
-    // setUsers(users);
-    // console.log("empList : ", empList);
-
-    // if (empList === null) {
-    //     return (<h1>로딩중인 화면</h1>);
-    // }
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
         setKeyword(prev => ({
@@ -89,14 +90,11 @@ export default function Users() {
             [name]: value
         });
     }, [selectedEmp]);
-    // console.log("selectedEmp : ", selectedEmp);
 
     const search = useCallback(async () => {
-        // console.log("검색 키워드:", condition);
         const { data } = await apiClient.post("/admin/complexSearch", keyword);
 
         setEmpList(data);
-        // console.log("복합검색결과 : ", data);
 
     }, [keyword]);
 
@@ -161,26 +159,42 @@ export default function Users() {
         setSelectedEmp({});
     }, [loadData, selectedEmp]);
 
-    const nameAsc = useCallback( async ()=>{
+    const nameAsc = useCallback(async () => {
         const { data } = await apiClient.get("/admin/nameAsc");
 
         setEmpList(data);
     }, []);
-    const emailAsc = useCallback( async ()=>{
+    const emailAsc = useCallback(async () => {
         const { data } = await apiClient.get("/admin/emailAsc");
 
         setEmpList(data);
     }, []);
-    const deptAsc = useCallback( async ()=>{
+    const deptAsc = useCallback(async () => {
         const { data } = await apiClient.get("/admin/deptAsc");
 
         setEmpList(data);
     }, []);
-    const positionAsc = useCallback( async ()=>{
+    const positionAsc = useCallback(async () => {
         const { data } = await apiClient.get("/admin/positionAsc");
 
         setEmpList(data);
     }, []);
+
+    const totalPage = useMemo(()=>{
+       return Math.ceil(count/page.size);
+    }, [count, page]);
+
+    const pageGroup = useMemo(()=>{
+        return Math.ceil(page.page / 5);
+    }, [page]);
+
+    const startPage = useMemo(()=>{
+        return (pageGroup - 1) * 5 +1;
+    }, [pageGroup]);
+
+    const endPage = useMemo(()=>{
+        return Math.min(pageGroup * 5, totalPage);
+    }, [pageGroup, totalPage]);
 
 
     return (<>
@@ -200,8 +214,7 @@ export default function Users() {
             </Row>
 
 
-            <Col className="d-flex justify-content-between align-items-center p-5">
-                <h1>회원관리</h1>
+            <Col className="text-end p-3">
                 <Button as={Link} to="/invite">
                     <FaPlus />
                     사용자 초대하기
@@ -225,21 +238,21 @@ export default function Users() {
                 <Card.Body>
                     <Row>
                         <Col className="text-nowrap" onClick={nameAsc}>
-                        <span>사번/이름</span>
-                        <FaArrowDown className="ms-2"/>
+                            <span>사번/이름</span>
+                            <FaArrowDown className="ms-2" />
                         </Col>
                         <Col className="text-nowrap">접속상태</Col>
                         <Col className="d-none d-md-block text-nowrap" onClick={emailAsc}>
-                        <span>이메일</span>
-                        <FaArrowDown className="ms-2"/>
+                            <span>이메일</span>
+                            <FaArrowDown className="ms-2" />
                         </Col>
                         <Col className="text-nowrap" onClick={deptAsc}>
-                        <span>부서</span>
-                        <FaArrowDown className="ms-2"/>
+                            <span>부서</span>
+                            <FaArrowDown className="ms-2" />
                         </Col>
                         <Col className="text-nowrap" onClick={positionAsc}>
-                        <span>직급</span>
-                        <FaArrowDown className="ms-2"/>
+                            <span>직급</span>
+                            <FaArrowDown className="ms-2" />
                         </Col>
                         <Col className="d-none d-md-block text-nowrap">생년월일</Col>
                         <Col className="d-none d-md-block text-nowrap">연락처</Col>
@@ -251,13 +264,11 @@ export default function Users() {
 
 
             {empList.map((emp) => {
-                // const online = users.some(user => user.empNo === emp.empNo);
 
                 return (
 
                     <Card key={emp.empNo} className="mt-2 card">
-                     {/* ${online ? "" : "text-muted"} */}
-                     
+
                         <OverlayTrigger
                             trigger="click"
                             placement="bottom"
@@ -344,9 +355,7 @@ export default function Users() {
                                 <Row>
                                     <Col className="text-nowrap">{emp.empNo}/{emp.empName}</Col>
                                     <Col>
-                                        {/* <FaCircle className={online ? "text-info" : "text-secondary"} />
-                                        <span className="ms-2">{online ? "online" : "offline"}</span> */}
-                                        <FaCircle/>
+                                        <FaCircle />
                                         <span className="ms-2">offline</span>
                                     </Col>
                                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
@@ -355,27 +364,56 @@ export default function Users() {
                                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
                                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
                                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1}</Col>
-                                    {/* {(emp.empState === "invited" || emp.empState === "inactive") && (<> */}
                                     <Col>
                                         <Button onClick={() => changeState(emp)}>
                                             <span>{emp.empState}</span>
                                         </Button>
                                     </Col>
-                                    {/* </>)}
-                                    {emp.empState === "active" && (<> */}
-                                    {/* <Col xs={1}>
-                                            <Button onClick={() => changeData(emp)}>
-                                                <span>{emp.empState}</span>
-                                            </Button>
-                                        </Col> */}
-                                    {/* </>)} */}
+
                                 </Row>
                             </Card.Body>
                         </OverlayTrigger>
                     </Card>
                 );
             })}
+            <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
+                <Pagination.Prev
+                    disabled={pageGroup === 1}
+                    onClick={()=>
+                        setPage(prev => ({
+                            ...prev,
+                            page: startPage -1
+                        }))
+                    }
+                />
+                {Array.from(
+                    {length : endPage - startPage + 1},
+                    (_, index)=> startPage + index)
+                    .map(pageNumber =>(
 
+                        <Pagination.Item
+                            key={pageNumber}
+                            active={page.page === pageNumber}
+                            onClick={() => 
+                                setPage(prev => ({ 
+                                ...prev, 
+                                page: pageNumber
+                            }))}
+                        >{pageNumber}</Pagination.Item>
+
+                ))}
+                
+                
+                <Pagination.Next 
+                    disabled={endPage === totalPage}
+                    onClick={()=>
+                        setPage(prev =>({
+                            ...prev,
+                            page : endPage + 1
+                        }))
+                    }
+                />
+            </Pagination>
 
         </div>
     </>)
