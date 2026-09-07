@@ -14,8 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { isLoginState, isAdminState } from "@utils/storage";
 import { logoutActionState } from "@utils/storage";
 import { authClient, apiClient } from "@utils/reaxios";
-import { useWebSocket } from "@websocket/WebSocketProvider";
-import { FaCircle } from "react-icons/fa6";
+// import { useWebSocket } from "@websocket/WebSocketProvider";
+// import { FaCircle } from "react-icons/fa6";
 import NoImage from "@assets/noimages.png";
 import "./Project.css";
 
@@ -37,7 +37,7 @@ export default function Header({ toggleSidebar }) {
 
     
 
-    const { users } = useWebSocket();
+    // const { users } = useWebSocket();
 
 
     const logout = useCallback(async () => {
@@ -59,7 +59,7 @@ export default function Header({ toggleSidebar }) {
     }, []);
 
 
-    const online = users.some(user => user.empName === empName);
+    // const online = users.some(user => user.empName === empName);
 
 
     const navigate = useNavigate();
@@ -192,8 +192,8 @@ export default function Header({ toggleSidebar }) {
                                 <Image className="header-img"
                                  src={attachNo === null ? NoImage : profileUrl}
                                     roundedCircle />
-                                <FaCircle className={`position-absolute bottom-0 end-0 
-                                    ${online ? "text-info" : "text-secondary"}`} />
+                                {/* <FaCircle className={`position-absolute bottom-0 end-0 
+                                    ${online ? "text-info" : "text-secondary"}`} /> */}
                             </div>
                         </OverlayTrigger>
 
