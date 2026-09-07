@@ -1,8 +1,26 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { renderAsync } from "docx-preview";
 import { apiClient } from "@utils/reaxios";
-import { ArrowLeft, Edit3, Trash2, Paperclip, Download, MessageSquare, Send, X, FileText } from "lucide-react";
-import "./Notes.css";
+import {
+  ArrowLeft,
+  Edit3,
+  Trash2,
+  Download,
+  FileText,
+  Eye,
+  Loader2,
+  X
+} from "lucide-react";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import NoteComments from "./NoteComments";
+import "./NoteDetail.css";
+
+// 이미지 파일 여부 판별 헬퍼[cite: 1]
+const isImageFile = (fileName = "") => {
+  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
+};
 
 export default function NoteDetail() {
   const { projectNo, noteNo } = useParams();
@@ -10,232 +28,312 @@ export default function NoteDetail() {
 
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState("");
-  const [commentFile, setCommentFile] = useState(null);
-  const fileInputRef = React.useRef(null);
 
-  const loadData = useCallback(async () => {
+  // 워드 문서 (.docx) 온라인 미리보기 상태
+  const [previewDocx, setPreviewDocx] = useState(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerError, setViewerError] = useState(null);
+  const docxContainerRef = useRef(null);
+
+  // 노트 정보 및 첨부파일 목록 조회
+  const loadNoteDetail = useCallback(async () => {
+    if (!noteNo || isNaN(Number(noteNo))) return;
+
     try {
-      const [noteRes, fileRes, commRes] = await Promise.all([
+      const [noteRes, fileRes] = await Promise.all([
         apiClient.get(`/note/${noteNo}`),
-        apiClient.get(`/note/file/list/${noteNo}`),
-        apiClient.get(`/note/comment/list/${noteNo}`)
+        apiClient.get(`/note/file/${noteNo}`)
       ]);
+
       setNote(noteRes.data);
       setFiles(fileRes.data || []);
-
-      const commList = commRes.data || [];
-      const withFiles = await Promise.all(
-        commList.map(async (c) => {
-          try {
-            const f = await apiClient.get(`/note/file/comment/${c.noteCommentNo}`);
-            return { ...c, files: f.data || [] };
-          } catch {
-            return { ...c, files: [] };
-          }
-        })
-      );
-      setComments(withFiles);
     } catch (e) {
-      console.error(e);
+      console.error("노트 데이터 로드 실패:", e);
+      toast.error("노트 데이터를 불러오지 못했습니다.");
     }
   }, [noteNo]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadNoteDetail();
+  }, [loadNoteDetail]);
 
+  // 목록으로 돌아가기 안전 핸들러
+  const handleGoBackToList = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate(`/projects/${projectNo}/note`);
+    }
+  };
+
+  // docx-preview 워드 문서 렌더링
+  useEffect(() => {
+    if (!previewDocx) return;
+    let isSubscribed = true;
+
+    const renderDocxOnline = async () => {
+      try {
+        setViewerLoading(true);
+        setViewerError(null);
+        const res = await apiClient.get(`/attach/${previewDocx.attachNo}`, {
+          responseType: "arraybuffer"
+        });
+
+        if (!isSubscribed) return;
+
+        if (docxContainerRef.current) {
+          docxContainerRef.current.innerHTML = "";
+          await renderAsync(res.data, docxContainerRef.current, null, {
+            className: "docx-doc-page",
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            breakPages: true
+          });
+        }
+      } catch (err) {
+        console.error("워드 문서 렌더링 실패:", err);
+        if (isSubscribed) {
+          setViewerError("워드 문서 양식을 웹 화면으로 불러오지 못했습니다.");
+        }
+      } finally {
+        if (isSubscribed) setViewerLoading(false);
+      }
+    };
+
+    renderDocxOnline();
+    return () => { isSubscribed = false; };
+  }, [previewDocx]);
+
+  // 파일 다운로드 핸들러
+  const handleDownloadFile = async (attachNo, attachName) => {
+    try {
+      const res = await apiClient.get(`/attach/${attachNo}`, {
+        responseType: "blob"
+      });
+
+      const blob = new Blob([res.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", attachName || `file_${attachNo}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error("다운로드 실패:", err);
+      toast.error("파일 다운로드에 실패했습니다.");
+    }
+  };
+
+  // 노트 삭제
   const handleDeleteNote = async () => {
-    if (!window.confirm("노트를 삭제하시겠습니까?")) return;
+    const result = await Swal.fire({
+      title: "노트 삭제",
+      text: "정말 노트를 삭제하시겠습니까? 관련 댓글과 첨부파일도 함께 삭제됩니다.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소"
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await apiClient.delete(`/note/${noteNo}`);
-      navigate(`/projects/${projectNo}/note`);
+      toast.success("노트가 삭제되었습니다.");
+      handleGoBackToList();
     } catch (e) {
-      console.error(e);
+      console.error("노트 삭제 실패:", e);
+      toast.error("노트 삭제에 실패했습니다.");
     }
   };
 
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!commentText.trim() && !commentFile) return;
+  if (!note) {
+    return <div className="note-detail-loading">노트를 불러오는 중...</div>;
+  }
 
-    try {
-      const res = await apiClient.post(`/note/comment/?projectNo=${projectNo}`, {
-        noteNo: Number(noteNo),
-        noteCommentContent: commentText.trim() || `[첨부파일] ${commentFile?.name}`
-      });
-      const newCommentNo = typeof res.data === "number" ? res.data : res.data?.noteCommentNo;
-
-      if (commentFile && newCommentNo) {
-        const formData = new FormData();
-        formData.append("file", commentFile);
-        formData.append("projectNo", projectNo);
-        await apiClient.post(`/note/file/comment/${newCommentNo}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" }
-        });
-      }
-
-      setCommentText("");
-      setCommentFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      loadData();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleDeleteComment = async (commentNo) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
-    try {
-      await apiClient.delete(`/note/comment/${commentNo}`);
-      loadData();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  if (!note) return <div className="notes-page-wrapper">노트를 불러오는 중...</div>;
+  // 첨부파일을 이미지와 일반 문서로 분류[cite: 1]
+  const imageFiles = files.filter((f) => isImageFile(f.attachName));
+  const docFiles = files.filter((f) => !isImageFile(f.attachName));
 
   return (
-    <div className="notes-page-wrapper">
-      {/* 상단 액션 바 */}
-      <div className="notes-top-header">
-        <button className="btn-notes-outline" onClick={() => navigate(`/projects/${projectNo}/note`)}>
+    <div className="note-detail-page-wrapper">
+      {/* 상단 툴바: 목록으로 버튼 */}
+      <div className="note-detail-top-bar">
+        <button
+          type="button"
+          className="btn-note-nav-outline"
+          onClick={handleGoBackToList}
+        >
           <ArrowLeft size={15} /> 목록으로
         </button>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="note-top-action-group">
           <button
-            className="btn-notes-outline"
+            type="button"
+            className="btn-note-nav-outline"
             onClick={() => navigate(`/projects/${projectNo}/note/${noteNo}/edit`)}
           >
             <Edit3 size={14} /> 수정
           </button>
-          <button className="btn-notes-danger" onClick={handleDeleteNote}>
+          <button
+            type="button"
+            className="btn-note-nav-danger"
+            onClick={handleDeleteNote}
+          >
             <Trash2 size={14} /> 삭제
           </button>
         </div>
       </div>
 
       {/* 본체 상세 카드 */}
-      <div className="note-detail-box">
-        <div className="note-detail-header">
-          <div>
-            <span className="note-category-tag">#{note.noteCategory || "일반"}</span>
-            <h1 className="note-detail-title">{note.noteTitle}</h1>
-          </div>
+      <div className="note-detail-main-card">
+        <div className="note-detail-card-head">
+          <span className="note-card-category-badge">#{note.noteCategory || "일반"}</span>
+          <h1 className="note-card-title-text">{note.noteTitle}</h1>
         </div>
 
-        <div className="note-detail-meta">
-          <span>작성일: {note.noteCtime ? String(note.noteCtime).slice(0, 10) : "-"}</span>
+        <div className="note-card-meta-row">
+          <span>작성자: <strong>{note.writerName || note.empName || "사원"}</strong></span>
+          <span>
+            작성일: {note.noteCtime ? String(note.noteCtime).slice(0, 10) : "-"}
+            {note.noteUtime && <strong className="note-edited-tag"> (수정됨)</strong>}
+          </span>
           <span>문서번호: #{note.noteNo}</span>
         </div>
 
-        {/* 본문 첨부파일 목록 */}
-        {files.length > 0 && (
-          <div className="note-files-card">
-            <div className="note-files-card-title"><FileText size={15} /> 첨부된 문서 ({files.length})</div>
-            <div className="attached-chips-row">
-              {files.map((f) => (
-                <a
-                  key={f.attachNo}
-                  href={`/api/attach/download/${f.attachNo}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="attached-chip"
-                  style={{ textDecoration: "none" }}
-                >
-                  <Download size={12} /> {f.attachName} ({(f.attachSize / 1024).toFixed(1)} KB)
-                </a>
-              ))}
-            </div>
+        {/* 1. 본문 텍스트 */}
+        <div className="note-detail-body-content">
+          {note.noteContent}
+        </div>
+
+        {/* 2. 첨부된 이미지 인라인 노출 (일반 글처럼 사진 표시)[cite: 1] */}
+        {imageFiles.length > 0 && (
+          <div className="note-inline-images-gallery">
+            {imageFiles.map((img) => (
+              <div key={img.attachNo} className="note-inline-image-item">
+                <img
+                  src={`http://localhost:8080/api/attach/${img.attachNo}`}
+                  alt={img.attachName}
+                  className="note-inline-img"
+                  onClick={() => window.open(`http://localhost:8080/api/attach/${img.attachNo}`, "_blank")}
+                  title="클릭 시 새 탭에서 원본 보기"
+                />
+                <div className="note-inline-img-caption">
+                  <span>{img.attachName}</span>
+                  <button
+                    type="button"
+                    className="btn-img-direct-dl"
+                    onClick={() => handleDownloadFile(img.attachNo, img.attachName)}
+                    title="다운로드"
+                  >
+                    <Download size={13} /> 다운로드
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* 본문 내용 */}
-        <div className="note-detail-content">
-          {note.noteContent}
-        </div>
+        {/* 3. 일반 문서 첨부파일 목록 (워드, PDF 등)[cite: 1] */}
+        {docFiles.length > 0 && (
+          <div className="note-attached-files-box">
+            <div className="note-attached-files-title">
+              <FileText size={15} /> 첨부된 문서 ({docFiles.length})
+            </div>
+            <div className="note-attached-chips-row">
+              {docFiles.map((f) => {
+                const isDocx = f.attachName?.toLowerCase().endsWith(".docx");
+
+                return (
+                  <div key={f.attachNo} className="note-attach-chip-item">
+                    <span className="note-attach-filename">
+                      {f.attachName} ({(f.attachSize / 1024).toFixed(1)} KB)
+                    </span>
+
+                    {/* 워드 문서 양식 열기 */}
+                    {isDocx && (
+                      <button
+                        type="button"
+                        className="btn-open-docx-badge"
+                        onClick={() => setPreviewDocx({ attachNo: f.attachNo, fileName: f.attachName })}
+                        title="브라우저에서 양식 열기"
+                      >
+                        <Eye size={12} /> 양식
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="btn-attach-icon-dl"
+                      onClick={() => handleDownloadFile(f.attachNo, f.attachName)}
+                      title="다운로드"
+                    >
+                      <Download size={13} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 댓글 영역 */}
-      <div className="note-comments-container">
-        <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
-          <MessageSquare size={16} /> 댓글 ({comments.length})
-        </div>
+      {/* 댓글 컴포넌트 */}
+      <NoteComments noteNo={noteNo} projectNo={projectNo} />
 
-        {/* 댓글 작성창 */}
-        <form onSubmit={handleAddComment} className="comment-input-box">
-          <textarea
-            rows={2}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="피드백이나 의견을 남겨주세요..."
-          />
+      {/* 워드 모달 */}
+      {previewDocx && (
+        <div className="note-docx-modal-backdrop" onClick={() => setPreviewDocx(null)}>
+          <div className="note-docx-modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="note-docx-modal-head">
+              <div className="modal-head-title-area">
+                <FileText size={18} color="#60a5fa" />
+                <span className="modal-head-filename">{previewDocx.fileName}</span>
+                <span className="modal-head-tag">인터넷 양식 뷰어</span>
+              </div>
 
-          {commentFile && (
-            <div className="attached-chip" style={{ alignSelf: "flex-start" }}>
-              <Paperclip size={12} /> {commentFile.name}
-              <button type="button" onClick={() => setCommentFile(null)}><X size={12} /></button>
-            </div>
-          )}
-
-          <div className="comment-input-actions">
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={(e) => setCommentFile(e.target.files[0] || null)}
-            />
-            <button
-              type="button"
-              className="btn-notes-outline"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Paperclip size={13} /> 파일 첨부
-            </button>
-            <button type="submit" className="btn-notes-primary" disabled={!commentText.trim() && !commentFile}>
-              <Send size={13} /> 등록
-            </button>
-          </div>
-        </form>
-
-        {/* 댓글 목록 */}
-        <div>
-          {comments.map((c) => (
-            <div key={c.noteCommentNo} className="comment-bubble-item">
-              <div className="comment-user-row">
-                <span className="comment-user-name">{c.empName || c.memberName || "사원"}</span>
+              <div className="modal-head-actions-area">
                 <button
-                  className="btn-notes-outline"
-                  style={{ padding: "2px 6px", fontSize: 11 }}
-                  onClick={() => handleDeleteComment(c.noteCommentNo)}
+                  type="button"
+                  className="btn-modal-download-primary"
+                  onClick={() => handleDownloadFile(previewDocx.attachNo, previewDocx.fileName)}
                 >
-                  삭제
+                  <Download size={13} /> 다운로드
+                </button>
+                <button
+                  type="button"
+                  className="btn-modal-close-icon"
+                  onClick={() => setPreviewDocx(null)}
+                >
+                  <X size={20} />
                 </button>
               </div>
-              <div className="comment-text-body">{c.noteCommentContent}</div>
+            </div>
 
-              {c.files && c.files.length > 0 && (
-                <div className="attached-chips-row" style={{ marginTop: 6 }}>
-                  {c.files.map((f) => (
-                    <a
-                      key={f.attachNo}
-                      href={`/api/attach/download/${f.attachNo}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="attached-chip"
-                      style={{ fontSize: 11, textDecoration: "none" }}
-                    >
-                      <Download size={11} /> {f.attachName}
-                    </a>
-                  ))}
+            <div className="note-docx-modal-body">
+              {viewerLoading && (
+                <div className="modal-render-loading">
+                  <Loader2 size={20} className="animate-spin" />
+                  <span>문서 양식을 웹 화면으로 변환 중입니다...</span>
                 </div>
               )}
+
+              {viewerError && (
+                <div className="modal-render-error-box">{viewerError}</div>
+              )}
+
+              <div
+                ref={docxContainerRef}
+                className={`note-docx-render-viewport ${viewerLoading || viewerError ? "hidden" : ""}`}
+              />
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

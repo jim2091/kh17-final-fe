@@ -110,18 +110,11 @@ function App() {
 
           {/* ----------------- [노트 라우트 설정] ----------------- */}
           <Route path="notes" element={<Notes />} />
-          <Route path="note" element={<Notes />} />
 
-          <Route path="noteInsert" element={<NoteInsert />} />
           <Route path="note/insert" element={<NoteInsert />} />
 
           <Route path="note/:noteNo" element={<NoteDetail />} />
-          <Route path="noteDetail/:noteNo" element={<NoteDetail />} />
 
-
-          <Route path="close" element={<ProjectClose />} />
-
-         <Route path="noteEdit/:noteNo" element={<NoteEdit />} />
           <Route path="note/:noteNo/edit" element={<NoteEdit />} />
           {/* ----------------------------------------------------- */}
 
