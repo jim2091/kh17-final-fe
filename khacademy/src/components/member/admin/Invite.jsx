@@ -13,7 +13,9 @@ export default function invite() {
     const [emp, setEmp] = useState({
         empName: "",
         empEmail: "",
-        empPassword: ""
+        empPassword: "",
+        empDeptNo : "",
+        empPositionNo : "",
     });
     const [result, setResult] = useState({
         empName: null,
@@ -29,6 +31,15 @@ export default function invite() {
         setDeptList(data);
         
     }, [deptList]);
+    //직급목록 불러오기
+    const [positionList, setPositionList] = useState([]);
+
+    const positionNameSearch = useCallback(async()=>{
+
+        const {data} = await apiClient.get("/position/");
+        setPositionList(data);
+        
+    }, [positionList]);
 
 
     const navigate = useNavigate();
@@ -159,18 +170,16 @@ export default function invite() {
         <Row className="mt-4">
             <Form.Label column sm={3}>직급</Form.Label>
             <Col sm={9}>
-                <Form.Select name="empPositionNo"
+                <Form.Select onClick={positionNameSearch} name="empPositionNo"
                 className="w-50 d-inline-block"
                     value={emp.empPositionNo}
                     onChange={changeNumericValue}>
                     <option value="">선택하세요</option>
-                    <option value="1">사원</option>
-                    <option value="2">대리</option>
-                    <option value="3">과장</option>
-                    <option value="4">부장</option>
-                    <option value="5">팀장</option>
-                    <option value="6">임원</option>
-                    <option value="7">대표</option>
+                        {positionList.map(position=>(
+                            <option key={position.positionNo} value={position.positionNo}>
+                                {position.positionName}
+                            </option>
+                        ))}
                 </Form.Select>
             </Col>
         </Row>

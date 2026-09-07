@@ -30,6 +30,7 @@ import Users from "./components/member/admin/Users";
 import AdminTabs from "./templates/AdminTabs";
 import Positions from "./components/member/admin/Positions";
 import Departments from "./components/member/admin/Departments";
+import Members from './components/member/Members';
 
 import Private from "./guard/Private";
 import Admin from "./guard/Admin";
@@ -78,6 +79,7 @@ function App() {
         <Route path="/me" element={<Private><Mypage /></Private>} />
         {/* 내 정보 수정 페이지 */}
         <Route path="/edit" element={<Private><Edit /></Private>} />
+
         <Route element={<AdminTabs />}>
 
           {/* 초대하기 화면 */}
@@ -90,6 +92,12 @@ function App() {
           {/* 직급관리(관리자) */}
           <Route path="positions" element={<Admin><Positions /></Admin>} />
         </Route>
+
+        {/* 사용자 목록 */}
+        <Route path="/members" element={<Members />} />
+
+
+
         {/* 프로젝트 내부 */}
         <Route path="/projects/:projectNo" element={<ProjectLayout />}>
           <Route index element={<Navigate to="task" replace />} />
@@ -110,9 +118,13 @@ function App() {
           <Route path="note/:noteNo" element={<NoteDetail />} />
           <Route path="noteDetail/:noteNo" element={<NoteDetail />} />
 
-          <Route path="noteEdit/:noteNo" element={<NoteEdit />} />
+
+          <Route path="close" element={<ProjectClose />} />
+
+         <Route path="noteEdit/:noteNo" element={<NoteEdit />} />
           <Route path="note/:noteNo/edit" element={<NoteEdit />} />
           {/* ----------------------------------------------------- */}
+
 
           <Route path="files" element={<Files />} />
           <Route path="records" element={<Records />} />
