@@ -7,7 +7,7 @@ export default function ProjectPresenceSidebar() {
 
     const { projectNo } = useParams();
 
-    const { presenceMap } = useWebSocket();
+    const { presenceMap, presenceReady } = useWebSocket();
 
     const [memberList, setMemberList] = useState([]);
 
@@ -23,8 +23,12 @@ export default function ProjectPresenceSidebar() {
     }, [projectNo]);
 
     useEffect(() => {
+
+        if(!presenceReady) return;
+
         loadMemberList();
-    }, [loadMemberList]);
+        
+    }, [presenceReady, loadMemberList]);
 
     return(
         <div className="project-presence-sidebar">
@@ -38,12 +42,20 @@ export default function ProjectPresenceSidebar() {
 
                     return (
                         <div className="project-presence-item" key={member.empNo}>
-                            <span className="project-presence-name">
-                                {member.empName}
-                            </span>
-                            <span className="project-presence-status">
-                                {status}
-                            </span>
+                            
+                            <div className="project-presence-user">
+                                <span className={`project-presence-dot ${status.toLowerCase()}`} />
+
+                                <span className="project-presence-name">
+                                    {member.empName}
+                                </span>
+                                
+                                <span className="project-presence-status">
+                                    {status === "ONLINE" && "온라인"}
+                                    {status === "AWAY" && "자리비움"}
+                                    {status === "OFFLINE" && "오프라인"}
+                                </span>
+                            </div>
                         </div>
                     );
                 })}

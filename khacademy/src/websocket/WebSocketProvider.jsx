@@ -10,6 +10,7 @@ export default function ({ children }) {
 
     const isLogin = useAtomValue(isLoginState);
     const [presenceMap, setPresenceMap] = useState({});
+    const [presenceReady, setPresenceReady] = useState(false);
 
     //웹소켓 연결을 관리하는 useEffect
     useEffect(() => {
@@ -30,6 +31,7 @@ export default function ({ children }) {
     useEffect(() => {
         if(!isLogin) {
             setPresenceMap({});
+            setPresenceReady(false)
             return;
         }
 
@@ -53,17 +55,21 @@ export default function ({ children }) {
                 }
             );
 
+            //WebSocket 연결 + Presence 구독 준비 완료
+            setPresenceReady(true);
+
         });
 
         return () => {
             subscription?.unsubscribe();
             setPresenceMap({});
+            setPresenceReady(false);
         }
     }, [isLogin]);
 
 
     return (<>
-        <WebSocketContext.Provider value={{ presenceMap }}>
+        <WebSocketContext.Provider value={{ presenceMap, presenceReady }}>
             {children}
         </WebSocketContext.Provider>
     </>);

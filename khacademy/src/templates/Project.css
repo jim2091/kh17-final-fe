@@ -30,6 +30,12 @@
     color: #6b7280;
 }
 
+.header-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
 
 /* =====================================================
     Project Tabs
@@ -67,6 +73,50 @@
     font-weight: 600;
 }
 
+/* =====================================================
+    Project Tabs Wrapper
+===================================================== */
+
+.project-tabs-wrapper {
+    display: flex;
+    align-items: stretch;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.project-tabs-wrapper .project-tabs {
+    flex: 1;
+    border-bottom: none;
+}
+
+/* =====================================================
+    Presence Toggle
+===================================================== */
+
+.project-presence-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 22px;
+    border: none;
+    border-left: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.project-presence-toggle:hover {
+    background-color: #f8fafc;
+    color: #111827;
+}
+
+.project-presence-toggle.active {
+    color: #2563eb;
+    background-color: #eff6ff;
+}
+
 
 /* =====================================================
     Project Layout
@@ -78,8 +128,121 @@
     background-color: #f5f7fa;
 }
 
+/* 탭 아래 실제 기능 화면의 기준 영역 */
+.project-body {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+}
+
+/* Task / Chat / Calendar 등 실제 탭 화면 */
 .project-content {
+    width: 100%;
+    min-width: 0;
+
     padding: 26px 34px;
+
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+    Project Presence
+===================================================== */
+
+/* 실제 화면 위에 겹쳐서 표시되는 우측 패널 */
+.project-presence-sidebar {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+    z-index: 30;
+
+    width: 280px;
+    min-height: 100%;
+    max-height: calc(100vh - 180px);
+
+    padding: 20px;
+
+    background-color: #ffffff;
+
+    border-left: 1px solid #e5e7eb;
+    box-shadow: -6px 0 18px rgba(0, 0, 0, 0.08);
+
+    box-sizing: border-box;
+
+    overflow-y: auto;
+}
+
+.project-presence-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+
+    margin-bottom: 16px;
+}
+
+.project-presence-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.project-presence-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 10px 8px;
+
+    border-radius: 8px;
+}
+
+.project-presence-item:hover {
+    background-color: #f7f8fa;
+}
+
+.project-presence-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.project-presence-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.project-presence-dot.online {
+    background-color: #22c55e;
+}
+
+.project-presence-dot.away {
+    background-color: #f59e0b;
+}
+
+.project-presence-dot.offline {
+    background-color: #9ca3af;
+}
+
+.project-presence-name {
+    font-size: 14px;
+    color: #343a40;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-presence-status {
+    flex-shrink: 0;
+    margin-left: 12px;
+    font-size: 12px;
+    color: #6c757d;
 }
 
 
@@ -121,6 +284,10 @@
 
     .project-content {
         padding: 30px 40px;
+    }
+
+    .project-presence-sidebar {
+        width: 300px;
     }
 
 }
@@ -171,67 +338,22 @@
         font-size: 14px;
     }
 
+    .project-presence-toggle {
+        flex-shrink: 0;
+        padding: 0 14px;
+    }
+
+    .project-presence-toggle span {
+        display: none;
+    }
+
     .project-content {
         padding: 16px;
     }
 
-}
-.header-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-}
+    .project-presence-sidebar {
+        width: min(280px, 85vw);
+        max-height: calc(100vh - 140px);
+    }
 
-/* 프로젝트 실제 화면 + Presence 영역 */
-.project-body {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.project-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.project-presence-sidebar {
-    width: 260px;
-    flex-shrink: 0;
-
-    background-color: #ffffff;
-    border: 1px solid #e8eaed;
-    border-radius: 12px;
-    padding: 18px;
-    box-sizing: border-box;
-}
-
-.project-presence-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 16px;
-}
-
-.project-presence-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.project-presence-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 6px;
-}
-
-.project-presence-name {
-    font-size: 14px;
-    color: #343a40;
-}
-
-.project-presence-status {
-    font-size: 12px;
-    color: #6c757d;
 }
