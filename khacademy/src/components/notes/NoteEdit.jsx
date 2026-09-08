@@ -6,6 +6,9 @@ import Swal from "sweetalert2";
 import { ArrowLeft, UploadCloud, X, Paperclip, Trash2, FileText } from "lucide-react";
 import "./Notes.css";
 
+// 👈 1. 1MB 용량 상수 선언 (반드시 컴포넌트 외부에 위치)
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
+
 export default function NoteEdit() {
   const { projectNo, noteNo } = useParams();
   const navigate = useNavigate();
@@ -13,10 +16,8 @@ export default function NoteEdit() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("회의록");
-  
-  // 기존 서버에 업로드되어 있던 첨부파일 목록
+
   const [existingFiles, setExistingFiles] = useState([]);
-  // 새로 추가할 첨부파일 목록
   const [newFiles, setNewFiles] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -24,13 +25,12 @@ export default function NoteEdit() {
 
   const fileInputRef = useRef(null);
 
-  // 1. 기존 노트 정보 및 첨부파일 목록 조회
+  // 기존 노트 정보 로드
   const loadNoteData = useCallback(async () => {
     if (!noteNo || isNaN(Number(noteNo))) return;
 
     try {
       setLoading(true);
-      // 백엔드 NoteFileRestController 경로 규격인 /note/file/{noteNo}와 일치
       const [resNote, resFiles] = await Promise.all([
         apiClient.get(`/note/${noteNo}`),
         apiClient.get(`/note/file/${noteNo}`)
@@ -54,19 +54,39 @@ export default function NoteEdit() {
     loadNoteData();
   }, [loadNoteData]);
 
-  // 새 파일 선택 핸들러
+  // 👈 2. 파일 선택 핸들러 (1MB 초과 즉시 toast 차단 및 setNewFiles 적용)
   const handleFileChange = (e) => {
-    if (e.target.files) {
-      setNewFiles((prev) => [...prev, ...Array.from(e.target.files)]);
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    // 1MB 초과 파일 존재 여부 검사
+    const overSizedFile = selectedFiles.find((f) => f.size > MAX_FILE_SIZE);
+
+    if (overSizedFile) {
+      const currentMB = (overSizedFile.size / (1024 * 1024)).toFixed(1);
+      toast.warn(
+        `"${overSizedFile.name}" 파일이 1MB를 초과했습니다. (현재: ${currentMB}MB) 1MB 이하의 파일만 첨부할 수 있습니다.`
+      );
+
+      // 인풋 비우고 첨부 중단
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    // 정상 통과 시 newFiles 상태에 추가 (setFiles 버그 수정 완료)
+    setNewFiles((prev) => [...prev, ...selectedFiles]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  // 새로 추가한 파일 목록에서 제거
   const handleRemoveNewFile = (index) => {
     setNewFiles((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  // 기존 서버 첨부파일 단건 삭제
   const handleDeleteExistingFile = async (attachNo) => {
     const result = await Swal.fire({
       title: "파일 삭제",
@@ -82,7 +102,7 @@ export default function NoteEdit() {
     if (!result.isConfirmed) return;
 
     try {
-      await apiClient.delete(`/note/file/${attachNo}`);
+      await apiClient.delete(`/note/file/${noteNo}/${attachNo}`);
       toast.success("파일이 삭제되었습니다.");
       setExistingFiles((prev) => prev.filter((f) => f.attachNo !== attachNo));
     } catch (e) {
@@ -91,11 +111,18 @@ export default function NoteEdit() {
     }
   };
 
-  // 2. 노트 내용 수정 제출
+  // 수정 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.warn("제목을 입력해주세요.");
+      return;
+    }
+
+    // 2차 사전 방어 (newFiles 기준)
+    const overSizedFile = newFiles.find((f) => f.size > MAX_FILE_SIZE);
+    if (overSizedFile) {
+      toast.warn(`1MB를 초과하는 첨부파일("${overSizedFile.name}")이 포함되어 있습니다.`);
       return;
     }
 
@@ -110,19 +137,16 @@ export default function NoteEdit() {
         noteCategory: category
       };
 
-      // 끝자리 슬래시 문제 방지를 위해 /note 로 호출 (만약 백엔드가 /{noteNo} 구조라면 /note/${noteNo} 로 변경)
       try {
         await apiClient.put(`/note`, updatePayload);
       } catch (putErr) {
         if (putErr.response?.status === 404) {
-          // 백엔드가 @PutMapping("/{noteNo}") 구조일 경우 대비한 Fallback
           await apiClient.put(`/note/${noteNo}`, updatePayload);
         } else {
           throw putErr;
         }
       }
 
-      // 새로 첨부된 파일이 있으면 백엔드 @RequestPart("file") 규격에 맞게 순차 업로드
       if (newFiles.length > 0) {
         for (const file of newFiles) {
           const formData = new FormData();
@@ -226,7 +250,7 @@ export default function NoteEdit() {
             onClick={() => fileInputRef.current?.click()}
           >
             <UploadCloud size={22} />
-            <span>새 첨부파일을 추가하려면 클릭하세요</span>
+            <span>새 첨부파일을 추가하려면 클릭하세요 (최대 1MB)</span>
             <input
               type="file"
               multiple

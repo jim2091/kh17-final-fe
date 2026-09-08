@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
-import { X, Download, FileText, Loader2 } from "lucide-react";
+import { X, Download, FileText, Loader2, Printer } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import "./DocxPreview.css";
 
@@ -19,22 +19,20 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
         setLoading(true);
         setError(null);
 
-        // 1. apiClient로 인증 토큰을 동봉하여 ArrayBuffer(바이너리)로 수신
         const res = await apiClient.get(`/attach/${attachNo}`, {
           responseType: "arraybuffer",
         });
 
         if (!isMounted) return;
 
-        // 2. docx-preview 엔진을 통해 DOM 컨테이너에 A4 워드 양식 인라인 렌더링
         if (viewerRef.current) {
           viewerRef.current.innerHTML = "";
           await renderAsync(res.data, viewerRef.current, null, {
-            className: "docx-doc-page",
-            inWrapper: true,      // 용지 여백 및 페이지 형태 래퍼 생성
-            ignoreWidth: false,   // 표/문단 너비 비율 유지
-            ignoreHeight: false,  // 줄간격 및 페이지 높이 유지
-            breakPages: true      // 페이지 나누기 반영
+            className: "docx-office-page",
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            breakPages: true,
           });
         }
       } catch (err) {
@@ -54,7 +52,6 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
     };
   }, [attachNo]);
 
-  // 모달 내부에서 직접 다운로드 지원
   const handleDownload = async () => {
     try {
       const res = await apiClient.get(`/attach/${attachNo}`, {
@@ -74,54 +71,74 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="docx-modal-overlay" onClick={onClose}>
-      <div className="docx-modal-container" onClick={(e) => e.stopPropagation()}>
-        {/* 상단 툴바 */}
-        <div className="docx-toolbar">
-          <div className="docx-toolbar-title-wrap">
-            <FileText size={18} className="docx-icon" />
-            <span className="docx-filename">{fileName}</span>
-            <span className="docx-badge">온라인 양식 뷰어</span>
+    <div className="office-docx-overlay" onClick={onClose}>
+      <div className="office-docx-window" onClick={(e) => e.stopPropagation()}>
+        {/* 오피스 스타일 탑 툴바 */}
+        <div className="office-docx-nav">
+          <div className="office-nav-left">
+            <div className="office-doc-icon">
+              <FileText size={18} />
+            </div>
+            <div className="office-doc-info">
+              <span className="office-doc-title">{fileName}</span>
+              <span className="office-read-only-badge">읽기 전용 서식</span>
+            </div>
           </div>
 
-          <div className="docx-toolbar-actions">
+          <div className="office-nav-right">
             <button
               type="button"
-              className="docx-btn-download"
-              onClick={handleDownload}
+              className="office-tool-btn"
+              onClick={handlePrint}
+              title="인쇄"
             >
-              <Download size={13} /> 다운로드
+              <Printer size={15} />
+              <span>인쇄</span>
             </button>
             <button
               type="button"
-              className="docx-btn-close"
-              onClick={onClose}
+              className="office-tool-btn btn-primary"
+              onClick={handleDownload}
+              title="파일 다운로드"
             >
-              <X size={20} />
+              <Download size={14} />
+              <span>다운로드</span>
+            </button>
+            <div className="office-nav-divider" />
+            <button
+              type="button"
+              className="office-btn-close"
+              onClick={onClose}
+              title="닫기"
+            >
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* 워드 문서 실제 출력 영역 */}
-        <div className="docx-viewer-viewport">
+        {/* 문서 캔버스 영역 */}
+        <div className="office-docx-canvas">
           {loading && (
-            <div className="docx-status-loading">
-              <Loader2 size={20} className="docx-spinner" />
-              <span>문서 서식을 웹 양식으로 변환하는 중입니다...</span>
+            <div className="office-loading-state">
+              <Loader2 size={24} className="office-spinner" />
+              <span>문서 서식을 변환하여 표시하고 있습니다...</span>
             </div>
           )}
 
           {error && (
-            <div className="docx-status-error">
-              {error}
+            <div className="office-error-state">
+              <div className="office-error-box">{error}</div>
             </div>
           )}
 
-          {/* docx-preview가 생성한 HTML이 주입되는 래퍼 */}
           <div
             ref={viewerRef}
-            className={`docx-render-wrapper ${loading || error ? "hidden" : ""}`}
+            className={`office-docx-render-target ${loading || error ? "hidden" : ""}`}
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { renderAsync } from "docx-preview";
+import DocxPreview from "../docx-preview/DocxPreview";
 import {
   MessageSquare,
   Send,
@@ -10,14 +10,15 @@ import {
   Paperclip,
   Download,
   Eye,
-  FileText,
-  Loader2,
   Image as ImageIcon
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { apiClient } from "@utils/reaxios";
 import "./NoteComments.css";
+
+// 첨부파일 최대 허용 용량 (1MB)
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
 // 이미지 파일 판별 헬퍼
 const isImageFile = (fileName = "") => {
@@ -60,19 +61,16 @@ export default function NoteComments({ noteNo, projectNo }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  // 수정 상태 및 원본 내용 보관[cite: 1, 2]
+  // 수정 상태 및 원본 내용 보관
   const [editingCommentNo, setEditingCommentNo] = useState(null);
   const [editInputContent, setEditInputContent] = useState("");
   const [originalEditContent, setOriginalEditContent] = useState("");
 
-  // 워드 모달 및 이미지 미리보기 모달 상태
+  // 워드 모달 및 이미지 원본 뷰어 상태
   const [previewDocx, setPreviewDocx] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [viewerLoading, setViewerLoading] = useState(false);
-  const [viewerError, setViewerError] = useState(null);
-  const docxContainerRef = useRef(null);
 
-  // 프로젝트 멤버 번호 매핑[cite: 1, 2]
+  // 프로젝트 멤버 번호 매핑
   useEffect(() => {
     if (!projectNo || isNaN(Number(projectNo)) || myEmpNo === 0) return;
 
@@ -92,7 +90,7 @@ export default function NoteComments({ noteNo, projectNo }) {
     fetchMyMemberNo();
   }, [projectNo, myEmpNo]);
 
-  // 댓글 목록 조회[cite: 1, 2]
+  // 댓글 목록 조회
   const fetchComments = useCallback(async (isSilent = false) => {
     if (!noteNo || isNaN(Number(noteNo))) {
       setLoading(false);
@@ -130,65 +128,55 @@ export default function NoteComments({ noteNo, projectNo }) {
     setSelectedFile(null);
   }, [noteNo, fetchComments]);
 
-  // 워드 뷰어 렌더링
-  useEffect(() => {
-    if (!previewDocx) return;
-    let isSubscribed = true;
+  // 파일 선택 시 용량 검증 (toast.warn 알림)
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const renderDocxOnline = async () => {
-      try {
-        setViewerLoading(true);
-        setViewerError(null);
-        const res = await apiClient.get(`/attach/${previewDocx.attachNo}`, {
-          responseType: "arraybuffer"
-        });
+    if (file.size > MAX_FILE_SIZE) {
+      const currentMB = (file.size / (1024 * 1024)).toFixed(1);
+      const limitMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
 
-        if (!isSubscribed) return;
+      toast.warn(`첨부파일은 최대 ${limitMB}MB까지만 업로드할 수 있습니다. (선택: ${currentMB}MB)`);
+      e.target.value = "";
+      setSelectedFile(null);
+      return;
+    }
 
-        if (docxContainerRef.current) {
-          docxContainerRef.current.innerHTML = "";
-          await renderAsync(res.data, docxContainerRef.current, null, {
-            className: "docx-doc-page",
-            inWrapper: true,
-            ignoreWidth: false,
-            ignoreHeight: false,
-            breakPages: true
-          });
-        }
-      } catch (err) {
-        console.error("워드 문서 렌더링 실패:", err);
-        if (isSubscribed) {
-          setViewerError("워드 문서 양식을 웹 화면으로 불러오지 못했습니다.");
-        }
-      } finally {
-        if (isSubscribed) setViewerLoading(false);
-      }
-    };
+    setSelectedFile(file);
+  };
 
-    renderDocxOnline();
-    return () => { isSubscribed = false; };
-  }, [previewDocx]);
-
-  // 댓글 등록[cite: 1, 2]
+  // 댓글 등록 제출 핸들러
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!inputContent.trim() && !selectedFile) return;
 
+    // 전송 직전 파일 용량 재검사
+    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
+      toast.warn("용량을 초과한 파일은 등록할 수 없습니다. 파일을 다시 선택해 주세요.");
+      return;
+    }
+
+    let createdCommentNo = null;
+
     try {
       const payloadContent = inputContent.trim() || `[첨부파일] ${selectedFile?.name}`;
+      
+      // 1단계: 댓글 텍스트 등록
       const res = await apiClient.post(`/note/comment/?projectNo=${projectNo || 0}`, {
         noteNo: Number(noteNo),
         noteCommentContent: payloadContent
       });
 
-      const newCommentNo = typeof res.data === "number" ? res.data : res.data?.noteCommentNo;
+      createdCommentNo = typeof res.data === "number" ? res.data : res.data?.noteCommentNo;
 
-      if (selectedFile && newCommentNo) {
+      // 2단계: 파일 업로드
+      if (selectedFile && createdCommentNo) {
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("projectNo", projectNo || 0);
 
-        await apiClient.post(`/note/file/comment/${newCommentNo}`, formData, {
+        await apiClient.post(`/note/file/comment/${createdCommentNo}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -199,8 +187,23 @@ export default function NoteComments({ noteNo, projectNo }) {
       toast.success("댓글이 등록되었습니다.");
       fetchComments(true);
     } catch (error) {
-      console.error("댓글 등록 실패:", error);
-      toast.error("댓글 등록에 실패했습니다.");
+      console.error("댓글 등록/파일 업로드 실패:", error);
+
+      // 파일 업로드 실패 시 방금 등록된 빈 댓글 롤백 삭제
+      if (createdCommentNo) {
+        try {
+          await apiClient.delete(`/note/comment/${createdCommentNo}`);
+        } catch (delErr) {
+          console.error("댓글 롤백 삭제 실패:", delErr);
+        }
+      }
+
+      if (error.response?.status === 413) {
+        toast.error("서버에서 허용하는 최대 파일 용량을 초과했습니다.");
+      } else {
+        toast.error("댓글 등록 또는 파일 업로드에 실패했습니다.");
+      }
+      fetchComments(true);
     }
   };
 
@@ -212,7 +215,7 @@ export default function NoteComments({ noteNo, projectNo }) {
     }
   };
 
-  // 수정 시작 및 취소[cite: 1, 2]
+  // 수정 시작 및 취소
   const handleStartEdit = (comment) => {
     setEditingCommentNo(comment.noteCommentNo);
     setEditInputContent(comment.noteCommentContent || "");
@@ -225,7 +228,7 @@ export default function NoteComments({ noteNo, projectNo }) {
     setOriginalEditContent("");
   };
 
-  // 수정 저장[cite: 1, 2]
+  // 수정 저장
   const handleSaveEdit = async (commentNo) => {
     if (!editInputContent.trim()) return;
 
@@ -246,7 +249,7 @@ export default function NoteComments({ noteNo, projectNo }) {
     }
   };
 
-  // 댓글 삭제[cite: 1, 2]
+  // 댓글 삭제 (삭제 확인 모달 유지)
   const handleDeleteComment = async (commentNo) => {
     const result = await Swal.fire({
       title: "댓글 삭제",
@@ -299,7 +302,7 @@ export default function NoteComments({ noteNo, projectNo }) {
         <span>댓글 ({comments.length})</span>
       </div>
 
-      {/* 등록 폼[cite: 1, 2] */}
+      {/* 댓글 작성 폼 */}
       <form className="comment-form" onSubmit={handleAddComment}>
         <textarea
           className="comment-input"
@@ -313,7 +316,9 @@ export default function NoteComments({ noteNo, projectNo }) {
         {selectedFile && (
           <div className="file-preview-tag">
             <Paperclip size={12} />
-            <span>{selectedFile.name}</span>
+            <span>
+              {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+            </span>
             <button
               type="button"
               className="btn-remove-file"
@@ -332,7 +337,7 @@ export default function NoteComments({ noteNo, projectNo }) {
             type="file"
             ref={fileInputRef}
             className="file-hidden-input"
-            onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+            onChange={handleFileChange}
           />
           <button
             type="button"
@@ -351,7 +356,7 @@ export default function NoteComments({ noteNo, projectNo }) {
         </div>
       </form>
 
-      {/* 댓글 목록[cite: 1, 2] */}
+      {/* 댓글 목록 */}
       <div className="comments-list">
         {loading ? (
           <div className="comment-empty">댓글을 불러오는 중...</div>
@@ -370,7 +375,6 @@ export default function NoteComments({ noteNo, projectNo }) {
             const isMyComment = isMemberMatch || isEmpMatch || isNameMatch;
             const isEditing = editingCommentNo === comment.noteCommentNo;
 
-            // 수정 시 내용 변경 여부 확인 (전과 같거나 공백이면 비활성화)[cite: 1, 2]
             const isSaveDisabled =
               !editInputContent.trim() || editInputContent.trim() === originalEditContent.trim();
 
@@ -384,7 +388,6 @@ export default function NoteComments({ noteNo, projectNo }) {
                         ? String(comment.noteCommentCtime).replace("T", " ").slice(0, 16)
                         : ""}
                     </span>
-                    {/* 댓글 utime이 존재할 때 수정됨 태그 노출 */}
                     {comment.noteCommentUtime && (
                       <span className="comment-edited-tag">(수정됨)</span>
                     )}
@@ -441,7 +444,7 @@ export default function NoteComments({ noteNo, projectNo }) {
                   <div className="bubble-text">{comment.noteCommentContent}</div>
                 )}
 
-                {/* 첨부파일 칩 목록 및 사진/워드 미리보기 버튼[cite: 1] */}
+                {/* 첨부파일 칩 목록 */}
                 {comment.files && comment.files.length > 0 && (
                   <div className="comment-files-row">
                     {comment.files.map((file) => {
@@ -458,7 +461,7 @@ export default function NoteComments({ noteNo, projectNo }) {
                             {file.attachName}
                           </span>
 
-                          {/* 이미지 파일 미리보기 버튼[cite: 1] */}
+                          {/* 이미지 미리보기 버튼 */}
                           {isImg && (
                             <button
                               type="button"
@@ -501,7 +504,7 @@ export default function NoteComments({ noteNo, projectNo }) {
         )}
       </div>
 
-      {/* 사진 원본 미리보기 모달[cite: 1] */}
+      {/* 사진 원본 미리보기 모달 */}
       {previewImage && (
         <div className="notes-modal-backdrop" onClick={() => setPreviewImage(null)}>
           <div className="notes-image-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -531,54 +534,13 @@ export default function NoteComments({ noteNo, projectNo }) {
         </div>
       )}
 
-      {/* 워드 뷰어 모달 */}
+      {/* 공통 DocxPreview 컴포넌트 호출 */}
       {previewDocx && (
-        <div className="notes-modal-backdrop" onClick={() => setPreviewDocx(null)}>
-          <div className="notes-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="notes-modal-header">
-              <div className="modal-title-left">
-                <FileText size={18} color="#60a5fa" />
-                <span className="modal-filename">{previewDocx.fileName}</span>
-                <span className="modal-view-badge">댓글 양식 뷰어</span>
-              </div>
-
-              <div className="modal-actions-right">
-                <button
-                  type="button"
-                  className="btn-submit modal-dl-btn"
-                  onClick={() => handleDownloadFile(previewDocx.attachNo, previewDocx.fileName)}
-                >
-                  <Download size={13} /> 다운로드
-                </button>
-                <button
-                  type="button"
-                  className="btn-modal-close"
-                  onClick={() => setPreviewDocx(null)}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-
-            <div className="notes-modal-body">
-              {viewerLoading && (
-                <div className="modal-state-msg">
-                  <Loader2 size={20} className="animate-spin" />
-                  <span>문서 양식을 변환 중입니다...</span>
-                </div>
-              )}
-
-              {viewerError && (
-                <div className="modal-state-msg error">{viewerError}</div>
-              )}
-
-              <div
-                ref={docxContainerRef}
-                className={`docx-render-container ${viewerLoading || viewerError ? "hidden" : ""}`}
-              />
-            </div>
-          </div>
-        </div>
+        <DocxPreview
+          attachNo={previewDocx.attachNo}
+          fileName={previewDocx.fileName}
+          onClose={() => setPreviewDocx(null)}
+        />
       )}
     </div>
   );

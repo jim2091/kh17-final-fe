@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 import { ArrowLeft, UploadCloud, X, Paperclip } from "lucide-react";
 import "./Notes.css";
 
+// 첨부파일 최대 허용 용량 (1MB)
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
+
 export default function NoteInsert() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
@@ -17,10 +20,45 @@ export default function NoteInsert() {
 
   const fileInputRef = useRef(null);
 
+  // 파일 선택 핸들러 (1MB 초과 검사 및 toast.warn 알림)
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    const validFiles = [];
+    let hasOverSize = false;
+
+    selectedFiles.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        hasOverSize = true;
+        const currentMB = (file.size / (1024 * 1024)).toFixed(1);
+        toast.warn(`"${file.name}" 은(는) 최대 1MB까지만 첨부 가능합니다. (현재: ${currentMB}MB)`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
+    }
+
+    // 동일 파일 재선택이 가능하도록 인풋 리셋
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.warn("노트 제목을 입력해주세요.");
+      return;
+    }
+
+    // 전송 직전 2차 검증
+    const overSizedFile = files.find((f) => f.size > MAX_FILE_SIZE);
+    if (overSizedFile) {
+      toast.warn(`1MB를 초과하는 첨부파일("${overSizedFile.name}")이 포함되어 있습니다.`);
       return;
     }
 
@@ -36,7 +74,7 @@ export default function NoteInsert() {
 
       const res = await apiClient.post(`/note/project/${projectNo}`, notePayload);
 
-      // [핵심] res.data 자체가 숫자(PK)일 때와 객체({ noteNo: X })일 때 모두 안전하게 추출
+      // newNoteNo 추출
       let newNoteNo = null;
       if (typeof res.data === "number") {
         newNoteNo = res.data;
@@ -52,16 +90,17 @@ export default function NoteInsert() {
       if (files.length > 0 && newNoteNo) {
         for (const file of files) {
           const formData = new FormData();
-          // 백엔드 NoteFileRestController: @RequestPart("file") 규격 일치
           formData.append("file", file);
 
           try {
             await apiClient.post(
               `/note/file/${newNoteNo}?projectNo=${projectNo || 0}`,
-              formData
+              formData,
+              { headers: { "Content-Type": "multipart/form-data" } }
             );
           } catch (fileErr) {
             console.error("파일 업로드 개별 실패:", fileErr);
+            toast.error(`"${file.name}" 업로드에 실패했습니다.`);
           }
         }
       }
@@ -127,15 +166,13 @@ export default function NoteInsert() {
             onClick={() => fileInputRef.current?.click()}
           >
             <UploadCloud size={22} />
-            <span>클릭하여 첨부할 파일을 선택하세요</span>
+            <span>클릭하여 첨부할 파일을 선택하세요 (최대 1MB)</span>
             <input
               type="file"
               multiple
               ref={fileInputRef}
               style={{ display: "none" }}
-              onChange={(e) =>
-                setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])
-              }
+              onChange={handleFileChange}
             />
           </div>
 
