@@ -3,6 +3,7 @@ import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { Badge, Button, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 export default function ProjectMemberModal({
     show,onHide,projectNo,project,loadProject
@@ -11,15 +12,17 @@ export default function ProjectMemberModal({
     const [memberList,setMemberList] = useState([]);
 
     //현재 로그인 사용자의 프로젝트 권한
-    const role = project.projectMemberRole;
+    const role = project?.projectMemberRole;
 
+    //네비
+    const navigate = useNavigate();
     //owner여부
     const isOwner = role === "owner";
 
     //프로젝트 상태
     const isClosed = project?.projectStatus === "closed";
     //맴버 초대 가능 여부
-    const canInvite = project.projectVisibility === "public" || 
+    const canInvite = project?.projectVisibility === "public" || 
                         role === "owner" ||
                         role === "manager";
 
@@ -117,6 +120,79 @@ export default function ProjectMemberModal({
             toast.error("owner 변경에 실패했습니다.");
         }
     },[projectNo,loadProject,loadMemberList])
+
+    //프로젝트 탈퇴
+    const leaveProject = useCallback(async()=>{
+        if(isOwner){
+            await Swal.fire({
+                icon : "warning",
+                title : "owner는 탈퇴할 수 없습니다.",
+                text : "먼저 다른 멤버에게 owner를 위임해주세요",
+                confirmButtonText : "확인"
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            icon : "warning",
+            title : "프로젝트에서 탈퇴하시겠습니까?",
+            text : "탈퇴 후에는 프로젝트에 접근할 수 없습니다.",
+            showCancelButton : true,
+            confirmButtonText : "탈퇴",
+            cancelButtonText : "취소",
+            confirmButtonColor : "#dc3545"
+        });
+
+        if(result.isConfirmed === false){
+            return;
+        }
+
+        try{
+            await apiClient.delete(`/project/${projectNo}/member/leave`);
+
+            toast.success("프로젝트에서 탈퇴했습니다.");
+            
+            onHide();
+
+            navigate("/projects/my");
+        }
+
+        catch(e){
+            toast.error("프로젝트 탈퇴에 실패했습니다.")
+        }
+
+    },[isOwner,projectNo,navigate,onHide])
+
+    //멤버 강제 퇴장
+    const kickMember = useCallback(async(member)=>{
+        const  result = await Swal.fire({
+            icon : "warning",
+            title : "멤버를 강제퇴장시키겠습니까?",
+            text : `${member.empName}님을 프로젝트에서 제외합니다.`,
+            showCancelButton : true,
+            confirmButtonText : "강제퇴장",
+            cancelButtonText : "취소",
+            confirmButtonColor : "#dc3545"
+        });
+
+        if(result.isConfirmed === false){
+            return;
+        }
+
+        try{
+            await apiClient.delete(`/project/${projectNo}/member/${member.projectMemberNo}`);
+
+            toast.success(`/${member.empName}님이 프로젝트에서 제외되었습니다.`);
+
+            await loadMemberList();
+        }
+
+        catch(e){
+            toast.error("멤버 강제퇴장에 실패했습니다.");
+        }
+
+    },[projectNo,loadMemberList]);
+
     return(
         <Modal show={show} onHide={onHide} centered size="lg">
             <Modal.Header closeButton>
@@ -195,7 +271,17 @@ export default function ProjectMemberModal({
                                                     onClick={()=> changeOwner(member)}>
                                                 owner 위임
                                             </Button>
+
                                         )}
+                                        {isOwner && isClosed === false &&
+                                                member.projectMemberRole !== "owner" &&(
+                                            <Button size="sm" variant="outline-danger"
+                                                    onClick={()=> kickMember(member)}>
+                                                강제퇴장
+                                            </Button>
+                                                        
+                                        )}
+
                                     </div>
                                 </div>
                             </ListGroup.Item>
@@ -212,6 +298,13 @@ export default function ProjectMemberModal({
                             toast.info("아직안됌")
                         }}>
                         멤버 초대
+                    </Button>
+                )}
+
+                {/* 프로젝트 초대 */}
+                {isClosed === false && (
+                    <Button variant="outline-danger" onClick={leaveProject}>
+                        프로젝트 탈퇴
                     </Button>
                 )}
             </Modal.Footer>
