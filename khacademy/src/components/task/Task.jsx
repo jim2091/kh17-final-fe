@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import {
   Paperclip,
   Download,
-  FileText
+  FileText,
+  EyeOff,
+  RotateCcw
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
@@ -23,10 +25,8 @@ export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
   //프로젝트 정보 받기-서준
-  const {project} = useOutletContext();
+  const { project } = useOutletContext();
   //종료여부
   const isClosed = project.projectStatus === "closed";
 
@@ -52,6 +52,44 @@ export default function Task() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
+
+  // 사원 번호와 프로젝트 번호를 결합하여 개인별 격리 스토리지 키 생성
+  const storageKey = `kanban_hidden_tasks_${currentEmpNo}_${projectNo}`;
+
+  const [hiddenTaskNos, setHiddenTaskNos] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // 계정(currentEmpNo)이나 프로젝트(projectNo)가 변경될 때 해당 사용자의 숨김 목록으로 동기화
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setHiddenTaskNos(saved ? JSON.parse(saved) : []);
+    } catch {
+      setHiddenTaskNos([]);
+    }
+  }, [storageKey]);
+
+  const handleToggleHideTask = (taskNo, e) => {
+    if (e) e.stopPropagation();
+    setHiddenTaskNos((prev) => {
+      const updated = prev.includes(taskNo)
+        ? prev.filter((id) => id !== taskNo)
+        : [...prev, taskNo];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleRestoreAll = () => {
+    setHiddenTaskNos([]);
+    localStorage.removeItem(storageKey);
+  };
 
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
@@ -223,11 +261,7 @@ export default function Task() {
     setSelectedTask(null);
     setTaskFiles([]);
     setIsEditing(false);
-
-    if(searchParams.has("taskNo")) {
-      setSearchParams({});
-    }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     if (!projectNo) return;
@@ -374,23 +408,8 @@ export default function Task() {
     }
   };
 
-  useEffect(() => {
-    const taskNo = searchParams.get("taskNo");
-
-    if(!taskNo) return;
-
-    const targetTaskNo = Number(taskNo);
-
-    if(selectedTask?.taskNo === targetTaskNo && drawerOpen === true) {
-      return;
-    }
-
-    handleCardClick(targetTaskNo);
-
-  }, [searchParams, selectedTask, drawerOpen]);
-
   const handleStartEdit = () => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 수정 불가합니다.");
       return;
     }
@@ -441,7 +460,7 @@ export default function Task() {
   };
 
   const handleDeleteTaskFile = async (attachNo) => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트에서는 파일을 삭제할 수 없습니다.");
       return;
     }
@@ -457,7 +476,7 @@ export default function Task() {
   };
 
   const handleUploadNewTaskFile = async (e) => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트에서는 파일을 추가할 수 없습니다.");
       return;
     }
@@ -485,9 +504,9 @@ export default function Task() {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 수정할 수 없습니다.");
-      return
+      return;
     }
 
     if (!editFormData.taskTitle.trim()) {
@@ -563,7 +582,7 @@ export default function Task() {
 
   const handleDrop = async (e, targetStatus) => {
     //드래그x
-    if(isClosed){
+    if (isClosed) {
       return;
     }
     e.preventDefault();
@@ -632,20 +651,48 @@ export default function Task() {
           <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
         </div>
 
-        {isClosed === false &&(
-          <button
-            type="button"
-            className="btn-create-task"
-            onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
-          >
-            <span className="plus-icon">+</span> 새 업무 등록
-          </button>
-        )}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {hiddenTaskNos.length > 0 && (
+            <button
+              type="button"
+              onClick={handleRestoreAll}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 12px",
+                backgroundColor: "#f8fafc",
+                border: "1px solid #cbd5e1",
+                borderRadius: "8px",
+                fontSize: "12.5px",
+                fontWeight: "600",
+                color: "#475569",
+                cursor: "pointer"
+              }}
+              title="숨긴 카드를 다시 보드에 노출합니다"
+            >
+              <RotateCcw size={13} />
+              숨긴 업무 {hiddenTaskNos.length}개 복구
+            </button>
+          )}
+
+          {isClosed === false && (
+            <button
+              type="button"
+              className="btn-create-task"
+              onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
+            >
+              <span className="plus-icon">+</span> 새 업무 등록
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter((t) => (t.taskStatus || "TODO") === col.id);
+          const columnTasks = tasks.filter(
+            (t) => (t.taskStatus || "TODO") === col.id && !hiddenTaskNos.includes(t.taskNo)
+          );
           const isOver = dragOverCol === col.id;
 
           return (
@@ -682,9 +729,41 @@ export default function Task() {
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
-                          <span className={`priority-tag ${pClass}`}>
-                            {task.taskPriority || "보통"}
-                          </span>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span className={`priority-tag ${pClass}`}>
+                              {task.taskPriority || "보통"}
+                            </span>
+
+                            <button
+                              type="button"
+                              className="btn-hide-task"
+                              title="보드에서 숨기기"
+                              onClick={(e) => handleToggleHideTask(task.taskNo, e)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: "#f1f5f9",
+                                border: "1px solid #cbd5e1",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                padding: "5px 7px",
+                                color: "#475569",
+                                transition: "all 0.15s ease"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#e2e8f0";
+                                e.currentTarget.style.color = "#0f172a";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#f1f5f9";
+                                e.currentTarget.style.color = "#475569";
+                              }}
+                            >
+                              <EyeOff size={17} strokeWidth={2.2} />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="card-main-title">{task.taskTitle}</div>
@@ -956,7 +1035,7 @@ export default function Task() {
                   <button className="btn-cancel" onClick={handleCloseDrawer}>
                     닫기
                   </button>
-                  {isClosed === false &&(
+                  {isClosed === false && (
                     <button className="btn-edit-trigger" onClick={handleStartEdit}>
                       수정하기
                     </button>
@@ -1225,6 +1304,7 @@ export default function Task() {
                                 {renderFileTypeBadge(file)}
                                 <span
                                   style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                                  title={file.attachName}
                                 >
                                   {file.attachName}
                                 </span>
