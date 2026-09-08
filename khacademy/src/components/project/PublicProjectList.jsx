@@ -214,7 +214,9 @@ export default function PublicProjectList() {
             </div>
         ):(
             <ListGroup variant="flush">
-                {projectList.map(project=>(
+                {projectList
+                    .filter(project=> project.projectMemberRole === null)
+                    .map(project=>(
                     <ListGroup.Item
                         key={project.projectNo}
                         onClick={()=> openProject(project)}
@@ -244,13 +246,8 @@ export default function PublicProjectList() {
 
                                 {/* 참여상태 */}
                                 <Col md={2} className="text-center">
-                                    {project.projectMemberRole !== null ? 
-                                    (
+                                    {project.projectMemberRole === null && (
                                         <Badge bg="success">
-                                            참여중
-                                        </Badge>
-                                    ):(
-                                        <Badge bg="secondary">
                                             참여 가능
                                         </Badge>
                                     )}
@@ -267,20 +264,21 @@ export default function PublicProjectList() {
                 <Pagination>
                     {/* 이전블록 */}
                     <Pagination.Prev 
-                        disabled={pageVO.beginBlock <=1}
-                        onClick={()=> setPage(pageVO.beginBlock -1)}/>
+                        disabled={page<=1}
+                        onClick={()=> setPage(prev=>prev-1)}
+                    />
                     {/* 페이지 번호 */}
                     {pageNumbers.map(number=>(
                         <Pagination.Item key={number}
-                            active={ number === pageVO.page}
+                            active={ number === page}
                             onClick={()=> setPage(number)}>
                                 {number}
                             </Pagination.Item>
                     ))}
                     {/* 다음블록 */}
                     <Pagination.Next
-                        disabled={pageVO.endBlock >= pageVO.pageCount}
-                        onClick={()=> setPage(pageVO.endBlock +1)}/>
+                        disabled={page >= pageVO.pageCount}
+                        onClick={()=> setPage(prev => prev +1)}/>
                 </Pagination>
             </div>
         )}
