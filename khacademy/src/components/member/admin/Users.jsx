@@ -25,9 +25,16 @@ export default function Users() {
     const [page, setPage] = useState({
         page: 1,
         size: 10,
+        sort: "empNo",
+        direction: "asc",
     });
 
     const [count, setCount] = useState(0);
+
+    const tabs = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ",
+        "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+
+    const [isSearch, setIsSearch] = useState(false);
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
     const [deptList, setDeptList] = useState([]);
@@ -49,12 +56,12 @@ export default function Users() {
 
     }, [positionList]);
 
-    const tabs = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ",
-        "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+
 
 
     // console.log("page : ", page);
     const loadData = useCallback(async () => {
+        if (isSearch) return;
 
         const { data } = await apiClient.post("/admin/", page);
 
@@ -91,20 +98,54 @@ export default function Users() {
         });
     }, [selectedEmp]);
 
-    const search = useCallback(async () => {
-        const { data } = await apiClient.post("/admin/complexSearch", keyword);
+    const search = useCallback(async (e) => {
 
-        setEmpList(data);
+        e.preventDefault();
 
-    }, [keyword]);
+        const newPage = {
+            ...page,
+            page: 1,
+            sort: "empNo",
+
+        }
+        setPage(newPage);
+        setIsSearch(true);
+        // loadData();
+
+        const { data } = await apiClient.post("/admin/complexSearch",
+            {
+                keyword: keyword.keyword,
+                pageVO: newPage,
+            }
+        );
+
+        setEmpList(data.list);
+        setCount(data.count);
+
+    }, [keyword, page]);
+    // console.log("count : ", count);
+
 
     const searchInitial = useCallback(async (tab) => {
+        const newPage = {
+            ...page,
+            page: 1,
+            sort: "empNo",
+
+        }
+        setPage(newPage);
+        setIsSearch(true);
+
         const { data } = await apiClient.post("/admin/initial", {
-            tab: tab
+            tab: tab,
+            pageVO: newPage,
         });
 
-        setEmpList(data);
-    }, []);
+        // setPage(prev=>({...prev, page : 1}));
+        setEmpList(data.list);
+        setCount(data.count);
+    }, [page]);
+    // console.log("list : ", empList);
 
     const changeState = useCallback(async (emp) => {
         const result = await Swal.fire({
@@ -120,15 +161,20 @@ export default function Users() {
         try {
             await apiClient.patch(`/admin/active/${emp.empNo}`);
             toast.success(emp.empState === "active" ? "비활성화되었습니다" : "활성화되었습니다.");
-
-            await loadData();
+            setIsSearch(false);
+            setPage(prev => ({
+                ...prev,
+                page: 1,
+                sort: "empNo",
+                direction: "asc",
+            }));
         }
         catch (e) {
             console.log("에러 : ", e);
             toast.error("실행이 실패하였습니다. \n 잠시 후 다시 시도해주세요");
         }
 
-    }, [loadData]);
+    }, []);
 
     const changeData = useCallback(async (emp) => {
         const result = await Swal.fire({
@@ -148,8 +194,14 @@ export default function Users() {
                 empPositionNo: selectedEmp.empPositionNo,
             });
             toast.success("수정되었습니다.");
+            setIsSearch(false);
+            setPage(prev => ({
+                ...prev,
+                page: 1,
+                sort: "empNo",
+                direction: "asc",
+            }));
 
-            await loadData();
         }
         catch (error) {
             console.log("error : ", error);
@@ -157,61 +209,43 @@ export default function Users() {
 
         }
         setSelectedEmp({});
-    }, [loadData, selectedEmp]);
+    }, [selectedEmp]);
 
-    const nameAsc = useCallback(async () => {
-        const { data } = await apiClient.get("/admin/nameAsc");
 
-        setEmpList(data);
-    }, []);
-    const emailAsc = useCallback(async () => {
-        const { data } = await apiClient.get("/admin/emailAsc");
 
-        setEmpList(data);
-    }, []);
-    const deptAsc = useCallback(async () => {
-        const { data } = await apiClient.get("/admin/deptAsc");
-
-        setEmpList(data);
-    }, []);
-    const positionAsc = useCallback(async () => {
-        const { data } = await apiClient.get("/admin/positionAsc");
-
-        setEmpList(data);
-    }, []);
-
-    const totalPage = useMemo(()=>{
-       return Math.ceil(count/page.size);
+    const totalPage = useMemo(() => {
+        return Math.ceil(count / page.size);
     }, [count, page]);
 
-    const pageGroup = useMemo(()=>{
+    const pageGroup = useMemo(() => {
         return Math.ceil(page.page / 5);
     }, [page]);
 
-    const startPage = useMemo(()=>{
-        return (pageGroup - 1) * 5 +1;
+    const startPage = useMemo(() => {
+        return (pageGroup - 1) * 5 + 1;
     }, [pageGroup]);
 
-    const endPage = useMemo(()=>{
+    const endPage = useMemo(() => {
         return Math.min(pageGroup * 5, totalPage);
     }, [pageGroup, totalPage]);
 
 
     return (<>
         <div className="p-4">
-            <Row className="mt-4">
-                <Col className="d-flex">
-                    <Form.Control name="keyword"
-                        placeholder="검색"
-                        onChange={changeStringValue}
-                        className="w-25"
-                    ></Form.Control>
-                    <Button onClick={search}
-                        className="ms-2"
-                    ><FaMagnifyingGlass /></Button>
-                </Col>
-
-            </Row>
+            <Form autoComplete="off" onSubmit={search}>
+                <Row className="mt-4">
+                    <Col className="d-flex">
+                        <Form.Control name="keyword"
+                            placeholder="검색"
+                            onChange={changeStringValue}
+                            className="w-25"
+                        ></Form.Control>
+                        <Button type="submit"
+                            className="ms-2"
+                        ><FaMagnifyingGlass /></Button>
+                    </Col>
+                </Row>
+            </Form>
 
 
             <Col className="text-end p-3">
@@ -222,7 +256,16 @@ export default function Users() {
             </Col>
 
             <div className="tabs">
-                <span className="tab" onClick={loadData}>전체</span>
+                <span className="tab" onClick={
+                    () => {
+                        setIsSearch(false);
+                        setPage(prev => ({
+                            ...prev,
+                            sort: "empNo",
+                            direction: "asc",
+                        }));
+                    }
+                }>전체</span>
                 {tabs.map((tab) => (
                     <div key={tab}
                         className="tab"
@@ -237,20 +280,39 @@ export default function Users() {
             <Card className="user-header fw-bold border-0">
                 <Card.Body>
                     <Row>
-                        <Col className="text-nowrap" onClick={nameAsc}>
+                        <Col className="text-nowrap" onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "empName",
+                        }))}>
                             <span>사번/이름</span>
                             <FaArrowDown className="ms-2" />
                         </Col>
                         <Col className="text-nowrap">접속상태</Col>
-                        <Col className="d-none d-md-block text-nowrap" onClick={emailAsc}>
+                        <Col className="d-none d-md-block text-nowrap"
+                            onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "empEmail",
+                            }))}>
                             <span>이메일</span>
                             <FaArrowDown className="ms-2" />
                         </Col>
-                        <Col className="text-nowrap" onClick={deptAsc}>
+                        <Col className="text-nowrap"
+                            onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "deptName",
+                            }))}>
                             <span>부서</span>
                             <FaArrowDown className="ms-2" />
                         </Col>
-                        <Col className="text-nowrap" onClick={positionAsc}>
+                        <Col className="text-nowrap"
+                            onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "positionName",
+                            }))}>
                             <span>직급</span>
                             <FaArrowDown className="ms-2" />
                         </Col>
@@ -379,37 +441,37 @@ export default function Users() {
             <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
                 <Pagination.Prev
                     disabled={pageGroup === 1}
-                    onClick={()=>
+                    onClick={() =>
                         setPage(prev => ({
                             ...prev,
-                            page: startPage -1
+                            page: startPage - 1
                         }))
                     }
                 />
                 {Array.from(
-                    {length : endPage - startPage + 1},
-                    (_, index)=> startPage + index)
-                    .map(pageNumber =>(
+                    { length: endPage - startPage + 1 },
+                    (_, index) => startPage + index)
+                    .map(pageNumber => (
 
                         <Pagination.Item
                             key={pageNumber}
                             active={page.page === pageNumber}
-                            onClick={() => 
-                                setPage(prev => ({ 
-                                ...prev, 
-                                page: pageNumber
-                            }))}
+                            onClick={() =>
+                                setPage(prev => ({
+                                    ...prev,
+                                    page: pageNumber
+                                }))}
                         >{pageNumber}</Pagination.Item>
 
-                ))}
-                
-                
-                <Pagination.Next 
+                    ))}
+
+
+                <Pagination.Next
                     disabled={endPage === totalPage}
-                    onClick={()=>
-                        setPage(prev =>({
+                    onClick={() =>
+                        setPage(prev => ({
                             ...prev,
-                            page : endPage + 1
+                            page: endPage + 1
                         }))
                     }
                 />

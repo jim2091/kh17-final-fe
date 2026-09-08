@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Swal from "sweetalert2";
+import Pagination from 'react-bootstrap/Pagination';
 // import "../member.css";
 
 function MyVerticallyCenteredModal(props) {
@@ -140,15 +141,27 @@ export default function Departments() {
 
     const [showPopover, setShowPopover] = useState(null);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    const [page, setPage] = useState({
+        page: 1,
+        size: 10,
+
+    });
+    const [count, setCount] = useState(0);
+
+
 
     const loadData = useCallback(async () => {
-        const { data } = await apiClient.get("/dept/");
+        const { data } = await apiClient.post("/dept/", page);
 
-        setDeptList(data);
-    }, []);
+        setDeptList(data.list);
+        setCount(data.count);
+
+    }, [page]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+    // console.log("deptList ;", deptList);
 
     // if (deptList === null) {
     //     return (<h1>로딩중인 화면</h1>);
@@ -176,16 +189,16 @@ export default function Departments() {
         });
 
         if (result.isConfirmed === false) return;
-        try{
+        try {
             await apiClient.put("/dept/edit", selectedDept);
             toast.success("수정되었습니다.");
 
-        loadData();
+            loadData();
 
-        setShowPopover(null);
+            setShowPopover(null);
 
         }
-        catch(e){
+        catch (e) {
             console.log("e : ", e);
             toast.error("수정에 실패하였습니다. \n 잠시후 다시 시도해주세요");
         }
@@ -193,6 +206,22 @@ export default function Departments() {
 
     }, [selectedDept, loadData]);
 
+
+    const totalPage = useMemo(() => {
+        return Math.ceil(count / page.size);
+    }, [count, page]);
+
+    const pageGroup = useMemo(() => {
+        return Math.ceil(page.page / 5);
+    }, [page]);
+
+    const startPage = useMemo(() => {
+        return (pageGroup - 1) * 5 + 1;
+    }, [pageGroup]);
+
+    const endPage = useMemo(() => {
+        return Math.min(pageGroup * 5, totalPage);
+    }, [pageGroup, totalPage]);
     return (<>
 
         <Col className="d-flex justify-content-between align-items-center p-5">
@@ -306,7 +335,44 @@ export default function Departments() {
                 </OverlayTrigger>
             </Card>
         ))}
+        <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
+            <Pagination.Prev
+                disabled={pageGroup === 1}
+                onClick={() =>
+                    setPage(prev => ({
+                        ...prev,
+                        page: startPage - 1
+                    }))
+                }
+            />
+            {Array.from(
+                { length: endPage - startPage + 1 },
+                (_, index) => startPage + index)
+                .map(pageNumber => (
 
+                    <Pagination.Item
+                        key={pageNumber}
+                        active={page.page === pageNumber}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: pageNumber
+                            }))}
+                    >{pageNumber}</Pagination.Item>
+
+                ))}
+
+
+            <Pagination.Next
+                disabled={endPage === totalPage}
+                onClick={() =>
+                    setPage(prev => ({
+                        ...prev,
+                        page: endPage + 1
+                    }))
+                }
+            />
+        </Pagination>
 
 
     </>)

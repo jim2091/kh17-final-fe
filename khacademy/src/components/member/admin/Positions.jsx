@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa6";
 import { apiClient } from "@utils/reaxios";
@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Swal from "sweetalert2";
+import Pagination from 'react-bootstrap/Pagination';
 
 function MyVerticallyCenteredModal(props) {
     const [position, setPosition] = useState({
@@ -138,16 +139,24 @@ export default function Positions() {
     });
 
     const [showPopover, setShowPopover] = useState(null);
+    const [page, setPage] = useState({
+        page: 1,
+        size: 10,
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    });
+    const [count, setCount] = useState(0);
+
+
 
     const loadData = useCallback(async () => {
-        const { data } = await apiClient.get("/position/");
+        const { data } = await apiClient.post("/position/", page);
 
-        setPositionList(data);
-    }, []);
+        setPositionList(data.list);
+        setCount(data.count);
+    }, [page]);
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
@@ -172,22 +181,37 @@ export default function Positions() {
         });
 
         if (result.isConfirmed === false) return;
-        try{
+        try {
 
             await apiClient.put("/position/edit", selectedPosition);
             toast.success("직급 정보가 수정되었습니다");
-    
+
             loadData();
-    
+
             setShowPopover(null);
         }
-        catch(e){
+        catch (e) {
             console.log("e : ", e);
             toast.error("수정에 실패하였습니다. \n 잠시후 다시 시도해주세요");
         }
         setSelectedPosition({});
 
     }, [selectedPosition, loadData]);
+    const totalPage = useMemo(() => {
+        return Math.ceil(count / page.size);
+    }, [count, page]);
+
+    const pageGroup = useMemo(() => {
+        return Math.ceil(page.page / 5);
+    }, [page]);
+
+    const startPage = useMemo(() => {
+        return (pageGroup - 1) * 5 + 1;
+    }, [pageGroup]);
+
+    const endPage = useMemo(() => {
+        return Math.min(pageGroup * 5, totalPage);
+    }, [pageGroup, totalPage]);
     return (<>
 
         <Col className="d-flex justify-content-between align-items-center p-5">
@@ -301,6 +325,44 @@ export default function Positions() {
                 </OverlayTrigger>
             </Card>
         ))}
+        <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
+            <Pagination.Prev
+                disabled={pageGroup === 1}
+                onClick={() =>
+                    setPage(prev => ({
+                        ...prev,
+                        page: startPage - 1
+                    }))
+                }
+            />
+            {Array.from(
+                { length: endPage - startPage + 1 },
+                (_, index) => startPage + index)
+                .map(pageNumber => (
+
+                    <Pagination.Item
+                        key={pageNumber}
+                        active={page.page === pageNumber}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: pageNumber
+                            }))}
+                    >{pageNumber}</Pagination.Item>
+
+                ))}
+
+
+            <Pagination.Next
+                disabled={endPage === totalPage}
+                onClick={() =>
+                    setPage(prev => ({
+                        ...prev,
+                        page: endPage + 1
+                    }))
+                }
+            />
+        </Pagination>
 
 
     </>)
