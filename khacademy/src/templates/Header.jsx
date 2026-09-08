@@ -18,13 +18,15 @@ import { authClient, apiClient } from "@utils/reaxios";
 // import { FaCircle } from "react-icons/fa6";
 import NoImage from "@assets/noimages.png";
 import "./Project.css";
+import { getWebSocketClient } from "../utils/websocket";
+import { useWebSocket } from "../websocket/WebSocketProvider";
 
 
 
 
 export default function Header({ toggleSidebar }) {
 
-    const { attachNo, empName, empEmail } = useAtomValue(loginUserState) || {};
+    const { attachNo, empName, empEmail, empNo } = useAtomValue(loginUserState) || {};
 
 
     const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/${attachNo}`;
@@ -42,13 +44,8 @@ export default function Header({ toggleSidebar }) {
 
     const logout = useCallback(async () => {
 
-
-
         try {
             await authClient.delete("/logout");//쿠키 삭제 요청
-
-
-
         }
         catch (e) {
             console.error(e);
@@ -57,10 +54,6 @@ export default function Header({ toggleSidebar }) {
             logoutAction();//에러여부와 관계없이 화면상의 데이터는 삭제
         }
     }, []);
-
-
-    // const online = users.some(user => user.empName === empName);
-
 
     const navigate = useNavigate();
     const [keyword, setKeyword] = useState("");
@@ -76,6 +69,22 @@ export default function Header({ toggleSidebar }) {
         navigate(`/search?keyword=${encodeURIComponent(value)}`);
 
     };
+
+    const changePresence = (status) => {
+        const client = getWebSocketClient();
+
+        if(client == null || client.connected !== true) return;
+
+        client.publish({
+            destination: "/app/presence/status",
+            body: JSON.stringify({
+                status: status
+            })
+        });
+    };
+
+    const {presenceMap} = useWebSocket();
+    const myPresence = presenceMap[empNo] || "ONLINE";
 
 
     return (<>
@@ -117,8 +126,6 @@ export default function Header({ toggleSidebar }) {
                     </>)}
                     {isLogin === true && (<>
 
-
-
                         <OverlayTrigger trigger="click" placement="bottom" rootClose={true}
                             overlay={
                                 <Popover id="popover-positioned-bottom">
@@ -146,6 +153,31 @@ export default function Header({ toggleSidebar }) {
                                             </Card.Body>
                                         </Card>
 
+                                        {/* Presence 상태 선택 */}
+      
+                                        <div className="header-presence-menu">
+                                            <div className="header-presence-title">
+                                                상태
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className={`header-presence-option ${myPresence === "ONLINE" ? "selected" : ""}`}
+                                                onClick={() => changePresence("ONLINE")}
+                                            >
+                                                <span className="header-presence-dot online"></span>
+                                                온라인
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`header-presence-option ${myPresence === "AWAY" ? "selected" : ""}`}
+                                                onClick={() => changePresence("AWAY")}
+                                            >
+                                                <span className="header-presence-dot away"></span>
+                                                자리비움
+                                            </button>
+                                        </div>
+                    
 
                                         <Card className="mt-2">
                                             <Card.Body>
@@ -192,8 +224,7 @@ export default function Header({ toggleSidebar }) {
                                 <Image className="header-img"
                                  src={attachNo === null ? NoImage : profileUrl}
                                     roundedCircle />
-                                {/* <FaCircle className={`position-absolute bottom-0 end-0 
-                                    ${online ? "text-info" : "text-secondary"}`} /> */}
+                                <span className={`header-my-presence-dot ${myPresence.toLowerCase()}`}/>
                             </div>
                         </OverlayTrigger>
 
