@@ -11,7 +11,31 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import NoImage from "@assets/noimages.png";
 import Pagination from 'react-bootstrap/Pagination';
+import Offcanvas from 'react-bootstrap/Offcanvas';
 
+function OffCanvasExample({ name, ...props }) {
+    const [show, setShow] = useState(false);
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
+    return (
+        <>
+            <Button variant="primary" onClick={handleShow} className="me-2">
+                {name}
+            </Button>
+            <Offcanvas show={show} onHide={handleClose} {...props}>
+                <Offcanvas.Header closeButton>
+                    <Offcanvas.Title>Offcanvas</Offcanvas.Title>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                    Some text as placeholder. In real life you can have the elements you
+                    have chosen. Like, text, images, lists, etc.
+                </Offcanvas.Body>
+            </Offcanvas>
+        </>
+    );
+}
 
 export default function Users() {
 
@@ -35,6 +59,11 @@ export default function Users() {
         "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
 
     const [isSearch, setIsSearch] = useState(false);
+
+    const [show, setShow] = useState(false);
+
+
+
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
     const [deptList, setDeptList] = useState([]);
@@ -176,7 +205,7 @@ export default function Users() {
 
     }, []);
 
-    const changeData = useCallback(async (emp) => {
+    const changeData = useCallback(async (selectedEmp) => {
         const result = await Swal.fire({
             title: "사원 정보를 수정하시겠습니까?",
             icon: "warning",
@@ -188,8 +217,8 @@ export default function Users() {
         if (result.isConfirmed === false) return;
 
         try {
-            await apiClient.put(`/admin/memberEdit/${emp.empNo}`, {
-                empNo: emp.empNo,
+            await apiClient.put(`/admin/memberEdit/`, {
+                empNo: selectedEmp.empNo,
                 empDeptNo: selectedEmp.empDeptNo,
                 empPositionNo: selectedEmp.empPositionNo,
             });
@@ -325,119 +354,171 @@ export default function Users() {
             </Card>
 
 
+
+
+
             {empList.map((emp) => {
 
+
                 return (
+                    
+                    <Card
+                        onClick={() => {
+                            setSelectedEmp(emp);
+                            setShow(true);
+                        }}
+                        key={emp.empNo}
+                        className="mt-2 card">
 
-                    <Card key={emp.empNo} className="mt-2 card">
-
-                        <OverlayTrigger
-                            trigger="click"
-                            placement="bottom"
-                            rootClose={true}
-                            overlay={
-                                <Popover id={`popover-positioned-bottom`} className="user-popover">
-                                    <Popover.Header as="h3">
-                                        <Col>
-                                            <img src={NoImage} className="profile-img"></img>
-                                        </Col>
-                                        <Col className="mt-4 text-end">{emp.empName}</Col>
-                                    </Popover.Header>
-                                    <Popover.Body>
-                                        <Row className="mt-4">
-                                            <Form.Label column sm={2}>부서</Form.Label>
-                                            <Col sm={10}>
-                                                <Form.Select onClick={deptNameSearch} name="empDeptNo"
-                                                    className="w-100 d-inline-block"
-                                                    value={selectedEmp.empDeptNo}
-                                                    onChange={changeNumericValue}
-                                                >
-                                                    <option value="">선택하세요</option>
-                                                    {deptList.map(dept => (
-                                                        <option key={dept.deptNo} value={dept.deptNo}>
-                                                            {dept.deptName}
-                                                        </option>
-                                                    ))}
-
-                                                </Form.Select>
-                                            </Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Form.Label column sm={2}>직급</Form.Label>
-                                            <Col sm={10}>
-                                                <Form.Select onClick={positionNameSearch} name="empPositionNo"
-                                                    className="w-100 d-inline-block"
-                                                    value={selectedEmp.empPositionNo}
-                                                    onChange={changeNumericValue}
-                                                >
-                                                    <option value="">선택하세요</option>
-                                                    {positionList.map(position => (
-                                                        <option key={position.positionNo} value={position.positionNo}>
-                                                            {position.positionName}
-                                                        </option>
-                                                    ))}
-                                                </Form.Select>
-                                            </Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Col sm={2}>이메일</Col>
-                                            <Col sm={10}>{emp.empEmail}</Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Col sm={2}>생일</Col>
-                                            <Col sm={10}>{emp.empBirth}</Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Col sm={2}>연락처</Col>
-                                            <Col sm={10}>{emp.empContact}</Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Col sm={2}>주소</Col>
-                                            <Col sm={10}>{emp.empPost} {emp.empAddress1} {emp.empAddress2}</Col>
-                                        </Row>
-                                        <Row className="mt-4">
-                                            <Col sm={2}>상태</Col>
-                                            <Col sm={10}>{emp.empState}</Col>
-                                        </Row>
-
-                                        <Row className="mt-4">
-                                            <Col className="text-end">
-                                                <Button onClick={() => changeData(emp)}>
-                                                    <span>수정하기</span>
-                                                </Button>
-                                            </Col>
-                                        </Row>
-
-
-                                    </Popover.Body>
-                                </Popover>
-                            }
-                        >
-                            <Card.Body>
-                                <Row>
-                                    <Col className="text-nowrap">{emp.empNo}/{emp.empName}</Col>
-                                    <Col>
-                                        <FaCircle />
-                                        <span className="ms-2">offline</span>
-                                    </Col>
-                                    <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
-                                    <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
-                                    <Col className="text-truncate text-nowrap">{emp.positionName}</Col>
-                                    <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
-                                    <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
-                                    <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1}</Col>
-                                    <Col>
-                                        <Button onClick={() => changeState(emp)}>
-                                            <span>{emp.empState}</span>
+                        <Card.Body>
+                            <Row>
+                                <Col className="text-nowrap">
+                                    
+                                    {emp.attachNo ? (
+                                        <img
+                                            src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
+                                            className="list-img"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={NoImage}
+                                            className="list-img"
+                                        />
+                                    )}
+                                    <span className="ms-2">{emp.empNo}/{emp.empName}</span>
+                                </Col>
+                                <Col>
+                                    <FaCircle />
+                                    <span className="ms-2">offline</span>
+                                </Col>
+                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
+                                <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
+                                <Col className="text-truncate text-nowrap">{emp.positionName}</Col>
+                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
+                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
+                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1} {emp.empAddress2}</Col>
+                                <Col>
+                                    {emp.empState === "invited" && (
+                                        <Button>
+                                            <span>초대중</span>
                                         </Button>
-                                    </Col>
+                                    )}
+                                    {emp.empState === "inactive" && (
+                                        <Button onClick={() => changeState(emp)}>
+                                            <span>비활성</span>
+                                        </Button>
+                                    )}
+                                    {emp.empState === "active" && (
+                                        <Button onClick={() => changeState(emp)}>
+                                            <span>활성</span>
+                                        </Button>
+                                    )}
+                                </Col>
 
-                                </Row>
-                            </Card.Body>
-                        </OverlayTrigger>
+                            </Row>
+                        </Card.Body>
+
                     </Card>
+
                 );
             })}
+            <Offcanvas show={show}
+                onHide={() => setShow(false)}
+                placement="end"
+                style={{ width: "800px" }}
+            >
+                {selectedEmp && (<>
+                    <Offcanvas.Header closeButton>
+                        <div>
+                            <div>
+                                <Offcanvas.Title>사용자 정보</Offcanvas.Title>
+                            </div>
+                            <div className="mt-2">
+                                <img
+                                    src={
+                                        selectedEmp.attachNo
+                                            ? `${import.meta.env.VITE_SERVER_URL}/api/attach/${selectedEmp.attachNo}`
+                                            : NoImage
+                                    }
+                                    className="profile-img"
+                                    alt="프로필"
+                                />
+                            </div>
+                            <div className="mt-4">{selectedEmp.empName}</div>
+                        </div>
+                    </Offcanvas.Header>
+                    <Offcanvas.Body>
+
+                        <Row className="mt-4">
+                            <Form.Label column sm={2}>부서</Form.Label>
+                            <Col sm={10}>
+                                <Form.Select onClick={deptNameSearch} name="empDeptNo"
+                                    className="w-100 d-inline-block"
+                                    value={selectedEmp.empDeptNo}
+                                    onChange={changeNumericValue}
+                                >
+                                    <option value="">선택하세요</option>
+                                    {deptList.map(dept => (
+                                        <option key={dept.deptNo} value={dept.deptNo}>
+                                            {dept.deptName}
+                                        </option>
+                                    ))}
+
+                                </Form.Select>
+                            </Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Form.Label column sm={2}>직급</Form.Label>
+                            <Col sm={10}>
+                                <Form.Select onClick={positionNameSearch} name="empPositionNo"
+                                    className="w-100 d-inline-block"
+                                    value={selectedEmp.empPositionNo}
+                                    onChange={changeNumericValue}
+                                >
+                                    <option value="">선택하세요</option>
+                                    {positionList.map(position => (
+                                        <option key={position.positionNo} value={position.positionNo}>
+                                            {position.positionName}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Col sm={2}>이메일</Col>
+                            <Col sm={10}>{selectedEmp.empEmail}</Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Col sm={2}>생일</Col>
+                            <Col sm={10}>{selectedEmp.empBirth}</Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Col sm={2}>연락처</Col>
+                            <Col sm={10}>{selectedEmp.empContact}</Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Col sm={2}>주소</Col>
+                            <Col sm={10}>{selectedEmp.empPost} {selectedEmp.empAddress1} {selectedEmp.empAddress2}</Col>
+                        </Row>
+                        <Row className="mt-4">
+                            <Col sm={2}>상태</Col>
+                            <Col sm={10}>{selectedEmp.empState}</Col>
+                        </Row>
+
+                        <Row className="mt-4">
+                            <Col className="text-end">
+                                <Button onClick={async () => {
+                                    await changeData(selectedEmp);
+                                    setShow(false);
+                                }}>
+                                    <span>수정하기</span>
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Offcanvas.Body>
+                </>)}
+            </Offcanvas>
+
             <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
                 <Pagination.Prev
                     disabled={pageGroup === 1}

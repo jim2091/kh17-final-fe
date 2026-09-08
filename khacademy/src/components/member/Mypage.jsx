@@ -19,7 +19,7 @@ export default function Mypage() {
         setEmp(data);
         
     }, []);
-    console.log("내정보 : ", emp);
+    // console.log("내정보 : ", emp);
 
     const profileUrl = emp.attachNo ? 
         `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}` : null;
@@ -55,38 +55,38 @@ export default function Mypage() {
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">이메일</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">이메일</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{emp.empEmail}</span>
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">부서</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">부서</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{emp.deptName}</span>
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">직급</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">직급</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{emp.positionName}</span>
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">생일</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">생일</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{emp.empBirth}</span>
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">연락처</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">연락처</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{emp.empContact}</span>
             </Col>
         </Row>
         <Row className="mt-4">
-            <Col sm={3} className="fw-bold text-info">주소</Col>
-            <Col sm={9} className="text-secondary">
+            <Col sm={2} className="fw-bold text-info">주소</Col>
+            <Col sm={10} className="text-secondary">
                 <span>{unionAddress}</span>
             </Col>
         </Row>
