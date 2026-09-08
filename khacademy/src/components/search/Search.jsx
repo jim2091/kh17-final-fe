@@ -182,6 +182,25 @@ export default function Search() {
 
     /*
      * ==========================================
+     * 사용자 프로젝트 이력 팝업
+     * ==========================================
+     */
+
+    const [selectedUser, setSelectedUser] =
+        useState(null);
+
+    const [projectHistory, setProjectHistory] =
+        useState([]);
+
+    const [projectHistoryLoading, setProjectHistoryLoading] =
+        useState(false);
+
+    const [projectHistoryError, setProjectHistoryError] =
+        useState("");
+
+
+    /*
+     * ==========================================
      * URL filter 변경 감지
      * ==========================================
      */
@@ -193,6 +212,319 @@ export default function Search() {
         );
 
     }, [searchParams]);
+
+
+    /*
+     * ==========================================
+     * 사용자 프로젝트 이력 팝업 열기
+     * ==========================================
+     */
+
+    const handleUserClick = async (user) => {
+
+        setSelectedUser(user);
+
+        setProjectHistory([]);
+
+        setProjectHistoryError("");
+
+        setProjectHistoryLoading(true);
+
+
+        try {
+
+            const response =
+                await apiClient.get(
+                    `/search/user/${user.empNo}/projects`
+                );
+
+
+            console.log(
+                "================================="
+            );
+
+            console.log(
+                "프로젝트 이력 API 응답"
+            );
+
+            console.log(
+                response.data
+            );
+
+            console.log(
+                "================================="
+            );
+
+
+            /*
+             * 프로젝트 상태 확인
+             */
+
+            if (Array.isArray(response.data)) {
+
+                response.data.forEach(
+                    (project, index) => {
+
+                        console.log(
+                            `[프로젝트 ${index + 1}]`,
+                            project.projectName,
+                            "projectStatus:",
+                            project.projectStatus
+                        );
+
+                    }
+                );
+
+            }
+
+
+            setProjectHistory(
+                Array.isArray(response.data)
+                    ? response.data
+                    : []
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "프로젝트 참여 이력 조회 실패:",
+                error
+            );
+
+
+            setProjectHistoryError(
+                "프로젝트 참여 이력을 불러오지 못했습니다."
+            );
+
+        }
+        finally {
+
+            setProjectHistoryLoading(false);
+
+        }
+
+    };
+
+
+    /*
+     * ==========================================
+     * 사용자 프로젝트 이력 팝업 닫기
+     * ==========================================
+     */
+
+    const handleCloseUserModal = () => {
+
+        setSelectedUser(null);
+
+        setProjectHistory([]);
+
+        setProjectHistoryError("");
+
+        setProjectHistoryLoading(false);
+
+    };
+
+
+    /*
+     * ==========================================
+     * 팝업 ESC 닫기
+     * ==========================================
+     */
+
+    useEffect(() => {
+
+        if (!selectedUser) {
+            return;
+        }
+
+
+        const handleKeyDown = (e) => {
+
+            if (e.key === "Escape") {
+
+                handleCloseUserModal();
+
+            }
+
+        };
+
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
+
+
+        return () => {
+
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
+
+        };
+
+    }, [selectedUser]);
+
+
+    /*
+     * ==========================================
+     * 팝업 열려 있을 때 배경 스크롤 방지
+     * ==========================================
+     */
+
+    useEffect(() => {
+
+        if (!selectedUser) {
+            return;
+        }
+
+
+        const originalOverflow =
+            document.body.style.overflow;
+
+
+        document.body.style.overflow = "hidden";
+
+
+        return () => {
+
+            document.body.style.overflow =
+                originalOverflow;
+
+        };
+
+    }, [selectedUser]);
+
+
+    /*
+     * ==========================================
+     * 날짜 포맷
+     * ==========================================
+     */
+
+    const formatDate = (dateValue) => {
+
+        if (!dateValue) {
+            return "-";
+        }
+
+
+        const normalizedDate =
+            typeof dateValue === "string" &&
+            dateValue.includes(" ")
+                ? dateValue.replace(" ", "T")
+                : dateValue;
+
+
+        const date =
+            new Date(normalizedDate);
+
+
+        if (Number.isNaN(date.getTime())) {
+            return "-";
+        }
+
+
+        return date.toLocaleDateString(
+            "ko-KR",
+            {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            }
+        );
+
+    };
+
+
+    /*
+     * ==========================================
+     * 프로젝트 상태 정규화
+     * ==========================================
+     */
+
+    const isProjectActive = (status) => {
+
+        const normalizedStatus =
+            String(status ?? "")
+                .trim()
+                .toLowerCase();
+
+
+        return normalizedStatus === "active";
+
+    };
+
+
+    /*
+     * ==========================================
+     * 프로젝트 상태 표시
+     *
+     * active
+     *     → 진행 중
+     *
+     * 그 외
+     *     → 종료
+     * ==========================================
+     */
+
+    const getProjectStatusLabel = (status) => {
+
+        return isProjectActive(status)
+            ? "진행 중"
+            : "종료";
+
+    };
+
+
+    const getProjectStatusClass = (status) => {
+
+        return isProjectActive(status)
+            ? "active"
+            : "ended";
+
+    };
+
+
+    /*
+     * ==========================================
+     * 프로젝트 역할 표시
+     * ==========================================
+     */
+
+    const getProjectRoleLabel = (
+        role
+    ) => {
+
+        if (!role) {
+            return "역할 없음";
+        }
+
+
+        const normalizedRole =
+            role.toLowerCase();
+
+
+        if (normalizedRole === "owner") {
+            return "owner";
+        }
+
+
+        if (normalizedRole === "manager") {
+            return "관리자";
+        }
+
+
+        if (normalizedRole === "member") {
+            return "멤버";
+        }
+
+
+        return role;
+
+    };
 
 
     /*
@@ -238,10 +570,14 @@ export default function Search() {
         if (filterKey === "all") {
 
             if (isAllSelected) {
+
                 nextFilters = [];
+
             }
             else {
+
                 nextFilters = ["all"];
+
             }
 
         }
@@ -328,6 +664,7 @@ export default function Search() {
 
 
         setSearchParams(params);
+
     };
 
 
@@ -348,9 +685,11 @@ export default function Search() {
                 });
 
                 setLoading(false);
+
                 setError("");
 
                 return;
+
             }
 
 
@@ -367,15 +706,18 @@ export default function Search() {
                 });
 
                 setLoading(false);
+
                 setError("");
 
                 return;
+
             }
 
 
             try {
 
                 setLoading(true);
+
                 setError("");
 
 
@@ -408,6 +750,7 @@ export default function Search() {
                     "검색 실패:",
                     e
                 );
+
 
                 setError(
                     "검색 중 오류가 발생했습니다."
@@ -458,23 +801,35 @@ export default function Search() {
     ) => {
 
         if (!projectNo) {
+
             console.warn(
                 "프로젝트 번호가 없습니다."
             );
+
             return;
+
         }
 
-        // owner 또는 member만 프로젝트 이동 가능
+
+        /*
+         * owner 또는 member만
+         * 프로젝트 이동 가능
+         */
+
         if (
             projectRole !== "owner" &&
             projectRole !== "member"
         ) {
+
             return;
+
         }
+
 
         navigate(
             `/projects/${projectNo}`
         );
+
     };
 
 
@@ -495,6 +850,7 @@ export default function Search() {
             );
 
             return;
+
         }
 
 
@@ -533,8 +889,6 @@ export default function Search() {
             /*
              * 검색 결과의 역할을
              * 즉시 member로 변경
-             *
-             * 참여 인원도 +1
              */
 
             setResult((prev) => ({
@@ -551,6 +905,7 @@ export default function Search() {
                             ) {
 
                                 return {
+
                                     ...project,
 
                                     projectRole:
@@ -558,9 +913,11 @@ export default function Search() {
 
                                     memberCount:
                                         (project.memberCount || 0) + 1,
+
                                 };
 
                             }
+
 
                             return project;
 
@@ -576,6 +933,7 @@ export default function Search() {
                 "프로젝트 참여 실패:",
                 e
             );
+
 
             alert(
                 e?.response?.data?.message ||
@@ -609,12 +967,14 @@ export default function Search() {
             );
 
             return;
+
         }
 
 
         navigate(
             `/projects/${projectNo}/task`
         );
+
     };
 
 
@@ -790,7 +1150,7 @@ export default function Search() {
 
 
         /*
-         * 이미지 파일
+         * 이미지
          */
 
         if (type === "image") {
@@ -811,6 +1171,7 @@ export default function Search() {
 
                             e.currentTarget.style.display =
                                 "none";
+
 
                             if (
                                 e.currentTarget
@@ -978,6 +1339,36 @@ export default function Search() {
         );
 
     };
+
+
+    /*
+     * ==========================================
+     * 진행 중 프로젝트
+     * ==========================================
+     */
+
+    const activeProjectHistory =
+        projectHistory.filter(
+            (history) =>
+                isProjectActive(
+                    history.projectStatus
+                )
+        );
+
+
+    /*
+     * ==========================================
+     * 종료된 프로젝트
+     * ==========================================
+     */
+
+    const endedProjectHistory =
+        projectHistory.filter(
+            (history) =>
+                !isProjectActive(
+                    history.projectStatus
+                )
+        );
 
 
     /*
@@ -1249,10 +1640,36 @@ export default function Search() {
                                             (user) => (
 
                                                 <div
-                                                    className="search-result-item"
+                                                    className="search-result-item search-user-result-item"
                                                     key={
                                                         user.empNo
                                                     }
+
+                                                    onClick={() =>
+                                                        handleUserClick(
+                                                            user
+                                                        )
+                                                    }
+
+                                                    role="button"
+                                                    tabIndex={0}
+
+                                                    onKeyDown={(e) => {
+
+                                                        if (
+                                                            e.key === "Enter" ||
+                                                            e.key === " "
+                                                        ) {
+
+                                                            e.preventDefault();
+
+                                                            handleUserClick(
+                                                                user
+                                                            );
+
+                                                        }
+
+                                                    }}
                                                 >
 
                                                     <div className="search-user-avatar">
@@ -1286,6 +1703,19 @@ export default function Search() {
                                                             }
 
                                                         </div>
+
+                                                    </div>
+
+
+                                                    <div className="search-user-arrow">
+
+                                                        <span>
+                                                            프로젝트 이력
+                                                        </span>
+
+                                                        <span className="search-user-arrow-icon">
+                                                            →
+                                                        </span>
 
                                                     </div>
 
@@ -1325,7 +1755,9 @@ export default function Search() {
                                                             ? "project-clickable"
                                                             : "project-not-member"
                                                     }`}
-                                                    key={project.projectNo}
+                                                    key={
+                                                        project.projectNo
+                                                    }
 
                                                     onClick={() =>
                                                         handleProjectClick(
@@ -1369,8 +1801,6 @@ export default function Search() {
 
                                                     <div className="search-item-main">
 
-                                                        {/* 프로젝트명 */}
-
                                                         <div className="search-project-title-row">
 
                                                             <div className="search-item-title">
@@ -1382,8 +1812,6 @@ export default function Search() {
 
                                                             </div>
 
-
-                                                            {/* 참여 인원 */}
 
                                                             <span className="project-member-count">
 
@@ -1400,8 +1828,6 @@ export default function Search() {
                                                         </div>
 
 
-                                                        {/* 프로젝트 목적 */}
-
                                                         <div className="search-item-sub">
 
                                                             {
@@ -1413,8 +1839,6 @@ export default function Search() {
 
                                                     </div>
 
-
-                                                    {/* 프로젝트 참여 상태 */}
 
                                                     <div
                                                         className="search-project-action"
@@ -1780,6 +2204,575 @@ export default function Search() {
                 </main>
 
             </div>
+
+
+            {/* ==========================================
+                사용자 프로젝트 이력 팝업
+            ========================================== */}
+
+            {selectedUser && (
+
+                <div
+                    className="user-project-modal-overlay"
+                    onMouseDown={(e) => {
+
+                        if (
+                            e.target ===
+                            e.currentTarget
+                        ) {
+
+                            handleCloseUserModal();
+
+                        }
+
+                    }}
+                >
+
+                    <div
+                        className="user-project-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="user-project-modal-title"
+                    >
+
+
+                        {/* =================================
+                            팝업 헤더
+                        ================================= */}
+
+                        <div className="user-project-modal-header">
+
+                            <div className="user-project-modal-user">
+
+                                <div className="user-project-modal-avatar">
+
+                                    {
+                                        selectedUser.empName?.charAt(
+                                            0
+                                        ) || "?"
+                                    }
+
+                                </div>
+
+
+                                <div>
+
+                                    <h2
+                                        id="user-project-modal-title"
+                                        className="user-project-modal-title"
+                                    >
+
+                                        {
+                                            selectedUser.empName ||
+                                            "이름 없음"
+                                        }
+
+                                    </h2>
+
+
+                                    <div className="user-project-modal-email">
+
+                                        {
+                                            selectedUser.empEmail ||
+                                            ""
+                                        }
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                className="user-project-modal-close"
+                                onClick={
+                                    handleCloseUserModal
+                                }
+                                aria-label="닫기"
+                            >
+
+                                ×
+
+                            </button>
+
+                        </div>
+
+
+                        {/* =================================
+                            팝업 본문
+                        ================================= */}
+
+                        <div className="user-project-modal-body">
+
+
+                            {/* =================================
+                                로딩
+                            ================================= */}
+
+                            {projectHistoryLoading && (
+
+                                <div className="user-project-modal-status">
+
+                                    <div className="user-project-loading-spinner" />
+
+                                    <span>
+                                        프로젝트 이력을 불러오는 중입니다...
+                                    </span>
+
+                                </div>
+
+                            )}
+
+
+                            {/* =================================
+                                오류
+                            ================================= */}
+
+                            {!projectHistoryLoading &&
+                                projectHistoryError && (
+
+                                    <div className="user-project-modal-error">
+
+                                        <div className="user-project-modal-error-icon">
+                                            !
+                                        </div>
+
+                                        <p>
+                                            {
+                                                projectHistoryError
+                                            }
+                                        </p>
+
+                                    </div>
+
+                                )}
+
+
+                            {/* =================================
+                                프로젝트 없음
+                            ================================= */}
+
+                            {!projectHistoryLoading &&
+                                !projectHistoryError &&
+                                projectHistory.length === 0 && (
+
+                                    <div className="user-project-modal-empty">
+
+                                        <div className="user-project-modal-empty-icon">
+                                            P
+                                        </div>
+
+                                        <h3>
+                                            프로젝트 참여 이력이 없습니다.
+                                        </h3>
+
+                                        <p>
+                                            해당 사용자의 프로젝트 참여 기록이 없습니다.
+                                        </p>
+
+                                    </div>
+
+                                )}
+
+
+                            {/* =================================
+                                프로젝트 이력
+                            ================================= */}
+
+                            {!projectHistoryLoading &&
+                                !projectHistoryError &&
+                                projectHistory.length > 0 && (
+
+                                    <div className="user-project-history-groups">
+
+
+                                        {/* =================================
+                                            진행 중 프로젝트
+                                        ================================= */}
+
+                                        <div className="user-project-history-group">
+
+                                            <div className="user-project-history-group-header">
+
+                                                <div className="user-project-history-group-title">
+
+                                                    <span className="user-project-history-group-status-dot active" />
+
+                                                    <span>
+                                                        진행 중인 프로젝트
+                                                    </span>
+
+                                                    <strong>
+                                                        {
+                                                            activeProjectHistory.length
+                                                        }
+                                                    </strong>
+
+                                                    <span>
+                                                        건
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {activeProjectHistory.length > 0 ? (
+
+                                                <div className="user-project-history-list">
+
+                                                    {activeProjectHistory.map(
+                                                        (
+                                                            history,
+                                                            index
+                                                        ) => (
+
+                                                            <div
+                                                                className="user-project-history-item"
+                                                                key={`active-${history.projectNo}-${index}`}
+                                                            >
+
+                                                                <div className="user-project-history-number">
+
+                                                                    {
+                                                                        index + 1
+                                                                    }
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-icon">
+
+                                                                    P
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-main">
+
+                                                                    <div className="user-project-history-title-row">
+
+                                                                        <div className="user-project-history-title">
+
+                                                                            {
+                                                                                history.projectName ||
+                                                                                "프로젝트 이름 없음"
+                                                                            }
+
+                                                                        </div>
+
+
+                                                                        <span
+                                                                            className={`user-project-history-status ${getProjectStatusClass(
+                                                                                history.projectStatus
+                                                                            )}`}
+                                                                        >
+
+                                                                            <span className="user-project-history-status-dot" />
+
+                                                                            {
+                                                                                getProjectStatusLabel(
+                                                                                    history.projectStatus
+                                                                                )
+                                                                            }
+
+                                                                        </span>
+
+                                                                    </div>
+
+
+                                                                    <div className="user-project-history-info">
+
+                                                                        <span className="user-project-history-role">
+
+                                                                            {
+                                                                                getProjectRoleLabel(
+                                                                                    history.projectMemberRole
+                                                                                )
+                                                                            }
+
+                                                                        </span>
+
+
+                                                                        <span className="user-project-history-divider">
+                                                                            ·
+                                                                        </span>
+
+
+                                                                        <span>
+
+                                                                            {
+                                                                                history.projectMemberJob ||
+                                                                                "담당 업무 없음"
+                                                                            }
+
+                                                                        </span>
+
+                                                                    </div>
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-date">
+
+                                                                    <span>
+                                                                        참여일
+                                                                    </span>
+
+                                                                    <strong>
+
+                                                                        {
+                                                                            formatDate(
+                                                                                history.projectMemberCtime
+                                                                            )
+                                                                        }
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        )
+                                                    )}
+
+                                                </div>
+
+                                            ) : (
+
+                                                <div className="user-project-history-group-empty">
+
+                                                    현재 진행 중인 프로젝트가 없습니다.
+
+                                                </div>
+
+                                            )}
+
+                                        </div>
+
+                                        <hr/>
+                                        {/* =================================
+                                            종료된 프로젝트
+                                        ================================= */}
+
+                                        <div className="user-project-history-group ended-group">
+
+                                            <div className="user-project-history-group-header">
+
+                                                <div className="user-project-history-group-title">
+
+                                                    <span className="user-project-history-group-status-dot ended" />
+
+                                                    <span>
+                                                        종료된 프로젝트
+                                                    </span>
+
+                                                    <strong>
+                                                        {
+                                                            endedProjectHistory.length
+                                                        }
+                                                    </strong>
+
+                                                    <span>
+                                                        건
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                                
+
+                                            
+
+                                                <div className="user-project-history-list">
+
+                                                    {endedProjectHistory.map(
+                                                        (
+                                                            history,
+                                                            index
+                                                        ) => (
+
+                                                            <div
+                                                                className="user-project-history-item"
+                                                                key={`ended-${history.projectNo}-${index}`}
+                                                            >
+
+                                                                <div className="user-project-history-number">
+
+                                                                    {
+                                                                        index + 1
+                                                                    }
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-icon">
+
+                                                                    P
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-main">
+
+                                                                    <div className="user-project-history-title-row">
+
+                                                                        <div className="user-project-history-title">
+
+                                                                            {
+                                                                                history.projectName ||
+                                                                                "프로젝트 이름 없음"
+                                                                            }
+
+                                                                        </div>
+
+
+                                                                        <span
+                                                                            className={`user-project-history-status ${getProjectStatusClass(
+                                                                                history.projectStatus
+                                                                            )}`}
+                                                                        >
+
+                                                                            <span className="user-project-history-status-dot" />
+
+                                                                            {
+                                                                                getProjectStatusLabel(
+                                                                                    history.projectStatus
+                                                                                )
+                                                                            }
+
+                                                                        </span>
+
+                                                                    </div>
+
+
+                                                                    <div className="user-project-history-info">
+
+                                                                        <span className="user-project-history-role">
+
+                                                                            {
+                                                                                getProjectRoleLabel(
+                                                                                    history.projectMemberRole
+                                                                                )
+                                                                            }
+
+                                                                        </span>
+
+
+                                                                        <span className="user-project-history-divider">
+                                                                            ·
+                                                                        </span>
+
+
+                                                                        <span>
+
+                                                                            {
+                                                                                history.projectMemberJob ||
+                                                                                "담당 업무 없음"
+                                                                            }
+
+                                                                        </span>
+
+                                                                    </div>
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-date">
+
+                                                                    <span>
+                                                                        참여일
+                                                                    </span>
+
+                                                                    <strong>
+
+                                                                        {
+                                                                            formatDate(
+                                                                                history.projectMemberCtime
+                                                                            )
+                                                                        }
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        )
+                                                    )}
+
+                                                </div>
+
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+                        </div>
+
+
+                        {/* =================================
+                            팝업 하단
+                        ================================= */}
+
+                        <div className="user-project-modal-footer">
+
+                            <span>
+
+                                진행 중{" "}
+
+                                <strong>
+                                    {
+                                        activeProjectHistory.length
+                                    }
+                                </strong>
+
+                                {" · "}
+
+                                종료{" "}
+
+                                <strong>
+                                    {
+                                        endedProjectHistory.length
+                                    }
+                                </strong>
+
+                                {" · "}
+
+                                총{" "}
+
+                                <strong>
+                                    {
+                                        projectHistory.length
+                                    }
+                                </strong>
+
+                                개의 프로젝트
+
+                            </span>
+
+
+                            <button
+                                type="button"
+                                onClick={
+                                    handleCloseUserModal
+                                }
+                            >
+                                닫기
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
 
