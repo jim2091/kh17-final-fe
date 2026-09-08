@@ -124,10 +124,10 @@ function App() {
           <Route path="records" element={<Records />} />
           <Route path="close" element={<ProjectClose />} />
         </Route>
+        <Route path="/emp/inactive" element={<EmpInactive />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
-      <Route path="/emp/inactive" element={<EmpInactive />} />
     </Routes>
   )
 }

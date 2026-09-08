@@ -183,30 +183,29 @@ export default function Header({ toggleSidebar }) {
                                             <Card.Body>
                                                 <Row className="mt-2">
                                                     {isAdmin === true && (<>
-                                                        <div>
-                                                            <strong>
-                                                                <Button as={Link} to="/invite"
-                                                                    className="w-100">
+                                                        <div className="header-presence-title">
+                                                                <button type="botton" 
+                                                                 onClick={() => navigate("/invite")}
+                                                                    className="header-presence-option">
+                                                                        <span className="header-dot"></span>
                                                                     사용자 초대하기
-                                                                </Button>
-                                                            </strong>
+                                                                </button>
                                                         </div>
-                                                        <div className="mt-2">
-                                                            <strong>
-                                                                <Button as={Link} to="/users"
-                                                                    className="w-100">
+                                                        <div className="header-presence-title">
+                                                                <button type="button" 
+                                                                 onClick={() => navigate("/users")}
+                                                                    className="header-presence-option">
+                                                                        <span className="header-dot"></span>
                                                                     관리
-                                                                </Button>
-                                                            </strong>
+                                                                </button>
                                                         </div>
                                                     </>)}
-                                                    <div className="mt-2">
-                                                        <strong>
-                                                            <Button onClick={logout}
-                                                                className="w-100">
+                                                    <div className="header-presence-title">
+                                                            <button type="button" onClick={logout}
+                                                                className="header-presence-option">
+                                                                    <span className="header-dot"></span>
                                                                 로그아웃
-                                                            </Button>
-                                                        </strong>
+                                                            </button>
                                                     </div>
                                                 </Row>
 
