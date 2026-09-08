@@ -192,7 +192,7 @@ export default function Notes() {
                 <p className="note-card-preview">{truncateContent(note.noteContent)}</p>
 
                 <div className="note-card-footer">
-                  <span className="note-card-author">{note.writerName || note.empName || "사원"}</span>
+                  <span className="note-card-author">{note.empName || "사원"}</span>
                   <span className="note-card-date">
                     <Calendar size={12} />
                     {note.noteUtime
