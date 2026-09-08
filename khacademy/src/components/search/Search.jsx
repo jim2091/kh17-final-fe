@@ -1,859 +1,126 @@
 import { useEffect, useState } from "react";
-import {
-    useSearchParams,
-    useNavigate,
-} from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
 import "./Search.css";
 
-
-/*
- * ==========================================
- * 검색 필터
- * ==========================================
- */
-
-const FILTER_OPTIONS = [
-    {
-        key: "user",
-        label: "사용자",
-    },
-    {
-        key: "project",
-        label: "프로젝트",
-    },
-    {
-        key: "task",
-        label: "업무",
-    },
-    {
-        key: "record",
-        label: "기록",
-    },
-    {
-        key: "note",
-        label: "노트",
-    },
-    {
-        key: "file",
-        label: "파일",
-    },
-];
-
-
-const FILTER_KEYS = FILTER_OPTIONS.map(
-    (option) => option.key
-);
-
-
-/*
- * ==========================================
- * 빈 결과 객체
- * ==========================================
- */
-
+const FILTER_OPTIONS = [ {key: "user", label: "사용자",},
+    {key: "project", label: "프로젝트",},
+    {key: "task",label: "업무",},
+    {key: "record",label: "기록",},
+    {key: "note",label: "노트",},
+    {key: "file",label: "파일",},];
+const FILTER_KEYS = FILTER_OPTIONS.map((option) => option.key);
 const EMPTY_RESULT = {
-    keyword: "",
-    filter: "all",
-
-    users: [],
-    projects: [],
-    tasks: [],
-    records: [],
-    notes: [],
-    files: [],
-};
-
-
-/*
- * ==========================================
- * Search
- * ==========================================
- */
-
+    keyword: "", filter: "all",
+    users: [], projects: [], tasks: [], records: [], notes: [], files: [],};
 export default function Search() {
-
-    const [
-        searchParams,
-        setSearchParams,
-    ] = useSearchParams();
-
+    const [searchParams,setSearchParams,] = useSearchParams();
     const navigate = useNavigate();
-
-
-    /*
-     * ==========================================
-     * 검색어
-     * ==========================================
-     */
-
-    const keyword =
-        searchParams.get("keyword") || "";
-
-
-    /*
-     * ==========================================
-     * URL에서 필터 가져오기
-     * ==========================================
-     */
-
+    const keyword = searchParams.get("keyword") || "";
     const getFiltersFromUrl = () => {
-
         const filterParam =
             searchParams.get("filter");
-
-
-        if (!filterParam) {
-            return ["all"];
-        }
-
-
-        if (filterParam === "all") {
-            return ["all"];
-        }
-
-
+        if (!filterParam) {return ["all"];}
+        if (filterParam === "all") {return ["all"];}
         const parsedFilters =
             filterParam
                 .split(",")
                 .filter((filter) =>
                     FILTER_KEYS.includes(filter)
                 );
-
-
-        if (parsedFilters.length === 0) {
-            return ["all"];
-        }
-
-
-        return parsedFilters;
-    };
-
-
-    /*
-     * ==========================================
-     * 선택된 필터
-     * ==========================================
-     */
-
-    const [filters, setFilters] =
-        useState(() => getFiltersFromUrl());
-
-
-    /*
-     * ==========================================
-     * 검색 결과
-     * ==========================================
-     */
-
-    const [result, setResult] =
-        useState(EMPTY_RESULT);
-
-
-    /*
-     * ==========================================
-     * 로딩
-     * ==========================================
-     */
-
-    const [loading, setLoading] =
-        useState(false);
-
-
-    /*
-     * ==========================================
-     * 프로젝트 참여 처리 중
-     * ==========================================
-     */
-
-    const [joiningProjectNo, setJoiningProjectNo] =
-        useState(null);
-
-
-    /*
-     * ==========================================
-     * 오류
-     * ==========================================
-     */
-
-    const [error, setError] =
-        useState("");
-
-
-    /*
-     * ==========================================
-     * 사용자 프로젝트 이력 팝업
-     * ==========================================
-     */
-
-    const [selectedUser, setSelectedUser] =
-        useState(null);
-
-    const [projectHistory, setProjectHistory] =
-        useState([]);
-
-    const [projectHistoryLoading, setProjectHistoryLoading] =
-        useState(false);
-
-    const [projectHistoryError, setProjectHistoryError] =
-        useState("");
-
-
-    /*
-     * ==========================================
-     * URL filter 변경 감지
-     * ==========================================
-     */
-
-    useEffect(() => {
-
-        setFilters(
-            getFiltersFromUrl()
-        );
-
-    }, [searchParams]);
-
-
-    /*
-     * ==========================================
-     * 사용자 프로젝트 이력 팝업 열기
-     * ==========================================
-     */
-
+        if (parsedFilters.length === 0) {return ["all"];}
+        return parsedFilters;};
+    const [filters, setFilters] = useState(() => getFiltersFromUrl());
+    const [result, setResult] = useState(EMPTY_RESULT);
+    const [loading, setLoading] = useState(false);
+    const [joiningProjectNo, setJoiningProjectNo] = useState(null);
+    const [error, setError] = useState("");
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [projectHistory, setProjectHistory] =useState([]);
+    const [projectHistoryLoading, setProjectHistoryLoading] = useState(false);
+    const [projectHistoryError, setProjectHistoryError] = useState("");
+    useEffect(() => {setFilters(getFiltersFromUrl());}, [searchParams]);
     const handleUserClick = async (user) => {
-
         setSelectedUser(user);
-
         setProjectHistory([]);
-
         setProjectHistoryError("");
-
         setProjectHistoryLoading(true);
-
-
         try {
-
-            const response =
-                await apiClient.get(
-                    `/search/user/${user.empNo}/projects`
-                );
-
-
-            console.log(
-                "================================="
-            );
-
-            console.log(
-                "프로젝트 이력 API 응답"
-            );
-
-            console.log(
-                response.data
-            );
-
-            console.log(
-                "================================="
-            );
-
-
-            /*
-             * 프로젝트 상태 확인
-             */
-
-            if (Array.isArray(response.data)) {
-
-                response.data.forEach(
-                    (project, index) => {
-
-                        console.log(
-                            `[프로젝트 ${index + 1}]`,
-                            project.projectName,
-                            "projectStatus:",
-                            project.projectStatus
-                        );
-
-                    }
-                );
-
-            }
-
-
-            setProjectHistory(
-                Array.isArray(response.data)
-                    ? response.data
-                    : []
-            );
-
-        }
-        catch (error) {
-
-            console.error(
-                "프로젝트 참여 이력 조회 실패:",
-                error
-            );
-
-
-            setProjectHistoryError(
-                "프로젝트 참여 이력을 불러오지 못했습니다."
-            );
-
-        }
-        finally {
-
-            setProjectHistoryLoading(false);
-
-        }
-
-    };
-
-
-    /*
-     * ==========================================
-     * 사용자 프로젝트 이력 팝업 닫기
-     * ==========================================
-     */
-
-    const handleCloseUserModal = () => {
-
-        setSelectedUser(null);
-
-        setProjectHistory([]);
-
-        setProjectHistoryError("");
-
-        setProjectHistoryLoading(false);
-
-    };
-
-
-    /*
-     * ==========================================
-     * 팝업 ESC 닫기
-     * ==========================================
-     */
-
-    useEffect(() => {
-
-        if (!selectedUser) {
-            return;
-        }
-
-
-        const handleKeyDown = (e) => {
-
-            if (e.key === "Escape") {
-
-                handleCloseUserModal();
-
-            }
-
-        };
-
-
-        document.addEventListener(
-            "keydown",
-            handleKeyDown
-        );
-
-
-        return () => {
-
-            document.removeEventListener(
-                "keydown",
-                handleKeyDown
-            );
-
-        };
-
-    }, [selectedUser]);
-
-
-    /*
-     * ==========================================
-     * 팝업 열려 있을 때 배경 스크롤 방지
-     * ==========================================
-     */
-
-    useEffect(() => {
-
-        if (!selectedUser) {
-            return;
-        }
-
-
-        const originalOverflow =
-            document.body.style.overflow;
-
-
+            const response = await apiClient.get(`/search/user/${user.empNo}/projects`);
+            console.log("=================================");
+            console.log("프로젝트 이력 API 응답");
+            console.log(response.data);
+            console.log("=================================");
+            if (Array.isArray(response.data)) {response.data.forEach((project, index) => {console.log(`[프로젝트 ${index + 1}]`,project.projectName,
+                            "projectStatus:",project.projectStatus);}); }
+            setProjectHistory(Array.isArray(response.data) ? response.data : []);}
+        catch (error) {console.error("프로젝트 참여 이력 조회 실패:", error);setProjectHistoryError("프로젝트 참여 이력을 불러오지 못했습니다.");}
+        finally {setProjectHistoryLoading(false);}};
+    const handleCloseUserModal = () => {setSelectedUser(null); setProjectHistory([]); setProjectHistoryError(""); setProjectHistoryLoading(false);};
+    useEffect(() => {if (!selectedUser) {return;}
+       const handleKeyDown = (e) => {if (e.key === "Escape") {handleCloseUserModal();}};
+        document.addEventListener("keydown",handleKeyDown);
+        return () => {document.removeEventListener("keydown",handleKeyDown);};}, [selectedUser]);
+    useEffect(() => {if (!selectedUser) {return;}
+        const originalOverflow =document.body.style.overflow;
         document.body.style.overflow = "hidden";
-
-
-        return () => {
-
-            document.body.style.overflow =
-                originalOverflow;
-
-        };
-
+        return () => {document.body.style.overflow =originalOverflow;};
     }, [selectedUser]);
-
-
-    /*
-     * ==========================================
-     * 날짜 포맷
-     * ==========================================
-     */
-
-    const formatDate = (dateValue) => {
-
-        if (!dateValue) {
-            return "-";
-        }
-
-
-        const normalizedDate =
-            typeof dateValue === "string" &&
-            dateValue.includes(" ")
-                ? dateValue.replace(" ", "T")
-                : dateValue;
-
-
-        const date =
-            new Date(normalizedDate);
-
-
-        if (Number.isNaN(date.getTime())) {
-            return "-";
-        }
-
-
-        return date.toLocaleDateString(
-            "ko-KR",
-            {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-            }
-        );
-
-    };
-
-
-    /*
-     * ==========================================
-     * 프로젝트 상태 정규화
-     * ==========================================
-     */
-
+    const formatDate = (dateValue) => {if (!dateValue) {return "-";}
+        const normalizedDate =typeof dateValue === "string" &&dateValue.includes(" ") ? dateValue.replace(" ", "T") : dateValue;
+        const date = new Date(normalizedDate);
+        if (Number.isNaN(date.getTime())) {return "-";}
+        return date.toLocaleDateString("ko-KR",{year: "numeric",month: "2-digit",day: "2-digit",});};
     const isProjectActive = (status) => {
-
-        const normalizedStatus =
-            String(status ?? "")
-                .trim()
-                .toLowerCase();
-
-
-        return normalizedStatus === "active";
-
-    };
-
-
-    /*
-     * ==========================================
-     * 프로젝트 상태 표시
-     *
-     * active
-     *     → 진행 중
-     *
-     * 그 외
-     *     → 종료
-     * ==========================================
-     */
-
+        const normalizedStatus =String(status ?? "").trim().toLowerCase();
+        return normalizedStatus === "active";};
     const getProjectStatusLabel = (status) => {
-
-        return isProjectActive(status)
-            ? "진행 중"
-            : "종료";
-
-    };
-
-
+        return isProjectActive(status) ? "진행 중" : "종료";};
     const getProjectStatusClass = (status) => {
-
-        return isProjectActive(status)
-            ? "active"
-            : "ended";
-
+        return isProjectActive(status) ? "active" : "ended";
     };
-
-
-    /*
-     * ==========================================
-     * 프로젝트 역할 표시
-     * ==========================================
-     */
-
-    const getProjectRoleLabel = (
-        role
-    ) => {
-
-        if (!role) {
-            return "역할 없음";
-        }
-
-
-        const normalizedRole =
-            role.toLowerCase();
-
-
-        if (normalizedRole === "owner") {
-            return "owner";
-        }
-
-
-        if (normalizedRole === "manager") {
-            return "관리자";
-        }
-
-
-        if (normalizedRole === "member") {
-            return "멤버";
-        }
-
-
-        return role;
-
-    };
-
-
-    /*
-     * ==========================================
-     * 전체 선택 여부
-     * ==========================================
-     */
-
-    const isAllSelected =
-        filters.includes("all");
-
-
-    /*
-     * ==========================================
-     * 특정 필터 선택 여부
-     * ==========================================
-     */
-
-    const isSelected = (filterKey) => {
-
-        return filters.includes(filterKey);
-
-    };
-
-
-    /*
-     * ==========================================
-     * 필터 변경
-     * ==========================================
-     */
-
-    const handleFilterChange = (
-        filterKey
-    ) => {
-
-        let nextFilters = [];
-
-
-        /*
-         * 전체
-         */
-
-        if (filterKey === "all") {
-
-            if (isAllSelected) {
-
-                nextFilters = [];
-
-            }
-            else {
-
-                nextFilters = ["all"];
-
-            }
-
-        }
-
-
-        /*
-         * 개별 필터
-         */
-
-        else {
-
-            if (isAllSelected) {
-
-                nextFilters = [
-                    filterKey,
-                ];
-
-            }
-            else if (
-                filters.includes(filterKey)
-            ) {
-
-                nextFilters =
-                    filters.filter(
-                        (filter) =>
-                            filter !== filterKey
-                    );
-
-            }
-            else {
-
-                nextFilters = [
-                    ...filters,
-                    filterKey,
-                ];
-
-            }
-
-        }
-
-
+    const getProjectRoleLabel = (role) => {
+        if (!role) {return "역할 없음";}
+        const normalizedRole = role.toLowerCase();
+        if (normalizedRole === "owner") {return "owner";}
+        if (normalizedRole === "manager") {return "관리자";}
+        if (normalizedRole === "member") {return "멤버";}
+        return role;};
+    const isAllSelected =filters.includes("all");
+    const isSelected = (filterKey) => {return filters.includes(filterKey);};
+    const handleFilterChange = (filterKey) => {let nextFilters = [];
+            if (filterKey === "all") {if (isAllSelected) {nextFilters = [];}
+            else {nextFilters = ["all"];}}
+        else {if (isAllSelected) {nextFilters = [filterKey,];}else if (filters.includes(filterKey)) {
+                    nextFilters = filters.filter((filter) =>filter !== filterKey);}
+            else {nextFilters = [...filters,filterKey,];}}
         setFilters(nextFilters);
-
-
-        /*
-         * URL 변경
-         */
-
-        const params =
-            new URLSearchParams();
-
-
-        if (keyword) {
-
-            params.set(
-                "keyword",
-                keyword
-            );
-
-        }
-
-
-        if (
-            nextFilters.length === 1 &&
-            nextFilters[0] === "all"
-        ) {
-
-            params.set(
-                "filter",
-                "all"
-            );
-
-        }
-        else if (
-            nextFilters.length > 0
-        ) {
-
-            params.set(
-                "filter",
-                nextFilters.join(",")
-            );
-
-        }
-
-
-        setSearchParams(params);
-
-    };
-
-
-    /*
-     * ==========================================
-     * 검색 API
-     * ==========================================
-     */
-
-    useEffect(() => {
-
-        const fetchSearch = async () => {
-
-            if (!keyword.trim()) {
-
-                setResult({
-                    ...EMPTY_RESULT,
-                });
-
+        const params = new URLSearchParams();
+        if (keyword) {params.set("keyword",keyword);}
+        if (nextFilters.length === 1 && nextFilters[0] === "all") {params.set("filter","all");}
+        else if (nextFilters.length > 0) {params.set("filter",nextFilters.join(","));}
+        setSearchParams(params);};
+    useEffect(() => {const fetchSearch = async () => {
+            if (!keyword.trim()) {setResult({...EMPTY_RESULT,});
                 setLoading(false);
-
                 setError("");
-
-                return;
-
-            }
-
-
-            if (filters.length === 0) {
-
-                setResult({
-
-                    ...EMPTY_RESULT,
-
-                    keyword,
-
-                    filter: "",
-
-                });
-
-                setLoading(false);
-
-                setError("");
-
-                return;
-
-            }
-
-
-            try {
-
-                setLoading(true);
-
-                setError("");
-
-
-                const filterParam =
-                    filters.includes("all")
-                        ? "all"
-                        : filters.join(",");
-
-
-                const response =
-                    await apiClient.get(
-                        "/search",
-                        {
-                            params: {
-                                keyword,
-                                filter: filterParam,
-                            },
-                        }
-                    );
-
-
-                setResult(
-                    response.data
-                );
-
-            }
-            catch (e) {
-
-                console.error(
-                    "검색 실패:",
-                    e
-                );
-
-
-                setError(
-                    "검색 중 오류가 발생했습니다."
-                );
-
-            }
-            finally {
-
-                setLoading(false);
-
-            }
-
-        };
-
-
-        fetchSearch();
-
-    }, [
-        keyword,
-        filters
-    ]);
-
-
-    /*
-     * ==========================================
-     * 전체 검색 결과 개수
-     * ==========================================
-     */
-
-    const totalCount =
-        (result.users?.length || 0) +
-        (result.projects?.length || 0) +
-        (result.tasks?.length || 0) +
-        (result.records?.length || 0) +
-        (result.notes?.length || 0) +
-        (result.files?.length || 0);
-
-
-    /*
-     * ==========================================
-     * 프로젝트 이동
-     * ==========================================
-     */
-
-    const handleProjectClick = (
-        projectNo,
-        projectRole
-    ) => {
-
-        if (!projectNo) {
-
-            console.warn(
-                "프로젝트 번호가 없습니다."
-            );
-
-            return;
-
-        }
-
-
-        /*
-         * owner 또는 member만
-         * 프로젝트 이동 가능
-         */
-
-        if (
-            projectRole !== "owner" &&
-            projectRole !== "member"
-        ) {
-
-            return;
-
-        }
-
-
-        navigate(
-            `/projects/${projectNo}`
-        );
-
-    };
-
-
-    /*
-     * ==========================================
-     * 프로젝트 참여
-     * ==========================================
-     */
-
-    const handleProjectJoin = async (
-        projectNo
-    ) => {
-
-        if (!projectNo) {
-
-            console.warn(
-                "프로젝트 번호가 없습니다."
-            );
-
-            return;
-
-        }
-
-
+                return;}
+            if (filters.length === 0) {setResult({...EMPTY_RESULT,keyword,filter: "",});
+                setLoading(false);setError("");return;}
+            try {setLoading(true);setError("");
+                const filterParam = filters.includes("all") ? "all" : filters.join(",");
+                const response = await apiClient.get("/search",{params: {keyword,filter: filterParam,},});
+                setResult(response.data);}
+            catch (e) {console.error("검색 실패:",e);
+                setError("검색 중 오류가 발생했습니다.");}
+            finally {setLoading(false);}};
+        fetchSearch();}, [keyword,filters]);
+    const totalCount =(result.users?.length || 0) +(result.projects?.length || 0) +(result.tasks?.length || 0) +
+        (result.records?.length || 0) +(result.notes?.length || 0) +(result.files?.length || 0);
+    const handleProjectClick = (projectNo,projectRole) => {if (!projectNo) {console.warn("프로젝트 번호가 없습니다.");return;}
+        if (projectRole !== "owner" && projectRole !== "member") {return;}
+        navigate(`/projects/${projectNo}`);};
+    const handleProjectJoin = async (projectNo) => {if (!projectNo) {console.warn("프로젝트 번호가 없습니다.");return;}
         if (joiningProjectNo === projectNo) {
             return;
         }
@@ -1629,104 +896,104 @@ export default function Search() {
                                     isSelected("user")
                                 ) && (
 
-                                    <SearchSection
-                                        title="사용자"
-                                        count={
-                                            result.users?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="사용자"
+                                            count={
+                                                result.users?.length || 0
+                                            }
+                                        >
 
-                                        {result.users?.map(
-                                            (user) => (
+                                            {result.users?.map(
+                                                (user) => (
 
-                                                <div
-                                                    className="search-result-item search-user-result-item"
-                                                    key={
-                                                        user.empNo
-                                                    }
+                                                    <div
+                                                        className="search-result-item search-user-result-item"
+                                                        key={
+                                                            user.empNo
+                                                        }
 
-                                                    onClick={() =>
-                                                        handleUserClick(
-                                                            user
-                                                        )
-                                                    }
-
-                                                    role="button"
-                                                    tabIndex={0}
-
-                                                    onKeyDown={(e) => {
-
-                                                        if (
-                                                            e.key === "Enter" ||
-                                                            e.key === " "
-                                                        ) {
-
-                                                            e.preventDefault();
-
+                                                        onClick={() =>
                                                             handleUserClick(
                                                                 user
-                                                            );
-
+                                                            )
                                                         }
 
-                                                    }}
-                                                >
+                                                        role="button"
+                                                        tabIndex={0}
 
-                                                    <div className="search-user-avatar">
+                                                        onKeyDown={(e) => {
 
-                                                        {
-                                                            user.empName?.charAt(
-                                                                0
-                                                            ) || "?"
-                                                        }
+                                                            if (
+                                                                e.key === "Enter" ||
+                                                                e.key === " "
+                                                            ) {
 
-                                                    </div>
+                                                                e.preventDefault();
 
+                                                                handleUserClick(
+                                                                    user
+                                                                );
 
-                                                    <div className="search-item-main">
+                                                            }
 
-                                                        <div className="search-item-title">
+                                                        }}
+                                                    >
+
+                                                        <div className="search-user-avatar">
 
                                                             {
-                                                                user.empName ||
-                                                                "이름 없음"
+                                                                user.empName?.charAt(
+                                                                    0
+                                                                ) || "?"
                                                             }
 
                                                         </div>
 
 
-                                                        <div className="search-item-sub">
+                                                        <div className="search-item-main">
 
-                                                            {
-                                                                user.empEmail ||
-                                                                ""
-                                                            }
+                                                            <div className="search-item-title">
+
+                                                                {
+                                                                    user.empName ||
+                                                                    "이름 없음"
+                                                                }
+
+                                                            </div>
+
+
+                                                            <div className="search-item-sub">
+
+                                                                {
+                                                                    user.empEmail ||
+                                                                    ""
+                                                                }
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div className="search-user-arrow">
+
+                                                            <span>
+                                                                프로젝트 이력
+                                                            </span>
+
+                                                            <span className="search-user-arrow-icon">
+                                                                →
+                                                            </span>
 
                                                         </div>
 
                                                     </div>
 
+                                                )
+                                            )}
 
-                                                    <div className="search-user-arrow">
+                                        </SearchSection>
 
-                                                        <span>
-                                                            프로젝트 이력
-                                                        </span>
-
-                                                        <span className="search-user-arrow-icon">
-                                                            →
-                                                        </span>
-
-                                                    </div>
-
-                                                </div>
-
-                                            )
-                                        )}
-
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
 
                                 {/* =================================
@@ -1738,173 +1005,172 @@ export default function Search() {
                                     isSelected("project")
                                 ) && (
 
-                                    <SearchSection
-                                        title="프로젝트"
-                                        count={
-                                            result.projects?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="프로젝트"
+                                            count={
+                                                result.projects?.length || 0
+                                            }
+                                        >
 
-                                        {result.projects?.map(
-                                            (project) => (
+                                            {result.projects?.map(
+                                                (project) => (
 
-                                                <div
-                                                    className={`search-result-item search-project-result-item ${
-                                                        project.projectRole === "owner" ||
-                                                        project.projectRole === "member"
+                                                    <div
+                                                        className={`search-result-item search-project-result-item ${project.projectRole === "owner" ||
+                                                            project.projectRole === "member"
                                                             ? "project-clickable"
                                                             : "project-not-member"
-                                                    }`}
-                                                    key={
-                                                        project.projectNo
-                                                    }
+                                                            }`}
+                                                        key={
+                                                            project.projectNo
+                                                        }
 
-                                                    onClick={() =>
-                                                        handleProjectClick(
-                                                            project.projectNo,
-                                                            project.projectRole
-                                                        )
-                                                    }
-
-                                                    role="button"
-                                                    tabIndex={
-                                                        project.projectRole === "owner" ||
-                                                        project.projectRole === "member"
-                                                            ? 0
-                                                            : -1
-                                                    }
-
-                                                    onKeyDown={(e) => {
-
-                                                        if (
-                                                            e.key === "Enter" &&
-                                                            (
-                                                                project.projectRole === "owner" ||
-                                                                project.projectRole === "member"
-                                                            )
-                                                        ) {
-
+                                                        onClick={() =>
                                                             handleProjectClick(
                                                                 project.projectNo,
                                                                 project.projectRole
-                                                            );
-
+                                                            )
                                                         }
 
-                                                    }}
-                                                >
+                                                        role="button"
+                                                        tabIndex={
+                                                            project.projectRole === "owner" ||
+                                                                project.projectRole === "member"
+                                                                ? 0
+                                                                : -1
+                                                        }
 
-                                                    <div className="search-project-icon">
-                                                        P
-                                                    </div>
+                                                        onKeyDown={(e) => {
+
+                                                            if (
+                                                                e.key === "Enter" &&
+                                                                (
+                                                                    project.projectRole === "owner" ||
+                                                                    project.projectRole === "member"
+                                                                )
+                                                            ) {
+
+                                                                handleProjectClick(
+                                                                    project.projectNo,
+                                                                    project.projectRole
+                                                                );
+
+                                                            }
+
+                                                        }}
+                                                    >
+
+                                                        <div className="search-project-icon">
+                                                            P
+                                                        </div>
 
 
-                                                    <div className="search-item-main">
+                                                        <div className="search-item-main">
 
-                                                        <div className="search-project-title-row">
+                                                            <div className="search-project-title-row">
 
-                                                            <div className="search-item-title">
+                                                                <div className="search-item-title">
 
-                                                                {
-                                                                    project.projectName ||
-                                                                    "프로젝트 이름 없음"
-                                                                }
+                                                                    {
+                                                                        project.projectName ||
+                                                                        "프로젝트 이름 없음"
+                                                                    }
+
+                                                                </div>
+
+
+                                                                <span className="project-member-count">
+
+                                                                    참여 :{" "}
+
+                                                                    {
+                                                                        project.memberCount ?? 0
+                                                                    }
+
+                                                                    명
+
+                                                                </span>
 
                                                             </div>
 
 
-                                                            <span className="project-member-count">
-
-                                                                참여 :{" "}
+                                                            <div className="search-item-sub">
 
                                                                 {
-                                                                    project.memberCount ?? 0
+                                                                    project.projectPurpose ||
+                                                                    ""
                                                                 }
 
-                                                                명
-
-                                                            </span>
+                                                            </div>
 
                                                         </div>
 
 
-                                                        <div className="search-item-sub">
+                                                        <div
+                                                            className="search-project-action"
 
-                                                            {
-                                                                project.projectPurpose ||
-                                                                ""
+                                                            onClick={(e) =>
+                                                                e.stopPropagation()
                                                             }
+                                                        >
+
+                                                            {project.projectRole === "owner" && (
+
+                                                                <span className="project-role owner">
+                                                                    owner
+                                                                </span>
+
+                                                            )}
+
+
+                                                            {project.projectRole === "member" && (
+
+                                                                <span className="project-role member">
+                                                                    참여 중
+                                                                </span>
+
+                                                            )}
+
+
+                                                            {!project.projectRole && (
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="project-join-button"
+
+                                                                    disabled={
+                                                                        joiningProjectNo ===
+                                                                        project.projectNo
+                                                                    }
+
+                                                                    onClick={() =>
+                                                                        handleProjectJoin(
+                                                                            project.projectNo
+                                                                        )
+                                                                    }
+                                                                >
+
+                                                                    {
+                                                                        joiningProjectNo ===
+                                                                            project.projectNo
+                                                                            ? "참여 중..."
+                                                                            : "참여"
+                                                                    }
+
+                                                                </button>
+
+                                                            )}
 
                                                         </div>
 
                                                     </div>
 
+                                                )
+                                            )}
 
-                                                    <div
-                                                        className="search-project-action"
+                                        </SearchSection>
 
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
-                                                        }
-                                                    >
-
-                                                        {project.projectRole === "owner" && (
-
-                                                            <span className="project-role owner">
-                                                                owner
-                                                            </span>
-
-                                                        )}
-
-
-                                                        {project.projectRole === "member" && (
-
-                                                            <span className="project-role member">
-                                                                참여 중
-                                                            </span>
-
-                                                        )}
-
-
-                                                        {!project.projectRole && (
-
-                                                            <button
-                                                                type="button"
-                                                                className="project-join-button"
-
-                                                                disabled={
-                                                                    joiningProjectNo ===
-                                                                    project.projectNo
-                                                                }
-
-                                                                onClick={() =>
-                                                                    handleProjectJoin(
-                                                                        project.projectNo
-                                                                    )
-                                                                }
-                                                            >
-
-                                                                {
-                                                                    joiningProjectNo ===
-                                                                    project.projectNo
-                                                                        ? "참여 중..."
-                                                                        : "참여"
-                                                                }
-
-                                                            </button>
-
-                                                        )}
-
-                                                    </div>
-
-                                                </div>
-
-                                            )
-                                        )}
-
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
 
                                 {/* =================================
@@ -1916,92 +1182,92 @@ export default function Search() {
                                     isSelected("task")
                                 ) && (
 
-                                    <SearchSection
-                                        title="업무"
-                                        count={
-                                            result.tasks?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="업무"
+                                            count={
+                                                result.tasks?.length || 0
+                                            }
+                                        >
 
-                                        {result.tasks?.map(
-                                            (task) => (
+                                            {result.tasks?.map(
+                                                (task) => (
 
-                                                <div
-                                                    className="search-result-item search-task-result-item"
-                                                    key={
-                                                        task.taskNo
-                                                    }
-
-                                                    onClick={() =>
-                                                        handleTaskClick(
-                                                            task.projectNo
-                                                        )
-                                                    }
-
-                                                    role="button"
-                                                    tabIndex={0}
-
-                                                    onKeyDown={(e) => {
-
-                                                        if (
-                                                            e.key === "Enter"
-                                                        ) {
-
-                                                            handleTaskClick(
-                                                                task.projectNo
-                                                            );
-
+                                                    <div
+                                                        className="search-result-item search-task-result-item"
+                                                        key={
+                                                            task.taskNo
                                                         }
 
-                                                    }}
-                                                >
+                                                        onClick={() =>
+                                                            handleTaskClick(
+                                                                task.projectNo
+                                                            )
+                                                        }
 
-                                                    <div className="search-task-icon">
-                                                        T
+                                                        role="button"
+                                                        tabIndex={0}
+
+                                                        onKeyDown={(e) => {
+
+                                                            if (
+                                                                e.key === "Enter"
+                                                            ) {
+
+                                                                handleTaskClick(
+                                                                    task.projectNo
+                                                                );
+
+                                                            }
+
+                                                        }}
+                                                    >
+
+                                                        <div className="search-task-icon">
+                                                            T
+                                                        </div>
+
+
+                                                        <div className="search-item-main">
+
+                                                            <div className="search-item-project">
+
+                                                                {
+                                                                    task.projectName ||
+                                                                    "프로젝트 없음"
+                                                                }
+
+                                                            </div>
+
+
+                                                            <div className="search-item-title">
+
+                                                                {
+                                                                    task.taskTitle ||
+                                                                    "업무 이름 없음"
+                                                                }
+
+                                                            </div>
+
+
+                                                            <div className="search-item-sub">
+
+                                                                {
+                                                                    task.taskContent ||
+                                                                    ""
+                                                                }
+
+                                                            </div>
+
+                                                        </div>
+
                                                     </div>
 
+                                                )
+                                            )}
 
-                                                    <div className="search-item-main">
+                                        </SearchSection>
 
-                                                        <div className="search-item-project">
-
-                                                            {
-                                                                task.projectName ||
-                                                                "프로젝트 없음"
-                                                            }
-
-                                                        </div>
-
-
-                                                        <div className="search-item-title">
-
-                                                            {
-                                                                task.taskTitle ||
-                                                                "업무 이름 없음"
-                                                            }
-
-                                                        </div>
-
-
-                                                        <div className="search-item-sub">
-
-                                                            {
-                                                                task.taskContent ||
-                                                                ""
-                                                            }
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            )
-                                        )}
-
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
 
                                 {/* =================================
@@ -2013,48 +1279,48 @@ export default function Search() {
                                     isSelected("record")
                                 ) && (
 
-                                    <SearchSection
-                                        title="기록"
-                                        count={
-                                            result.records?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="기록"
+                                            count={
+                                                result.records?.length || 0
+                                            }
+                                        >
 
-                                        {result.records?.map(
-                                            (
-                                                record,
-                                                index
-                                            ) => (
+                                            {result.records?.map(
+                                                (
+                                                    record,
+                                                    index
+                                                ) => (
 
-                                                <div
-                                                    className="search-result-item"
-                                                    key={
-                                                        record.id ||
-                                                        index
-                                                    }
-                                                >
+                                                    <div
+                                                        className="search-result-item"
+                                                        key={
+                                                            record.id ||
+                                                            index
+                                                        }
+                                                    >
 
-                                                    <div className="search-item-main">
+                                                        <div className="search-item-main">
 
-                                                        <div className="search-item-title">
+                                                            <div className="search-item-title">
 
-                                                            {
-                                                                record.title ||
-                                                                "기록"
-                                                            }
+                                                                {
+                                                                    record.title ||
+                                                                    "기록"
+                                                                }
+
+                                                            </div>
 
                                                         </div>
 
                                                     </div>
 
-                                                </div>
+                                                )
+                                            )}
 
-                                            )
-                                        )}
+                                        </SearchSection>
 
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
 
                                 {/* =================================
@@ -2066,48 +1332,48 @@ export default function Search() {
                                     isSelected("note")
                                 ) && (
 
-                                    <SearchSection
-                                        title="노트"
-                                        count={
-                                            result.notes?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="노트"
+                                            count={
+                                                result.notes?.length || 0
+                                            }
+                                        >
 
-                                        {result.notes?.map(
-                                            (
-                                                note,
-                                                index
-                                            ) => (
+                                            {result.notes?.map(
+                                                (
+                                                    note,
+                                                    index
+                                                ) => (
 
-                                                <div
-                                                    className="search-result-item"
-                                                    key={
-                                                        note.id ||
-                                                        index
-                                                    }
-                                                >
+                                                    <div
+                                                        className="search-result-item"
+                                                        key={
+                                                            note.id ||
+                                                            index
+                                                        }
+                                                    >
 
-                                                    <div className="search-item-main">
+                                                        <div className="search-item-main">
 
-                                                        <div className="search-item-title">
+                                                            <div className="search-item-title">
 
-                                                            {
-                                                                note.title ||
-                                                                "노트"
-                                                            }
+                                                                {
+                                                                    note.title ||
+                                                                    "노트"
+                                                                }
+
+                                                            </div>
 
                                                         </div>
 
                                                     </div>
 
-                                                </div>
+                                                )
+                                            )}
 
-                                            )
-                                        )}
+                                        </SearchSection>
 
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
 
                                 {/* =================================
@@ -2119,83 +1385,83 @@ export default function Search() {
                                     isSelected("file")
                                 ) && (
 
-                                    <SearchSection
-                                        title="파일"
-                                        count={
-                                            result.files?.length || 0
-                                        }
-                                    >
+                                        <SearchSection
+                                            title="파일"
+                                            count={
+                                                result.files?.length || 0
+                                            }
+                                        >
 
-                                        {result.files?.map(
-                                            (file) => (
+                                            {result.files?.map(
+                                                (file) => (
 
-                                                <div
-                                                    className="search-result-item search-file-result-item"
-                                                    key={
-                                                        file.attachNo
-                                                    }
-                                                >
+                                                    <div
+                                                        className="search-result-item search-file-result-item"
+                                                        key={
+                                                            file.attachNo
+                                                        }
+                                                    >
 
-                                                    <SearchFileIcon
-                                                        file={file}
-                                                    />
-
-
-                                                    <div className="search-item-main">
-
-                                                        <div className="search-item-project">
-
-                                                            {
-                                                                file.projectName ||
-                                                                "프로젝트 없음"
-                                                            }
-
-                                                        </div>
+                                                        <SearchFileIcon
+                                                            file={file}
+                                                        />
 
 
-                                                        <div className="search-item-title">
+                                                        <div className="search-item-main">
 
-                                                            {
-                                                                file.attachName ||
-                                                                "파일 이름 없음"
-                                                            }
+                                                            <div className="search-item-project">
 
-                                                        </div>
+                                                                {
+                                                                    file.projectName ||
+                                                                    "프로젝트 없음"
+                                                                }
+
+                                                            </div>
 
 
-                                                        <div className="search-item-sub">
+                                                            <div className="search-item-title">
 
-                                                            {file.empName && (
+                                                                {
+                                                                    file.attachName ||
+                                                                    "파일 이름 없음"
+                                                                }
 
-                                                                <>
+                                                            </div>
 
-                                                                    {
-                                                                        file.empName
-                                                                    }
 
-                                                                    {" · "}
+                                                            <div className="search-item-sub">
 
-                                                                </>
+                                                                {file.empName && (
 
-                                                            )}
+                                                                    <>
 
-                                                            {
-                                                                file.attachType ||
-                                                                ""
-                                                            }
+                                                                        {
+                                                                            file.empName
+                                                                        }
+
+                                                                        {" · "}
+
+                                                                    </>
+
+                                                                )}
+
+                                                                {
+                                                                    file.attachType ||
+                                                                    ""
+                                                                }
+
+                                                            </div>
 
                                                         </div>
 
                                                     </div>
 
-                                                </div>
+                                                )
+                                            )}
 
-                                            )
-                                        )}
+                                        </SearchSection>
 
-                                    </SearchSection>
-
-                                )}
+                                    )}
 
                             </div>
 
@@ -2552,7 +1818,7 @@ export default function Search() {
 
                                         </div>
 
-                                        <hr/>
+                                        <hr />
                                         {/* =================================
                                             종료된 프로젝트
                                         ================================= */}
@@ -2583,128 +1849,128 @@ export default function Search() {
 
                                             </div>
 
-                                                
-
-                                            
-
-                                                <div className="user-project-history-list">
-
-                                                    {endedProjectHistory.map(
-                                                        (
-                                                            history,
-                                                            index
-                                                        ) => (
-
-                                                            <div
-                                                                className="user-project-history-item"
-                                                                key={`ended-${history.projectNo}-${index}`}
-                                                            >
-
-                                                                <div className="user-project-history-number">
-
-                                                                    {
-                                                                        index + 1
-                                                                    }
-
-                                                                </div>
 
 
-                                                                <div className="user-project-history-icon">
-
-                                                                    P
-
-                                                                </div>
 
 
-                                                                <div className="user-project-history-main">
+                                            <div className="user-project-history-list">
 
-                                                                    <div className="user-project-history-title-row">
+                                                {endedProjectHistory.map(
+                                                    (
+                                                        history,
+                                                        index
+                                                    ) => (
 
-                                                                        <div className="user-project-history-title">
+                                                        <div
+                                                            className="user-project-history-item"
+                                                            key={`ended-${history.projectNo}-${index}`}
+                                                        >
 
-                                                                            {
-                                                                                history.projectName ||
-                                                                                "프로젝트 이름 없음"
-                                                                            }
+                                                            <div className="user-project-history-number">
 
-                                                                        </div>
+                                                                {
+                                                                    index + 1
+                                                                }
 
-
-                                                                        <span
-                                                                            className={`user-project-history-status ${getProjectStatusClass(
-                                                                                history.projectStatus
-                                                                            )}`}
-                                                                        >
-
-                                                                            <span className="user-project-history-status-dot" />
-
-                                                                            {
-                                                                                getProjectStatusLabel(
-                                                                                    history.projectStatus
-                                                                                )
-                                                                            }
-
-                                                                        </span>
-
-                                                                    </div>
+                                                            </div>
 
 
-                                                                    <div className="user-project-history-info">
+                                                            <div className="user-project-history-icon">
 
-                                                                        <span className="user-project-history-role">
+                                                                P
 
-                                                                            {
-                                                                                getProjectRoleLabel(
-                                                                                    history.projectMemberRole
-                                                                                )
-                                                                            }
-
-                                                                        </span>
+                                                            </div>
 
 
-                                                                        <span className="user-project-history-divider">
-                                                                            ·
-                                                                        </span>
+                                                            <div className="user-project-history-main">
 
+                                                                <div className="user-project-history-title-row">
 
-                                                                        <span>
-
-                                                                            {
-                                                                                history.projectMemberJob ||
-                                                                                "담당 업무 없음"
-                                                                            }
-
-                                                                        </span>
-
-                                                                    </div>
-
-                                                                </div>
-
-
-                                                                <div className="user-project-history-date">
-
-                                                                    <span>
-                                                                        참여일
-                                                                    </span>
-
-                                                                    <strong>
+                                                                    <div className="user-project-history-title">
 
                                                                         {
-                                                                            formatDate(
-                                                                                history.projectMemberCtime
+                                                                            history.projectName ||
+                                                                            "프로젝트 이름 없음"
+                                                                        }
+
+                                                                    </div>
+
+
+                                                                    <span
+                                                                        className={`user-project-history-status ${getProjectStatusClass(
+                                                                            history.projectStatus
+                                                                        )}`}
+                                                                    >
+
+                                                                        <span className="user-project-history-status-dot" />
+
+                                                                        {
+                                                                            getProjectStatusLabel(
+                                                                                history.projectStatus
                                                                             )
                                                                         }
 
-                                                                    </strong>
+                                                                    </span>
+
+                                                                </div>
+
+
+                                                                <div className="user-project-history-info">
+
+                                                                    <span className="user-project-history-role">
+
+                                                                        {
+                                                                            getProjectRoleLabel(
+                                                                                history.projectMemberRole
+                                                                            )
+                                                                        }
+
+                                                                    </span>
+
+
+                                                                    <span className="user-project-history-divider">
+                                                                        ·
+                                                                    </span>
+
+
+                                                                    <span>
+
+                                                                        {
+                                                                            history.projectMemberJob ||
+                                                                            "담당 업무 없음"
+                                                                        }
+
+                                                                    </span>
 
                                                                 </div>
 
                                                             </div>
 
-                                                        )
-                                                    )}
 
-                                                </div>
+                                                            <div className="user-project-history-date">
+
+                                                                <span>
+                                                                    참여일
+                                                                </span>
+
+                                                                <strong>
+
+                                                                    {
+                                                                        formatDate(
+                                                                            history.projectMemberCtime
+                                                                        )
+                                                                    }
+
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )
+                                                )}
+
+                                            </div>
 
 
                                         </div>
