@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./TaskAttachmentSection.css";
 
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
+
 export default function TaskAttachmentSection({ taskNo, projectNo }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,10 +29,21 @@ export default function TaskAttachmentSection({ taskNo, projectNo }) {
     fetchTaskFiles();
   }, [taskNo]);
 
-  // 업무 파일 업로드
+  // 업무 파일 업로드 (1MB 초과 검증 적용)
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      const currentMB = (file.size / (1024 * 1024)).toFixed(1);
+      toast.warn(`"${file.name}" 파일이 1MB를 초과했습니다. (현재: ${currentMB}MB) 1MB 이하의 파일만 첨부할 수 있습니다.`);
+      
+      // 인풋 비우고 서버 요청 중단
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -46,7 +59,11 @@ export default function TaskAttachmentSection({ taskNo, projectNo }) {
       fetchTaskFiles();
     } catch (error) {
       console.error("파일 업로드 실패:", error);
-      toast.error("파일 업로드에 실패했습니다.");
+      if (error.response?.status === 413) {
+        toast.error("서버에서 허용하는 최대 파일 용량을 초과했습니다.");
+      } else {
+        toast.error("파일 업로드에 실패했습니다.");
+      }
     }
   };
 
