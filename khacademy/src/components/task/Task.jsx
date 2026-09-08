@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import {
@@ -22,6 +22,8 @@ const COLUMNS = [
 export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   //프로젝트 정보 받기-서준
   const {project} = useOutletContext();
@@ -221,7 +223,11 @@ export default function Task() {
     setSelectedTask(null);
     setTaskFiles([]);
     setIsEditing(false);
-  }, []);
+
+    if(searchParams.has("taskNo")) {
+      setSearchParams({});
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!projectNo) return;
@@ -367,6 +373,21 @@ export default function Task() {
       setDrawerLoading(false);
     }
   };
+
+  useEffect(() => {
+    const taskNo = searchParams.get("taskNo");
+
+    if(!taskNo) return;
+
+    const targetTaskNo = Number(taskNo);
+
+    if(selectedTask?.taskNo === targetTaskNo && drawerOpen === true) {
+      return;
+    }
+
+    handleCardClick(targetTaskNo);
+
+  }, [searchParams, selectedTask, drawerOpen]);
 
   const handleStartEdit = () => {
     if(isClosed){

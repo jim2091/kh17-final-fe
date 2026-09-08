@@ -2,7 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
@@ -26,6 +26,8 @@ export default function Calendar() {
     const { projectNo } = useParams();
     const { project, loadProject } = useOutletContext();
 
+    const navigate = useNavigate();
+
     //권한 + 프로젝트 상태에 따른 제어
     const isClosed = project?.projectStatus === "closed"
     //일정 작성자인지는 scheduleDetail이 생긴 후에 계산 가능해서 아래쪽으로 옮김
@@ -35,16 +37,19 @@ export default function Calendar() {
     //수정/삭제 가능한지 판정도 작성자인지를 써야하니 아래로
 
     const [scheduleList, setScheduleList] = useState([]);
+    const [taskList, setTaskList] = useState([]);
+
     const [loading, setLoading] = useState(false);
     //초기 목록 로딩
     useEffect(() => {
         loadScheduleList();
+        loadTaskList();
     }, []);
 
     const loadScheduleList = useCallback(async (showLoading = true) => {
         try {
             //최초 로딩시에만 로딩화면 띄우도록 개선
-            if(showLoading === true) {
+            if (showLoading === true) {
                 setLoading(true);
             }
 
@@ -56,34 +61,61 @@ export default function Calendar() {
             toast.error("일정을 불러오지 못했습니다.");
         }
         finally {
-            if(showLoading === true) {
+            if (showLoading === true) {
                 setLoading(false);
             }
         }
     }, []);
 
-    //웹소켓으로 변동사항 받아서 실시간 화면 갱신
-    useEffect(()=>{
+    const loadTaskList = useCallback(async () => {
+        try {
+            const { data } = await apiClient.get(`/task/list/${projectNo}`);
 
-        let subscription = null;
+            setTaskList(data);
+        }
+        catch (e) {
+            console.error(e);
+            toast.error("업무 목록을 불러오지 못했습니다.");
+        }
+    }, [])
+
+    //웹소켓으로 변동사항 받아서 실시간 화면 갱신
+    useEffect(() => {
+
+        if(!projectNo) return;
+
+        let scheduleSubscription = null;
+        let taskSubscription = null
 
         onWebSocketConnect(() => {
             const client = getWebSocketClient();//App.jsx에서 만든 공용 웹소켓 클라이언트를 가져와서
-    
-            if(client == null) return;
+
+            if (client == null) return;
             //if(client.connected === false) return;//이제 없어도 됨 onWebSocketConnect안에 들어가니까
-    
-            subscription = client.subscribe(
+
+            //일정 변경 구독
+            scheduleSubscription = client.subscribe(
                 `/public/project/${projectNo}/schedule`,
                 (message) => {//구독한 채널로부터 메세지가 오면 실행되는 함수
                     const json = JSON.parse(message.body);
-                    
+
                     console.log("일정 변경 알림 수신", json);
-    
+
                     loadScheduleList(false);//일정 페이지를 갱신
                     //웹소켓으로 변동사항 받아서 갱신시에는 로딩화면 띄우지 않도록 false
                 }
             );
+
+            //업무 변경 구독
+            taskSubscription = client.subscribe(
+                `/public/projects/${projectNo}/kanban`,
+                (message) => {
+                    const json = JSON.parse(message.body);
+                    console.log("업무 변경 알림 수신", json);
+
+                    loadTaskList();
+                }
+            )
         });
 
         //클린업 함수
@@ -92,31 +124,96 @@ export default function Calendar() {
             //우리는 App.jsx에서 공용 웹소켓에 연결하고 그게 계속 이어지는 형태
             //여기서 그 연결을 끊어버리면 안됨. 구독만 끊어주는 것.
             //구독을 만약 안끊으면 일정 페이지 들어올때마다 구독이 누적됨
-            subscription?.unsubscribe();
+            scheduleSubscription?.unsubscribe();
+            taskSubscription?.unsubscribe();
         }
     }, []);
 
     //FullCallendar용 데이터로 변환
-    const schedules = scheduleList.map(schedule => {
-        
+    const scheduleEvents = scheduleList.map(schedule => {
+
         //여러 일자에 걸친 일정 처리 추가
-        const isMultiday = 
+        const isMultiday =
             schedule.scheduleEnd &&
             !dayjs(schedule.scheduleStart)
                 .isSame(dayjs(schedule.scheduleEnd), "day");
 
         return {
-            id: String(schedule.scheduleNo),
+            id: `schedule-${schedule.scheduleNo}`,
             title: schedule.scheduleTitle,
             start: schedule.scheduleStart,
             end: schedule.scheduleEnd || undefined,
-            
+
             //여러 날짜에 걸치는 일정은 주간 화면에서 상단에 표시
             allDay: isMultiday,
 
             backgroundColor: "#6f8fcf",
+
+            extendedProps: {
+                type: "schedule",
+                scheduleNo: schedule.scheduleNo,
+            },
         };
     });
+
+    const taskEvents = taskList
+        .filter(task => task.taskStart || task.taskEnd)
+        .map(task => {
+            if (task.taskStart && task.taskEnd) {
+
+                const endDate = new Date(task.taskEnd);
+
+                //FullCallendar의 end는 마지막 날짜를 포함하지 않기 때문에
+                //마감일 다음 날짜를 end로 넘김
+                endDate.setDate(endDate.getDate() + 1);
+
+                return {
+                    id: `task-${task.taskNo}`,
+                    title: task.taskTitle,
+                    start: task.taskStart,
+                    end: endDate,
+                    allDay: true,
+                    backgroundColor: "#7c8f6b",
+                    extendedProps: {
+                        type: "task",
+                        taskNo: task.taskNo,
+                    },
+                };
+            }
+
+            //시작일만 있는 경우
+            if (task.taskStart) {
+                return {
+                    id: `task-${task.taskNo}`,
+                    title: task.taskTitle,
+                    start: task.taskStart,
+                    allDay: true,
+                    backgroundColor: "#7c8f6b",
+                    extendedProps: {
+                        type: "task",
+                        taskNo: task.taskNo,
+                    },
+                }
+            }
+
+            //마감일만 있는 경우
+            return {
+                id: `task-${task.taskNo}`,
+                title: task.taskTitle,
+                start: task.taskEnd,
+                allDay: true,
+                backgroundColor: "#7c8f6b",
+                extendedProps: {
+                    type: "task",
+                    taskNo: task.taskNo,
+                },
+            }
+        });
+
+    const calendarEvents = [
+        ...scheduleEvents,
+        ...taskEvents
+    ]
 
     //FullCalendar가 보여주고 있는 날짜
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -182,7 +279,7 @@ export default function Calendar() {
     const [inputModal, setInputModal] = useState(false);
     const openInputModal = useCallback(() => {
         //아마 버튼들 다 막아놔서 닫힌 프로젝트면 이걸 실행시킬 방법이 없겠지만 혹시나
-        if(canAddSchedule === false) return;
+        if (canAddSchedule === false) return;
         setInputModal(true);
     }, [canAddSchedule]);
     const closeInputModal = useCallback(() => {
@@ -278,7 +375,7 @@ export default function Calendar() {
     const handleDateClick = useCallback((info) => {
 
         //종료된 프로젝트면 작동 안하게
-        if(canAddSchedule === false) return;
+        if (canAddSchedule === false) return;
 
         let start;
         //월간에서 클릭한 날짜의 오전 9시로 자동 입력
@@ -301,8 +398,11 @@ export default function Calendar() {
 
     //상세 관련
     const [detailModal, setDetailModal] = useState(false);
+    const [taskDetailModal, setTaskDetailModal] = useState(false);
 
     const [scheduleDetail, setScheduleDetail] = useState(null);
+    const [taskDetail, setTaskDetail] = useState(null);
+
     const [editMode, setEditMode] = useState(false);
 
     const [scheduleEdit, setScheduleEdit] = useState({
@@ -313,6 +413,35 @@ export default function Calendar() {
         schedulePlace: "",
     });
 
+    //일정 상세 조회
+    const openScheduleDetail = useCallback(async (scheduleNo) => {
+        try {
+            const { data } = await apiClient.get(`/schedule/${scheduleNo}`);
+            setScheduleDetail(data);
+            setDetailModal(true);
+            setEditMode(false);
+        }
+        catch (e) {
+            console.error(e);
+            toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
+        };
+    }, []);
+
+    //업무 상세 조회
+    const openTaskDetail = useCallback(async (taskNo) => {
+        try {
+            const { data } = await apiClient.get(`/task/${taskNo}`);
+
+            setTaskDetail(data);
+            setTaskDetailModal(true);
+        }
+        catch (e) {
+            console.error(e);
+            toast.error("업무 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요");
+        }
+    }, []);
+
+    //상세 모달 닫기
     const closeDetailModal = useCallback(() => {
         setDetailModal(false);
         setScheduleDetail(null);
@@ -334,23 +463,32 @@ export default function Calendar() {
         });
     }, []);
 
-    //일정 상세 조회
-    const openScheduleDetail = useCallback(async (scheduleNo) => {
-        try {
-            const { data } = await apiClient.get(`/schedule/${scheduleNo}`);
-            setScheduleDetail(data);
-            setDetailModal(true);
-            setEditMode(false);
-        }
-        catch (e) {
-            console.error(e);
-            toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
-        };
+    const closeTaskDetailModal = useCallback(() => {
+        setTaskDetailModal(false);
+        setTaskDetail(null);
     }, []);
 
-    const handleScheduleClick = useCallback((info) => {
-        openScheduleDetail(info.event.id);
-    }, [openScheduleDetail]);
+    const moveToTask = useCallback(() => {
+        if(taskDetail === null) return;
+
+        const taskNo = taskDetail.taskNo;
+        
+        closeTaskDetailModal();
+        navigate(`/projects/${projectNo}/task?taskNo=${taskNo}`);
+    }, [taskDetail]);
+
+    const handleEventClick = useCallback((info) => {
+        const type = info.event.extendedProps.type;
+
+        if(type === "schedule") {
+            const scheduleNo = info.event.extendedProps.scheduleNo;
+            openScheduleDetail(scheduleNo);
+        }
+        else if(type === "task") {
+            const taskNo = info.event.extendedProps.taskNo;
+            openTaskDetail(taskNo);
+        }
+    }, [openScheduleDetail, openTaskDetail]);
 
     const isScheduleWriter = project?.projectMemberNo === scheduleDetail?.scheduleWriterNo;
     const canEditSchedule = !isClosed && (isScheduleWriter || isManagerOrOwner);
@@ -517,22 +655,41 @@ export default function Calendar() {
         return dayjs(value).format("YYYY-MM-DD HH:mm")
     };
 
+    const formatTaskDate = useCallback((date) => {
+        if(!date) return "-";
+
+        return dayjs(date).format("YYYY-MM-DD");
+    }, []);
+
+    const getTaskStatusLabel = useCallback((status) => {
+        switch(status) {
+            case "TODO":
+                return "할 일";
+            case "IN_PROGRESS":
+                return "진행 중";
+            case "DONE":
+                return "완료";
+            default:
+                return status || "-";
+        }
+    }, []);
+
     const formatUpcomingDate = (value) => {
         if (!value) return "";
 
         const target = dayjs(value);
         const today = dayjs();
 
-        if (target.isSame(today, "day")){
+        if (target.isSame(today, "day")) {
             return "오늘"
         }
-        if (target.isSame(today.add(1, "day"), "day")){
+        if (target.isSame(today.add(1, "day"), "day")) {
             return "내일"
         }
-        
+
         return dayjs(value).format("M/D")
     }
-    
+
 
     //여기 함수 네개 참 애매하네 이렇게까지 반복해야하나
     //jsx안에 바로 각각 써주기 길어서 따로 뺀건데 따로 빼도 뭐 크게 다를바 없네 이러면..
@@ -542,7 +699,7 @@ export default function Calendar() {
     //invalid는 그냥 시작일 없을때만 주는걸로
     //굳이 여기서 빡세게 나눠서 함수까지 더만들어가며 컨트롤해주긴 좀 그렇다
     //어차피 다른 부분들에서 입력안되게 혹은 전송안되게 막고 있으니까.
-    const changeScheduleDate = useCallback((name, date)=>{
+    const changeScheduleDate = useCallback((name, date) => {
         const value = date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
 
         setScheduleInput(prev => ({
@@ -550,7 +707,7 @@ export default function Calendar() {
             [name]: value
         }));
 
-        setInputResult(prev=>({
+        setInputResult(prev => ({
             ...prev,
             [name]:
                 name === "scheduleStart" && value.length === 0
@@ -560,11 +717,11 @@ export default function Calendar() {
 
     const changeScheduleEditDate = useCallback((name, date) => {
         const value = date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : "";
-        setScheduleEdit(prev=>({
+        setScheduleEdit(prev => ({
             ...prev,
             [name]: value
         }));
-        setEditResult(prev=>({
+        setEditResult(prev => ({
             ...prev,
             [name]:
                 name === "scheduleStart" && value.length === 0
@@ -581,14 +738,14 @@ export default function Calendar() {
 
     //이동할 연/월/일 state
     const [moveYear, setMoveYear] = useState(dayjs(currentDate).year());
-    const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month()+1);//1월이 0임
+    const [moveMonth, setMoveMonth] = useState(dayjs(currentDate).month() + 1);//1월이 0임
     const [moveDate, setMoveDate] = useState(dayjs(currentDate).toDate());
 
-    const moveCalendar = useCallback(()=>{
+    const moveCalendar = useCallback(() => {
         const calendarApi = calendarRef.current.getApi();
 
         //월간
-        if(currentView === "dayGridMonth") {
+        if (currentView === "dayGridMonth") {
             const targetMonth = dayjs()
                 .year(Number(moveYear))
                 .month(Number(moveMonth) - 1)
@@ -609,25 +766,25 @@ export default function Calendar() {
         }
 
         setMoveModal(false);
-    },[moveYear, moveMonth, moveDate, currentView, anchorDate]);
+    }, [moveYear, moveMonth, moveDate, currentView, anchorDate]);
 
     //이동 연/월 선택 모달
     const [moveModal, setMoveModal] = useState(false);
 
-    const openMoveModal = useCallback(()=>{
+    const openMoveModal = useCallback(() => {
         setMoveYear(dayjs(currentDate).year());
-        setMoveMonth(dayjs(currentDate).month()+1);
+        setMoveMonth(dayjs(currentDate).month() + 1);
         setMoveDate(dayjs(anchorDate).toDate());
 
         setMoveModal(true);
     }, [currentDate, anchorDate]);
 
-    const closeMoveModal = useCallback(()=>{
+    const closeMoveModal = useCallback(() => {
         setMoveModal(false);
     }, []);
 
     //View에 따라 다른 제목 state
-    const getCalendarTitle = useCallback(()=>{
+    const getCalendarTitle = useCallback(() => {
         //월간
         if (currentView === "dayGridMonth") {
             return dayjs(currentDate).format("YYYY년 M월");
@@ -635,7 +792,7 @@ export default function Calendar() {
         //주간/목록
         const calendarApi = calendarRef.current?.getApi();
 
-        if(!calendarApi) {
+        if (!calendarApi) {
             return dayjs(currentDate).format("YYYY년 M월");
         }
 
@@ -653,37 +810,37 @@ export default function Calendar() {
     }, [anchorDate]);
 
     //화살표도 anchorDate 쓰도록 하는 커스텀 버튼에 들어갈 함수
-    const movePrev = useCallback(()=>{
+    const movePrev = useCallback(() => {
         const calendarApi = calendarRef.current.getApi();
         calendarApi.prev();
 
         const viewType = calendarApi.view.type;
 
         //월 view일 경우 이전 앵커에서 월만 1 빼는 형태로
-        if(viewType === "dayGridMonth") {
+        if (viewType === "dayGridMonth") {
             setAnchorDate(prev => dayjs(prev).subtract(1, "month").toDate())
         }
         //주/목록 view일 경우 이전 앵커에서 주만 1빼는 형태로
         else {
-            setAnchorDate(prev=>dayjs(prev).subtract(1, "week").toDate());
+            setAnchorDate(prev => dayjs(prev).subtract(1, "week").toDate());
         }
     }, []);
 
-    const moveNext = useCallback(()=>{
+    const moveNext = useCallback(() => {
         const calendarApi = calendarRef.current.getApi();
         calendarApi.next();
 
         const viewType = calendarApi.view.type;
 
-        if(viewType === "dayGridMonth") {
+        if (viewType === "dayGridMonth") {
             setAnchorDate(prev => dayjs(prev).add(1, "month").toDate());
         }
         else {
-            setAnchorDate(prev=>dayjs(prev).add(1, "week").toDate());
+            setAnchorDate(prev => dayjs(prev).add(1, "week").toDate());
         }
     }, []);
 
-    const moveToday = useCallback(()=>{
+    const moveToday = useCallback(() => {
         const calendarApi = calendarRef.current.getApi();
 
         const today = new Date();
@@ -702,24 +859,24 @@ export default function Calendar() {
         weekButton?.classList.remove("fc-button-active");
         listButton?.classList.remove("fc-button-active");
 
-        if(viewType === "dayGridMonth") {
+        if (viewType === "dayGridMonth") {
             monthButton?.classList.add("fc-button-active");
         }
-        else if(viewType === "timeGridWeek") {
+        else if (viewType === "timeGridWeek") {
             weekButton?.classList.add("fc-button-active");
         }
-        if(viewType === "listWeek") {
+        if (viewType === "listWeek") {
             listButton?.classList.add("fc-button-active");
         }
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         const wheelButton = document.querySelector(".fc-wheelMove-button");
 
-        if(!wheelButton) return;
+        if (!wheelButton) return;
 
         // 현재 view에 따라 툴팁 설명 변경
-        if(currentView === "dayGridMonth") {
+        if (currentView === "dayGridMonth") {
             wheelButton.title = "이 영역에서 마우스 휠을 사용하면 월 단위로 이동됩니다.";
         }
         else {
@@ -731,19 +888,19 @@ export default function Calendar() {
             e.preventDefault();
 
             //직전 휠 이동 처리 중이면 무시
-            if(wheelLockRef.current === true) return;
+            if (wheelLockRef.current === true) return;
             wheelLockRef.current = true;
 
             //아래로 휠
-            if(e.deltaY > 0) {
+            if (e.deltaY > 0) {
                 moveNext();
             }
-            else if(e.deltaY < 0){
+            else if (e.deltaY < 0) {
                 movePrev();
             }
 
             //빠르게 휙휙 이동하지 않도록 잠깐 잠금
-            setTimeout(()=>{
+            setTimeout(() => {
                 wheelLockRef.current = false;
             }, 20);
         }
@@ -760,7 +917,6 @@ export default function Calendar() {
     //이때 휠 useEffect가 실행되면서 이 버튼에 이벤트가 붙음.
     //근데 이후 목록 조회가 시작되며 loading이 true가 되고 이때 Fullcalendar가 사라짐
     //그러니 loading도 의존배열에 넣어서 loading이 바뀌면 다시 effect 실행되도록 조치
-
 
     return (<>
         <div className="calendar-page">
@@ -853,18 +1009,18 @@ export default function Calendar() {
 
                                 //종료된 프로젝트면 등록 버튼이 안보이게 처리
                                 right: canAddSchedule
-                                // 월 -> 주 변경시 1일이 기준이 되므로 오늘을 포함하는 기간을 보여주지 않음
-                                // ? "dayGridMonth,timeGridWeek,listWeek addSchedule"
-                                // : "dayGridMonth,timeGridWeek,listWeek"
-                                //그래서 별도로 버튼 만들어서 연결
-                                ? "wheelMove monthView,weekView,listView addSchedule"
-                                : "wheelMove monthView,weekView,listView"
+                                    // 월 -> 주 변경시 1일이 기준이 되므로 오늘을 포함하는 기간을 보여주지 않음
+                                    // ? "dayGridMonth,timeGridWeek,listWeek addSchedule"
+                                    // : "dayGridMonth,timeGridWeek,listWeek"
+                                    //그래서 별도로 버튼 만들어서 연결
+                                    ? "wheelMove monthView,weekView,listView addSchedule"
+                                    : "wheelMove monthView,weekView,listView"
                             }}
 
-                            events={schedules}
+                            events={calendarEvents}
 
                             dateClick={handleDateClick}
-                            eventClick={handleScheduleClick}
+                            eventClick={handleEventClick}
 
                             dayMaxEvents={2}
 
@@ -911,13 +1067,13 @@ export default function Calendar() {
                                     const scheduleLastTime = schedule.scheduleEnd
                                         ? dayjs(schedule.scheduleEnd)
                                         : dayjs(schedule.scheduleStart)
-                                    
+
                                     const isPast = scheduleLastTime.isBefore(now);
                                     const isOngoing = schedule.scheduleEnd
                                         && dayjs(schedule.scheduleStart).isBefore(now)
                                         && dayjs(schedule.scheduleEnd).isAfter(now);
-                                    
-                                    return(
+
+                                    return (
                                         <div
                                             key={schedule.scheduleNo}
                                             className={`calendar-side-item
@@ -947,8 +1103,8 @@ export default function Calendar() {
                                         </div>
                                     );
                                 })
-                                    
-                             
+
+
                             )}
                         </div>
                     </div>
@@ -1072,14 +1228,14 @@ export default function Calendar() {
                                 scheduleInput.scheduleStart
                                     ? dayjs(scheduleInput.scheduleStart).toDate() : undefined
                             }
-                            filterTime={(time)=>{
-                                if(!scheduleInput.scheduleStart) return true;
+                            filterTime={(time) => {
+                                if (!scheduleInput.scheduleStart) return true;
 
                                 const start = dayjs(scheduleInput.scheduleStart);
                                 const target = dayjs(time);
 
                                 //시작일과 다른 날짜면 모든 시간 선택 가능
-                                if(!target.isSame(start, "day")) return true;
+                                if (!target.isSame(start, "day")) return true;
 
                                 //같은 날짜면 시작시간 이후만 선택 가능
                                 return target.isAfter(start);
@@ -1225,7 +1381,7 @@ export default function Calendar() {
                                 />
 
                             </Form.Group>
-                            
+
 
                             <Form.Group className="mb-3">
                                 <Form.Label>종료 일시</Form.Label>
@@ -1240,14 +1396,14 @@ export default function Calendar() {
                                         scheduleEdit.scheduleStart
                                             ? dayjs(scheduleEdit.scheduleStart).toDate() : undefined
                                     }
-                                    filterTime={(time)=>{
-                                        if(!scheduleEdit.scheduleStart) return true;
+                                    filterTime={(time) => {
+                                        if (!scheduleEdit.scheduleStart) return true;
 
                                         const start = dayjs(scheduleEdit.scheduleStart);
                                         const target = dayjs(time);
 
                                         //시작일과 다른 날짜면 모든 시간 선택 가능
-                                        if(!target.isSame(start, "day")) return true;
+                                        if (!target.isSame(start, "day")) return true;
 
                                         //같은 날짜면 시작시간 이후만 선택 가능
                                         return target.isAfter(start);
@@ -1314,6 +1470,95 @@ export default function Calendar() {
             </Modal.Footer>
         </Modal>
 
+        {/* 업무 상세 모달 */}
+        <Modal
+            show={taskDetailModal}
+            onHide={closeTaskDetailModal}
+            centered
+            className="schedule-detail-modal"
+            restoreFocus={false}
+        >
+            <Modal.Header closeButton>
+                    <Modal.Title>
+                        업무 상세
+                    </Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                {taskDetail !== null && (
+                    <div className="schedule-detail">
+                        <div className="schedule-detail-title">
+                            <div>{taskDetail.taskTitle}</div>
+                        </div>
+
+                        <div className="schedule-detail-info">
+                            <div className="schedule-detail-row">
+                                <div className="schedule-detail-label">
+                                    시작일
+                                </div>
+
+                                <div className="schedule-detail-value">
+                                    {formatTaskDate(taskDetail.taskStart)}
+                                </div>
+                            </div>
+
+                            <div className="schedule-detail-row">
+                                <div className="schedule-detail-label">
+                                    마감일
+                                </div>
+
+                                <div className="schedule-detail-value">
+                                    {formatTaskDate(taskDetail.taskEnd)}
+                                </div>
+                            </div>
+
+                            <div className="schedule-detail-row">
+                                <div className="schedule-detail-label">
+                                    상태
+                                </div>
+
+                                <div className="schedule-detail-value">
+                                    {getTaskStatusLabel(taskDetail.taskStatus)}
+                                </div>
+                            </div>
+
+                            <div className="schedule-detail-row">
+                                <div className="schedule-detail-label">
+                                    우선순위
+                                </div>
+
+                                <div className="schedule-detail-value">
+                                    {taskDetail.taskPriority || "-"}
+                                </div>
+                            </div>
+
+                            <div className="schedule-detail-row">
+                                <div className="schedule-detail-label">
+                                    내용
+                                </div>
+
+                                <div className="schedule-detail-value">
+                                    {taskDetail.taskContent || "등록된 내용이 없습니다"}
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                )}
+            </Modal.Body>
+
+            <Modal.Footer>
+                <Button variant="primary" onClick={moveToTask}>
+                    업무에서 보기
+                </Button>
+
+                <Button variant="secondary" onClick={closeTaskDetailModal}>
+                    닫기
+                </Button>
+            </Modal.Footer>
+
+        </Modal>
+
         {/* 선택 모달 */}
         <Modal
             show={moveModal}
@@ -1336,7 +1581,7 @@ export default function Calendar() {
                         <Form.Control
                             type="number"
                             value={moveYear}
-                            onChange={(e)=>setMoveYear(e.target.value)}
+                            onChange={(e) => setMoveYear(e.target.value)}
                             min={1900}
                             max={2100}
                         />
@@ -1348,12 +1593,12 @@ export default function Calendar() {
 
                         <Form.Select
                             value={moveMonth}
-                            onChange={(e)=>setMoveMonth(e.target.value)}
-                            >
-                            {Array.from({ length: 12 }, (_, index)=> (
+                            onChange={(e) => setMoveMonth(e.target.value)}
+                        >
+                            {Array.from({ length: 12 }, (_, index) => (
                                 <option
-                                key={index + 1}
-                                value={index + 1}
+                                    key={index + 1}
+                                    value={index + 1}
                                 >
                                     {index + 1}월
                                 </option>
@@ -1371,7 +1616,7 @@ export default function Calendar() {
                         <DatePicker
                             selected={moveDate}
                             onChange={(date) => {
-                                if(date) {
+                                if (date) {
                                     setMoveDate(date);
                                 }
                             }}
@@ -1381,7 +1626,7 @@ export default function Calendar() {
                     </div>
                 </>)}
             </Modal.Body>
-            
+
             <Modal.Footer>
                 <Button variant="secondary" onClick={closeMoveModal}>
                     취소
