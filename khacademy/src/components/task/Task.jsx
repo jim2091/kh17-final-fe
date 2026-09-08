@@ -7,7 +7,8 @@ import {
   Download,
   FileText,
   EyeOff,
-  RotateCcw
+  Check,
+  X
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
@@ -28,7 +29,7 @@ export default function Task() {
   //프로젝트 정보 받기-서준
   const { project } = useOutletContext();
   //종료여부
-  const isClosed = project.projectStatus === "closed";
+  const isClosed = project?.projectStatus === "closed";
 
   const isLogin = useAtomValue(isLoginState);
 
@@ -53,7 +54,6 @@ export default function Task() {
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // 사원 번호와 프로젝트 번호를 결합하여 개인별 격리 스토리지 키 생성
   const storageKey = `kanban_hidden_tasks_${currentEmpNo}_${projectNo}`;
 
   const [hiddenTaskNos, setHiddenTaskNos] = useState(() => {
@@ -65,7 +65,9 @@ export default function Task() {
     }
   });
 
-  // 계정(currentEmpNo)이나 프로젝트(projectNo)가 변경될 때 해당 사용자의 숨김 목록으로 동기화
+  const [isHideMode, setIsHideMode] = useState(false);
+  const [tempHiddenNos, setTempHiddenNos] = useState([]);
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -75,20 +77,28 @@ export default function Task() {
     }
   }, [storageKey]);
 
-  const handleToggleHideTask = (taskNo, e) => {
-    if (e) e.stopPropagation();
-    setHiddenTaskNos((prev) => {
-      const updated = prev.includes(taskNo)
-        ? prev.filter((id) => id !== taskNo)
-        : [...prev, taskNo];
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-      return updated;
-    });
+  const handleEnterHideMode = () => {
+    setTempHiddenNos([...hiddenTaskNos]);
+    setIsHideMode(true);
   };
 
-  const handleRestoreAll = () => {
-    setHiddenTaskNos([]);
-    localStorage.removeItem(storageKey);
+  const handleCheckTask = (taskNo, e) => {
+    if (e) e.stopPropagation();
+    setTempHiddenNos((prev) =>
+      prev.includes(taskNo) ? prev.filter((id) => id !== taskNo) : [...prev, taskNo]
+    );
+  };
+
+  const handleSaveHideSelection = () => {
+    setHiddenTaskNos(tempHiddenNos);
+    localStorage.setItem(storageKey, JSON.stringify(tempHiddenNos));
+    setIsHideMode(false);
+    toast.success("업무 숨김 설정이 적용되었습니다.");
+  };
+
+  const handleCancelHideMode = () => {
+    setTempHiddenNos([]);
+    setIsHideMode(false);
   };
 
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -384,7 +394,7 @@ export default function Task() {
   });
 
   const handleCardClick = async (taskNo) => {
-    if (isDragging) return;
+    if (isDragging || isHideMode) return;
     setIsEditing(false);
 
     const localTarget = tasks.find((t) => t.taskNo === taskNo);
@@ -556,6 +566,7 @@ export default function Task() {
   };
 
   const handleDragStart = (e, taskNo) => {
+    if (isHideMode) return;
     setIsDragging(true);
     setDraggedTaskId(taskNo);
     e.dataTransfer.setData("text/plain", String(taskNo));
@@ -570,6 +581,7 @@ export default function Task() {
   };
 
   const handleDragOver = (e, columnId) => {
+    if (isHideMode) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverCol !== columnId) setDragOverCol(columnId);
@@ -582,7 +594,7 @@ export default function Task() {
 
   const handleDrop = async (e, targetStatus) => {
     //드래그x
-    if (isClosed) {
+    if (isClosed || isHideMode) {
       return;
     }
     e.preventDefault();
@@ -648,51 +660,67 @@ export default function Task() {
       <div className="kanban-title-bar">
         <div className="kanban-title-text">
           <h2>프로젝트 #{projectNo} 업무 보드</h2>
-          <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
+          <p>
+            {isHideMode
+              ? "보드에서 숨길 업무를 선택한 후 [숨김 설정 완료]를 누르세요."
+              : "카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요."}
+          </p>
         </div>
 
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          {hiddenTaskNos.length > 0 && (
-            <button
-              type="button"
-              onClick={handleRestoreAll}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f8fafc",
-                border: "1px solid #cbd5e1",
-                borderRadius: "8px",
-                fontSize: "12.5px",
-                fontWeight: "600",
-                color: "#475569",
-                cursor: "pointer"
-              }}
-              title="숨긴 카드를 다시 보드에 노출합니다"
-            >
-              <RotateCcw size={13} />
-              숨긴 업무 {hiddenTaskNos.length}개 복구
-            </button>
-          )}
+        <div className="kanban-top-actions">
+          {isHideMode ? (
+            <>
+              <button
+                type="button"
+                className="btn-kanban-confirm"
+                onClick={handleSaveHideSelection}
+              >
+                <Check size={14} /> 숨김 설정 완료 ({tempHiddenNos.length}개 숨김)
+              </button>
+              <button
+                type="button"
+                className="btn-kanban-cancel"
+                onClick={handleCancelHideMode}
+              >
+                <X size={14} /> 취소
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn-kanban-mode"
+                onClick={handleEnterHideMode}
+              >
+                <EyeOff size={14} />
+                업무 숨김/정리 모드
+                {hiddenTaskNos.length > 0 && (
+                  <span className="hidden-count-badge">{hiddenTaskNos.length}</span>
+                )}
+              </button>
 
-          {isClosed === false && (
-            <button
-              type="button"
-              className="btn-create-task"
-              onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
-            >
-              <span className="plus-icon">+</span> 새 업무 등록
-            </button>
+              {isClosed === false && (
+                <button
+                  type="button"
+                  className="btn-create-task"
+                  onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
+                >
+                  <span className="plus-icon">+</span> 새 업무 등록
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
 
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter(
-            (t) => (t.taskStatus || "TODO") === col.id && !hiddenTaskNos.includes(t.taskNo)
-          );
+          const columnTasks = tasks.filter((t) => {
+            if ((t.taskStatus || "TODO") !== col.id) return false;
+            if (isHideMode) return true;
+            return !hiddenTaskNos.includes(t.taskNo);
+          });
+
           const isOver = dragOverCol === col.id;
 
           return (
@@ -717,53 +745,43 @@ export default function Task() {
                     const pClass = getPriorityBadge(task.taskPriority);
                     const assigneeName = getAssigneeName(task);
                     const ddayBadge = getTaskDeadlineBadge(task);
+                    const isTaskHidden = isHideMode && tempHiddenNos.includes(task.taskNo);
 
                     return (
                       <div
                         key={task.taskNo}
-                        draggable={!isClosed}
+                        draggable={!isClosed && !isHideMode}
                         onDragStart={(e) => handleDragStart(e, task.taskNo)}
                         onDragEnd={handleDragEnd}
-                        onClick={() => handleCardClick(task.taskNo)}
-                        className={`direct-task-card ${pClass} ${isDraggingThis ? "is-dragging" : ""}`}
+                        onClick={() => {
+                          if (isHideMode) {
+                            handleCheckTask(task.taskNo);
+                          } else {
+                            handleCardClick(task.taskNo);
+                          }
+                        }}
+                        className={`direct-task-card ${pClass} ${isDraggingThis ? "is-dragging" : ""} ${isTaskHidden ? "card-hide-target" : ""}`}
                       >
+                        {isHideMode && (
+                          <div className="card-hide-selector">
+                            <input
+                              type="checkbox"
+                              checked={tempHiddenNos.includes(task.taskNo)}
+                              onChange={(e) => handleCheckTask(task.taskNo, e)}
+                              className="hide-checkbox"
+                            />
+                            <span className="hide-selector-label">
+                              {tempHiddenNos.includes(task.taskNo) ? "숨김 대상" : "노출 유지"}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span className={`priority-tag ${pClass}`}>
-                              {task.taskPriority || "보통"}
-                            </span>
-
-                            <button
-                              type="button"
-                              className="btn-hide-task"
-                              title="보드에서 숨기기"
-                              onClick={(e) => handleToggleHideTask(task.taskNo, e)}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: "#f1f5f9",
-                                border: "1px solid #cbd5e1",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                padding: "5px 7px",
-                                color: "#475569",
-                                transition: "all 0.15s ease"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#e2e8f0";
-                                e.currentTarget.style.color = "#0f172a";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "#f1f5f9";
-                                e.currentTarget.style.color = "#475569";
-                              }}
-                            >
-                              <EyeOff size={17} strokeWidth={2.2} />
-                            </button>
-                          </div>
+                          <span className={`priority-tag ${pClass}`}>
+                            {task.taskPriority || "보통"}
+                          </span>
                         </div>
 
                         <div className="card-main-title">{task.taskTitle}</div>
@@ -774,7 +792,7 @@ export default function Task() {
                             <span>{assigneeName}</span>
                           </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <div className="card-due-info">
                             {ddayBadge && (
                               <span className={`dday-badge ${ddayBadge.className}`}>
                                 {ddayBadge.text}
@@ -859,7 +877,7 @@ export default function Task() {
 
                     <div className="meta-card-item">
                       <span className="meta-label">마감일자</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div className="meta-deadline-row">
                         <span className="meta-text-val">
                           {selectedTask.taskEnd ? String(selectedTask.taskEnd).slice(0, 10) : "미정"}
                         </span>
@@ -903,35 +921,25 @@ export default function Task() {
 
                   <div className="view-section">
                     <span className="section-title">
-                      <Paperclip size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+                      <Paperclip size={13} className="inline-paperclip" />
                       업무 첨부파일 ({taskFiles.length}개)
                     </span>
 
-                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <div className="task-file-list-box">
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
                           {taskFiles.some(isImageAttach) && (
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", marginBottom: "4px" }}>
+                            <div className="task-img-gallery-grid">
                               {taskFiles.filter(isImageAttach).map((file) => {
                                 const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
                                 return (
-                                  <div
-                                    key={file.attachNo}
-                                    style={{
-                                      position: "relative",
-                                      borderRadius: "6px",
-                                      overflow: "hidden",
-                                      border: "1px solid #cbd5e1",
-                                      aspectRatio: "1/1",
-                                      backgroundColor: "#000"
-                                    }}
-                                  >
+                                  <div key={file.attachNo} className="task-img-thumbnail-item">
                                     <img
                                       src={fileUrl}
                                       alt={file.attachName}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
+                                      className="task-thumbnail-image"
                                       onClick={() => window.open(fileUrl, "_blank")}
                                       title={`${file.attachName} (클릭하여 확대)`}
                                     />
@@ -939,22 +947,9 @@ export default function Task() {
                                       href={fileUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      style={{
-                                        position: "absolute",
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        backgroundColor: "rgba(15, 23, 42, 0.65)",
-                                        color: "#ffffff",
-                                        fontSize: "10px",
-                                        padding: "3px 4px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        textDecoration: "none"
-                                      }}
+                                      className="task-img-download-bar"
                                     >
-                                      <Download size={11} style={{ marginRight: "2px" }} /> 다운로드
+                                      <Download size={11} /> 다운로드
                                     </a>
                                   </div>
                                 );
@@ -963,27 +958,13 @@ export default function Task() {
                           )}
 
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
-                            <div
-                              key={file.attachNo}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "6px",
-                                padding: "8px 12px"
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                            <div key={file.attachNo} className="task-doc-item">
+                              <div className="task-doc-info-wrap">
                                 {renderFileTypeBadge(file)}
-                                <span
-                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                                  title={file.attachName}
-                                >
+                                <span className="task-doc-name" title={file.attachName}>
                                   {file.attachName}
                                 </span>
-                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                <span className="task-doc-size">
                                   ({formatFileSize(file.attachSize)})
                                 </span>
                               </div>
@@ -993,19 +974,6 @@ export default function Task() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn-file-download"
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  padding: "4px 8px",
-                                  backgroundColor: "#f1f5f9",
-                                  border: "1px solid #cbd5e1",
-                                  borderRadius: "4px",
-                                  fontSize: "11px",
-                                  fontWeight: "600",
-                                  color: "#334155",
-                                  textDecoration: "none"
-                                }}
                               >
                                 <Download size={12} /> 다운로드
                               </a>
@@ -1149,9 +1117,9 @@ export default function Task() {
                       함께할 협업자 ({editCollaborators.length}명 선택됨)
                     </label>
 
-                    <div className="collab-chips-box" style={{ marginBottom: "8px" }}>
+                    <div className="collab-chips-box">
                       {editCollaborators.length === 0 ? (
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                        <span className="collab-empty-text">
                           지정된 협업자가 없습니다. 아래에서 추가하세요.
                         </span>
                       ) : (
@@ -1169,7 +1137,7 @@ export default function Task() {
                               <span className="chip-avatar">{(member.empName || "사").slice(0, 1)}</span>
                               <span className="chip-name">{member.empName}</span>
                               {member.empDeptNo && <span className="chip-dept">({member.empDeptNo})</span>}
-                              <span style={{ marginLeft: "4px", fontSize: "11px", fontWeight: "bold" }}>✕</span>
+                              <span className="chip-remove-mark">✕</span>
                             </button>
                           );
                         })
@@ -1206,25 +1174,10 @@ export default function Task() {
                     />
                   </div>
 
-                  <div className="form-group full-width" style={{ marginTop: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <label className="form-label" style={{ margin: 0 }}>업무 첨부파일 관리</label>
-                      <label
-                        htmlFor="task-file-upload-input"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          fontSize: "12px",
-                          padding: "4px 8px",
-                          backgroundColor: "#f1f5f9",
-                          border: "1px solid #cbd5e1",
-                          borderRadius: "4px",
-                          color: "#334155",
-                          cursor: "pointer",
-                          fontWeight: "600"
-                        }}
-                      >
+                  <div className="form-group full-width form-file-edit-wrap">
+                    <div className="edit-file-top-bar">
+                      <label className="form-label">업무 첨부파일 관리</label>
+                      <label htmlFor="task-file-upload-input" className="btn-file-add-label">
                         <Paperclip size={12} /> 새 파일 추가
                       </label>
                       <input
@@ -1235,49 +1188,24 @@ export default function Task() {
                       />
                     </div>
 
-                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <div className="task-file-list-box">
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
                           {taskFiles.some(isImageAttach) && (
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
+                            <div className="task-img-gallery-grid-sm">
                               {taskFiles.filter(isImageAttach).map((file) => (
-                                <div
-                                  key={file.attachNo}
-                                  style={{
-                                    position: "relative",
-                                    borderRadius: "6px",
-                                    overflow: "hidden",
-                                    border: "1px solid #cbd5e1",
-                                    aspectRatio: "1/1"
-                                  }}
-                                >
+                                <div key={file.attachNo} className="task-img-edit-card">
                                   <img
                                     src={`http://localhost:8080/api/attach/${file.attachNo}`}
                                     alt={file.attachName}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    className="task-thumbnail-image"
                                   />
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                    style={{
-                                      position: "absolute",
-                                      top: "3px",
-                                      right: "3px",
-                                      backgroundColor: "rgba(239, 68, 68, 0.9)",
-                                      border: "none",
-                                      borderRadius: "50%",
-                                      width: "20px",
-                                      height: "20px",
-                                      color: "#ffffff",
-                                      fontSize: "11px",
-                                      fontWeight: "bold",
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center"
-                                    }}
+                                    className="btn-attach-delete-circle"
                                     title="삭제"
                                   >
                                     ✕
@@ -1288,27 +1216,13 @@ export default function Task() {
                           )}
 
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
-                            <div
-                              key={file.attachNo}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "6px",
-                                padding: "8px 12px"
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                            <div key={file.attachNo} className="task-doc-item">
+                              <div className="task-doc-info-wrap">
                                 {renderFileTypeBadge(file)}
-                                <span
-                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                                  title={file.attachName}
-                                >
+                                <span className="task-doc-name" title={file.attachName}>
                                   {file.attachName}
                                 </span>
-                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                <span className="task-doc-size">
                                   ({formatFileSize(file.attachSize)})
                                 </span>
                               </div>
@@ -1316,17 +1230,7 @@ export default function Task() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "#ef4444",
-                                  cursor: "pointer",
-                                  padding: "4px",
-                                  fontSize: "14px",
-                                  fontWeight: "bold"
-                                }}
+                                className="btn-doc-delete-icon"
                                 title="파일 삭제"
                               >
                                 ✕

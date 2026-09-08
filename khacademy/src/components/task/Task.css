@@ -28,6 +28,94 @@
   margin: 4px 0 0 0;
 }
 
+/* 상단 액션 툴바 그룹 */
+.kanban-top-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 업무 숨김/정리 모드 진입 버튼 */
+.btn-kanban-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.btn-kanban-mode:hover {
+  transform: translateY(-1px);
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 숨겨진 카드 개수 뱃지 */
+.hidden-count-badge {
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+/* 숨김 모드 완료 버튼 (블루 그라디언트 통일) */
+.btn-kanban-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-kanban-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+/* 숨김 모드 취소 버튼 */
+.btn-kanban-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-kanban-cancel:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
 /* 새 업무 등록 버튼 */
 .btn-create-task {
   display: inline-flex;
@@ -155,6 +243,38 @@
   border: 2px dashed #3b82f6;
 }
 
+/* 숨김 모드에서 선택된 카드의 시각 피드백 */
+.direct-task-card.card-hide-target {
+  opacity: 0.55;
+  background-color: #f8fafc;
+  border: 2px dashed #94a3b8 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 숨김 모드 전용 상단 체크박스 영역 */
+.card-hide-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.hide-checkbox {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.hide-selector-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
 /* 우선순위 좌측 보더 라인 */
 .direct-task-card.badge-urgent { border-left: 4px solid #ef4444; }
 .direct-task-card.badge-high { border-left: 4px solid #f97316; }
@@ -228,6 +348,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.card-due-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .due-date-text {
