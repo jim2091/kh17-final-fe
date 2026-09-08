@@ -9,8 +9,7 @@ import {
   X,
   Paperclip,
   Download,
-  Eye,
-  Image as ImageIcon
+  Eye
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -19,11 +18,6 @@ import "./NoteComments.css";
 
 // 첨부파일 최대 허용 용량 (1MB)
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
-
-// 이미지 파일 판별 헬퍼
-const isImageFile = (fileName = "") => {
-  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
-};
 
 export default function NoteComments({ noteNo, projectNo }) {
   // 스토리지 전수 검사로 실제 로그인 사번 및 이름 추출
@@ -41,15 +35,20 @@ export default function NoteComments({ noteNo, projectNo }) {
                 empName: String(parsed.empName || "").trim()
               };
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return {
       empNo: Number(localStorage.getItem("empNo") || sessionStorage.getItem("empNo") || 0),
       empName: String(localStorage.getItem("empName") || sessionStorage.getItem("empName") || "").trim()
     };
+  };
+
+  // 인라인 미리보기를 지원하는 확장자 판별
+  const canPreview = (fileName = "") => {
+    return /\.(docx|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
   };
 
   const { empNo: myEmpNo, empName: myEmpName } = getLoginUserInfo();
@@ -66,9 +65,8 @@ export default function NoteComments({ noteNo, projectNo }) {
   const [editInputContent, setEditInputContent] = useState("");
   const [originalEditContent, setOriginalEditContent] = useState("");
 
-  // 워드 모달 및 이미지 원본 뷰어 상태
+  // 통합 미리보기 모달 상태 (워드, PDF, 이미지, 텍스트 공용)
   const [previewDocx, setPreviewDocx] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
 
   // 프로젝트 멤버 번호 매핑
   useEffect(() => {
@@ -151,7 +149,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     if (e && e.preventDefault) e.preventDefault();
     if (!inputContent.trim() && !selectedFile) return;
 
-    // 전송 직전 파일 용량 재검사
     if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
       toast.warn("용량을 초과한 파일은 등록할 수 없습니다. 파일을 다시 선택해 주세요.");
       return;
@@ -161,8 +158,7 @@ export default function NoteComments({ noteNo, projectNo }) {
 
     try {
       const payloadContent = inputContent.trim() || `[첨부파일] ${selectedFile?.name}`;
-      
-      // 1단계: 댓글 텍스트 등록
+
       const res = await apiClient.post(`/note/comment/?projectNo=${projectNo || 0}`, {
         noteNo: Number(noteNo),
         noteCommentContent: payloadContent
@@ -170,7 +166,6 @@ export default function NoteComments({ noteNo, projectNo }) {
 
       createdCommentNo = typeof res.data === "number" ? res.data : res.data?.noteCommentNo;
 
-      // 2단계: 파일 업로드
       if (selectedFile && createdCommentNo) {
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -189,7 +184,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     } catch (error) {
       console.error("댓글 등록/파일 업로드 실패:", error);
 
-      // 파일 업로드 실패 시 방금 등록된 빈 댓글 롤백 삭제
       if (createdCommentNo) {
         try {
           await apiClient.delete(`/note/comment/${createdCommentNo}`);
@@ -215,7 +209,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     }
   };
 
-  // 수정 시작 및 취소
   const handleStartEdit = (comment) => {
     setEditingCommentNo(comment.noteCommentNo);
     setEditInputContent(comment.noteCommentContent || "");
@@ -228,7 +221,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     setOriginalEditContent("");
   };
 
-  // 수정 저장
   const handleSaveEdit = async (commentNo) => {
     if (!editInputContent.trim()) return;
 
@@ -249,7 +241,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     }
   };
 
-  // 댓글 삭제 (삭제 확인 모달 유지)
   const handleDeleteComment = async (commentNo) => {
     const result = await Swal.fire({
       title: "댓글 삭제",
@@ -274,7 +265,6 @@ export default function NoteComments({ noteNo, projectNo }) {
     }
   };
 
-  // 첨부파일 다운로드
   const handleDownloadFile = async (attachNo, attachName) => {
     try {
       const res = await apiClient.get(`/attach/${attachNo}`, {
@@ -447,55 +437,43 @@ export default function NoteComments({ noteNo, projectNo }) {
                 {/* 첨부파일 칩 목록 */}
                 {comment.files && comment.files.length > 0 && (
                   <div className="comment-files-row">
-                    {comment.files.map((file) => {
-                      const isDocx = file.attachName?.toLowerCase().endsWith(".docx");
-                      const isImg = isImageFile(file.attachName);
+                    {comment.files.map((file) => (
+                      <div key={file.attachNo} className="comment-file-chip">
+                        <Paperclip size={11} />
+                        <span
+                          className="comment-file-name"
+                          onClick={() => handleDownloadFile(file.attachNo, file.attachName)}
+                        >
+                          {file.attachName}
+                        </span>
 
-                      return (
-                        <div key={file.attachNo} className="comment-file-chip">
-                          <Paperclip size={11} />
-                          <span
-                            className="comment-file-name"
-                            onClick={() => handleDownloadFile(file.attachNo, file.attachName)}
-                          >
-                            {file.attachName}
-                          </span>
-
-                          {/* 이미지 미리보기 버튼 */}
-                          {isImg && (
-                            <button
-                              type="button"
-                              className="btn-img-tag"
-                              onClick={() => setPreviewImage({ attachNo: file.attachNo, fileName: file.attachName })}
-                              title="사진 크게 보기"
-                            >
-                              <ImageIcon size={10} /> 미리보기
-                            </button>
-                          )}
-
-                          {/* 워드 파일 양식 보기 버튼 */}
-                          {isDocx && (
-                            <button
-                              type="button"
-                              className="btn-docx-tag"
-                              onClick={() => setPreviewDocx({ attachNo: file.attachNo, fileName: file.attachName })}
-                              title="브라우저에서 워드 양식 열기"
-                            >
-                              <Eye size={10} /> 양식
-                            </button>
-                          )}
-
+                        {/* 👈 [수정 포인트] f -> file 변수명 수정 및 단일 미리보기 버튼으로 통합 */}
+                        {canPreview(file.attachName) && (
                           <button
                             type="button"
-                            className="btn-icon-dl"
-                            onClick={() => handleDownloadFile(file.attachNo, file.attachName)}
-                            title="다운로드"
+                            className="btn-docx-tag"
+                            onClick={() =>
+                              setPreviewDocx({
+                                attachNo: file.attachNo,
+                                fileName: file.attachName
+                              })
+                            }
+                            title="미리보기"
                           >
-                            <Download size={11} color="#64748b" />
+                            <Eye size={10} /> 미리보기
                           </button>
-                        </div>
-                      );
-                    })}
+                        )}
+
+                        <button
+                          type="button"
+                          className="btn-icon-dl"
+                          onClick={() => handleDownloadFile(file.attachNo, file.attachName)}
+                          title="다운로드"
+                        >
+                          <Download size={11} color="#64748b" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -504,37 +482,7 @@ export default function NoteComments({ noteNo, projectNo }) {
         )}
       </div>
 
-      {/* 사진 원본 미리보기 모달 */}
-      {previewImage && (
-        <div className="notes-modal-backdrop" onClick={() => setPreviewImage(null)}>
-          <div className="notes-image-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="notes-modal-header image-modal-header">
-              <span className="modal-filename">{previewImage.fileName}</span>
-              <div className="modal-actions-right">
-                <button
-                  type="button"
-                  className="btn-submit modal-dl-btn"
-                  onClick={() => handleDownloadFile(previewImage.attachNo, previewImage.fileName)}
-                >
-                  <Download size={13} /> 다운로드
-                </button>
-                <button type="button" className="btn-modal-close" onClick={() => setPreviewImage(null)}>
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="image-render-viewport">
-              <img
-                src={`http://localhost:8080/api/attach/${previewImage.attachNo}`}
-                alt={previewImage.fileName}
-                className="modal-full-img"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 공통 DocxPreview 컴포넌트 호출 */}
+      {/* 통합 DocxPreview 컴포넌트 호출 (워드, PDF, 이미지, 텍스트 모두 처리) */}
       {previewDocx && (
         <DocxPreview
           attachNo={previewDocx.attachNo}
