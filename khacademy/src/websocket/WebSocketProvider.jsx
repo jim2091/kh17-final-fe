@@ -9,7 +9,7 @@ const WebSocketContext = createContext(null);
 export default function ({ children }) {
 
     const isLogin = useAtomValue(isLoginState);
-    const [users, setUsers] = useState([]);
+    const [presenceMap, setPresenceMap] = useState({});
 
     //웹소켓 연결을 관리하는 useEffect
     useEffect(() => {
@@ -26,55 +26,51 @@ export default function ({ children }) {
 
     }, [isLogin]);
 
-    //백엔드에서 온라인 사용자 변동을 실시간으로 전달받는 구독
-    useEffect(()=>{
-        if(!isLogin){//로그인 상태가 아니면
-            setUsers([]);//사용자들을 보여주지 않겠다
+    //Presence 상태 변화를 실시간으로 전달받는 구독
+    useEffect(() => {
+        if(!isLogin) {
+            setPresenceMap({});
             return;
         }
 
         let subscription = null;
-        
-        onWebSocketConnect(() => {//웹소켓 서버와 연결이 되면 이 콜백함수를 실행하겠다
-            //공용 웹소켓 클라이언트를 가져오고
+
+        onWebSocketConnect(() => {
             const client = getWebSocketClient();
-            //없으면 때려치고
+
             if(client == null) return;
 
             subscription = client.subscribe(
-                "/public/onlineUsers",//여기 구독해서
+                "/public/presence",
                 (message) => {
+
                     const json = JSON.parse(message.body);
-                    setUsers(json);
+
+                    setPresenceMap(prev => ({
+                        ...prev,
+                        [json.empNo]: json.status
+                    }));
                 }
             );
 
-            //현재 온라인 사용자 목록 요청
-            client.publish({
-                destination: "/app/onlineUsers"
-            });
-
         });
 
-        //클린업 함수
         return () => {
             subscription?.unsubscribe();
-            setUsers([]);
+            setPresenceMap({});
         }
-
     }, [isLogin]);
 
-    //아까 publish도 언뜻 봤던거 같은데 지금은 백엔드에 따로 구현 안돼있는거 같아서 그냥 둘게요
 
     return (<>
-        <WebSocketContext.Provider value={{ users }}>
+        <WebSocketContext.Provider value={{ presenceMap }}>
             {children}
         </WebSocketContext.Provider>
     </>);
 }
 
 //커스텀 훅
-// 다른 하위 컴포넌트에서 const{ users } = useWebSocket();
+// 다른 하위 컴포넌트에서 const{ presenceMap } = useWebSocket();
 // 이렇게 하면 아까 구독을 통해 받은 사용자 목록을 받아서 쓸 수 있음
 export const useWebSocket = () => {
     return useContext(WebSocketContext);

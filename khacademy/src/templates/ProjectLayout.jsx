@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { apiClient } from "../utils/reaxios";
 import { Spinner } from "react-bootstrap";
+import ProjectPresenceSidebar from "../components/project/ProjectPresenceSidebar";
 
 export default function ProjectLayout() {
 
@@ -56,14 +57,20 @@ export default function ProjectLayout() {
             {/* 프로젝트 내부탭 영역 */}
             <ProjectTabs/>
 
-            {/* 탭별 실제 화면 */}
-            <div className="project-content">
-                <Outlet
-                    context={{
-                        project,
-                        loadProject
-                    }}
-                />
+            {/* 프로젝트 실제 컨텐츠 영역 */}
+            <div className="project-body">
+                {/* 탭별 실제 화면 */}
+                <div className="project-content">
+                    <Outlet
+                        context={{
+                            project,
+                            loadProject
+                        }}
+                    />
+                </div>
+
+                {/* 프로젝트 멤버 Presence */}
+                <ProjectPresenceSidebar />
             </div>
         </div>
     </>)
