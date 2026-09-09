@@ -80,4 +80,47 @@
     border-radius: 50%;
     object-fit: cover;
 }
+.profile-line{
+    width: 300px;
+    height: 3px;
+    background-color: orange;
+    margin-top: 10px;
+}
+.div-line{
+    width: 500px;
+    height: 3px;
+    background-color: #2563eb;
+    margin-top: 10px;
+}
+.autocomplete {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background-color: #f5f5f5;
+}
+.search-area{
+    position : relative;
+}
+.list-box {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+.list-box:hover{
+    background-color: #f5f5f5;
+}
 
