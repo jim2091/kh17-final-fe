@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button, Modal, Form, Badge, FormGroup, FormLabel } from "react-bootstrap";
-import { Plus, FileText, Calendar, User } from "lucide-react";
+import { Plus, Calendar, User } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Records.css";
@@ -20,6 +20,27 @@ export default function Records() {
     const [recordType, setRecordType] = useState("")
     const [recordTitle, setRecordTitle] = useState("");
     const [recordContent, setRecordContent] = useState("");
+
+    //중복 줄이고 업무, 노트, 파일 리스트를 relatedSource로 최대한 묶는 형태의 설계
+    //원본 데이터 목록
+    const [relatedSource, setRelatedSource] = useState({
+        TASK: [],
+        NOTE: [],
+        ATTACH: []
+    });
+
+    //선택된 원본 데이터
+    const [selectedRelatedList, setSelectedRelatedList] = useState([]);
+
+    //원본 데이터 선택 모달
+    const [relatedSelectModalOpen, setRelatedSelectModalOpen] = useState(false);
+    const [relatedSelectType, setRelatedSelectType] = useState(null);
+
+    //원본 데이터 검색어
+    const [relatedKeyword, setRelatedKeyword] = useState("");
+
+    //원본 데이터 목록 로딩
+    const [relatedLoading, setRelatedLoading] = useState(false);
 
     //상세 모달
     const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -45,6 +66,46 @@ export default function Records() {
         }
     }, []);
 
+    //Record 등록용 원본 데이터 목록 조회
+    const loadRelatedSource = useCallback(async () => {
+
+        try {
+            setRelatedLoading(true);
+            const taskResponse = await apiClient.get(`/task/list/${projectNo}`);
+
+            const taskList = taskResponse.data || [];
+
+            const noteResponse = await apiClient.post(
+                `/note/project/${projectNo}/list`,
+                {
+                    lastNo: null,
+                    size: 100,
+                    type: "all",
+                    keyword: ""
+                }
+            );
+
+            const noteList = noteResponse.data.noteList || [];
+
+            const fileResponse = await apiClient.get(`/attach/list/${projectNo}`);
+
+            const fileList = fileResponse.data.files || [];
+
+            setRelatedSource({
+                TASK: taskList,
+                NOTE: noteList,
+                ATTACH: fileList
+            });
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("관련 항목을 불러오지 못했습니다");
+        }
+        finally{
+            setRelatedLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadRecordList();
     }, []);
@@ -55,8 +116,23 @@ export default function Records() {
         setRecordTitle("");
         setRecordContent("");
 
+        setSelectedRelatedList([]);
+
+        setRelatedSelectModalOpen(false);
+        setRelatedSelectType(null);
+        setRelatedKeyword("");
+
+        loadRelatedSource();
+
         setAddModalOpen(true);
     }, []);
+
+    //원본 데이터 선택 모달 열기
+    const openRelatedSelectModal = useCallback((type) => {
+        setRelatedSelectType(type);
+        setRelatedKeyword("");
+        setRelatedSelectModalOpen(true)
+    }, [])
 
     //등록
     const addRecord = useCallback(async () => {
@@ -148,6 +224,99 @@ export default function Records() {
                 return "secondary";
         }
     }; 
+
+    // 원본 데이터 type 변환
+    const getRelatedTypeName = (type) => {
+        switch(type) {
+            case "TASK":
+                return "업무";
+            case "MESSAGE":
+                return "채팅";
+            case "NOTE":
+                return "노트";
+            case "ATTACH":
+                return "파일";
+            default:
+                return type;
+        }
+    }
+
+    // 원본 데이터 목록을 공통 형태로 변환
+    const getRelatedOptionList = () => {
+
+        if(!relatedSelectType) return [];
+
+        const sourceList = relatedSource[relatedSelectType] || [];
+
+        switch(relatedSelectType) {
+            case "TASK":
+                return sourceList.map(task => ({
+                    relatedType: "TASK",
+                    relatedNo: task.taskNo,
+                    relatedTitle: task.taskTitle,
+                    relatedStatus: task.taskStatus
+                }));
+            case "NOTE":
+                return sourceList.map(note => ({
+                    relatedType: "NOTE",
+                    relatedNo: note.noteNo,
+                    relatedTitle: note.noteTitle,
+                    relatedStatus: null
+                }));
+            case "ATTACH":
+                return sourceList.map(file => ({
+                    relatedType: "ATTACH",
+                    relatedNo: file.attachNo,
+                    relatedTitle: file.attachName,
+                    relatedStatus: null
+                }));
+            default:
+                return [];
+        }
+    };
+
+    
+    //검색된 원본 데이터 리스트
+    const relatedOptionList = getRelatedOptionList();
+    const filteredRelatedOptionList = 
+        relatedOptionList.filter(item => 
+            item.relatedTitle
+                ?.toLowerCase()
+                .includes(relatedKeyword.toLowerCase())
+    );
+
+    //원본 데이터 선택 여부 확인
+    const isRelatedSelected = useCallback((item) => {
+        return selectedRelatedList.some(
+            selected => 
+                selected.relatedType === item.relatedType
+                && selected.relatedNo === item.relatedNo
+        )
+    }, [selectedRelatedList]);
+
+    //원본 데이터 선택/해제 함수
+    const toggleRelated = useCallback((item) => {
+        setSelectedRelatedList(prev => {
+            //지금 선택한게 선택되어 있나?
+            const exists = prev.some(
+                selected => 
+                    selected.relatedType === item.relatedType
+                    && selected.relatedNo === item.relatedNo
+            );
+            //선택되어 있다면 빼라
+            if(exists) {
+                return prev.filter(
+                    selected =>
+                        !(
+                            selected.relatedType === item.relatedType
+                            && selected.relatedNo === item.relatedNo
+                        )
+                );
+            }
+            //선택되어 있지 않았다면 넣어라
+            return [...prev, item];
+        })
+    }, [])
 
     return(<>
         <div className="records-page">
@@ -299,6 +468,60 @@ export default function Records() {
                             placeholder="기록할 내용을 입력하세요"
                         />
                     </FormGroup>
+
+                    {/* 원본 데이터 */}
+                    <FormGroup className="mt-4">
+                        <FormLabel>
+                            원본 데이터
+                            <span className="text-muted ms-2">
+                                (선택)
+                            </span>
+                        </FormLabel>
+
+                        <div className="record-related-buttons">
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("TASK")}
+                            >
+                                + 업무
+                            </Button>
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("NOTE")}
+                            >
+                                + 노트
+                            </Button>
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("ATTACH")}
+                            >
+                                + 파일
+                            </Button>
+                        </div>
+
+                        {/* 선택된 관련 항목 */}
+                        {selectedRelatedList.length > 0 && (
+                            <div className="record-selected-related-list">
+                                {selectedRelatedList.map(related => (
+                                    <div
+                                        className="record-selected-related-item"
+                                        key={`${related.relatedType}-${related.relatedNo}`}
+                                    >
+                                        <Badge bg="light" text="dark">
+                                            {getRelatedTypeName(related.relatedType)}
+                                        </Badge>
+
+                                        <span className="record-selected-related-title">
+                                            {related.relatedTitle}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </FormGroup>
                 </Modal.Body>
 
                 <Modal.Footer>
@@ -310,6 +533,85 @@ export default function Records() {
                     <Button variant="primary"
                         onClick={addRecord}>
                             등록
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* 원본 데이터 선택 모달 */}
+            <Modal
+                show={relatedSelectModalOpen}
+                onHide={() => setRelatedSelectModalOpen(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        원본 {getRelatedTypeName(relatedSelectType)} 선택
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    {/* 검색 */}
+                    <Form.Control
+                        type="text"
+                        value={relatedKeyword}
+                        onChange={e => setRelatedKeyword(e.target.value)}
+                        placeholder={`${getRelatedTypeName(relatedSelectType)} 검색`}
+                        className="mb-3"
+                    />
+
+                    {relatedLoading === true ? (
+                        <div className="records-empty">
+                            관련 항목을 불러오는 중입니다
+                        </div>
+                    ) : filteredRelatedOptionList.length === 0 ? (
+                        <div className="records-empty">
+                            표시할 항목이 없습니다
+                        </div>
+                    ) : (
+                        <div className="record-related-select-list">
+                            {filteredRelatedOptionList.map(item => {
+                                const selected = isRelatedSelected(item);
+
+                                return (
+                                    <div 
+                                        key={`${item.relatedType}-${item.relatedNo}`}
+                                        className={
+                                            selected
+                                                ? "record-related-select-item selected"
+                                                : "record-related-select-item"
+                                        }
+                                        onClick={() => toggleRelated(item)}
+                                    >
+                                        <Form.Check
+                                            type="checkbox"
+                                            checked={selected}
+                                            readOnly
+                                        />
+
+                                        <div className="record-related-select-content">
+                                            <div className="record-related-select-title">
+                                                {item.relatedTitle}
+                                            </div>
+
+                                            {item.relatedStatus && (
+                                                <div className="record-related-select-info">
+                                                    {item.relatedStatus}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button
+                        variant="primary"
+                        onClick={() => setRelatedSelectModalOpen(false)}
+                    >
+                        선택 완료
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -390,6 +692,39 @@ export default function Records() {
                             <div className="record-detail-content">
                                 {selectedRecord.projectRecordContent}
                             </div>
+
+                            {/* 연결된 원본 영역 */}
+                            {selectedRecord.relatedList &&
+                                selectedRecord.relatedList.length > 0 && (
+                                    <div className="record-related">
+                                        <div className="record-related-title">
+                                            원본 데이터
+                                        </div>
+
+                                        <div className="record-related-list">
+                                            {selectedRecord.relatedList.map((related) => (
+                                                <div
+                                                    className="record-related-item"
+                                                    key={`${related.relatedType}-${related.relatedNo}`}
+                                                >
+                                                    <Badge bg="light" text="dark">
+                                                        {getRelatedTypeName(related.relatedType)}
+                                                    </Badge>
+
+                                                    <span className="record-related-item-title">
+                                                        {related.relatedTitle}
+                                                    </span>
+
+                                                    {related.relatedStatus && (
+                                                        <span className="record-related-status">
+                                                            {related.relatedStatus}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                             {selectedRecord.projectRecordType === "ISSUE"
                                 && selectedRecord.projectRecordIssueStatus == "RESOLVED"
