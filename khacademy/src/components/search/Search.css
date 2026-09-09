@@ -1785,6 +1785,70 @@
 
 
 /* ==========================================
+   사용자 상세 정보
+========================================== */
+
+.user-project-modal-user-area {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-project-modal-user-text {
+    min-width: 0;
+}
+
+.user-project-modal-user-info {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eeeeee;
+    box-sizing: border-box;
+}
+
+.user-project-modal-info-item {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 18px;
+    border-right: 1px solid #eeeeee;
+    box-sizing: border-box;
+}
+
+.user-project-modal-info-item:first-child {
+    padding-left: 0;
+}
+
+.user-project-modal-info-item:last-child {
+    padding-right: 0;
+    border-right: none;
+}
+
+.user-project-modal-info-label {
+    display: block;
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 500;
+    color: #999999;
+}
+
+.user-project-modal-info-value {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #333333;
+}
+
+/* ==========================================
    애니메이션
 ========================================== */
 
@@ -2273,4 +2337,39 @@
         height: 5px;
     }
 
+}
+
+@media (max-width: 480px) {
+    .user-project-modal-user-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 0;
+        margin-top: 14px;
+        padding-top: 14px;
+    }
+
+    .user-project-modal-info-item {
+        padding: 0 10px;
+        border-right: none;
+    }
+
+    .user-project-modal-info-item:first-child {
+        padding-left: 0;
+    }
+
+    .user-project-modal-info-item:nth-child(even) {
+        padding-right: 0;
+        padding-left: 10px;
+        border-left: 1px solid #eeeeee;
+    }
+
+    .user-project-modal-info-item:nth-child(3) {
+        padding-left: 0;
+        grid-column: 1 / -1;
+        border-left: none;
+    }
+
+    .user-project-modal-info-value {
+        font-size: 11px;
+    }
 }
