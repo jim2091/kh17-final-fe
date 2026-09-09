@@ -1,10 +1,8 @@
-import { Button, Col, Form, Row, Card } from "react-bootstrap";
+import { Button, Col, Form, Row, Card, Badge } from "react-bootstrap";
 import { FaArrowDown, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
 import "../member.css";
 import "@templates/project.css";
 import Swal from "sweetalert2";
@@ -277,14 +275,7 @@ export default function Users() {
             </Form>
 
 
-            <Col className="text-end p-3">
-                <Button as={Link} to="/invite">
-                    <FaPlus />
-                    사용자 초대하기
-                </Button>
-            </Col>
-
-            <div className="tabs">
+            <div className="tabs mt-5">
                 <span className="tab" onClick={
                     () => {
                         setIsSearch(false);
@@ -317,6 +308,7 @@ export default function Users() {
                             <span>사번/이름</span>
                             <FaArrowDown className="ms-2" />
                         </Col>
+                        <Col className="text-nowrap">레벨</Col>
                         <Col className="text-nowrap">접속상태</Col>
                         <Col className="d-none d-md-block text-nowrap"
                             onClick={() => setPage(prev => ({
@@ -361,7 +353,7 @@ export default function Users() {
 
 
                 return (
-                    
+
                     <Card
                         onClick={() => {
                             setSelectedEmp(emp);
@@ -371,9 +363,9 @@ export default function Users() {
                         className="mt-2 card">
 
                         <Card.Body>
-                            <Row>
+                            <Row className="align-items-center">
                                 <Col className="text-nowrap">
-                                    
+
                                     {emp.attachNo ? (
                                         <img
                                             src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
@@ -387,6 +379,7 @@ export default function Users() {
                                     )}
                                     <span className="ms-2">{emp.empNo}/{emp.empName}</span>
                                 </Col>
+                                <Col className="text-truncate text-nowrap">{emp.empLevel}</Col>
                                 <Col>
                                     <FaCircle />
                                     <span className="ms-2">offline</span>
@@ -394,32 +387,45 @@ export default function Users() {
                                 <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
                                 <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
                                 <Col className="text-truncate text-nowrap">{emp.positionName}</Col>
+
                                 <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
                                 <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
                                 <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1} {emp.empAddress2}</Col>
                                 <Col>
-                                    {emp.empState === "invited" && (
-                                        <Button>
-                                            <span>초대중</span>
-                                        </Button>
-                                    )}
-                                    {emp.empState === "inactive" && (
-                                        <Button onClick={() => changeState(emp)}>
-                                            <span>비활성</span>
-                                        </Button>
-                                    )}
-                                    {emp.empState === "active" && (
-                                        <Button onClick={() => changeState(emp)}>
-                                            <span>활성</span>
-                                        </Button>
-                                    )}
+                                    {emp.empLevel === "admin" ? (
+                                        <Badge>{emp.empState}</Badge>
+                                    ) : (<>
+                                        {emp.empState === "invited" && (
+                                            <Button onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShow(false);
+                                            }}>
+                                                <span>초대중</span>
+                                            </Button>
+                                        )}
+                                        {emp.empState === "inactive" && (
+                                            <Button onClick={(e) => {
+                                                e.stopPropagation();
+                                                changeState(emp);
+                                                setShow(false);
+                                            }}>
+                                                <span>비활성</span>
+                                            </Button>
+                                        )}
+                                        {emp.empState === "active" && (
+                                            <Button onClick={(e) => {
+                                                e.stopPropagation();
+                                                changeState(emp);
+                                                setShow(false);
+                                            }}>
+                                                <span>활성</span>
+                                            </Button>
+                                        )}
+                                    </>)}
                                 </Col>
-
                             </Row>
                         </Card.Body>
-
                     </Card>
-
                 );
             })}
             <Offcanvas show={show}
@@ -444,7 +450,17 @@ export default function Users() {
                                     alt="프로필"
                                 />
                             </div>
-                            <div className="mt-4">{selectedEmp.empName}</div>
+                            <div className="mt-4">
+                                <span className="fs-3">{selectedEmp.empName}</span>
+                                <span className="ms-2">{selectedEmp.deptName}</span>
+                                <span className="ms-2">{selectedEmp.positionName}</span>
+                                <Badge className="ms-2">{selectedEmp.empLevel}</Badge>
+                                <Badge className="ms-2">{selectedEmp.empState}</Badge>
+
+
+
+                            </div>
+                            <div className="profile-line"></div>
                         </div>
                     </Offcanvas.Header>
                     <Offcanvas.Body>
@@ -500,10 +516,7 @@ export default function Users() {
                             <Col sm={2}>주소</Col>
                             <Col sm={10}>{selectedEmp.empPost} {selectedEmp.empAddress1} {selectedEmp.empAddress2}</Col>
                         </Row>
-                        <Row className="mt-4">
-                            <Col sm={2}>상태</Col>
-                            <Col sm={10}>{selectedEmp.empState}</Col>
-                        </Row>
+
 
                         <Row className="mt-4">
                             <Col className="text-end">
