@@ -6,11 +6,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../member.css";
 import { FaMagnifyingGlass, FaXmark } from "react-icons/fa6";
+import { useAtomValue } from "jotai";
+import { loginUserState } from "@utils/storage";
+import { MdAdminPanelSettings } from "react-icons/md";
 
 
 
 
 export default function invite() {
+    const { empLevel } = useAtomValue(loginUserState) || {};
 
     const [emp, setEmp] = useState({
         empName: "",
@@ -82,9 +86,23 @@ export default function invite() {
         setShowAutoComplete(false);
     }, [keyword]);
     // console.log("검색 결과 : ", resultList);
+    const adminNumber = useMemo(() => {
+        return empList.filter(emp => emp.empLevel === "admin").length;
+    }, [empList]);
+
     const becomeAdmin = useCallback(async (emp) => {
+        if (emp.empLevel === empLevel) {
+            toast.error("자기 자신의 관리자 권한은 변경할 수 없습니다.");
+            return;
+        }
+        // 마지막 관리자라면 관리자 권한 해제 불가
+        if (emp.empLevel === "admin" && adminNumber <= 1) {
+            toast.error("관리자는 최소 1명 이상이어야 합니다.");
+            return;
+        }
+
         const result = await Swal.fire({
-            title: emp.empLevel === "member" ? "관리자로 지정하시겠습니까?" : "실행을 되돌리시겠습니까?",
+            title: emp.empLevel === "member" ? `${emp.empName}님을 관리자로 지정하시겠습니까?` : "실행을 되돌리시겠습니까?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "네",
@@ -92,20 +110,20 @@ export default function invite() {
         });
 
         if (result.isConfirmed === false) return;
-        try{
+        try {
             await apiClient.patch(`/admin/becomeAdmin/${emp.empNo}`);
             toast.success("성공하였습니다!");
             setResultList([]);
             setKeyword("");
         }
-        catch(e){
+        catch (e) {
             console.log("에러 : ", e);
             toast.error("실행이 실패하였습니다. \n 잠시 후 다시 시도해주세요");
         }
-    }, []);
+    }, [empLevel,adminNumber]);
 
 
-    
+
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
         setEmp(prev => ({
@@ -310,8 +328,14 @@ export default function invite() {
         {resultList.map((emp) => (
 
 
-            <div key={emp.empNo} onClick={() => becomeAdmin(emp)}>
+            <div key={emp.empNo}>
                 <Row className="list-box">
+                    <Col className="d-none d-lg-block text-truncate text-nowrap"
+                         onClick={() => becomeAdmin(emp)}>
+                            <MdAdminPanelSettings />
+                        <span className="ms-2">관리자로 지정하기
+                        </span>
+                    </Col>
                     <Col className="text-nowrap">
                         <span className="ms-2">{emp.empNo}/{emp.empName}</span>
                     </Col>
@@ -321,12 +345,13 @@ export default function invite() {
                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empLevel}</Col>
                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
                     <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1}</Col>
-                    <Col className="d-none d-lg-block text-truncate text-nowrap">
-                        <span onClick={() => {
+                    <Col className="d-none d-lg-block text-truncate text-nowrap"
+                        onClick={() => {
                             setResultList(prev =>
                                 prev.filter(item => item.empNo !== emp.empNo)
                             );
                         }}>
+                        <span>
                             <FaXmark />
                         </span>
                     </Col>

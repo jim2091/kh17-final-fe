@@ -40,6 +40,8 @@ export default function Users() {
 
     const [show, setShow] = useState(false);
 
+    const [checked, setChecked] = useState([]);
+
 
 
 
@@ -74,16 +76,18 @@ export default function Users() {
 
         setEmpList(data.list);
         setCount(data.count);
+        setChecked([]);
+
 
 
     }, [page]);
 
-    
-    const totalData = useCallback(async()=> {
-        const {data} = await apiClient.get("/admin/");
+
+    const totalData = useCallback(async () => {
+        const { data } = await apiClient.get("/admin/");
         setTotalList(data);
     }, []);
-    
+
     useEffect(() => {
         loadData();
         totalData();
@@ -228,8 +232,8 @@ export default function Users() {
         setSelectedEmp({});
     }, [selectedEmp]);
 
-    const inactiveNumber = useMemo(()=>{
-        return totalList.filter(emp=>emp.empState === "inactive").length;
+    const inactiveNumber = useMemo(() => {
+        return totalList.filter(emp => emp.empState === "inactive").length;
     }, [totalList]);
 
     const totalPage = useMemo(() => {
@@ -247,6 +251,8 @@ export default function Users() {
     const endPage = useMemo(() => {
         return Math.min(pageGroup * 5, totalPage);
     }, [pageGroup, totalPage]);
+
+    
 
 
     return (<>
@@ -343,7 +349,20 @@ export default function Users() {
                 <thead>
                     <tr>
                         <th>
-                            <Form.Check></Form.Check>
+                            <Form.Check
+                                checked={
+                                    empList.length > 0 &&
+                                    checked.length === empList.length
+                                }
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setChecked(empList.map(emp=>emp.empNo));                                        
+                                    } else {
+                                        setChecked([]);
+                                    }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                            ></Form.Check>
                         </th>
                         <th onClick={() => setPage(prev => ({
                             ...prev,
@@ -428,7 +447,22 @@ export default function Users() {
                             key={emp.empNo}
                             className="member-table-item">
                             <td className="d-flex align-items-center">
-                                <Form.Check></Form.Check>
+                                <Form.Check
+                                    checked={checked.includes(emp.empNo)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setChecked(prev => [
+                                                ...prev,
+                                                emp.empNo
+                                            ]);
+                                        } else {
+                                            setChecked(prev =>
+                                                prev.filter(empNo => empNo !== emp.empNo)
+                                            );
+                                        }
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                ></Form.Check>
 
                                 {emp.attachNo ? (
                                     <img
@@ -441,22 +475,22 @@ export default function Users() {
                                         className="list-img ms-3"
                                     />
                                 )}</td>
-                            <td className="fw-bold">
+                            <td>
                                 {emp.empName === null ? (
                                     <span className="ms-2">{emp.empNo}/이름없음</span>
                                 ) : (<>
                                     <span className="ms-2">{emp.empNo}/{emp.empName}</span>
                                 </>)}
                             </td>
-                            <td className="fw-bold">{emp.empLevel}</td>
-                            <td className="fw-bold">offline</td>
-                            <td className="fw-bold">{emp.empEmail}</td>
-                            <td className="fw-bold">{emp.deptName}</td>
-                            <td className="fw-bold">{emp.positionName}</td>
-                            <td className="fw-bold">{emp.empBirth}</td>
-                            <td className="fw-bold">{emp.empContact}</td>
-                            <td className="fw-bold">{emp.empAddress1} {emp.empAddress2}</td>
-                            <td className="fw-bold">
+                            <td>{emp.empLevel}</td>
+                            <td>offline</td>
+                            <td>{emp.empEmail}</td>
+                            <td>{emp.deptName}</td>
+                            <td>{emp.positionName}</td>
+                            <td>{emp.empBirth}</td>
+                            <td>{emp.empContact}</td>
+                            <td>{emp.empAddress1} {emp.empAddress2}</td>
+                            <td>
                                 {emp.empLevel === "admin" ? (
                                     <span>활성</span>
                                 ) : (<>
@@ -580,17 +614,17 @@ export default function Users() {
                                     )}
                                     {selectedEmp.empState === "inactive" && (
                                         <Button onClick={async () => {
-                                        await changeState(selectedEmp);
-                                        setShow(false);
-                                    }}>
+                                            await changeState(selectedEmp);
+                                            setShow(false);
+                                        }}>
                                             <span>비활성</span>
                                         </Button>
                                     )}
                                     {selectedEmp.empState === "active" && (
                                         <Button onClick={async () => {
-                                        await changeState(selectedEmp);
-                                        setShow(false);
-                                    }}>
+                                            await changeState(selectedEmp);
+                                            setShow(false);
+                                        }}>
                                             <span>활성</span>
                                         </Button>
                                     )}
