@@ -1,5 +1,5 @@
-import { Button, Col, Form, Row, Card, Badge } from "react-bootstrap";
-import { FaArrowDown, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
+import { Button, Col, Form, Row, Card, Badge, Table } from "react-bootstrap";
+import { FaArrowDown, FaArrowUp, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
@@ -11,33 +11,13 @@ import NoImage from "@assets/noimages.png";
 import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 
-function OffCanvasExample({ name, ...props }) {
-    const [show, setShow] = useState(false);
 
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
-
-    return (
-        <>
-            <Button variant="primary" onClick={handleShow} className="me-2">
-                {name}
-            </Button>
-            <Offcanvas show={show} onHide={handleClose} {...props}>
-                <Offcanvas.Header closeButton>
-                    <Offcanvas.Title>Offcanvas</Offcanvas.Title>
-                </Offcanvas.Header>
-                <Offcanvas.Body>
-                    Some text as placeholder. In real life you can have the elements you
-                    have chosen. Like, text, images, lists, etc.
-                </Offcanvas.Body>
-            </Offcanvas>
-        </>
-    );
-}
 
 export default function Users() {
 
     const [empList, setEmpList] = useState([]);
+
+    const [totalList, setTotalList] = useState([]);
 
 
     const [keyword, setKeyword] = useState("");
@@ -98,12 +78,18 @@ export default function Users() {
 
     }, [page]);
 
+    
+    const totalData = useCallback(async()=> {
+        const {data} = await apiClient.get("/admin/");
+        setTotalList(data);
+    }, []);
+    
     useEffect(() => {
         loadData();
+        totalData();
 
 
-    }, [loadData]);
-
+    }, [loadData, totalData]);
 
 
 
@@ -153,7 +139,11 @@ export default function Users() {
     // console.log("count : ", count);
 
 
+    const [activeTab, setActiveTab] = useState("전체");
+
     const searchInitial = useCallback(async (tab) => {
+        setActiveTab(tab);
+
         const newPage = {
             ...page,
             page: 1,
@@ -238,7 +228,9 @@ export default function Users() {
         setSelectedEmp({});
     }, [selectedEmp]);
 
-
+    const inactiveNumber = useMemo(()=>{
+        return totalList.filter(emp=>emp.empState === "inactive").length;
+    }, [totalList]);
 
     const totalPage = useMemo(() => {
         return Math.ceil(count / page.size);
@@ -259,13 +251,28 @@ export default function Users() {
 
     return (<>
         <div className="p-4">
+
+            <div className="mt-2">
+                <div>
+                    <h3>사용자 목록</h3>
+                </div>
+                <div className="text-muted">
+                    <span>사원 수 : {totalList.length}명</span>
+                </div>
+                <div className="text-muted">
+                    <span>현재 비활성 사원 : {inactiveNumber}명</span>
+                </div>
+                <div className="text-muted">
+                    <span>검색 결과 : {count}명</span>
+                </div>
+            </div>
             <Form autoComplete="off" onSubmit={search}>
                 <Row className="mt-4">
                     <Col className="d-flex">
                         <Form.Control name="keyword"
                             placeholder="검색"
                             onChange={changeStringValue}
-                            className="w-25"
+                            className="w-100"
                         ></Form.Control>
                         <Button type="submit"
                             className="ms-2"
@@ -274,160 +281,203 @@ export default function Users() {
                 </Row>
             </Form>
 
-
-            <div className="tabs mt-5">
-                <span className="tab" onClick={
-                    () => {
-                        setIsSearch(false);
-                        setPage(prev => ({
-                            ...prev,
-                            sort: "empNo",
-                            direction: "asc",
-                        }));
-                    }
-                }>전체</span>
+            <div className="tabs mt-2">
+                <span className={`tab ${activeTab === "전체" ? "active" : ""}`}
+                    onClick={
+                        () => {
+                            setActiveTab("전체");
+                            setIsSearch(false);
+                            setPage(prev => ({
+                                ...prev,
+                                sort: "empNo",
+                                direction: "asc",
+                            }));
+                        }
+                    }>전체</span>
                 {tabs.map((tab) => (
                     <div key={tab}
-                        className="tab"
+                        className={`tab ${activeTab === tab ? "active" : ""}`}
                         onClick={() => searchInitial(tab)}>
                         <span>{tab}</span>
                     </div>
                 ))}
+                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
+                    onClick={
+                        () => {
+                            setActiveTab("비활성");
+                            setIsSearch(false);
+                            setPage(prev => ({
+                                ...prev,
+                                sort: "empNo",
+                                direction: "asc",
+                            }));
+                        }
+                    }>활성화</span>
+                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
+                    onClick={
+                        () => {
+                            setActiveTab("비활성");
+                            setIsSearch(false);
+                            setPage(prev => ({
+                                ...prev,
+                                sort: "empNo",
+                                direction: "asc",
+                            }));
+                        }
+                    }>부서변경</span>
+                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
+                    onClick={
+                        () => {
+                            setActiveTab("비활성");
+                            setIsSearch(false);
+                            setPage(prev => ({
+                                ...prev,
+                                sort: "empNo",
+                                direction: "asc",
+                            }));
+                        }
+                    }>직급 변경</span>
             </div>
 
-
-
-            <Card className="user-header fw-bold border-0">
-                <Card.Body>
-                    <Row>
-                        <Col className="text-nowrap" onClick={() => setPage(prev => ({
+            <Table className="member-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <Form.Check></Form.Check>
+                        </th>
+                        <th onClick={() => setPage(prev => ({
                             ...prev,
                             page: 1,
                             sort: "empName",
+                            direction: prev.sort === "empName" && prev.direction === "asc" ? "desc" : "asc",
                         }))}>
                             <span>사번/이름</span>
-                            <FaArrowDown className="ms-2" />
-                        </Col>
-                        <Col className="text-nowrap">레벨</Col>
-                        <Col className="text-nowrap">접속상태</Col>
-                        <Col className="d-none d-md-block text-nowrap"
-                            onClick={() => setPage(prev => ({
-                                ...prev,
-                                page: 1,
-                                sort: "empEmail",
-                            }))}>
+                            {page.sort === "empName" && page.direction === "asc" ? (
+                                <FaArrowDown className="ms-2" />
+                            ) : (
+                                <FaArrowUp className="ms-2" />
+                            )}
+
+                        </th>
+                        <th>레벨</th>
+                        <th>상태</th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "empEmail",
+                            direction: prev.sort === "empEmail" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
                             <span>이메일</span>
-                            <FaArrowDown className="ms-2" />
-                        </Col>
-                        <Col className="text-nowrap"
-                            onClick={() => setPage(prev => ({
-                                ...prev,
-                                page: 1,
-                                sort: "deptName",
-                            }))}>
+                            {page.sort === "empEmail" && page.direction === "asc" ? (
+                                <FaArrowDown className="ms-2" />
+                            ) : (
+                                <FaArrowUp className="ms-2" />
+                            )}
+                        </th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "deptName",
+                            direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
                             <span>부서</span>
-                            <FaArrowDown className="ms-2" />
-                        </Col>
-                        <Col className="text-nowrap"
-                            onClick={() => setPage(prev => ({
-                                ...prev,
-                                page: 1,
-                                sort: "positionName",
-                            }))}>
+                            {page.sort === "deptName" && page.direction === "asc" ? (
+                                <FaArrowDown className="ms-2" />
+                            ) : (
+                                <FaArrowUp className="ms-2" />
+                            )}
+                        </th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "positionName",
+                            direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
                             <span>직급</span>
-                            <FaArrowDown className="ms-2" />
-                        </Col>
-                        <Col className="d-none d-md-block text-nowrap">생년월일</Col>
-                        <Col className="d-none d-md-block text-nowrap">연락처</Col>
-                        <Col className="d-none d-md-block text-nowrap">주소</Col>
-                        <Col className="text-nowrap">회원상태</Col>
-                    </Row>
-                </Card.Body>
-            </Card>
+                            {page.sort === "positionName" && page.direction === "asc" ? (
+                                <FaArrowDown className="ms-2" />
+                            ) : (
+                                <FaArrowUp className="ms-2" />
+                            )}
+                        </th>
+                        <th>생일</th>
+                        <th>연락처</th>
+                        <th>주소</th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "empState",
+                            direction: prev.sort === "empState" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
+                            <span>계정상태</span>
+                            {page.sort === "empState" && page.direction === "asc" ? (
+                                <FaArrowDown className="ms-2" />
+                            ) : (
+                                <FaArrowUp className="ms-2" />
+                            )}
+                        </th>
+                    </tr>
+                </thead>
 
-
-
-
-
-            {empList.map((emp) => {
-
-
-                return (
-
-                    <Card
-                        onClick={() => {
+                <tbody>
+                    {empList.map((emp) => (
+                        <tr onClick={() => {
                             setSelectedEmp(emp);
                             setShow(true);
                         }}
-                        key={emp.empNo}
-                        className="mt-2 card">
+                            key={emp.empNo}
+                            className="member-table-item">
+                            <td className="d-flex align-items-center">
+                                <Form.Check></Form.Check>
 
-                        <Card.Body>
-                            <Row className="align-items-center">
-                                <Col className="text-nowrap">
-
-                                    {emp.attachNo ? (
-                                        <img
-                                            src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
-                                            className="list-img"
-                                        />
-                                    ) : (
-                                        <img
-                                            src={NoImage}
-                                            className="list-img"
-                                        />
-                                    )}
+                                {emp.attachNo ? (
+                                    <img
+                                        src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
+                                        className="list-img ms-3"
+                                    />
+                                ) : (
+                                    <img
+                                        src={NoImage}
+                                        className="list-img ms-3"
+                                    />
+                                )}</td>
+                            <td className="fw-bold">
+                                {emp.empName === null ? (
+                                    <span className="ms-2">{emp.empNo}/이름없음</span>
+                                ) : (<>
                                     <span className="ms-2">{emp.empNo}/{emp.empName}</span>
-                                </Col>
-                                <Col className="text-truncate text-nowrap">{emp.empLevel}</Col>
-                                <Col>
-                                    <FaCircle />
-                                    <span className="ms-2">offline</span>
-                                </Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
-                                <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
-                                <Col className="text-truncate text-nowrap">{emp.positionName}</Col>
+                                </>)}
+                            </td>
+                            <td className="fw-bold">{emp.empLevel}</td>
+                            <td className="fw-bold">offline</td>
+                            <td className="fw-bold">{emp.empEmail}</td>
+                            <td className="fw-bold">{emp.deptName}</td>
+                            <td className="fw-bold">{emp.positionName}</td>
+                            <td className="fw-bold">{emp.empBirth}</td>
+                            <td className="fw-bold">{emp.empContact}</td>
+                            <td className="fw-bold">{emp.empAddress1} {emp.empAddress2}</td>
+                            <td className="fw-bold">
+                                {emp.empLevel === "admin" ? (
+                                    <span>활성</span>
+                                ) : (<>
+                                    {emp.empState === "invited" && (
+                                        <span>초대중</span>
+                                    )}
+                                    {emp.empState === "inactive" && (
+                                        <span>비활성</span>
+                                    )}
+                                    {emp.empState === "active" && (
+                                        <span>활성</span>
+                                    )}
+                                </>)}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
 
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1} {emp.empAddress2}</Col>
-                                <Col>
-                                    {emp.empLevel === "admin" ? (
-                                        <Badge>{emp.empState}</Badge>
-                                    ) : (<>
-                                        {emp.empState === "invited" && (
-                                            <Button onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShow(false);
-                                            }}>
-                                                <span>초대중</span>
-                                            </Button>
-                                        )}
-                                        {emp.empState === "inactive" && (
-                                            <Button onClick={(e) => {
-                                                e.stopPropagation();
-                                                changeState(emp);
-                                                setShow(false);
-                                            }}>
-                                                <span>비활성</span>
-                                            </Button>
-                                        )}
-                                        {emp.empState === "active" && (
-                                            <Button onClick={(e) => {
-                                                e.stopPropagation();
-                                                changeState(emp);
-                                                setShow(false);
-                                            }}>
-                                                <span>활성</span>
-                                            </Button>
-                                        )}
-                                    </>)}
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                );
-            })}
+
+
             <Offcanvas show={show}
                 onHide={() => setShow(false)}
                 placement="end"
@@ -520,10 +570,37 @@ export default function Users() {
 
                         <Row className="mt-4">
                             <Col className="text-end">
-                                <Button onClick={async () => {
-                                    await changeData(selectedEmp);
-                                    setShow(false);
-                                }}>
+                                {selectedEmp.empLevel === "admin" ? (
+                                    <span className="text-muted">활성</span>
+                                ) : (<>
+                                    {selectedEmp.empState === "invited" && (
+                                        <Button>
+                                            <span>초대중</span>
+                                        </Button>
+                                    )}
+                                    {selectedEmp.empState === "inactive" && (
+                                        <Button onClick={async () => {
+                                        await changeState(selectedEmp);
+                                        setShow(false);
+                                    }}>
+                                            <span>비활성</span>
+                                        </Button>
+                                    )}
+                                    {selectedEmp.empState === "active" && (
+                                        <Button onClick={async () => {
+                                        await changeState(selectedEmp);
+                                        setShow(false);
+                                    }}>
+                                            <span>활성</span>
+                                        </Button>
+                                    )}
+                                </>)}
+                                <Button
+                                    className="ms-3"
+                                    onClick={async () => {
+                                        await changeData(selectedEmp);
+                                        setShow(false);
+                                    }}>
                                     <span>수정하기</span>
                                 </Button>
                             </Col>
