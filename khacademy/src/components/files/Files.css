@@ -195,7 +195,7 @@
 
     --file-col:
         minmax(0, 1fr)
-        100px
+        110px
         120px
         100px
         65px
@@ -259,7 +259,9 @@
 }
 
 
-/* 이미지 파일은 클릭 가능 */
+/* ==========================================
+   이미지 파일 클릭
+========================================== */
 
 .files-image-row {
     cursor: pointer;
@@ -274,7 +276,9 @@
 }
 
 
-/* 일반 파일 hover */
+/* ==========================================
+   일반 파일 hover
+========================================== */
 
 .files-list-row:not(.files-image-row):hover {
     background: #f8f9fa;
@@ -342,10 +346,47 @@
 
     padding: 0 8px;
 
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
 
     overflow: hidden;
+
+    white-space: nowrap;
+
     text-overflow: ellipsis;
+
+    color: #5f6368;
+
+    font-size: 11px;
+
+    /*
+     * 출처 클릭 영역이 파일 행 전체 클릭과 충돌하지 않도록
+     * 출처 자체를 별도의 클릭 영역으로 사용
+     */
+    cursor: default;
+
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+
+/* ==========================================
+   출처 - 원본으로 이동 가능
+========================================== */
+
+.files-col-source.files-source-clickable {
+    color: #5b4df8;
+
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.files-col-source.files-source-clickable:hover {
+    color: #4338ca;
+
+    text-decoration: underline;
 }
 
 
@@ -361,7 +402,10 @@
     white-space: nowrap;
 
     overflow: hidden;
+
     text-overflow: ellipsis;
+
+    color: #3c4043;
 }
 
 
@@ -375,6 +419,8 @@
     padding: 0 4px;
 
     white-space: nowrap;
+
+    color: #5f6368;
 }
 
 
@@ -401,6 +447,8 @@
     padding-left: 15px;
 
     white-space: nowrap;
+
+    color: #5f6368;
 }
 
 
@@ -1015,15 +1063,19 @@
         gap: 10px;
     }
 
+
     .files-search {
         width: 100%;
     }
+
 
     .files-upload-button {
         flex: 0 0 auto;
     }
 
+
     .files-list {
+
         overflow-x: auto;
 
         --file-col:
@@ -1034,7 +1086,9 @@
             60px
             75px
             60px;
+
     }
+
 
     .files-list-header,
     .files-list-row {
@@ -1048,6 +1102,7 @@
         padding: 10px;
     }
 
+
     .files-preview-modal {
         width: 100%;
         height: 92vh;
@@ -1055,9 +1110,11 @@
         border-radius: 12px;
     }
 
+
     .files-preview-body {
         padding: 15px;
     }
+
 
     .files-preview-title span {
         max-width: 200px;
