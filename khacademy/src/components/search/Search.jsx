@@ -41,22 +41,52 @@ export default function Search() {
     const [projectHistoryError, setProjectHistoryError] = useState("");
     useEffect(() => {setFilters(getFiltersFromUrl());}, [searchParams]);
     const handleUserClick = async (user) => {
-        setSelectedUser(user);
+    setSelectedUser(user);
+    setProjectHistory([]);
+    setProjectHistoryError("");
+    setProjectHistoryLoading(true);
+
+    try {
+        const response = await apiClient.get(
+            `/search/user/${user.empNo}/projects`
+        );
+
+        console.log("=================================");
+        console.log("프로젝트 이력 API 전체 응답");
+        console.log(response);
+        console.log("프로젝트 이력 API response.data");
+        console.log(response.data);
+        console.log("프로젝트 이력 response.data.projects");
+        console.log(response.data?.projects);
+        console.log("=================================");
+
+        const projects = response.data?.projects;
+
+        setProjectHistory(
+            Array.isArray(projects)
+                ? projects
+                : []
+        );
+
+    } catch (error) {
+        console.error("프로젝트 참여 이력 조회 실패:", error);
+        console.error("에러 응답:", error.response?.data);
+
+        setProjectHistoryError(
+            "프로젝트 참여 이력을 불러오지 못했습니다."
+        );
+
         setProjectHistory([]);
-        setProjectHistoryError("");
-        setProjectHistoryLoading(true);
-        try {
-            const response = await apiClient.get(`/search/user/${user.empNo}/projects`);
-            console.log("=================================");
-            console.log("프로젝트 이력 API 응답");
-            console.log(response.data);
-            console.log("=================================");
-            if (Array.isArray(response.data)) {response.data.forEach((project, index) => {console.log(`[프로젝트 ${index + 1}]`,project.projectName,
-                            "projectStatus:",project.projectStatus);}); }
-            setProjectHistory(Array.isArray(response.data) ? response.data : []);}
-        catch (error) {console.error("프로젝트 참여 이력 조회 실패:", error);setProjectHistoryError("프로젝트 참여 이력을 불러오지 못했습니다.");}
-        finally {setProjectHistoryLoading(false);}};
-    const handleCloseUserModal = () => {setSelectedUser(null); setProjectHistory([]); setProjectHistoryError(""); setProjectHistoryLoading(false);};
+    } finally {
+        setProjectHistoryLoading(false);
+    }
+};
+const handleCloseUserModal = () => {
+    setSelectedUser(null);
+    setProjectHistory([]);
+    setProjectHistoryError("");
+    setProjectHistoryLoading(false);
+};
     useEffect(() => {if (!selectedUser) {return;}
        const handleKeyDown = (e) => {if (e.key === "Escape") {handleCloseUserModal();}};
         document.addEventListener("keydown",handleKeyDown);
@@ -121,19 +151,8 @@ export default function Search() {
         if (projectRole !== "owner" && projectRole !== "member") {return;}
         navigate(`/projects/${projectNo}`);};
     const handleProjectJoin = async (projectNo) => {if (!projectNo) {console.warn("프로젝트 번호가 없습니다.");return;}
-        if (joiningProjectNo === projectNo) {
-            return;
-        }
-
-
-        /*
-         * 참여 확인
-         */
-
-        const confirmed =
-            window.confirm(
-                "정말 이 프로젝트에 참여하시겠습니까?"
-            );
+        if (joiningProjectNo === projectNo) {return;}
+        const confirmed =window.confirm("정말 이 프로젝트에 참여하시겠습니까?");
 
 
         if (!confirmed) {
