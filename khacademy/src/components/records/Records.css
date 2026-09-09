@@ -126,6 +126,134 @@
     color: #166534;
 }
 
+/* 원본 데이터 */
+.record-related {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.record-related-title {
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.record-related-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.record-related-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+}
+
+.record-related-item-title {
+    flex: 1;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.record-related-status {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.record-related-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.record-selected-related-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.record-selected-related-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    background-color: #f9fafb;
+}
+
+.record-selected-related-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.record-related-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.record-related-select-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+
+    padding: 0.65rem 0.75rem;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.record-related-select-item:hover {
+    background-color: #f8fafc;
+}
+
+.record-related-select-item.selected {
+    border-color: #86b7fe;
+    background-color: #f0f6ff;
+}
+
+.record-related-select-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.record-related-select-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.record-related-select-info {
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
 @media (max-width: 768px) {
     .records-header {
         flex-direction: column;
