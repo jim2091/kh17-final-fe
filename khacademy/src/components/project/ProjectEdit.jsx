@@ -225,155 +225,248 @@ export default function ProjectEdit() {
     }
 
     //view
-    return (<>
-        {/* 프로젝트명 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트명</span>
-                    <FaAsterisk className="text-danger"/>
-                </Form.Label>
+    return (
+    <>
+        {/* 수정 화면 */}
+        <div className="project-page project-form-container">
 
-                <Col sm={9}>
-                    <Form.Control
-                        type="text"
-                        name="projectName"
-                        value={project.projectName}
-                        onChange={changeStringValue}
-                        placeholder="e.g. 쇼핑몰 홈페이지 만들기"
-                        onBlur={checkProjectName}
-                        className={result.projectName}
-                    />
+            {/* 제목 */}
+            <div className="project-page-header">
+                <div className="mt-5">
+                    <h3 className="project-page-title">
+                        프로젝트 수정
+                    </h3>
 
-                    <div className="valid-feedback">
-                        프로젝트명이 설정되었습니다.
-                    </div>
-
-                    <div className="invalid-feedback">
-                        프로젝트명은 1자 이상 100자 이하로 입력해주세요.
-                    </div>
-                </Col>
-            </Row>
+                    <p className="project-page-description">
+                        프로젝트의 기본 정보를 수정할 수 있습니다.
+                    </p>
+                </div>
+            </div>
 
 
-            {/* 프로젝트 목적 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트 목적</span>
-                    <FaAsterisk className="text-danger"/>
-                </Form.Label>
+            {/* 입력 영역 */}
+            <div className="project-form-card">
 
-                <Col sm={9}>
-                    <Form.Control
-                        as="textarea"
-                        rows={5}
-                        name="projectPurpose"
-                        value={project.projectPurpose}
-                        onChange={changeStringValue}
-                        onBlur={checkProjectPurpose}
-                        className={result.projectPurpose}
-                    />
+                {/* 프로젝트명 */}
+                <Row className="project-form-group align-items-start">
 
-                    <div className="valid-feedback">
-                        프로젝트 목적이 설정되었습니다.
-                    </div>
+                    <Form.Label
+                        column
+                        sm={3}
+                        className="project-form-label pt-2"
+                    >
+                        <span>프로젝트명</span>
 
-                    <div className="invalid-feedback">
-                        프로젝트 목적은 1자 이상 300자 이하로 입력해주세요.
-                    </div>
-                </Col>
-            </Row>
+                        <FaAsterisk
+                            className="text-danger ms-1"
+                            size={7}
+                        />
+                    </Form.Label>
 
+                    <Col sm={9}>
 
-            {/* 공개 범위 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>공개 범위</span>
-                    <FaAsterisk className="text-danger"/>
-                </Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="projectName"
+                            value={project.projectName}
+                            onChange={changeStringValue}
+                            placeholder="e.g. 쇼핑몰 홈페이지 만들기"
+                            onBlur={checkProjectName}
+                            className={result.projectName}
+                        />
 
-                <Col sm={9}>
-                    <Form.Check
-                        inline
-                        type="radio"
-                        label="공개"
-                        name="projectVisibility"
-                        value="public"
-                        checked={project.projectVisibility === "public"}
-                        onChange={changeVisibility}
-                    />
+                        <div className="valid-feedback">
+                            프로젝트명이 설정되었습니다.
+                        </div>
 
-                    <Form.Check
-                        inline
-                        type="radio"
-                        label="비공개"
-                        name="projectVisibility"
-                        value="private"
-                        checked={project.projectVisibility === "private"}
-                        onChange={changeVisibility}
-                    />
-                </Col>
-            </Row>
+                        <div className="invalid-feedback">
+                            프로젝트명은 1자 이상 100자 이하로 입력해주세요.
+                        </div>
+
+                    </Col>
+                </Row>
 
 
-            {/* 시작일 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트 시작일</span>
-                </Form.Label>
+                {/* 프로젝트 목적 */}
+                <Row className="project-form-group align-items-start">
 
-                <Col sm={9}>
-                    <Form.Control
-                        type="datetime-local"
-                        name="projectStart"
-                        value={project.projectStart}
-                        onChange={changeStringValue}
-                        onBlur={checkProjectStart}
-                        className={result.projectStart}
-                    />
+                    <Form.Label
+                        column
+                        sm={3}
+                        className="project-form-label pt-2"
+                    >
+                        <span>프로젝트 목적</span>
 
-                    <div className="invalid-feedback">
-                        날짜 형식이 올바르지 않습니다.
-                    </div>
-                </Col>
-            </Row>
+                        <FaAsterisk
+                            className="text-danger ms-1"
+                            size={7}
+                        />
+                    </Form.Label>
+
+                    <Col sm={9}>
+
+                        <Form.Control
+                            as="textarea"
+                            rows={5}
+                            name="projectPurpose"
+                            value={project.projectPurpose}
+                            onChange={changeStringValue}
+                            onBlur={checkProjectPurpose}
+                            className={result.projectPurpose}
+                            placeholder="프로젝트의 목적을 입력해주세요."
+                        />
+
+                        <div className="valid-feedback">
+                            프로젝트 목적이 설정되었습니다.
+                        </div>
+
+                        <div className="invalid-feedback">
+                            프로젝트 목적은 1자 이상 300자 이하로 입력해주세요.
+                        </div>
+
+                    </Col>
+                </Row>
 
 
-            {/* 마감일 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트 마감일</span>
-                </Form.Label>
+                {/* 공개 범위 */}
+                <Row className="project-form-group align-items-start">
 
-                <Col sm={9}>
-                    <Form.Control
-                        type="datetime-local"
-                        name="projectDeadline"
-                        value={project.projectDeadline}
-                        onChange={changeStringValue}
-                        onBlur={checkProjectDeadline}
-                        className={result.projectDeadline}
-                    />
+                    <Form.Label
+                        column
+                        sm={3}
+                        className="project-form-label pt-2"
+                    >
+                        <span>공개 범위</span>
 
-                    <div className="invalid-feedback">
-                        날짜 형식이 올바르지 않습니다.
-                    </div>
-                </Col>
-            </Row>
+                        <FaAsterisk
+                            className="text-danger ms-1"
+                            size={7}
+                        />
+                    </Form.Label>
 
-            {/* 수정 버튼 */}
-            <Row className="mt-5">
-                <Col>
+                    <Col sm={9}>
+
+                        <div className="pt-2">
+
+                            <Form.Check
+                                inline
+                                type="radio"
+                                label="공개"
+                                name="projectVisibility"
+                                value="public"
+                                checked={
+                                    project.projectVisibility === "public"
+                                }
+                                onChange={changeVisibility}
+                            />
+
+                            <Form.Check
+                                inline
+                                type="radio"
+                                label="비공개"
+                                name="projectVisibility"
+                                value="private"
+                                checked={
+                                    project.projectVisibility === "private"
+                                }
+                                onChange={changeVisibility}
+                            />
+
+                        </div>
+
+
+                    </Col>
+                </Row>
+
+
+                {/* 시작일 */}
+                <Row className="project-form-group align-items-start">
+
+                    <Form.Label
+                        column
+                        sm={3}
+                        className="project-form-label pt-2"
+                    >
+                        프로젝트 시작일
+                    </Form.Label>
+
+                    <Col sm={9}>
+
+                        <Form.Control
+                            type="datetime-local"
+                            name="projectStart"
+                            value={project.projectStart}
+                            onChange={changeStringValue}
+                            onBlur={checkProjectStart}
+                            className={result.projectStart}
+                        />
+
+                        <div className="invalid-feedback">
+                            날짜 형식이 올바르지 않습니다.
+                        </div>
+
+                    </Col>
+                </Row>
+
+
+                {/* 마감일 */}
+                <Row className="project-form-group align-items-start">
+
+                    <Form.Label
+                        column
+                        sm={3}
+                        className="project-form-label pt-2"
+                    >
+                        프로젝트 마감일
+                    </Form.Label>
+
+                    <Col sm={9}>
+
+                        <Form.Control
+                            type="datetime-local"
+                            name="projectDeadline"
+                            value={project.projectDeadline}
+                            onChange={changeStringValue}
+                            onBlur={checkProjectDeadline}
+                            className={result.projectDeadline}
+                        />
+
+                        <div className="invalid-feedback">
+                            날짜 형식이 올바르지 않습니다.
+                        </div>
+
+
+                    </Col>
+                </Row>
+
+
+                {/* 하단 버튼 */}
+                <div className="project-form-actions">
+
                     <Button
                         type="button"
-                        variant="success"
-                        className="w-100"
+                        className="project-cancel-button"
+                        onClick={() =>
+                            navigate(`/projects/${projectNo}/task`)
+                        }
+                    >
+                        취소
+                    </Button>
+
+                    <Button
+                        type="button"
+                        className="project-primary-button"
                         disabled={valid === false}
                         onClick={projectEdit}
                     >
-                        <FaPlus className="me-2"/>
-                        <span>수정하기</span>
+                        수정하기
                     </Button>
-                </Col>
-            </Row>
-    </>)
+
+                </div>
+
+            </div>
+        </div>
+
+    </>
+);
 }

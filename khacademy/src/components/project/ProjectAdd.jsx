@@ -4,6 +4,7 @@ import { apiClient } from "../../utils/reaxios";
 import { Row, Form, Col, Button } from "react-bootstrap";
 import { FaAsterisk, FaPlus } from "react-icons/fa6";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 export default function ProjectAdd() {
 
@@ -11,7 +12,7 @@ export default function ProjectAdd() {
     const [project, setProject] = useState({
         projectName: "",
         projectPurpose: "",
-        projectVisibility: "public",
+        projectVisibility: "private",
         projectStart: "",
         projectDeadline: ""
     });
@@ -101,6 +102,36 @@ export default function ProjectAdd() {
 
     }, [project.projectDeadline]);
 
+    //공개범위 변경
+    const changeVisibility = useCallback(async(e)=>{
+        const value = e.target.value;
+
+        //비공개->공개
+        if(project.projectVisibility === "private" &&
+            value === "public"
+        ){
+            const result = await Swal.fire({
+                icon : "warning",
+                title : "공개 프로젝트로 변경하시겠습니까?",
+                text : "공개로 변경하면 모든 사원에게 조회가 됩니다.",
+                showCancelButton : true,
+                confirmButtonText : "변경",
+                cancelButtonText : "취소"
+            })
+            //최소
+            if(result.isConfirmed === false){
+                return;
+            }
+        }
+
+            //공개범위 변경
+            setProject(prev =>({
+                ...prev,
+                projectVisibility : value
+            }));
+
+    },[project.projectVisibility]);
+
 
     //전체 입력 가능 여부
     const valid = useMemo(() => {
@@ -145,15 +176,43 @@ export default function ProjectAdd() {
 
 
     return (
-        <>
+    <div className="project-page project-form-container">
+
+        {/* 페이지 제목 */}
+        <div className="project-page-header">
+            <div className="mt-5">
+                <h3 className="project-page-title">
+                    프로젝트 생성
+                </h3>
+
+                <p className="project-page-description">
+                    새로운 프로젝트의 기본 정보를 입력해주세요.
+                </p>
+            </div>
+        </div>
+
+
+        {/* 프로젝트 입력 영역 */}
+        <div className="project-form-card">
+
             {/* 프로젝트명 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
+            <Row className="project-form-group align-items-start">
+
+                <Form.Label
+                    column
+                    sm={3}
+                    className="project-form-label pt-2"
+                >
                     <span>프로젝트명</span>
-                    <FaAsterisk className="text-danger"/>
+
+                    <FaAsterisk
+                        className="text-danger ms-1"
+                        size={7}
+                    />
                 </Form.Label>
 
                 <Col sm={9}>
+
                     <Form.Control
                         type="text"
                         name="projectName"
@@ -171,18 +230,29 @@ export default function ProjectAdd() {
                     <div className="invalid-feedback">
                         프로젝트명은 1자 이상 100자 이하로 입력해주세요.
                     </div>
+
                 </Col>
             </Row>
 
 
             {/* 프로젝트 목적 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
+            <Row className="project-form-group align-items-start">
+
+                <Form.Label
+                    column
+                    sm={3}
+                    className="project-form-label pt-2"
+                >
                     <span>프로젝트 목적</span>
-                    <FaAsterisk className="text-danger"/>
+
+                    <FaAsterisk
+                        className="text-danger ms-1"
+                        size={7}
+                    />
                 </Form.Label>
 
                 <Col sm={9}>
+
                     <Form.Control
                         as="textarea"
                         rows={5}
@@ -191,6 +261,7 @@ export default function ProjectAdd() {
                         onChange={changeStringValue}
                         onBlur={checkProjectPurpose}
                         className={result.projectPurpose}
+                        placeholder="프로젝트의 목적과 진행 배경을 입력해주세요."
                     />
 
                     <div className="valid-feedback">
@@ -200,48 +271,76 @@ export default function ProjectAdd() {
                     <div className="invalid-feedback">
                         프로젝트 목적은 1자 이상 300자 이하로 입력해주세요.
                     </div>
+
                 </Col>
             </Row>
 
 
             {/* 공개 범위 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
+            <Row className="project-form-group align-items-start">
+
+                <Form.Label
+                    column
+                    sm={3}
+                    className="project-form-label pt-2"
+                >
                     <span>공개 범위</span>
-                    <FaAsterisk className="text-danger"/>
+
+                    <FaAsterisk
+                        className="text-danger ms-1"
+                        size={7}
+                    />
                 </Form.Label>
 
                 <Col sm={9}>
-                    <Form.Check
-                        inline
-                        type="radio"
-                        label="공개"
-                        name="projectVisibility"
-                        value="public"
-                        checked={project.projectVisibility === "public"}
-                        onChange={changeStringValue}
-                    />
 
-                    <Form.Check
-                        inline
-                        type="radio"
-                        label="비공개"
-                        name="projectVisibility"
-                        value="private"
-                        checked={project.projectVisibility === "private"}
-                        onChange={changeStringValue}
-                    />
+                    <div className="pt-2">
+
+                        <Form.Check
+                            inline
+                            type="radio"
+                            label="공개"
+                            name="projectVisibility"
+                            value="public"
+                            checked={
+                                project.projectVisibility
+                                === "public"
+                            }
+                            onChange={changeVisibility}
+                        />
+
+                        <Form.Check
+                            inline
+                            type="radio"
+                            label="비공개"
+                            name="projectVisibility"
+                            value="private"
+                            checked={
+                                project.projectVisibility
+                                === "private"
+                            }
+                            onChange={changeVisibility}
+                        />
+
+                    </div>
+
                 </Col>
             </Row>
 
 
             {/* 시작일 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트 시작일</span>
+            <Row className="project-form-group align-items-start">
+
+                <Form.Label
+                    column
+                    sm={3}
+                    className="project-form-label pt-2"
+                >
+                    프로젝트 시작일
                 </Form.Label>
 
                 <Col sm={9}>
+
                     <Form.Control
                         type="datetime-local"
                         name="projectStart"
@@ -254,17 +353,24 @@ export default function ProjectAdd() {
                     <div className="invalid-feedback">
                         날짜 형식이 올바르지 않습니다.
                     </div>
+
                 </Col>
             </Row>
 
 
             {/* 마감일 */}
-            <Row className="mt-4">
-                <Form.Label column sm={3}>
-                    <span>프로젝트 마감일</span>
+            <Row className="project-form-group align-items-start">
+
+                <Form.Label
+                    column
+                    sm={3}
+                    className="project-form-label pt-2"
+                >
+                    프로젝트 마감일
                 </Form.Label>
 
                 <Col sm={9}>
+
                     <Form.Control
                         type="datetime-local"
                         name="projectDeadline"
@@ -277,25 +383,39 @@ export default function ProjectAdd() {
                     <div className="invalid-feedback">
                         날짜 형식이 올바르지 않습니다.
                     </div>
+
+
                 </Col>
             </Row>
 
 
-            {/* 생성 버튼 */}
-            <Row className="mt-5">
-                <Col>
-                    <Button
-                        type="button"
-                        variant="success"
-                        className="w-100"
-                        disabled={valid === false}
-                        onClick={projectAdd}
-                    >
-                        <FaPlus className="me-2"/>
-                        <span>등록하기</span>
-                    </Button>
-                </Col>
-            </Row>
-        </>
-    );
+            {/* 버튼 */}
+            <div className="project-form-actions">
+
+                <Button
+                    type="button"
+                    className="project-cancel-button"
+                    onClick={() =>
+                        navigate("/projects/my")
+                    }
+                >
+                    취소
+                </Button>
+
+                <Button
+                    type="button"
+                    className="project-primary-button"
+                    disabled={valid === false}
+                    onClick={projectAdd}
+                >
+                    <FaPlus className="me-2"/>
+                    등록하기
+                </Button>
+
+            </div>
+
+        </div>
+
+    </div>
+);
 }
