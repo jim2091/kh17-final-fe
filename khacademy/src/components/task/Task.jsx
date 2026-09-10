@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
+import Swal from "sweetalert2";
 import {
   MoreVertical,
   Plus,
@@ -12,7 +13,10 @@ import {
   Paperclip,
   Undo2,
   X,
-  Search
+  Search,
+  Archive,
+  ArrowLeft,
+  Clock
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
@@ -56,7 +60,7 @@ export default function Task() {
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
-  // 실시간 업무 검색 키워드 상태
+  // 실시간 업무 검색 상태
   const [searchKeyword, setSearchKeyword] = useState("");
 
   // 상단 업무 관리 드롭다운 메뉴 상태
@@ -155,6 +159,9 @@ export default function Task() {
     setSelectedRestoreNos((prev) => prev.filter((id) => id !== taskNo));
     toast.success("업무가 보드로 복구되었습니다.");
   };
+
+  // 완료 업무 보관함 모달 상태
+  const [doneArchiveModalOpen, setDoneArchiveModalOpen] = useState(false);
 
   // 드래그 앤 드롭 상태
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -543,6 +550,7 @@ export default function Task() {
     );
   };
 
+  // SweetAlert2 적용 소프트 삭제
   const handleDeleteTask = async () => {
     if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 삭제할 수 없습니다.");
@@ -550,21 +558,40 @@ export default function Task() {
     }
     if (!selectedTask) return;
 
-    if (!window.confirm(`정말 "${selectedTask.taskTitle}" 업무를 삭제하시겠습니까?\n(휴지통으로 이동되며 언제든 복구할 수 있습니다.)`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "업무를 삭제하시겠습니까?",
+      html: `<strong>"${selectedTask.taskTitle}"</strong> 업무가 휴지통으로 이동됩니다.<br><span style="font-size: 13px; color: #64748b;">(휴지통에서 언제든 다시 복구할 수 있습니다.)</span>`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#94a3b8",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await apiClient.delete(`/task/${selectedTask.taskNo}?projectNo=${projectNo}`);
-      toast.success("업무가 삭제(휴지통 이동)되었습니다.");
+      Swal.fire({
+        title: "삭제 완료",
+        text: "업무가 휴지통으로 이동되었습니다.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false
+      });
 
       const deletedTaskNo = selectedTask.taskNo;
       handleCloseDrawer();
-
       setTasks((prev) => prev.filter((t) => t.taskNo !== deletedTaskNo));
     } catch (error) {
       console.error("업무 삭제 실패:", error);
-      toast.error("업무 삭제에 실패했습니다.");
+      Swal.fire({
+        title: "삭제 실패",
+        text: "업무 삭제 중 오류가 발생했습니다.",
+        icon: "error"
+      });
     }
   };
 
@@ -578,6 +605,37 @@ export default function Task() {
     } catch (error) {
       console.error("업무 복구 실패:", error);
       toast.error("업무 복구에 실패했습니다.");
+    }
+  };
+
+  // 보관함 모달 내에서 다른 상태(TODO / IN_PROGRESS)로 즉시 복귀시키는 함수
+  const handleMoveFromArchive = async (taskNo, targetStatus) => {
+    if (isClosed) {
+      toast.warning("종료된 프로젝트의 업무는 상태를 변경할 수 없습니다.");
+      return;
+    }
+
+    const backupTasks = [...tasks];
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.taskNo === taskNo
+          ? { ...t, taskStatus: targetStatus, taskUtime: new Date().toISOString() }
+          : t
+      )
+    );
+
+    try {
+      await apiClient.patch("/task/move", {
+        taskNo: taskNo,
+        targetStatus: targetStatus,
+        projectNo: Number(projectNo)
+      });
+      toast.success(`업무가 [${getStatusLabel(targetStatus)}] 상태로 이동되었습니다.`);
+    } catch (error) {
+      console.error("상태 변경 실패:", error);
+      toast.error("상태 변경에 실패했습니다.");
+      setTasks(backupTasks);
     }
   };
 
@@ -724,7 +782,7 @@ export default function Task() {
 
     setTasks((prev) =>
       prev.map((t) =>
-        t.taskNo === targetTaskId ? { ...t, taskStatus: targetStatus } : t
+        t.taskNo === targetTaskId ? { ...t, taskStatus: targetStatus, taskUtime: new Date().toISOString() } : t
       )
     );
 
@@ -760,6 +818,41 @@ export default function Task() {
     }
   };
 
+  // 실시간 검색 키워드 및 숨김 여부를 반영한 컬럼별 카드 필터링
+  const trimmedKeyword = searchKeyword.trim().toLowerCase();
+
+  const getFilteredColumnTasks = (colId) => {
+    return tasks.filter((t) => {
+      const isCorrectCol = (t.taskStatus || "TODO") === colId;
+      const isNotHidden = !hiddenTaskNos.includes(t.taskNo);
+      if (!isCorrectCol || !isNotHidden) return false;
+
+      if (!trimmedKeyword) return true;
+
+      const title = (t.taskTitle || "").toLowerCase();
+      const content = (t.taskContent || "").toLowerCase();
+      const category = (t.taskCategory || "").toLowerCase();
+      const assignee = getAssigneeName(t).toLowerCase();
+
+      return (
+        title.includes(trimmedKeyword) ||
+        content.includes(trimmedKeyword) ||
+        category.includes(trimmedKeyword) ||
+        assignee.includes(trimmedKeyword)
+      );
+    });
+  };
+
+  // DONE 컬럼: 최신 수정/완료 일시(taskUtime) 내림차순 정렬 후 4개 분할
+  const allDoneTasks = getFilteredColumnTasks("DONE").sort((a, b) => {
+    const timeA = new Date(a.taskUtime || a.taskCtime).getTime();
+    const timeB = new Date(b.taskUtime || b.taskCtime).getTime();
+    return timeB - timeA;
+  });
+
+  const visibleDoneTasks = allDoneTasks.slice(0, 4);
+  const archivedDoneTasks = allDoneTasks.slice(4);
+
   if (loading) return <div className="kanban-loading">칸반 보드를 불러오는 중...</div>;
 
   return (
@@ -773,7 +866,7 @@ export default function Task() {
 
         {/* 우측 상단 액션 그룹 */}
         <div className="kanban-top-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* 실시간 업무 검색 입력창 */}
+          {/* 실시간 업무 검색창 */}
           <div className="kanban-search-box">
             <Search size={14} className="kanban-search-icon" />
             <input
@@ -869,28 +962,8 @@ export default function Task() {
       {/* 3단 칸반 보드 영역 */}
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
-          const trimmedKeyword = searchKeyword.trim().toLowerCase();
-
-          const columnTasks = tasks.filter((t) => {
-            const isCorrectCol = (t.taskStatus || "TODO") === col.id;
-            const isNotHidden = !hiddenTaskNos.includes(t.taskNo);
-            if (!isCorrectCol || !isNotHidden) return false;
-
-            if (!trimmedKeyword) return true;
-
-            const title = (t.taskTitle || "").toLowerCase();
-            const content = (t.taskContent || "").toLowerCase();
-            const category = (t.taskCategory || "").toLowerCase();
-            const assignee = getAssigneeName(t).toLowerCase();
-
-            return (
-              title.includes(trimmedKeyword) ||
-              content.includes(trimmedKeyword) ||
-              category.includes(trimmedKeyword) ||
-              assignee.includes(trimmedKeyword)
-            );
-          });
-
+          const columnTasks = col.id === "DONE" ? visibleDoneTasks : getFilteredColumnTasks(col.id);
+          const totalCount = col.id === "DONE" ? allDoneTasks.length : columnTasks.length;
           const isOver = dragOverCol === col.id;
 
           return (
@@ -903,7 +976,7 @@ export default function Task() {
             >
               <div className="column-header">
                 <span className="column-title">{col.title}</span>
-                <span className="task-count-badge">{columnTasks.length}</span>
+                <span className="task-count-badge">{totalCount}</span>
               </div>
 
               <div className="card-list-area">
@@ -967,11 +1040,218 @@ export default function Task() {
                     );
                   })
                 )}
+
+                {/* DONE 컬럼에서 4개 초과 카드가 있을 때 보관함 버튼 노출 */}
+                {col.id === "DONE" && archivedDoneTasks.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDoneArchiveModalOpen(true)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      marginTop: "6px",
+                      backgroundColor: "#ffffff",
+                      border: "1px dashed #cbd5e1",
+                      borderRadius: "8px",
+                      fontSize: "12.5px",
+                      fontWeight: "700",
+                      color: "#15803d",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.03)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0fdf4";
+                      e.currentTarget.style.borderColor = "#86efac";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
+                    }}
+                  >
+                    <Archive size={14} />
+                    <span>이전 완료 업무 +{archivedDoneTasks.length}개 보관함</span>
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* 완료 업무 보관함 모달 */}
+      {doneArchiveModalOpen && (
+        <div className="modal-overlay" onClick={() => setDoneArchiveModalOpen(false)}>
+          <div
+            className="modal-window"
+            style={{ width: "620px", maxHeight: "82vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <Archive size={18} color="#15803d" />
+                <span className="modal-title-text">완료 업무 보관함</span>
+                <span
+                  style={{
+                    backgroundColor: "#dcfce7",
+                    color: "#15803d",
+                    padding: "2px 8px",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}
+                >
+                  총 {allDoneTasks.length}개 중 {archivedDoneTasks.length}개 보관 중
+                </span>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setDoneArchiveModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: "10px 20px", backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12.5px", color: "#64748b" }}>
+              💡 보관된 업무를 다시 진행해야 하는 경우, 우측 버튼을 눌러 보드로 즉시 되돌릴 수 있습니다.
+            </div>
+
+            <div className="modal-body-list">
+              {archivedDoneTasks.length === 0 ? (
+                <div className="modal-empty-state">보관된 완료 업무가 없습니다.</div>
+              ) : (
+                archivedDoneTasks.map((task) => (
+                  <div
+                    key={task.taskNo}
+                    className="modal-item-card"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "12px",
+                      cursor: "default"
+                    }}
+                  >
+                    <div
+                      style={{ cursor: "pointer", flex: 1, overflow: "hidden" }}
+                      onClick={() => {
+                        setDoneArchiveModalOpen(false);
+                        handleCardClick(task.taskNo);
+                      }}
+                      title="클릭하여 상세 정보 열람"
+                    >
+                      <div className="modal-item-meta">
+                        <span className="modal-meta-category">#{task.taskCategory || "일반"}</span>
+                        <span
+                          style={{
+                            fontSize: "10.5px",
+                            padding: "1px 5px",
+                            borderRadius: "4px",
+                            backgroundColor: "#dcfce7",
+                            color: "#15803d",
+                            fontWeight: "600"
+                          }}
+                        >
+                          완료
+                        </span>
+                        <span style={{ fontSize: "11.5px", color: "#64748b" }}>
+                          담당: {getAssigneeName(task)}
+                        </span>
+                      </div>
+                      <div
+                        className="modal-item-title"
+                        style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      >
+                        {task.taskTitle}
+                      </div>
+                      <div className="modal-item-subtext" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <Clock size={11} />
+                        완료: {task.taskUtime ? String(task.taskUtime).replace("T", " ").slice(0, 16) : "-"}
+                      </div>
+                    </div>
+
+                    {/* 원클릭 상태 되돌리기 액션 버튼 그룹 */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveFromArchive(task.taskNo, "IN_PROGRESS")}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "5px 9px",
+                          backgroundColor: "#fffbeb",
+                          border: "1px solid #fde68a",
+                          borderRadius: "6px",
+                          fontSize: "11.5px",
+                          fontWeight: "700",
+                          color: "#d97706",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        title="진행 중(In Progress) 컬럼으로 이동"
+                      >
+                        <ArrowLeft size={12} />
+                        진행 중
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleMoveFromArchive(task.taskNo, "TODO")}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "5px 9px",
+                          backgroundColor: "#eff6ff",
+                          border: "1px solid #bfdbfe",
+                          borderRadius: "6px",
+                          fontSize: "11.5px",
+                          fontWeight: "700",
+                          color: "#2563eb",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        title="할 일(To Do) 컬럼으로 이동"
+                      >
+                        <ArrowLeft size={12} />
+                        할 일
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-modal-action"
+                        style={{ padding: "5px 9px", fontSize: "11.5px" }}
+                        onClick={() => {
+                          setDoneArchiveModalOpen(false);
+                          handleCardClick(task.taskNo);
+                        }}
+                      >
+                        상세
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setDoneArchiveModalOpen(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 숨긴 업무 체크박스 복구 모달 */}
       {hiddenModalOpen && (
@@ -1047,6 +1327,7 @@ export default function Task() {
                         }}
                       >
                         <RotateCcw size={12} />
+                        단건 복구
                       </button>
                     </div>
                   );
