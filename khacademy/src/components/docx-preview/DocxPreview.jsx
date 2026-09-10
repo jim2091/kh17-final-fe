@@ -19,13 +19,15 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
   const isDocx = ext === "docx";
   const isPdf = ext === "pdf";
   const isImage = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
-  const isText = ["txt", "log", "json", "sql", "md", "csv"].includes(ext);
+  const isTxt = ["txt", "log", "json", "sql", "md", "csv"].includes(ext);
 
   useEffect(() => {
     if (!attachNo) return;
 
     let isMounted = true;
     let localBlobUrl = null;
+    //(보충)중복 요청 방지 및 취소 토큰
+    const abortController = new AbortController();
 
     const loadFileData = async () => {
       try {
@@ -51,9 +53,10 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
           }
         }
         //텍스트 / 코드 문서 (.txt, .log, .json 등)
-        else if (isText) {
+        else if (isTxt) {
           const res = await apiClient.get(`/attach/${attachNo}`, {
             responseType: "text",
+            signal: abortController.signal
           });
           if (!isMounted) return;
           setTextContent(res.data);
@@ -62,6 +65,7 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
         else if (isPdf || isImage) {
           const res = await apiClient.get(`/attach/${attachNo}`, {
             responseType: "blob",
+            signal: abortController.signal
           });
           if (!isMounted) return;
 
@@ -87,13 +91,14 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
 
     loadFileData();
 
+    //클린업 함수(?)
     return () => {
       isMounted = false;
       if (localBlobUrl) {
         window.URL.revokeObjectURL(localBlobUrl);
       }
     };
-  }, [attachNo, ext, isDocx, isPdf, isImage, isText]);
+  }, [attachNo, ext, isDocx, isPdf, isImage, isTxt]);
 
   // 다운로드 처리
   const handleDownload = async () => {
@@ -109,16 +114,21 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+
+      setTimeout(()=>{
+        window.URL.revokeObjectURL(url);
+      }, 1000);
     } catch (e) {
       console.error("다운로드 실패:", e);
     }
   };
 
+  //첨부파일 인쇄 (docx-preview 에서 제공)
   const handlePrint = () => {
     window.print();
   };
 
+  //view
   return (
     <div className="office-docx-overlay" onClick={onClose}>
       <div className="office-docx-window" onClick={(e) => e.stopPropagation()}>
@@ -225,7 +235,7 @@ export default function DocxPreview({ attachNo, fileName, onClose }) {
           )}
 
           {/* 4. 텍스트 / 코드 문서 (.txt, .json 등) */}
-          {!loading && !error && isText && (
+          {!loading && !error && isTxt && (
             <div style={{ padding: "20px", width: "100%", height: "100%", boxSizing: "border-box" }}>
               <pre
                 style={{

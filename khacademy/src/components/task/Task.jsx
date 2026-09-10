@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import {
-  Paperclip,
+  MoreVertical,
+  Plus,
+  Trash2,
+  RotateCcw,
+  EyeOff,
   Download,
-  FileText
+  Paperclip,
+  Undo2,
+  X,
+  Search
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
@@ -23,12 +30,8 @@ export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  //프로젝트 정보 받기-서준
-  const {project} = useOutletContext();
-  //종료여부
-  const isClosed = project.projectStatus === "closed";
+  const { project } = useOutletContext();
+  const isClosed = project?.projectStatus === "closed";
 
   const isLogin = useAtomValue(isLoginState);
 
@@ -42,7 +45,7 @@ export default function Task() {
           if (parsed && (parsed.empNo || parsed.memberNo)) return parsed;
         }
       }
-    } catch (e) { }
+    } catch (e) {}
     return null;
   };
 
@@ -53,16 +56,118 @@ export default function Task() {
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
+  // 실시간 업무 검색 키워드 상태
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  // 상단 업무 관리 드롭다운 메뉴 상태
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 업무 로컬 숨김 상태 관리
+  const storageKey = `kanban_hidden_tasks_${currentEmpNo}_${projectNo}`;
+  const [hiddenTaskNos, setHiddenTaskNos] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setHiddenTaskNos(saved ? JSON.parse(saved) : []);
+    } catch {
+      setHiddenTaskNos([]);
+    }
+  }, [storageKey]);
+
+  const handleToggleHideTask = (taskNo, e) => {
+    if (e) e.stopPropagation();
+    setHiddenTaskNos((prev) => {
+      const updated = prev.includes(taskNo)
+        ? prev.filter((id) => id !== taskNo)
+        : [...prev, taskNo];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // 숨긴 업무 복구 모달 상태
+  const [hiddenModalOpen, setHiddenModalOpen] = useState(false);
+  const [selectedRestoreNos, setSelectedRestoreNos] = useState([]);
+
+  const hiddenTaskList = tasks.filter((t) => hiddenTaskNos.includes(t.taskNo));
+
+  const handleOpenHiddenModal = () => {
+    setSelectedRestoreNos([...hiddenTaskNos]);
+    setHiddenModalOpen(true);
+  };
+
+  const handleToggleRestoreCheck = (taskNo) => {
+    setSelectedRestoreNos((prev) =>
+      prev.includes(taskNo) ? prev.filter((id) => id !== taskNo) : [...prev, taskNo]
+    );
+  };
+
+  const handleToggleAllRestoreCheck = () => {
+    if (selectedRestoreNos.length === hiddenTaskNos.length) {
+      setSelectedRestoreNos([]);
+    } else {
+      setSelectedRestoreNos([...hiddenTaskNos]);
+    }
+  };
+
+  const handleConfirmRestoreSelected = () => {
+    if (selectedRestoreNos.length === 0) {
+      toast.warn("복구할 업무를 1개 이상 선택해주세요.");
+      return;
+    }
+
+    setHiddenTaskNos((prev) => {
+      const updated = prev.filter((id) => !selectedRestoreNos.includes(id));
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
+    });
+
+    toast.success(`${selectedRestoreNos.length}개의 업무가 보드로 복구되었습니다.`);
+    setSelectedRestoreNos([]);
+    setHiddenModalOpen(false);
+  };
+
+  const handleRestoreSingleTask = (taskNo) => {
+    setHiddenTaskNos((prev) => {
+      const updated = prev.filter((id) => id !== taskNo);
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
+    });
+    setSelectedRestoreNos((prev) => prev.filter((id) => id !== taskNo));
+    toast.success("업무가 보드로 복구되었습니다.");
+  };
+
+  // 드래그 앤 드롭 상태
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // 드로어 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
-
   const [taskFiles, setTaskFiles] = useState([]);
 
+  // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     taskTitle: "",
@@ -77,10 +182,13 @@ export default function Task() {
   const [editCollaborators, setEditCollaborators] = useState([]);
   const [updating, setUpdating] = useState(false);
 
-  // 시작일과 마감일을 대조하여 D-Day 뱃지 정보 반환
+  // 휴지통 모달 상태
+  const [trashModalOpen, setTrashModalOpen] = useState(false);
+  const [deletedTasks, setDeletedTasks] = useState([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+
   const getTaskDeadlineBadge = (task) => {
     if (!task.taskEnd) return null;
-
     if (task.taskStatus === "DONE") {
       return { text: "완료", className: "dday-done" };
     }
@@ -88,7 +196,6 @@ export default function Task() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 시작일이 설정되어 있고 오늘보다 미래인 경우 뱃지 미노출
     if (task.taskStart) {
       const startDate = new Date(task.taskStart);
       startDate.setHours(0, 0, 0, 0);
@@ -104,7 +211,6 @@ export default function Task() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      // 숫자 카운트(+N일)를 없애고 단일 뱃지로 노출
       return { text: "기한 초과", className: "dday-overdue" };
     } else if (diffDays === 0) {
       return { text: "오늘 마감", className: "dday-today" };
@@ -181,7 +287,7 @@ export default function Task() {
       const taskList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setTasks(taskList);
     } catch (error) {
-      console.error("조회 실패:", error);
+      console.error("업무 목록 조회 실패:", error);
       toast.error("업무 목록을 불러오지 못했습니다.");
     } finally {
       if (showLoading) setLoading(false);
@@ -211,6 +317,21 @@ export default function Task() {
     }
   }, []);
 
+  const fetchDeletedTasks = useCallback(async () => {
+    if (!projectNo) return;
+    try {
+      setTrashLoading(true);
+      const res = await apiClient.get(`/task/deleted/${projectNo}`);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setDeletedTasks(list);
+    } catch (error) {
+      console.error("휴지통 조회 실패:", error);
+      toast.error("삭제된 업무 목록을 가져오지 못했습니다.");
+    } finally {
+      setTrashLoading(false);
+    }
+  }, [projectNo]);
+
   useEffect(() => {
     if (projectNo) {
       fetchTasks(projectNo, true);
@@ -223,11 +344,7 @@ export default function Task() {
     setSelectedTask(null);
     setTaskFiles([]);
     setIsEditing(false);
-
-    if(searchParams.has("taskNo")) {
-      setSearchParams({});
-    }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     if (!projectNo) return;
@@ -266,6 +383,7 @@ export default function Task() {
               break;
 
             case "TASK_CREATED":
+            case "TASK_RESTORED":
               fetchTasks(projectNo, false);
               break;
 
@@ -374,23 +492,8 @@ export default function Task() {
     }
   };
 
-  useEffect(() => {
-    const taskNo = searchParams.get("taskNo");
-
-    if(!taskNo) return;
-
-    const targetTaskNo = Number(taskNo);
-
-    if(selectedTask?.taskNo === targetTaskNo && drawerOpen === true) {
-      return;
-    }
-
-    handleCardClick(targetTaskNo);
-
-  }, [searchParams, selectedTask, drawerOpen]);
-
   const handleStartEdit = () => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 수정 불가합니다.");
       return;
     }
@@ -440,8 +543,46 @@ export default function Task() {
     );
   };
 
+  const handleDeleteTask = async () => {
+    if (isClosed) {
+      toast.warning("종료된 프로젝트의 업무는 삭제할 수 없습니다.");
+      return;
+    }
+    if (!selectedTask) return;
+
+    if (!window.confirm(`정말 "${selectedTask.taskTitle}" 업무를 삭제하시겠습니까?\n(휴지통으로 이동되며 언제든 복구할 수 있습니다.)`)) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/task/${selectedTask.taskNo}?projectNo=${projectNo}`);
+      toast.success("업무가 삭제(휴지통 이동)되었습니다.");
+
+      const deletedTaskNo = selectedTask.taskNo;
+      handleCloseDrawer();
+
+      setTasks((prev) => prev.filter((t) => t.taskNo !== deletedTaskNo));
+    } catch (error) {
+      console.error("업무 삭제 실패:", error);
+      toast.error("업무 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleRestoreTask = async (taskNo) => {
+    try {
+      await apiClient.patch(`/task/${taskNo}/restore?projectNo=${projectNo}`);
+      toast.success("업무가 정상 복구되었습니다.");
+
+      setDeletedTasks((prev) => prev.filter((t) => t.taskNo !== taskNo));
+      fetchTasks(projectNo, false);
+    } catch (error) {
+      console.error("업무 복구 실패:", error);
+      toast.error("업무 복구에 실패했습니다.");
+    }
+  };
+
   const handleDeleteTaskFile = async (attachNo) => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트에서는 파일을 삭제할 수 없습니다.");
       return;
     }
@@ -457,7 +598,7 @@ export default function Task() {
   };
 
   const handleUploadNewTaskFile = async (e) => {
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트에서는 파일을 추가할 수 없습니다.");
       return;
     }
@@ -485,9 +626,9 @@ export default function Task() {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
-    if(isClosed){
+    if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 수정할 수 없습니다.");
-      return
+      return;
     }
 
     if (!editFormData.taskTitle.trim()) {
@@ -562,10 +703,7 @@ export default function Task() {
   };
 
   const handleDrop = async (e, targetStatus) => {
-    //드래그x
-    if(isClosed){
-      return;
-    }
+    if (isClosed) return;
     e.preventDefault();
     setDragOverCol(null);
 
@@ -626,26 +764,133 @@ export default function Task() {
 
   return (
     <div className="custom-kanban-page">
+      {/* 상단 타이틀 바 */}
       <div className="kanban-title-bar">
         <div className="kanban-title-text">
           <h2>프로젝트 #{projectNo} 업무 보드</h2>
           <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
         </div>
 
-        {isClosed === false &&(
-          <button
-            type="button"
-            className="btn-create-task"
-            onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
-          >
-            <span className="plus-icon">+</span> 새 업무 등록
-          </button>
-        )}
+        {/* 우측 상단 액션 그룹 */}
+        <div className="kanban-top-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* 실시간 업무 검색 입력창 */}
+          <div className="kanban-search-box">
+            <Search size={14} className="kanban-search-icon" />
+            <input
+              type="text"
+              placeholder="업무, 내용, 담당자 검색..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="kanban-search-input"
+            />
+            {searchKeyword && (
+              <button
+                type="button"
+                className="kanban-search-clear"
+                onClick={() => setSearchKeyword("")}
+                title="검색어 초기화"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* 업무 관리 드롭다운 메뉴 */}
+          <div style={{ position: "relative" }} ref={menuRef}>
+            <button
+              type="button"
+              className="btn-kanban-menu-trigger"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((prev) => !prev);
+              }}
+            >
+              <span>업무 관리</span>
+              {hiddenTaskNos.length > 0 && <span className="menu-active-dot" />}
+              <MoreVertical size={16} color="#64748b" />
+            </button>
+
+            {menuOpen && (
+              <div className="kanban-dropdown-menu">
+                {!isClosed && (
+                  <button
+                    type="button"
+                    className="dropdown-item-btn item-primary"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate(`/projects/${projectNo}/taskInsert`);
+                    }}
+                  >
+                    <Plus size={15} strokeWidth={2.5} />
+                    새 업무 등록
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="dropdown-item-btn item-default"
+                  disabled={hiddenTaskNos.length === 0}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleOpenHiddenModal();
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <RotateCcw size={14} />
+                    숨긴 업무 복구
+                  </span>
+                  {hiddenTaskNos.length > 0 && (
+                    <span className="dropdown-item-badge">
+                      {hiddenTaskNos.length}
+                    </span>
+                  )}
+                </button>
+
+                <div className="dropdown-divider" />
+
+                <button
+                  type="button"
+                  className="dropdown-item-btn item-danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    fetchDeletedTasks();
+                    setTrashModalOpen(true);
+                  }}
+                >
+                  <Trash2 size={14} />
+                  휴지통 (삭제된 업무)
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* 3단 칸반 보드 영역 */}
       <div className="custom-kanban-board">
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter((t) => (t.taskStatus || "TODO") === col.id);
+          const trimmedKeyword = searchKeyword.trim().toLowerCase();
+
+          const columnTasks = tasks.filter((t) => {
+            const isCorrectCol = (t.taskStatus || "TODO") === col.id;
+            const isNotHidden = !hiddenTaskNos.includes(t.taskNo);
+            if (!isCorrectCol || !isNotHidden) return false;
+
+            if (!trimmedKeyword) return true;
+
+            const title = (t.taskTitle || "").toLowerCase();
+            const content = (t.taskContent || "").toLowerCase();
+            const category = (t.taskCategory || "").toLowerCase();
+            const assignee = getAssigneeName(t).toLowerCase();
+
+            return (
+              title.includes(trimmedKeyword) ||
+              content.includes(trimmedKeyword) ||
+              category.includes(trimmedKeyword) ||
+              assignee.includes(trimmedKeyword)
+            );
+          });
+
           const isOver = dragOverCol === col.id;
 
           return (
@@ -682,9 +927,21 @@ export default function Task() {
                       >
                         <div className="card-top-info">
                           <span className="category-tag">#{task.taskCategory || "일반"}</span>
-                          <span className={`priority-tag ${pClass}`}>
-                            {task.taskPriority || "보통"}
-                          </span>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span className={`priority-tag ${pClass}`}>
+                              {task.taskPriority || "보통"}
+                            </span>
+
+                            <button
+                              type="button"
+                              className="btn-hide-task"
+                              title="보드에서 숨기기"
+                              onClick={(e) => handleToggleHideTask(task.taskNo, e)}
+                            >
+                              <EyeOff size={17} strokeWidth={2.2} />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="card-main-title">{task.taskTitle}</div>
@@ -716,6 +973,173 @@ export default function Task() {
         })}
       </div>
 
+      {/* 숨긴 업무 체크박스 복구 모달 */}
+      {hiddenModalOpen && (
+        <div className="modal-overlay" onClick={() => setHiddenModalOpen(false)}>
+          <div className="modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <RotateCcw size={18} color="#2563eb" />
+                <span className="modal-title-text">숨긴 업무 복구</span>
+                <span className="modal-count-badge primary">총 {hiddenTaskNos.length}개</span>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setHiddenModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {hiddenTaskNos.length > 0 && (
+              <div className="modal-check-toolbar">
+                <label className="modal-check-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedRestoreNos.length === hiddenTaskNos.length && hiddenTaskNos.length > 0}
+                    onChange={handleToggleAllRestoreCheck}
+                    style={{ width: "15px", height: "15px", cursor: "pointer" }}
+                  />
+                  전체 선택 ({selectedRestoreNos.length}/{hiddenTaskNos.length})
+                </label>
+                <span className="modal-hint-text">체크된 카드가 보드로 복구됩니다</span>
+              </div>
+            )}
+
+            <div className="modal-body-list">
+              {hiddenTaskList.length === 0 ? (
+                <div className="modal-empty-state">숨겨진 업무가 없습니다.</div>
+              ) : (
+                hiddenTaskList.map((task) => {
+                  const isChecked = selectedRestoreNos.includes(task.taskNo);
+
+                  return (
+                    <div
+                      key={task.taskNo}
+                      className={`modal-item-card ${isChecked ? "is-checked" : ""}`}
+                      onClick={() => handleToggleRestoreCheck(task.taskNo)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="modal-item-left">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleRestoreCheck(task.taskNo)}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                        />
+                        <div>
+                          <div className="modal-item-meta">
+                            <span className="modal-meta-category">#{task.taskCategory || "일반"}</span>
+                            <span className="modal-meta-status">{task.taskStatus}</span>
+                          </div>
+                          <div className="modal-item-title">{task.taskTitle}</div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn-modal-action"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRestoreSingleTask(task.taskNo);
+                        }}
+                      >
+                        <RotateCcw size={12} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setHiddenModalOpen(false)}
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                className="btn-modal-confirm"
+                disabled={selectedRestoreNos.length === 0}
+                onClick={handleConfirmRestoreSelected}
+              >
+                선택한 {selectedRestoreNos.length}개 업무 복구
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 휴지통 모달 */}
+      {trashModalOpen && (
+        <div className="modal-overlay" onClick={() => setTrashModalOpen(false)}>
+          <div className="modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <Trash2 size={18} color="#e11d48" />
+                <span className="modal-title-text">휴지통 (삭제된 업무)</span>
+                <span className="modal-count-badge danger">{deletedTasks.length}</span>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setTrashModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="modal-body-list">
+              {trashLoading ? (
+                <div className="modal-empty-state">휴지통 목록을 불러오는 중...</div>
+              ) : deletedTasks.length === 0 ? (
+                <div className="modal-empty-state">삭제된 업무가 없습니다.</div>
+              ) : (
+                deletedTasks.map((dTask) => (
+                  <div key={dTask.taskNo} className="modal-item-card" style={{ backgroundColor: "#f8fafc" }}>
+                    <div>
+                      <div className="modal-item-meta">
+                        <span className="modal-meta-category">#{dTask.taskCategory || "일반"}</span>
+                        <span className="modal-meta-status">{dTask.taskStatus}</span>
+                      </div>
+                      <div className="modal-item-title">{dTask.taskTitle}</div>
+                      <div className="modal-item-subtext">
+                        삭제일시: {dTask.taskUtime ? String(dTask.taskUtime).replace("T", " ").slice(0, 16) : "-"}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-modal-action"
+                      onClick={() => handleRestoreTask(dTask.taskNo)}
+                    >
+                      <Undo2 size={13} />
+                      복구
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setTrashModalOpen(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 업무 상세 드로어 */}
       <div className={`drawer-backdrop ${drawerOpen ? "open" : ""}`} onClick={handleCloseDrawer} />
 
       <aside className={`task-drawer ${drawerOpen ? "open" : ""}`}>
@@ -743,6 +1167,7 @@ export default function Task() {
               </button>
             </div>
 
+            {/* 열람 모드 */}
             {!isEditing && (
               <>
                 <div className="drawer-body view-mode">
@@ -755,9 +1180,7 @@ export default function Task() {
                     <div className="meta-card-item">
                       <span className="meta-label">담당자</span>
                       <div className="meta-user-val">
-                        <span className="meta-bold-val">
-                          {getAssigneeName(selectedTask)}
-                        </span>
+                        <span className="meta-bold-val">{getAssigneeName(selectedTask)}</span>
                         {selectedTask.assignedMemberDept && (
                           <span className="meta-sub-val">({selectedTask.assignedMemberDept})</span>
                         )}
@@ -766,9 +1189,7 @@ export default function Task() {
 
                     <div className="meta-card-item">
                       <span className="meta-label">작성자</span>
-                      <span className="meta-bold-val">
-                        {selectedTask.taskWriterName || "미입력"}
-                      </span>
+                      <span className="meta-bold-val">{selectedTask.taskWriterName || "미입력"}</span>
                     </div>
 
                     <div className="meta-card-item">
@@ -798,8 +1219,7 @@ export default function Task() {
 
                   <div className="view-section">
                     <span className="section-title">
-                      함께하는 협업자 (
-                      {selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
+                      함께하는 협업자 ({selectedTask.collaborators ? selectedTask.collaborators.length : 0}명)
                     </span>
                     <div className="collab-tag-list">
                       {selectedTask.collaborators && selectedTask.collaborators.length > 0 ? (
@@ -828,31 +1248,21 @@ export default function Task() {
                       업무 첨부파일 ({taskFiles.length}개)
                     </span>
 
-                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <div className="task-file-list-box">
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
                           {taskFiles.some(isImageAttach) && (
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", marginBottom: "4px" }}>
+                            <div className="task-img-gallery-grid">
                               {taskFiles.filter(isImageAttach).map((file) => {
                                 const fileUrl = `http://localhost:8080/api/attach/${file.attachNo}`;
                                 return (
-                                  <div
-                                    key={file.attachNo}
-                                    style={{
-                                      position: "relative",
-                                      borderRadius: "6px",
-                                      overflow: "hidden",
-                                      border: "1px solid #cbd5e1",
-                                      aspectRatio: "1/1",
-                                      backgroundColor: "#000"
-                                    }}
-                                  >
+                                  <div key={file.attachNo} className="task-img-card">
                                     <img
                                       src={fileUrl}
                                       alt={file.attachName}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
+                                      className="task-img-element"
                                       onClick={() => window.open(fileUrl, "_blank")}
                                       title={`${file.attachName} (클릭하여 확대)`}
                                     />
@@ -860,20 +1270,7 @@ export default function Task() {
                                       href={fileUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      style={{
-                                        position: "absolute",
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        backgroundColor: "rgba(15, 23, 42, 0.65)",
-                                        color: "#ffffff",
-                                        fontSize: "10px",
-                                        padding: "3px 4px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        textDecoration: "none"
-                                      }}
+                                      className="task-img-download-overlay"
                                     >
                                       <Download size={11} style={{ marginRight: "2px" }} /> 다운로드
                                     </a>
@@ -884,27 +1281,13 @@ export default function Task() {
                           )}
 
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
-                            <div
-                              key={file.attachNo}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "6px",
-                                padding: "8px 12px"
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                            <div key={file.attachNo} className="task-doc-row">
+                              <div className="task-doc-info">
                                 {renderFileTypeBadge(file)}
-                                <span
-                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                                  title={file.attachName}
-                                >
+                                <span className="task-doc-title" title={file.attachName}>
                                   {file.attachName}
                                 </span>
-                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                <span className="task-doc-size">
                                   ({formatFileSize(file.attachSize)})
                                 </span>
                               </div>
@@ -914,19 +1297,6 @@ export default function Task() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn-file-download"
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  padding: "4px 8px",
-                                  backgroundColor: "#f1f5f9",
-                                  border: "1px solid #cbd5e1",
-                                  borderRadius: "4px",
-                                  fontSize: "11px",
-                                  fontWeight: "600",
-                                  color: "#334155",
-                                  textDecoration: "none"
-                                }}
                               >
                                 <Download size={12} /> 다운로드
                               </a>
@@ -953,18 +1323,33 @@ export default function Task() {
                 </div>
 
                 <div className="drawer-footer">
-                  <button className="btn-cancel" onClick={handleCloseDrawer}>
-                    닫기
-                  </button>
-                  {isClosed === false &&(
-                    <button className="btn-edit-trigger" onClick={handleStartEdit}>
-                      수정하기
+                  <div>
+                    {isClosed === false && (
+                      <button
+                        type="button"
+                        className="btn-drawer-delete"
+                        onClick={handleDeleteTask}
+                      >
+                        <Trash2 size={13} />
+                        업무 삭제
+                      </button>
+                    )}
+                  </div>
+                  <div className="drawer-footer-right">
+                    <button className="btn-cancel" onClick={handleCloseDrawer}>
+                      닫기
                     </button>
-                  )}
+                    {isClosed === false && (
+                      <button className="btn-edit-trigger" onClick={handleStartEdit}>
+                        수정하기
+                      </button>
+                    )}
+                  </div>
                 </div>
               </>
             )}
 
+            {/* 수정 모드 */}
             {isEditing && (
               <form className="drawer-edit-form" onSubmit={handleSaveEdit}>
                 <div className="drawer-body edit-mode">
@@ -1070,9 +1455,9 @@ export default function Task() {
                       함께할 협업자 ({editCollaborators.length}명 선택됨)
                     </label>
 
-                    <div className="collab-chips-box" style={{ marginBottom: "8px" }}>
+                    <div className="collab-chips-box">
                       {editCollaborators.length === 0 ? (
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                        <span className="empty-hint-text">
                           지정된 협업자가 없습니다. 아래에서 추가하세요.
                         </span>
                       ) : (
@@ -1084,13 +1469,13 @@ export default function Task() {
                               key={member.projectMemberNo}
                               type="button"
                               onClick={() => handleCollabToggle(member.projectMemberNo)}
-                              className="collab-chip-btn selected"
+                              className="collab-chip-btn"
                               title="클릭하여 협업자에서 제외"
                             >
                               <span className="chip-avatar">{(member.empName || "사").slice(0, 1)}</span>
                               <span className="chip-name">{member.empName}</span>
                               {member.empDeptNo && <span className="chip-dept">({member.empDeptNo})</span>}
-                              <span style={{ marginLeft: "4px", fontSize: "11px", fontWeight: "bold" }}>✕</span>
+                              <span className="chip-remove-x">✕</span>
                             </button>
                           );
                         })
@@ -1128,24 +1513,9 @@ export default function Task() {
                   </div>
 
                   <div className="form-group full-width" style={{ marginTop: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <div className="edit-file-header">
                       <label className="form-label" style={{ margin: 0 }}>업무 첨부파일 관리</label>
-                      <label
-                        htmlFor="task-file-upload-input"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          fontSize: "12px",
-                          padding: "4px 8px",
-                          backgroundColor: "#f1f5f9",
-                          border: "1px solid #cbd5e1",
-                          borderRadius: "4px",
-                          color: "#334155",
-                          cursor: "pointer",
-                          fontWeight: "600"
-                        }}
-                      >
+                      <label htmlFor="task-file-upload-input" className="btn-file-upload-label">
                         <Paperclip size={12} /> 새 파일 추가
                       </label>
                       <input
@@ -1156,49 +1526,24 @@ export default function Task() {
                       />
                     </div>
 
-                    <div className="task-file-list-box" style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <div className="task-file-list-box">
                       {taskFiles.length === 0 ? (
                         <span className="empty-hint-text">등록된 첨부파일이 없습니다.</span>
                       ) : (
                         <>
                           {taskFiles.some(isImageAttach) && (
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
+                            <div className="task-img-gallery-grid-sm">
                               {taskFiles.filter(isImageAttach).map((file) => (
-                                <div
-                                  key={file.attachNo}
-                                  style={{
-                                    position: "relative",
-                                    borderRadius: "6px",
-                                    overflow: "hidden",
-                                    border: "1px solid #cbd5e1",
-                                    aspectRatio: "1/1"
-                                  }}
-                                >
+                                <div key={file.attachNo} className="task-img-card">
                                   <img
                                     src={`http://localhost:8080/api/attach/${file.attachNo}`}
                                     alt={file.attachName}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    className="task-img-element"
                                   />
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                    style={{
-                                      position: "absolute",
-                                      top: "3px",
-                                      right: "3px",
-                                      backgroundColor: "rgba(239, 68, 68, 0.9)",
-                                      border: "none",
-                                      borderRadius: "50%",
-                                      width: "20px",
-                                      height: "20px",
-                                      color: "#ffffff",
-                                      fontSize: "11px",
-                                      fontWeight: "bold",
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center"
-                                    }}
+                                    className="btn-img-delete"
                                     title="삭제"
                                   >
                                     ✕
@@ -1209,26 +1554,13 @@ export default function Task() {
                           )}
 
                           {taskFiles.filter((f) => !isImageAttach(f)).map((file) => (
-                            <div
-                              key={file.attachNo}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                backgroundColor: "#ffffff",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "6px",
-                                padding: "8px 12px"
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                            <div key={file.attachNo} className="task-doc-row">
+                              <div className="task-doc-info">
                                 {renderFileTypeBadge(file)}
-                                <span
-                                  style={{ fontSize: "12.5px", fontWeight: "600", color: "#1e293b", maxWidth: "230px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                                >
+                                <span className="task-doc-title" title={file.attachName}>
                                   {file.attachName}
                                 </span>
-                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                <span className="task-doc-size">
                                   ({formatFileSize(file.attachSize)})
                                 </span>
                               </div>
@@ -1236,17 +1568,7 @@ export default function Task() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteTaskFile(file.attachNo)}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "#ef4444",
-                                  cursor: "pointer",
-                                  padding: "4px",
-                                  fontSize: "14px",
-                                  fontWeight: "bold"
-                                }}
+                                className="btn-doc-delete"
                                 title="파일 삭제"
                               >
                                 ✕
@@ -1259,7 +1581,7 @@ export default function Task() {
                   </div>
                 </div>
 
-                <div className="drawer-footer">
+                <div className="drawer-footer" style={{ justifyContent: "flex-end" }}>
                   <button
                     type="button"
                     className="btn-cancel"
