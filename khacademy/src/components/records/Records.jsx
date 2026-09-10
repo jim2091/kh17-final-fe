@@ -5,6 +5,7 @@ import { Plus, Calendar, User } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Records.css";
+import Swal from "sweetalert2";
 
 export default function Records() {
 
@@ -302,6 +303,38 @@ export default function Records() {
         }
 
     }, [editRecordNo, recordTitle, recordContent, selectedRelatedList]);
+
+    //record 삭제
+    const deleteRecord = useCallback(async () => {
+
+        if(!selectedRecord) return;
+
+        const result = await Swal.fire({
+            title: "기록을 삭제하시겠습니까?",
+            text: "삭제한 기록은 복구할 수 없습니다",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "삭제",
+            cancelButtonText: "취소"
+        });
+
+        if(!result.isConfirmed) return;
+
+        try {
+            await apiClient.delete(`/record/${selectedRecord.projectRecordNo}`);
+
+            toast.success("기록이 삭제되었습니다");
+
+            setDetailModalOpen(false);
+            setSelectedRecord(null);
+
+            await loadRecordList();
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("기록 삭제에 실패했습니다");
+        }
+    }, [selectedRecord]);
 
     //타입 한글 변환
     const getTypeName = (type) => {
@@ -875,25 +908,39 @@ export default function Records() {
                     )}
                 </Modal.Body>
 
-                <Modal.Footer>
-                    {canManageRecord && (
-                        <Button
-                            variant="primary"
-                            onClick={openEditModal}
-                        >
-                            수정
-                        </Button>
-                    )}
+                <Modal.Footer className="record-detail-footer">
+                    <div>
+                        {canManageRecord && (
+                            <Button
+                                variant="danger"
+                                onClick={deleteRecord}
+                            >
+                                삭제
+                            </Button>
+                        )}
+                    </div>
 
-                    <Button
-                        variant="secondary"
-                        onClick={() => {
-                            setDetailModalOpen(false);
-                            setSelectedRecord(null);
-                        }}
-                    >
-                        닫기
-                    </Button>
+                    <div className="record-detail-footer-actions">
+                        {canManageRecord && (<>
+
+                            <Button
+                                variant="primary"
+                                onClick={openEditModal}
+                            >
+                                수정
+                            </Button>
+                        </>)}
+
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setDetailModalOpen(false);
+                                setSelectedRecord(null);
+                            }}
+                        >
+                            닫기
+                        </Button>
+                    </div>
                 </Modal.Footer>
             </Modal>
 
