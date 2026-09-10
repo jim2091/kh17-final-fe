@@ -195,7 +195,7 @@ export default function TaskInsert() {
       <form className="task-create-form" onSubmit={handleSubmit}>
         {/* 업무 제목 */}
         <div className="form-group full-width">
-          <label className="form-label required">업무 제목</label>
+          <label className="form-label">업무 제목</label>
           <input
             type="text"
             name="taskTitle"
@@ -204,7 +204,6 @@ export default function TaskInsert() {
             onChange={handleChange}
             className="form-input title-input"
             maxLength={200}
-            required
           />
         </div>
 
