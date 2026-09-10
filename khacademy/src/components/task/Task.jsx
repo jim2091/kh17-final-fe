@@ -19,6 +19,7 @@ import { isLoginState } from "@utils/storage";
 import "./Task.css";
 import TaskComments from "./TaskComments";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
+import Swal from "sweetalert2";
 
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
@@ -45,7 +46,7 @@ export default function Task() {
           if (parsed && (parsed.empNo || parsed.memberNo)) return parsed;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
     return null;
   };
 
@@ -403,7 +404,6 @@ export default function Task() {
               fetchTasks(projectNo, false);
               setSelectedTask((prev) => {
                 if (prev && prev.taskNo === Number(event.taskNo)) {
-                  toast.info("현재 열람 중인 업무가 삭제되었습니다.");
                   handleCloseDrawer();
                 }
                 return prev;
@@ -550,9 +550,19 @@ export default function Task() {
     }
     if (!selectedTask) return;
 
-    if (!window.confirm(`정말 "${selectedTask.taskTitle}" 업무를 삭제하시겠습니까?\n(휴지통으로 이동되며 언제든 복구할 수 있습니다.)`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "업무를 삭제하시겠습니까?",
+      html: `<strong>"${selectedTask.taskTitle}"</strong> 업무가 휴지통으로 이동됩니다.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmBUttonColor: "#e11d48",
+      cancelButtonColor: "#94a3b8",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await apiClient.delete(`/task/${selectedTask.taskNo}?projectNo=${projectNo}`);
