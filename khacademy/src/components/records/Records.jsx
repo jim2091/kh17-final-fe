@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { Button, Modal, Form, Badge, FormGroup, FormLabel } from "react-bootstrap";
 import { Plus, Calendar, User } from "lucide-react";
 import { toast } from "react-toastify";
@@ -9,6 +9,7 @@ import "./Records.css";
 export default function Records() {
 
     const {projectNo} = useParams();
+    const {project} = useOutletContext();
 
     //목록
     const [recordList, setRecordList] = useState([]);
@@ -47,6 +48,20 @@ export default function Records() {
 
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
+
+    //수정 모달
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editRecordNo, setEditRecordNo] = useState(null);
+
+    //수정/삭제 권한
+    const isRecordWritter = 
+        project?.projectMemberNo === selectedRecord?.projectRecordWriterNo;
+
+    const isManagerOrOwner = 
+        project?.projectMemberRole === "owner"
+        || project?.projectMemberRole === "manager";
+
+    const canManageRecord = isRecordWritter || isManagerOrOwner;
 
     //목록 조회
     const loadRecordList = useCallback(async () => {
@@ -149,13 +164,27 @@ export default function Records() {
             return;
         }
 
+        //선택된 원본 데이터를 타입별 번호 목록으로 변환
+        const taskNoList = selectedRelatedList
+            .filter(item => item.relatedType === "TASK")
+            .map(item => item.relatedNo);
+        const noteNoList = selectedRelatedList
+            .filter(item => item.relatedType === "NOTE")
+            .map(item => item.relatedNo);
+        const attachNoList = selectedRelatedList
+            .filter(item => item.relatedType === "ATTACH")
+            .map(item => item.relatedNo);
+
         try {
             await apiClient.post(
                 `/record/project/${projectNo}`,
                 {
                     projectRecordType: recordType,
                     projectRecordTitle: recordTitle,
-                    projectRecordContent: recordContent
+                    projectRecordContent: recordContent,
+                    taskNoList: taskNoList,
+                    noteNoList: noteNoList,
+                    attachNoList: attachNoList
                 }
             );
             toast.success("기록이 등록되었습니다");
@@ -168,7 +197,7 @@ export default function Records() {
             console.error(e);
             toast.error("record 등록에 실패했습니다");
         }
-    }, [recordType, recordTitle, recordContent]);
+    }, [recordType, recordTitle, recordContent, selectedRelatedList]);
 
     //상세 조회
     const openDetail = useCallback(async (projectRecordNo) => {
@@ -191,6 +220,88 @@ export default function Records() {
             setDetailLoading(false);
         }
     }, []);
+
+    //수정 모달 열기
+    const openEditModal = useCallback(() => {
+        if (!selectedRecord) return;
+
+        setEditRecordNo(selectedRecord.projectRecordNo);
+
+        setRecordType(selectedRecord.projectRecordType);
+        setRecordTitle(selectedRecord.projectRecordTitle);
+        setRecordContent(selectedRecord.projectRecordContent);
+
+        //메세지는 record 수정 화면에서 x
+        const editableRelatedList = 
+            (selectedRecord.relatedList || []).filter(
+                related => related.relatedType === "TASK"
+                        || related.relatedType === "NOTE"
+                        || related.relatedType === "ATTACH"
+            );
+        
+        setSelectedRelatedList(editableRelatedList);
+
+        setRelatedSelectModalOpen(false);
+        setRelatedSelectType(null);
+        setRelatedKeyword("");
+
+        loadRelatedSource();
+
+        setDetailModalOpen(false);
+        setEditModalOpen(true);
+
+    }, [selectedRecord]);
+
+    // 수정
+    const editRecord = useCallback(async () => {
+
+        if(recordTitle.trim().length === 0) {
+            toast.warning("제목을 입력해주세요");
+            return;
+        }
+        if(recordContent.trim().length === 0) {
+            toast.warning("내용을 입력해주세요");
+            return;
+        }
+
+        //선택된 원본 데이터를 타입별 번호 목록으로 변환
+        const taskNoList = selectedRelatedList
+            .filter(item => item.relatedType === "TASK")
+            .map(item => item.relatedNo);
+        const noteNoList = selectedRelatedList
+            .filter(item => item.relatedType === "NOTE")
+            .map(item => item.relatedNo);
+        const attachNoList = selectedRelatedList
+            .filter(item => item.relatedType === "ATTACH")
+            .map(item => item.relatedNo);
+
+        try {
+            await apiClient.put(
+                `/record/${editRecordNo}`,
+                {
+                    projectRecordTitle: recordTitle,
+                    projectRecordContent: recordContent,
+                    taskNoList: taskNoList,
+                    noteNoList: noteNoList,
+                    attachNoList: attachNoList
+                }
+            );
+
+            toast.success("기록이 수정되었습니다");
+
+            setEditModalOpen(false);
+
+            await loadRecordList();
+            await openDetail(editRecordNo);
+
+            setEditRecordNo(null);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("record 수정에 실패했습니다");
+        }
+
+    }, [editRecordNo, recordTitle, recordContent, selectedRelatedList]);
 
     //타입 한글 변환
     const getTypeName = (type) => {
@@ -316,7 +427,20 @@ export default function Records() {
             //선택되어 있지 않았다면 넣어라
             return [...prev, item];
         })
-    }, [])
+    }, []);
+
+    //선택된 원본 데이터 제거
+    const removeRelated = useCallback((target) => {
+        setSelectedRelatedList(prev =>
+            prev.filter(
+                item =>
+                    !(
+                        item.relatedType === target.relatedType
+                        && item.relatedNo === target.relatedNo
+                    )
+            )
+        );
+    }, []);
 
     return(<>
         <div className="records-page">
@@ -517,6 +641,14 @@ export default function Records() {
                                         <span className="record-selected-related-title">
                                             {related.relatedTitle}
                                         </span>
+
+                                        <Button
+                                            variant="link"
+                                            className="record-selected-related-remove"
+                                            onClick={() => removeRelated(related)}
+                                        >
+                                            ×
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
@@ -744,6 +876,15 @@ export default function Records() {
                 </Modal.Body>
 
                 <Modal.Footer>
+                    {canManageRecord && (
+                        <Button
+                            variant="primary"
+                            onClick={openEditModal}
+                        >
+                            수정
+                        </Button>
+                    )}
+
                     <Button
                         variant="secondary"
                         onClick={() => {
@@ -752,6 +893,154 @@ export default function Records() {
                         }}
                     >
                         닫기
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* 수정 모달 */}
+            <Modal
+                show={editModalOpen}
+                onHide={() => setEditModalOpen(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        프로젝트 기록 수정
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <FormGroup className="mb-3">
+                        <FormLabel>
+                            기록 유형
+                        </FormLabel>
+
+                        <Form.Select
+                            value={recordType}
+                            disabled
+                        >
+                            <option value={"DECISION"}>
+                                의사결정
+                            </option>
+                            <option value={"ISSUE"}>
+                                이슈
+                            </option>
+                            <option value={"DELIVERABLE"}>
+                                산출물
+                            </option>
+                            <option value={"ETC"}>
+                                기타
+                            </option>
+                        </Form.Select>
+                    </FormGroup>
+
+                    <FormGroup className="mb-3">
+                        <FormLabel>
+                            제목
+                        </FormLabel>
+
+                        <Form.Control
+                            type="text"
+                            maxLength={300}
+                            value={recordTitle}
+                            onChange={e => setRecordTitle(e.target.value)}
+                        />
+                    </FormGroup>
+
+                    <FormGroup>
+                        <FormLabel>
+                            내용
+                        </FormLabel>
+
+                        <Form.Control
+                            as="textarea"
+                            rows={6}
+                            value={recordContent}
+                            onChange={e => setRecordContent(e.target.value)}
+                        />
+                    </FormGroup>
+
+                    <FormGroup className="mt-4">
+                        <FormLabel>
+                            원본 데이터
+                            <span className="text-muted ms-2">
+                                (선택)
+                            </span>
+                        </FormLabel>
+
+                        <div className="record-related-buttons">
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("TASK")}
+                            >
+                                + 업무
+                            </Button>
+                            
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("NOTE")}
+                            >
+                                + 노트
+                            </Button>
+                            <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => openRelatedSelectModal("ATTACH")}
+                            >
+                                + 파일
+                            </Button>
+                        </div>
+
+                        {selectedRelatedList.length > 0 && (
+                            <div className="record-selected-related-list">
+                                {selectedRelatedList.map(related => (
+                                    <div 
+                                        className="record-selected-related-item"
+                                        key={`${related.relatedType}-${related.relatedNo}`}
+                                    >
+                                        <Badge bg="light" text="dark">
+                                            {getRelatedTypeName(related.relatedType)}
+                                        </Badge>
+
+                                        <span className="record-selected-related-title">
+                                            {related.relatedTitle}
+                                        </span>
+
+                                        <Button
+                                            variant="link"
+                                            className="record-selected-related-remove"
+                                            onClick={() => removeRelated(related)}
+                                        >
+                                            ×
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}                        
+                        
+                    </FormGroup>
+
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => {
+                            setEditModalOpen(false);
+                            setDetailModalOpen(true);
+                            setEditRecordNo(null);
+                        }}
+                    >
+                        취소
+                    </Button>
+
+                    <Button 
+                        variant="primary"
+                        onClick={editRecord}    
+                    >
+                        수정
                     </Button>
                 </Modal.Footer>
             </Modal>

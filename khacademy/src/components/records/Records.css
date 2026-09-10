@@ -254,6 +254,21 @@
     color: #6b7280;
 }
 
+.record-selected-related-remove {
+    padding: 0;
+    margin-left: auto;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.record-selected-related-remove:hover{
+    color: #dc3545;
+}
+
+
+
 @media (max-width: 768px) {
     .records-header {
         flex-direction: column;
