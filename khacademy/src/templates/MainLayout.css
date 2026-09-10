@@ -15,3 +15,10 @@
     min-width: 0;
     overflow: auto;
 }
+.Toastify__toast--success {
+    background-color: #2563eb !important;
+}
+
+.Toastify__toast--error {
+    background-color: #ca3f3f !important;
+}
