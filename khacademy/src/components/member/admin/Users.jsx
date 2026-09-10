@@ -44,9 +44,11 @@ export default function Users() {
 
     const [showStateOverlay, setShowStateOverlay] = useState(false);
     const [showDeptOverlay, setShowDeptOverlay] = useState(false);
+    const [showPositionOverlay, setShowPositionOverlay] = useState(false);
 
 
     const [checked, setChecked] = useState([]);
+    console.log("선택된 회원번호 : ", checked);
 
     const [stateChecked, setStateChecked] = useState([]);
     // console.log("변경할 사항 : ", stateChecked);
@@ -54,6 +56,7 @@ export default function Users() {
 
     const [editData, setEditData] = useState({});
 
+    const [activeTab, setActiveTab] = useState("");
 
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
@@ -124,7 +127,15 @@ export default function Users() {
             ...selectedEmp,//나머지 유지
             [name]: value
         });
-    }, [selectedEmp]);
+    }, []);
+    const changeDataValue = useCallback((e) => {
+        const { name, value } = e.target;
+
+        setEditData({
+            ...editData,//나머지 유지
+            [name]: value
+        });
+    }, []);
 
     const search = useCallback(async (e) => {
 
@@ -154,7 +165,7 @@ export default function Users() {
     // console.log("count : ", count);
 
 
-    const [activeTab, setActiveTab] = useState("전체");
+   
 
     const searchInitial = useCallback(async (tab) => {
         setActiveTab(tab);
@@ -232,7 +243,7 @@ export default function Users() {
             toast.success("처리 되었습니다.");
 
             setChecked([]);
-            setStateChecked([]);
+            setStateChecked("");
             setIsSearch(false);
             setPage(prev => ({
                 ...prev,
@@ -283,9 +294,76 @@ export default function Users() {
         setSelectedEmp({});
     }, []);
 
-    const changeDeptAll = useState(async () => {
+    const changeDeptAll = useCallback(async (editData) => {
+        const result = await Swal.fire({
+            title: "사원 정보를 수정하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "수정",
+            cancelButtonText: "취소"
+        });
 
-    }, []);
+        if (result.isConfirmed === false) return;
+
+        try {
+            await apiClient.patch(`/admin/changeDeptAll`, {
+                empNos: checked,
+                empDeptNo: editData.empDeptNo,
+            });
+            toast.success("수정되었습니다.");
+            setShowDeptOverlay(false);
+            setIsSearch(false);
+            setPage(prev => ({
+                ...prev,
+                page: 1,
+                sort: "empNo",
+                direction: "asc",
+            }));
+
+        }
+        catch (error) {
+            console.log("error : ", error);
+            toast.error("수정이 실패하였습니다. \n잠시 후 다시 시도해주세요.");
+
+        }
+        setEditData({});
+        setChecked([]);
+    }, [checked]);
+    const changePositionAll = useCallback(async (editData) => {
+        const result = await Swal.fire({
+            title: "사원 정보를 수정하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "수정",
+            cancelButtonText: "취소"
+        });
+
+        if (result.isConfirmed === false) return;
+
+        try {
+            await apiClient.patch(`/admin/changePositionAll`, {
+                empNos: checked,
+                empPositionNo: editData.empPositionNo,
+            });
+            toast.success("수정되었습니다.");
+            setShowPositionOverlay(false);
+            setIsSearch(false);
+            setPage(prev => ({
+                ...prev,
+                page: 1,
+                sort: "empNo",
+                direction: "asc",
+            }));
+
+        }
+        catch (error) {
+            console.log("error : ", error);
+            toast.error("수정이 실패하였습니다. \n잠시 후 다시 시도해주세요.");
+
+        }
+        setEditData({});
+        setChecked([]);
+    }, [checked]);
 
     const inactiveNumber = useMemo(() => {
         return totalList.filter(emp => emp.empState === "inactive").length;
@@ -392,10 +470,8 @@ export default function Users() {
                                 <h4>회원 상태 변경하기</h4>
                                 <span>선택한 회원의 변경 사항을 선택해주세요. </span>
                                 <br />
-                                <span>초대중인 회원의 상태는 변경할 수 없습니다. </span>
-                                <br />
-                                <span>관리자인 회원의 상태는 변경할 수 없습니다. </span>
-                                <ListGroup className="list-group mt-5 ">
+                                
+                                <ListGroup className="list-group mt-3 ">
                                     <ListGroup.Item
                                         className="d-flex align-items-center item"
                                         onClick={() => {
@@ -423,7 +499,11 @@ export default function Users() {
                                         <span className="fs-5 ms-2 text-muted">({checked.length}명 선택)</span>
                                     </ListGroup.Item>
                                 </ListGroup>
-                                <div className="mt-5 text-center">
+                                <div className="mt-2">
+
+                                <span>초대중인 회원과 관리자인 회원의 상태는 변경할 수 없습니다. </span>
+                                </div>
+                                <div className="mt-4 text-center">
                                     <Button onClick={() => {
                                         setShowStateOverlay(false);
                                         setStateChecked([]);
@@ -469,16 +549,14 @@ export default function Users() {
                                 <h4>회원 부서 일괄 변경하기</h4>
                                 <span>선택한 회원의 변경 사항을 선택해주세요. </span>
                                 <br />
-                                <span>초대중인 회원의 상태는 변경할 수 없습니다. </span>
-                                <br />
-                                <span>관리자인 회원의 상태는 변경할 수 없습니다. </span>
+                                <span>관리자인 회원의 정보는 변경할 수 없습니다. </span>
                                 <Row className="mt-4">
                                     <Form.Label column sm={2}>부서</Form.Label>
                                     <Col sm={10}>
                                         <Form.Select onClick={deptNameSearch} name="empDeptNo"
                                             className="w-100 d-inline-block"
                                             value={editData.empDeptNo}
-                                            onChange={changeNumericValue}
+                                            onChange={changeDataValue}
                                         >
                                             <option value="">선택하세요</option>
                                             {deptList.map(dept => (
@@ -493,6 +571,7 @@ export default function Users() {
                                 <div className="mt-5 text-center">
                                     <Button onClick={() => {
                                         setShowDeptOverlay(false);
+                                        setEditData({});
                                     }}>
                                         취소
                                     </Button>
@@ -508,21 +587,73 @@ export default function Users() {
                     }
                 >
                     <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}>
-                        부서/직급 변경
+                        부서 변경
                     </span>
                 </OverlayTrigger>
                 <span className="divider"></span>
-                <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}
-                    onClick={
-                        () => {
-                            setIsSearch(false);
-                            setPage(prev => ({
-                                ...prev,
-                                sort: "empNo",
-                                direction: "asc",
-                            }));
-                        }
-                    }>직급 변경</span>
+                <OverlayTrigger
+                    trigger="click"
+                    placement="bottom"
+                    rootClose
+                    show={showPositionOverlay}
+                    onToggle={setShowPositionOverlay}
+                    popperConfig={{
+                        modifiers: [
+                            {
+                                name: "offset",
+                                options: {
+                                    offset: [250, 5],
+                                },
+                            },
+                        ],
+                    }}
+                    overlay={
+                        <Popover id="popover-positioned-bottom"
+                            className="state-popover">
+                            <Popover.Body>
+                                <h4>회원 직급 일괄 변경하기</h4>
+                                <span>선택한 회원의 변경 사항을 선택해주세요. </span>
+                                <br />
+                                <span>관리자인 회원의 정보는 변경할 수 없습니다. </span>
+                                <Row className="mt-4">
+                                    <Form.Label column sm={2}>직급</Form.Label>
+                                    <Col sm={10}>
+                                        <Form.Select onClick={positionNameSearch} name="empPositionNo"
+                                            className="w-100 d-inline-block"
+                                            value={editData.empPositionNo}
+                                            onChange={changeDataValue}
+                                        >
+                                            <option value="">선택하세요</option>
+                                            {positionList.map(position => (
+                                                <option key={position.positionNo} value={position.positionNo}>
+                                                    {position.positionName}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Col>
+                                </Row>
+                                <div className="mt-5 text-center">
+                                    <Button onClick={() => {
+                                        setShowPositionOverlay(false);
+                                        setEditData({});
+                                    }}>
+                                        취소
+                                    </Button>
+                                    <Button className="ms-3"
+                                        onClick={
+                                            () => changePositionAll(editData)
+                                        }>
+                                        확인
+                                    </Button>
+                                </div>
+                            </Popover.Body>
+                        </Popover>
+                    }
+                >
+                    <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}>
+                        직급 변경
+                    </span>
+                </OverlayTrigger>
             </div>
 
             <Table className="member-table">
