@@ -238,7 +238,6 @@ export default function TaskInsert() {
             >
               <option value="TODO">할 일 (To Do)</option>
               <option value="IN_PROGRESS">진행 중 (In Progress)</option>
-              <option value="DONE">완료 (Done)</option>
             </select>
           </div>
 

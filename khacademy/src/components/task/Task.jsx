@@ -1327,7 +1327,7 @@ export default function Task() {
                         }}
                       >
                         <RotateCcw size={12} />
-                        단건 복구
+                        복구
                       </button>
                     </div>
                   );

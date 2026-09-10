@@ -1,3 +1,6 @@
+/* =========================================
+   새 업무 등록 컨테이너 (TaskInsert)
+   ========================================= */
 .task-create-container {
   max-width: 860px;
   margin: 36px auto;
@@ -8,28 +11,61 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: #1e293b;
+  box-sizing: border-box;
 }
 
+/* =========================================
+   상단 헤더 영역
+   ========================================= */
 .task-create-header {
   margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 1px solid #f1f5f9;
 }
 
+/* 보드로 돌아가기 (가시성 대폭 강화 스타일) */
 .back-link-btn {
-  background: none;
-  border: none;
-  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px 6px 10px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  padding: 0 0 12px 0;
-  display: inline-block;
-  transition: 0.2s;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
+/* 화살표 아이콘 */
+.back-arrow-icon {
+  color: #64748b;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* 마우스 올렸을 때 (화살표 살짝 뒤로 밀리는 모션 + 블루 포인트 점등) */
 .back-link-btn:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
   color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.12);
+}
+
+.back-link-btn:hover .back-arrow-icon {
+  color: #2563eb;
+  transform: translateX(-3px);
+}
+
+/* 클릭하는 순간의 피드백 */
+.back-link-btn:active {
+  transform: translateY(0);
+  background-color: #dbeafe;
 }
 
 .task-create-header h2 {
@@ -37,6 +73,7 @@
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
 }
 
 .sub-desc {
@@ -45,6 +82,9 @@
   margin: 0;
 }
 
+/* =========================================
+   등록 폼 및 인풋 기본 규격
+   ========================================= */
 .task-create-form {
   display: flex;
   flex-direction: column;
@@ -84,21 +124,6 @@
   color: #ef4444;
 }
 
-.label-with-val {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.progress-num-badge {
-  font-size: 12px;
-  font-weight: 800;
-  color: #2563eb;
-  background-color: #eff6ff;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
 .form-input,
 .form-select,
 .form-textarea {
@@ -122,19 +147,19 @@
 }
 
 .form-input.title-input {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   padding: 12px 16px;
 }
 
-.form-range {
-  width: 100%;
-  accent-color: #2563eb;
-  cursor: pointer;
-  margin-top: 8px;
+.form-textarea {
+  resize: vertical;
+  line-height: 1.6;
 }
 
-/* 협업자 선택 칩 */
+/* =========================================
+   협업자 선택 칩 인터랙션 (선택 전 흐림 -> 선택 시 점등)
+   ========================================= */
 .collab-chips-box {
   display: flex;
   flex-wrap: wrap;
@@ -145,51 +170,109 @@
   border-radius: 10px;
   min-height: 52px;
   align-items: center;
+  box-sizing: border-box;
 }
 
+/* 1. 선택 전 기본 상태: 흐릿하고 부드러운 톤다운 */
 .collab-chip-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 12px 6px 8px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background-color: #ffffff;
-  color: #475569;
+  color: #64748b;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  opacity: 0.65; /* 선택 전 흐리게 처리 */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
-.collab-chip-btn:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
-}
-
-.collab-chip-btn.selected {
-  background-color: #eff6ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
-  font-weight: 700;
-}
-
-.chip-avatar {
-  width: 18px;
-  height: 18px;
+/* 미선택 칩 아바타 (무채색 그레이) */
+.collab-chip-btn .chip-avatar {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: #cbd5e1;
   color: #ffffff;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.chip-dept {
+.collab-chip-btn .chip-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+.collab-chip-btn .chip-dept {
   font-size: 11px;
-  color: #64748b;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+/* 미선택 상태에서 마우스 올렸을 때 */
+.collab-chip-btn:hover {
+  opacity: 0.9;
+  border-color: #94a3b8;
+  background-color: #f1f5f9;
+}
+
+.collab-chip-btn:hover .chip-name {
+  color: #1e293b;
+}
+
+/* 2. 선택 완료 상태 (.selected): 불투명도 100% + 블루 테두리 + 글로우 점등 */
+.collab-chip-btn.selected {
+  opacity: 1; /* 완전히 진해짐 */
+  background-color: #eff6ff;
+  border-color: #3b82f6; /* 테두리 켜짐 */
+  color: #1d4ed8;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18), 0 2px 5px rgba(37, 99, 235, 0.12); /* 글로우 점등 */
+  transform: translateY(-1px);
+}
+
+.collab-chip-btn.selected .chip-avatar {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.collab-chip-btn.selected .chip-name {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.collab-chip-btn.selected .chip-dept {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* 3. 선택된 상태에서 마우스 올렸을 때: 빨간색 대신 더 진한 블루 톤으로 부드럽게 강조 */
+.collab-chip-btn.selected:hover {
+  background-color: #dbeafe;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.22);
+}
+
+.collab-chip-btn.selected:hover .chip-avatar {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.collab-chip-btn.selected:hover .chip-name,
+.collab-chip-btn.selected:hover .chip-dept {
+  color: #1e40af;
 }
 
 .loading-text,
@@ -198,50 +281,87 @@
   color: #94a3b8;
 }
 
-/* 하단 버튼 */
+/* =========================================
+   첨부파일 제어 버튼
+   ========================================= */
+.btn-upload-file-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #334155;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-upload-file-sm:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* 하단 액션 버튼 (오른쪽 아래 정렬) */
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 10px;
-  padding-top: 16px;
+  margin-top: 16px;
+  padding-top: 20px;
   border-top: 1px solid #f1f5f9;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* 취소 버튼 & 등록 버튼 공통 규격 통일 */
+.btn-cancel,
+.btn-submit {
+  height: 42px;             /* 높이 완전히 일치 */
+  min-width: 100px;         /* 최소 너비 통일 */
+  padding: 0 18px;          /* 가로 여백 통일 */
+  border-radius: 8px;       /* 모서리 곡률 통일 */
+  font-size: 13.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 취소 버튼 개별 스타일 */
 .btn-cancel {
-  padding: 10px 20px;
-  border-radius: 10px;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
   color: #475569;
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
 }
 
 .btn-cancel:hover {
   background-color: #f1f5f9;
+  color: #1e293b;
 }
 
+/* 등록 완료 버튼 개별 스타일 */
 .btn-submit {
-  padding: 10px 24px;
-  border-radius: 10px;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border: none;
+  border: 1px solid transparent;
   color: #ffffff;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
 }
 
 .btn-submit:hover:not(:disabled) {
   opacity: 0.93;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 
 .btn-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
