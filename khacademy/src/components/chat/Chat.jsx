@@ -189,7 +189,9 @@ export default function Chat() {
     //● 메세지 전송
     const sendMessage = useCallback(() => {
 
-        //(1) 메세지를 전송할 수 있는 상태인지 검증
+        //(1)종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
+        //(2) 메세지를 전송할 수 있는 상태인지 검증
         if (!selectedChannel) return;//채널을 선택하지 않았으면 전송하지 않음
         if(input.trim() === "") return;//입력값이 비어있으면 전송하지 않음
         
@@ -198,7 +200,7 @@ export default function Chat() {
             return;//WebSocket 연결이 안됐으면 전송하지 않음
         }
 
-        //(2) 메세지 전송을 위한 JSON 데이터 생성
+        //(3) 메세지 전송을 위한 JSON 데이터 생성
         const json = { content : input };
 
         client.publish({
@@ -206,14 +208,17 @@ export default function Chat() {
             body: JSON.stringify(json)
         });
 
-        //(3) 메세지 입력창 비우기
+        //(4) 메세지 입력창 비우기
         setInput("");
 
-    }, [input, selectedChannel]);
+    }, [input, selectedChannel,isClosed]);
 
 
     //● 메세지 삭제 
     const handleDelete = async(message) => {
+
+        //종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
 
         const result = await Swal.fire({
             title: "메세지를 삭제하시겠습니까?",
@@ -240,6 +245,9 @@ export default function Chat() {
 
     //● 메세지 수정
     const handleEdit = async(message) => {
+        //종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
+
         const content = window.prompt(
             "메시지를 수정하세요.",
             message.content
@@ -447,13 +455,21 @@ export default function Chat() {
                     onLoadMore={loadMoreMessages}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    isClosed={isClosed}
                 />
 
+            {isClosed === false ? (
                 <MessageInput 
                     input={input}
                     setInput={setInput}
                     onSend={sendMessage}
                 />
+
+            ):(
+                <div>
+                    종료된 프로젝트에서는 메세지를 작성할 수 없습니다.
+                </div>
+            )}
 
             </div>
         </div>
