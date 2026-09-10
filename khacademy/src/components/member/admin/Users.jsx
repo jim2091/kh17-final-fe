@@ -1,4 +1,4 @@
-import { Button, Col, Form, Row, Card, Badge, Table } from "react-bootstrap";
+import { Button, Col, Form, Row, Card, Badge, Table, ListGroup } from "react-bootstrap";
 import { FaArrowDown, FaArrowUp, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -10,6 +10,8 @@ import { toast } from "react-toastify";
 import NoImage from "@assets/noimages.png";
 import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
 
 
 
@@ -37,11 +39,20 @@ export default function Users() {
         "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
 
     const [isSearch, setIsSearch] = useState(false);
-
+    //회원상세창 state
     const [show, setShow] = useState(false);
+
+    const [showStateOverlay, setShowStateOverlay] = useState(false);
+    const [showDeptOverlay, setShowDeptOverlay] = useState(false);
+
 
     const [checked, setChecked] = useState([]);
 
+    const [stateChecked, setStateChecked] = useState([]);
+    // console.log("변경할 사항 : ", stateChecked);
+    // console.log("팝오버창 상태 : ", showStateOverlay);
+
+    const [editData, setEditData] = useState({});
 
 
 
@@ -169,8 +180,9 @@ export default function Users() {
     // console.log("list : ", empList);
 
     const changeState = useCallback(async (emp) => {
+        const empName = emp.empName === null ? "이름없음" : emp.empName;
         const result = await Swal.fire({
-            title: emp.empState === "active" ? "비활성화 하시겠습니까? " : "활성화하시겠습니까?",
+            title: emp.empState === "active" ? `${empName}님을 비활성화 하시겠습니까? ` : `${empName}님을 활성화 하시겠습니까? `,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: emp.empState === "active" ? "비활성화" : "활성화",
@@ -197,7 +209,46 @@ export default function Users() {
 
     }, []);
 
+    //일괄 상태 변경하기 
+    const changeStateAll = useCallback(async (stateChecked) => {
+        const result = await Swal.fire({
+            title: stateChecked === "active" ?
+                "선택한 회원을 활성화하시겠습니까?" :
+                "선택한 회원을 비활성화 하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: stateChecked === "active" ? "활성화" : "비활성화",
+            cancelButtonText: "취소"
+
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await apiClient.patch("/admin/activeAll", {
+                empNos: checked,
+                empState: stateChecked
+            });
+            toast.success("처리 되었습니다.");
+
+            setChecked([]);
+            setStateChecked([]);
+            setIsSearch(false);
+            setPage(prev => ({
+                ...prev,
+                page: 1,
+                sort: "empNo",
+                direction: "asc",
+            }));
+        }
+        catch (e) {
+            console.log("에러 : ", e);
+            toast.error("실행이 실패하였습니다. \n잠시 후 다시 시도해주세요.");
+        }
+    }, [checked]);
+
     const changeData = useCallback(async (selectedEmp) => {
+
         const result = await Swal.fire({
             title: "사원 정보를 수정하시겠습니까?",
             icon: "warning",
@@ -230,7 +281,11 @@ export default function Users() {
 
         }
         setSelectedEmp({});
-    }, [selectedEmp]);
+    }, []);
+
+    const changeDeptAll = useState(async () => {
+
+    }, []);
 
     const inactiveNumber = useMemo(() => {
         return totalList.filter(emp => emp.empState === "inactive").length;
@@ -252,7 +307,7 @@ export default function Users() {
         return Math.min(pageGroup * 5, totalPage);
     }, [pageGroup, totalPage]);
 
-    
+
 
 
     return (<>
@@ -288,7 +343,7 @@ export default function Users() {
             </Form>
 
             <div className="tabs mt-2">
-                <span className={`tab ${activeTab === "전체" ? "active" : ""}`}
+                <span className={`mb-1 tab ${activeTab === "전체" ? "active" : ""}`}
                     onClick={
                         () => {
                             setActiveTab("전체");
@@ -302,39 +357,164 @@ export default function Users() {
                     }>전체</span>
                 {tabs.map((tab) => (
                     <div key={tab}
-                        className={`tab ${activeTab === tab ? "active" : ""}`}
+                        className={`mb-1 tab ${activeTab === tab ? "active" : ""}`}
                         onClick={() => searchInitial(tab)}>
                         <span>{tab}</span>
                     </div>
                 ))}
-                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
-                    onClick={
-                        () => {
-                            setActiveTab("비활성");
-                            setIsSearch(false);
-                            setPage(prev => ({
-                                ...prev,
-                                sort: "empNo",
-                                direction: "asc",
-                            }));
+                <span className="divider"></span>
+                <OverlayTrigger
+                    trigger="click"
+                    placement="bottom"
+                    rootClose
+                    show={showStateOverlay}
+                    onToggle={(show) => {
+                        setShowStateOverlay(show);
+
+                        if (!show) {
+                            setStateChecked([]);
                         }
-                    }>활성화</span>
-                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
+                    }}
+                    popperConfig={{
+                        modifiers: [
+                            {
+                                name: "offset",
+                                options: {
+                                    offset: [250, 5],
+                                },
+                            },
+                        ],
+                    }}
+                    overlay={
+                        <Popover id="popover-positioned-bottom"
+                            className="state-popover">
+                            <Popover.Body>
+                                <h4>회원 상태 변경하기</h4>
+                                <span>선택한 회원의 변경 사항을 선택해주세요. </span>
+                                <br />
+                                <span>초대중인 회원의 상태는 변경할 수 없습니다. </span>
+                                <br />
+                                <span>관리자인 회원의 상태는 변경할 수 없습니다. </span>
+                                <ListGroup className="list-group mt-5 ">
+                                    <ListGroup.Item
+                                        className="d-flex align-items-center item"
+                                        onClick={() => {
+                                            setStateChecked(
+                                                stateChecked === "active" ? "" : "active"
+                                            );
+                                        }}>
+                                        <Form.Check
+                                            checked={stateChecked === "active"}
+                                            onClick={(e) => e.stopPropagation()}></Form.Check>
+                                        <span className="fs-5 ms-2 text-muted">선택한 회원 활성화하기</span>
+                                        <span className="fs-5 ms-2 text-muted">({checked.length}명 선택)</span>
+                                    </ListGroup.Item>
+                                    <ListGroup.Item
+                                        className="d-flex align-items-center item"
+                                        onClick={() => {
+                                            setStateChecked(
+                                                stateChecked === "inactive" ? "" : "inactive"
+                                            );
+                                        }}>
+                                        <Form.Check
+                                            checked={stateChecked === "inactive"}
+                                            onClick={(e) => e.stopPropagation()}></Form.Check>
+                                        <span className="fs-5 ms-2 text-muted">선택한 회원 비활성화하기</span>
+                                        <span className="fs-5 ms-2 text-muted">({checked.length}명 선택)</span>
+                                    </ListGroup.Item>
+                                </ListGroup>
+                                <div className="mt-5 text-center">
+                                    <Button onClick={() => {
+                                        setShowStateOverlay(false);
+                                        setStateChecked([]);
+                                    }}>
+                                        취소
+                                    </Button>
+                                    <Button className="ms-3"
+                                        onClick={
+                                            () => changeStateAll(stateChecked)
+                                        }>
+                                        확인
+                                    </Button>
+                                </div>
+                            </Popover.Body>
+                        </Popover>
+                    }
+                >
+                    <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}>
+                        활성화
+                    </span>
+                </OverlayTrigger>
+                <span className="divider"></span>
+                <OverlayTrigger
+                    trigger="click"
+                    placement="bottom"
+                    rootClose
+                    show={showDeptOverlay}
+                    onToggle={setShowDeptOverlay}
+                    popperConfig={{
+                        modifiers: [
+                            {
+                                name: "offset",
+                                options: {
+                                    offset: [250, 5],
+                                },
+                            },
+                        ],
+                    }}
+                    overlay={
+                        <Popover id="popover-positioned-bottom"
+                            className="state-popover">
+                            <Popover.Body>
+                                <h4>회원 부서 일괄 변경하기</h4>
+                                <span>선택한 회원의 변경 사항을 선택해주세요. </span>
+                                <br />
+                                <span>초대중인 회원의 상태는 변경할 수 없습니다. </span>
+                                <br />
+                                <span>관리자인 회원의 상태는 변경할 수 없습니다. </span>
+                                <Row className="mt-4">
+                                    <Form.Label column sm={2}>부서</Form.Label>
+                                    <Col sm={10}>
+                                        <Form.Select onClick={deptNameSearch} name="empDeptNo"
+                                            className="w-100 d-inline-block"
+                                            value={editData.empDeptNo}
+                                            onChange={changeNumericValue}
+                                        >
+                                            <option value="">선택하세요</option>
+                                            {deptList.map(dept => (
+                                                <option key={dept.deptNo} value={dept.deptNo}>
+                                                    {dept.deptName}
+                                                </option>
+                                            ))}
+
+                                        </Form.Select>
+                                    </Col>
+                                </Row>
+                                <div className="mt-5 text-center">
+                                    <Button onClick={() => {
+                                        setShowDeptOverlay(false);
+                                    }}>
+                                        취소
+                                    </Button>
+                                    <Button className="ms-3"
+                                        onClick={
+                                            () => changeDeptAll(editData)
+                                        }>
+                                        확인
+                                    </Button>
+                                </div>
+                            </Popover.Body>
+                        </Popover>
+                    }
+                >
+                    <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}>
+                        부서/직급 변경
+                    </span>
+                </OverlayTrigger>
+                <span className="divider"></span>
+                <span className={`mb-1 toolbar ${checked.length > 0 ? "button" : ""}`}
                     onClick={
                         () => {
-                            setActiveTab("비활성");
-                            setIsSearch(false);
-                            setPage(prev => ({
-                                ...prev,
-                                sort: "empNo",
-                                direction: "asc",
-                            }));
-                        }
-                    }>부서변경</span>
-                <span className={`tab ${activeTab === "비활성" ? "active" : ""}`}
-                    onClick={
-                        () => {
-                            setActiveTab("비활성");
                             setIsSearch(false);
                             setPage(prev => ({
                                 ...prev,
@@ -350,13 +530,14 @@ export default function Users() {
                     <tr>
                         <th>
                             <Form.Check
+                                className="big-checkbox"
                                 checked={
                                     empList.length > 0 &&
                                     checked.length === empList.length
                                 }
                                 onChange={(e) => {
                                     if (e.target.checked) {
-                                        setChecked(empList.map(emp=>emp.empNo));                                        
+                                        setChecked(empList.map(emp => emp.empNo));
                                     } else {
                                         setChecked([]);
                                     }
@@ -448,6 +629,7 @@ export default function Users() {
                             className="member-table-item">
                             <td className="d-flex align-items-center">
                                 <Form.Check
+                                    className="big-checkbox"
                                     checked={checked.includes(emp.empNo)}
                                     onChange={(e) => {
                                         if (e.target.checked) {
@@ -608,16 +790,14 @@ export default function Users() {
                                     <span className="text-muted">활성</span>
                                 ) : (<>
                                     {selectedEmp.empState === "invited" && (
-                                        <Button>
-                                            <span>초대중</span>
-                                        </Button>
+                                        <span></span>
                                     )}
                                     {selectedEmp.empState === "inactive" && (
                                         <Button onClick={async () => {
                                             await changeState(selectedEmp);
                                             setShow(false);
                                         }}>
-                                            <span>비활성</span>
+                                            <span>활성화</span>
                                         </Button>
                                     )}
                                     {selectedEmp.empState === "active" && (
@@ -625,7 +805,7 @@ export default function Users() {
                                             await changeState(selectedEmp);
                                             setShow(false);
                                         }}>
-                                            <span>활성</span>
+                                            <span>비활성화</span>
                                         </Button>
                                     )}
                                 </>)}
