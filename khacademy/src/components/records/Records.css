@@ -112,6 +112,17 @@
     color: #374151;
 }
 
+.record-detail-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.record-detail-footer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .record-issue-resolution {
     margin-top: 1.5rem;
     padding: 1rem;
