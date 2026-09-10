@@ -14,7 +14,8 @@ export default function MessageArea(
         messages = [], 
         onLoadMore,
         onEdit,
-        onDelete
+        onDelete,
+        isClosed
     }
 ) {
     //● state
@@ -208,7 +209,7 @@ export default function MessageArea(
                                     </div>
 
                                     {/* 내가 보낸 메세지이고 삭제되지 않은 경우 */}
-                                    {isMine && message.deleted !== "Y" && (
+                                    {isMine && message.deleted !== "Y" && isClosed === false && (
                                         <div className="message-menu-wrapper">
                                             <button 
                                                 className="message-menu-button"

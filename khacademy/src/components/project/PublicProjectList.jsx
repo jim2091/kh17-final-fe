@@ -90,6 +90,11 @@ export default function PublicProjectList() {
         return new Date(date).toLocaleDateString("ko-KR");
     });
 
+    //참여 가능한 프로젝트
+    const availableProjectList = projectList.filter(
+        project => project.projectMemberRole === null
+    );
+
     //프로젝트 클릭
     const openProject = useCallback(async(project) =>{
         //이미 프로젝트 참여중인지 확인
@@ -146,141 +151,226 @@ export default function PublicProjectList() {
         );
     }
     
-    return (<>
+    return (
+        <div className="project-page public-project-page">
 
-        {/* 제목 */}
-        <Row className="mt-4 mb-4">
-            <Col>
-                <h3 className="fw-bold">
-                    공개 프로젝트
-                </h3>
+            {/* 제목 */}
+            <div className="project-page-header mt-4 mb-4">
 
-                <div className="text-muted">
-                    회사 구성원에게 공개된 프로젝트입니다.
+                <div>
+                    <h3 className="project-page-title">
+                        공개 프로젝트
+                    </h3>
+
+                    <p className="project-page-description">
+                        회사 구성원에게 공개된 프로젝트입니다.
+                    </p>
                 </div>
-            </Col>
 
-            <Col className="text-end">
-                <span className="text-muted">
+                <div className="project-page-count">
                     전체
-                </span>
-                <div className="ms-2">
-                    {pageVO.count}개
-                </div>
-            </Col>
-        </Row>
-
-        {/* 검색 */}
-        <Row className="mb-4">
-            <Col md={8} lg={6}>
-                <div className="d-flex ms-2">
-                    <Form.Control type="text" value={keyword}
-                        placeholder="프로젝트명 또는 목적검색"
-                        onChange={(e)=> setKeyword(e.target.value)} 
-                        onKeyDown={searchEnter}/>
-
-                    <Button variant="primary" onClick={searchProject}>
-                        검색
-                    </Button>
+                    <strong>
+                        {pageVO.count}
+                    </strong>
+                    개
                 </div>
 
-            </Col>
-        </Row>
-
-        {/* 항목 */}
-        <Row className="fw-bold border-top border-bottom py-3 bg-light">
-            <Col md={3}>
-                프로젝트 명
-            </Col>
-            <Col md={4}>
-                프로젝트 목적
-            </Col>
-            <Col md={3}>
-                프로젝트 기간
-            </Col>
-            <Col md={2}>
-                프로젝트 참여상태
-            </Col>
-
-        </Row>
-
-        {/* 프로젝트 없음 */}
-        {projectList.length === 0 ? (
-            <div className="text-center text-muted py-5">
-
-                {searchKeyword !== ""
-                    ? "검색된 프로젝트가 없습니다."
-                    : "공개 프로젝트가 없습니다."}
             </div>
-        ):(
-            <ListGroup variant="flush">
-                {projectList
-                    .filter(project=> project.projectMemberRole === null)
-                    .map(project=>(
-                    <ListGroup.Item
-                        key={project.projectNo}
-                        onClick={()=> openProject(project)}
-                        className="py-3">
-                            
-                            <Row className="align-items-center">
-                                {/* 프로젝트명 */}
-                                <Col md={3}>
-                                    <div className="fw-bold">
-                                        {project.projectName}
-                                    </div>
-                                </Col>
-                                {/* 목적 */}
-                                <Col md={4}>
-                                    <div className="text-muted">
-                                        {project.projectPurpose}
-                                    </div>
-                                </Col>
-                                {/* 기간 */}
-                                <Col md={3}>
-                                    <div className="small text-muted">
-                                        {formatDate(project.projectStart)}
-                                        {"~"}
-                                        {formatDate(project.projectDeadline)}
-                                    </div>
-                                </Col>
 
-                                {/* 참여상태 */}
-                                <Col md={2} className="text-center">
-                                    {project.projectMemberRole === null && (
-                                        <Badge bg="success">
+
+            {/* 검색 */}
+            <div className="public-project-search">
+
+                <Form.Control
+                    type="text"
+                    className="public-project-search-input"
+                    value={keyword}
+                    placeholder="프로젝트명 또는 목적 검색"
+                    onChange={(e) =>
+                        setKeyword(e.target.value)
+                    }
+                    onKeyDown={searchEnter}
+                />
+
+                <Button
+                    className="public-project-search-button"
+                    onClick={searchProject}
+                >
+                    검색
+                </Button>
+
+            </div>
+
+
+            {/* 프로젝트 목록 */}
+            <div className="public-project-panel">
+
+                {/* 목록 제목 */}
+                <Row className="public-project-list-header">
+
+                    <Col md={3}>
+                        프로젝트명
+                    </Col>
+
+                    <Col md={4}>
+                        프로젝트 목적
+                    </Col>
+
+                    <Col md={3}>
+                        프로젝트 기간
+                    </Col>
+
+                    <Col md={2} className="text-center">
+                        참여상태
+                    </Col>
+
+                </Row>
+
+
+                {/* 프로젝트 없음 */}
+                {availableProjectList.length === 0 ? (
+
+                    <div className="public-project-empty">
+
+                        <div className="public-project-empty-title">
+                            {searchKeyword !== ""
+                                ? "검색된 프로젝트가 없습니다."
+                                : "참여 가능한 공개 프로젝트가 없습니다."
+                            }
+                        </div>
+
+                        <div className="public-project-empty-description">
+                            다른 검색어로 프로젝트를 찾아보세요.
+                        </div>
+
+                    </div>
+
+                ) : (
+
+                    <ListGroup
+                        variant="flush"
+                        className="public-project-list"
+                    >
+
+                        {availableProjectList.map(project => (
+
+                            <ListGroup.Item
+                                key={project.projectNo}
+                                onClick={() =>
+                                    openProject(project)
+                                }
+                                className="public-project-list-item"
+                            >
+
+                                <Row className="align-items-center">
+
+                                    {/* 프로젝트명 */}
+                                    <Col md={3}>
+
+                                        <div className="public-project-name">
+                                            {project.projectName}
+                                        </div>
+
+                                    </Col>
+
+
+                                    {/* 목적 */}
+                                    <Col md={4}>
+
+                                        <div className="public-project-purpose">
+                                            {project.projectPurpose}
+                                        </div>
+
+                                    </Col>
+
+
+                                    {/* 기간 */}
+                                    <Col md={3}>
+
+                                        <div className="public-project-period">
+
+                                            {formatDate(
+                                                project.projectStart
+                                            )}
+
+                                            <span className="public-project-period-arrow">
+                                                ~
+                                            </span>
+
+                                            {formatDate(
+                                                project.projectDeadline
+                                            )}
+
+                                        </div>
+
+                                    </Col>
+
+
+                                    {/* 참여 상태 */}
+                                    <Col
+                                        md={2}
+                                        className="text-center"
+                                    >
+
+                                        <span className="public-project-join-badge">
                                             참여 가능
-                                        </Badge>
-                                    )}
-                                </Col>
-                            </Row>
-                        </ListGroup.Item>
-                ))}
-            </ListGroup>
-        )}
+                                        </span>
 
-        {/* 페이지네이션 */}
-        {pageVO.pageCount > 0 &&(
-            <div className="d-flex justify-content-center mt-4">
-                <Pagination>
-                    {/* 이전블록 */}
-                    <Pagination.Prev 
-                        disabled={page<=1}
-                        onClick={()=> setPage(prev=>prev-1)}
-                    />
-                    {/* 페이지 번호 */}
-                    {pageNumbers.map(number=>(
-                        <Pagination.Item key={number}
-                            active={ number === page}
-                            onClick={()=> setPage(number)}>
+                                    </Col>
+
+                                </Row>
+
+                            </ListGroup.Item>
+
+                        ))}
+
+                    </ListGroup>
+
+                )}
+
+            </div>
+
+
+            {/* 페이지네이션 */}
+            {pageVO.pageCount > 0 && (
+                <div className="d-flex justify-content-center mt-4">
+
+                    <Pagination className="my-pagination">
+
+                        {/* 이전 페이지 */}
+                        <Pagination.Prev
+                            disabled={page <= 1}
+                            onClick={() =>
+                                setPage(prev => prev - 1)
+                            }
+                        />
+
+                        {/* 페이지 번호 */}
+                        {pageNumbers.map(number => (
+                            <Pagination.Item
+                                key={number}
+                                active={number === page}
+                                onClick={() =>
+                                    setPage(number)
+                                }
+                            >
                                 {number}
                             </Pagination.Item>
-                    ))}
-                    {/* 다음블록 */}
-                    <Pagination.Next
-                        disabled={page >= pageVO.pageCount}
-                        onClick={()=> setPage(prev => prev +1)}/>
-                </Pagination>
-            </div>
-        )}
-    </>)
+                        ))}
+
+                        {/* 다음 페이지 */}
+                        <Pagination.Next
+                            disabled={page >= pageVO.pageCount}
+                            onClick={() =>
+                                setPage(prev => prev + 1)
+                            }
+                        />
+
+                    </Pagination>
+
+                </div>
+            )}
+
+        </div>
+    );
 }
