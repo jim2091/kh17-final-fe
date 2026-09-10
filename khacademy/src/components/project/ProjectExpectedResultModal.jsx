@@ -137,236 +137,220 @@ export default function ProjectExpectedResultModal({
                 }
     },[projectNo,loadResultList]);
 
-    return(<>
-        <Modal show={show} onHide={onHide}
-            centered size="lg">
-            
-            <Modal.Header closeButton>
-                <Modal.Title>
-                    프로젝트 기대결과
-                </Modal.Title>
+    return(
+        <Modal
+            show={show}
+            onHide={onHide}
+            centered
+            size="lg"
+            className="project-modal"
+        >
+
+            {/* 헤더 */}
+            <Modal.Header
+                closeButton
+                className="project-modal-header"
+            >
+                <div>
+                    <Modal.Title className="project-modal-title">
+                        프로젝트 기대결과
+                    </Modal.Title>
+
+                    <div className="project-modal-description">
+                        프로젝트에서 달성해야 할 기대결과를 관리합니다.
+                    </div>
+                </div>
             </Modal.Header>
 
-            <Modal.Body>
+
+            <Modal.Body className="project-modal-body">
+
                 {/* OWNER만 등록 가능 */}
-                    {isOwner && isClosed === false &&(
+                {isOwner && isClosed === false && (
 
-                        <div className="d-flex gap-2 mb-4">
+                    <div className="project-result-add-area">
 
-                            <Form.Control
-                                type="text"
-                                placeholder="기대결과를 입력하세요"
-                                value={content}
-                                onChange={(e) =>
-                                    setContent(
-                                        e.target.value
-                                    )
-                                }
-                            />
+                        <Form.Control
+                            type="text"
+                            className="project-result-input"
+                            placeholder="기대결과를 입력하세요"
+                            value={content}
+                            onChange={(e) =>
+                                setContent(e.target.value)
+                            }
+                        />
 
-                            <Button
-                                variant="primary"
-                                onClick={addResult}
+                        <Button
+                            className="project-primary-button project-result-add-button"
+                            onClick={addResult}
+                        >
+                            추가
+                        </Button>
+
+                    </div>
+
+                )}
+
+
+                {/* 로딩 */}
+                {loading === true ? (
+
+                    <div className="project-modal-loading">
+
+                        <Spinner
+                            animation="border"
+                            className="project-modal-spinner"
+                        />
+
+                        <div>
+                            기대결과를 불러오는 중입니다...
+                        </div>
+
+                    </div>
+
+                ) : resultList.length === 0 ? (
+
+                    /* 기대결과 없음 */
+                    <div className="project-result-empty">
+                        등록된 기대결과가 없습니다.
+                    </div>
+
+                ) : (
+
+                    /* 기대결과 목록 */
+                    <ListGroup
+                        variant="flush"
+                        className="project-result-list"
+                    >
+
+                        {resultList.map(result => (
+
+                            <ListGroup.Item
+                                key={result.projectResultNo}
+                                className="project-result-list-item"
                             >
-                                추가
-                            </Button>
 
-                        </div>
+                                <div className="project-result-row">
 
-                    )}
+                                    {/* 기대결과 내용 */}
+                                    <div className="project-result-main">
 
-                        {/* 로딩 */}
-                    {loading === true ? (
+                                        {/* 순서 */}
+                                        <span className="project-result-order">
+                                            {result.projectResultOrder}
+                                        </span>
 
-                        <div className="text-center py-5">
 
-                            <Spinner
-                                animation="border"
-                            />
+                                        {/* 수정중 */}
+                                        {editNo === result.projectResultNo ? (
 
-                            <div className="mt-2">
-                                기대결과 불러오는 중입니다...
-                            </div>
-
-                        </div>
-
-                    ) : resultList.length === 0 ? (
-
-                        /* 기대결과 없음 */
-                        <div className="text-center text-muted py-5">
-
-                            등록된 기대결과가 없습니다.
-
-                        </div>
-
-                    ) : (
-
-                        /* 기대결과 목록 */
-                        <ListGroup>
-
-                            {resultList.map(
-                                (result) => (
-
-                                    <ListGroup.Item
-                                        key={
-                                            result.projectResultNo
-                                        }
-                                    >
-
-                                        <div
-                                            className="
-                                                d-flex
-                                                justify-content-between
-                                                align-items-center
-                                                gap-3
-                                            "
-                                        >
-
-                                            {/* 수정중 */}
-                                            {
-                                                editNo
-                                                ===
-                                                result.projectResultNo
-                                                    ? (
-
-                                                        <Form.Control
-                                                            type="text"
-                                                            value={
-                                                                editContent
-                                                            }
-                                                            onChange={
-                                                                (e) =>
-                                                                    setEditContent(
-                                                                        e.target.value
-                                                                    )
-                                                            }
-                                                        />
-
+                                            <Form.Control
+                                                type="text"
+                                                className="project-result-edit-input"
+                                                value={editContent}
+                                                onChange={(e) =>
+                                                    setEditContent(
+                                                        e.target.value
                                                     )
-                                                    : (
+                                                }
+                                            />
 
-                                                        <div>
+                                        ) : (
 
-                                                            {
-                                                                result.projectResultOrder
-                                                            }.
+                                            <div className="project-result-content">
+                                                {result.projectResultContent}
+                                            </div>
 
-                                                            {" "}
+                                        )}
 
-                                                            {
-                                                                result.projectResultContent
-                                                            }
-
-                                                        </div>
-
-                                                    )
-                                            }
+                                    </div>
 
 
-                                            {/* OWNER만 수정/삭제 가능 */}
-                                            {isOwner && isClosed === false &&(
+                                    {/* OWNER만 수정 / 삭제 */}
+                                    {isOwner && isClosed === false && (
 
-                                                <div
-                                                    className="
-                                                        d-flex
-                                                        gap-2
-                                                        flex-shrink-0
-                                                    "
-                                                >
+                                        <div className="project-result-actions">
 
-                                                    {
-                                                        editNo
-                                                        ===
-                                                        result.projectResultNo
-                                                            ? (
-                                                                <>
+                                            {editNo === result.projectResultNo ? (
+                                                <>
 
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="success"
-                                                                        onClick={() =>
-                                                                            updateResult(
-                                                                                result.projectResultNo
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        저장
-                                                                    </Button>
-
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="secondary"
-                                                                        onClick={
-                                                                            cancelEdit
-                                                                        }
-                                                                    >
-                                                                        취소
-                                                                    </Button>
-
-                                                                </>
+                                                    <Button
+                                                        size="sm"
+                                                        className="project-result-save-button"
+                                                        onClick={() =>
+                                                            updateResult(
+                                                                result.projectResultNo
                                                             )
-                                                            : (
-                                                                <>
+                                                        }
+                                                    >
+                                                        저장
+                                                    </Button>
 
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline-primary"
-                                                                        onClick={() =>
-                                                                            startEdit(
-                                                                                result
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        수정
-                                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        className="project-result-cancel-button"
+                                                        onClick={cancelEdit}
+                                                    >
+                                                        취소
+                                                    </Button>
 
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline-danger"
-                                                                        onClick={() =>
-                                                                            deleteResult(
-                                                                                result
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        삭제
-                                                                    </Button>
+                                                </>
 
-                                                                </>
-                                                            )
-                                                    }
+                                            ) : (
+                                                <>
 
-                                                </div>
+                                                    <Button
+                                                        size="sm"
+                                                        className="project-result-edit-button"
+                                                        onClick={() =>
+                                                            startEdit(result)
+                                                        }
+                                                    >
+                                                        수정
+                                                    </Button>
 
+                                                    <Button
+                                                        size="sm"
+                                                        className="project-result-delete-button"
+                                                        onClick={() =>
+                                                            deleteResult(result)
+                                                        }
+                                                    >
+                                                        삭제
+                                                    </Button>
+
+                                                </>
                                             )}
 
                                         </div>
 
-                                    </ListGroup.Item>
+                                    )}
 
-                                )
-                            )}
+                                </div>
 
-                        </ListGroup>
+                            </ListGroup.Item>
 
-                    )}
+                        ))}
 
-                </Modal.Body>
+                    </ListGroup>
+
+                )}
+
+            </Modal.Body>
 
 
-                <Modal.Footer>
+            {/* 하단 */}
+            <Modal.Footer className="project-modal-footer">
 
-                    <Button
-                        variant="secondary"
-                        onClick={onHide}
-                    >
-                        닫기
-                    </Button>
+                <Button
+                    className="project-cancel-button"
+                    onClick={onHide}
+                >
+                    닫기
+                </Button>
 
-                </Modal.Footer>
+            </Modal.Footer>
 
-            </Modal>
-
-        </>
+        </Modal>
     );
 }

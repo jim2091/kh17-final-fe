@@ -356,229 +356,80 @@
         max-height: calc(100vh - 140px);
     }
 
-}
+    .project-page-header {
+        align-items: flex-start;
+        flex-direction: column;
 
-/* =====================================================
-    Project Common Page
-===================================================== */
+        gap: 10px;
+    }
 
-.project-page {
-    width: 100%;
-    min-width: 0;
-}
+    .project-page-title {
+        font-size: 21px;
+    }
 
-.project-page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    .project-form-card {
+        padding: 20px 16px;
+    }
 
-    margin-bottom: 24px;
-}
+    .project-form-actions {
+        flex-direction: column-reverse;
+    }
 
-.project-page-title {
-    margin: 0;
+    .project-form-actions .btn {
+        width: 100%;
+    }
 
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
-}
+    .project-result-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 
-.project-page-description {
-    margin-top: 6px;
-    margin-bottom: 0;
+    .project-result-actions {
+        width: 100%;
+    }
 
-    font-size: 14px;
-    color: #6b7280;
-}
+    .project-result-actions .btn {
+        flex: 1;
+    }
 
-.project-page-count {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    .project-member-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
 
-    font-size: 14px;
-    color: #6b7280;
-}
+    .project-search-area {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-.project-page-count strong {
-    color: #2563eb;
-    font-size: 18px;
-}
+    .project-search-input {
+        max-width: none;
+    }
 
+    .project-result-add-area {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-/* =====================================================
-    Project Card / Panel
-===================================================== */
+    .project-result-add-button {
+        width: 100%;
+    }
 
-.project-panel {
-    background-color: #ffffff;
+    .project-result-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    .project-result-main {
+        width: 100%;
+    }
 
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    .project-result-actions {
+        justify-content: flex-end;
 
-    overflow: hidden;
-}
+        width: 100%;
+    }
 
-.project-panel-body {
-    padding: 24px;
-}
-
-.project-section {
-    margin-bottom: 28px;
-}
-
-.project-section:last-child {
-    margin-bottom: 0;
-}
-
-.project-section-title {
-    margin-bottom: 12px;
-
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.project-section-description {
-    margin-bottom: 16px;
-
-    font-size: 13px;
-    color: #6b7280;
-}
-
-/* =====================================================
-    Project Search
-===================================================== */
-
-.project-search-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    margin-bottom: 20px;
-}
-
-.project-search-input {
-    max-width: 420px;
-}
-
-.project-search-button {
-    min-width: 76px;
-    font-weight: 600;
-}
-
-/* =====================================================
-    Project List
-===================================================== */
-
-.project-list-header {
-    display: grid;
-
-    grid-template-columns:
-        minmax(180px, 1.2fr)
-        minmax(250px, 1.8fr)
-        minmax(180px, 1fr)
-        minmax(100px, 0.6fr);
-
-    align-items: center;
-
-    padding: 14px 20px;
-
-    background-color: #f8fafc;
-
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
-
-    font-size: 13px;
-    font-weight: 700;
-    color: #475569;
-}
-
-.project-list-item {
-    padding: 18px 20px !important;
-
-    border-left: none !important;
-    border-right: none !important;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.15s ease,
-        transform 0.15s ease;
-}
-
-.project-list-item:hover {
-    background-color: #f8fafc;
-}
-
-.project-list-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.project-list-purpose {
-    font-size: 14px;
-    color: #64748b;
-
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.project-list-period {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-.project-list-empty {
-    padding: 60px 20px;
-
-    text-align: center;
-
-    font-size: 14px;
-    color: #9ca3af;
-}
-
-/* =====================================================
-    Project Status
-===================================================== */
-
-.project-status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-width: 68px;
-
-    padding: 5px 10px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.project-status-badge.active {
-    background-color: #dcfce7;
-    color: #15803d;
-}
-
-.project-status-badge.closed {
-    background-color: #f1f5f9;
-    color: #64748b;
-}
-
-.project-status-badge.public {
-    background-color: #dbeafe;
-    color: #1d4ed8;
-}
-
-.project-status-badge.private {
-    background-color: #f3e8ff;
-    color: #7e22ce;
 }
 
 /* =====================================================
@@ -723,6 +574,69 @@
     color: #111827 !important;
 }
 
+/* 프로젝트 탈퇴 버튼*/
+.project-leave-button {
+    min-width: 90px;
+
+    padding: 9px 18px;
+
+    background-color: #e24b30!important;
+    border-color: #d1d5db !important;
+
+    color: #ffffff !important;
+
+    font-weight: 600;
+}
+
+.project-leave-button:hover {
+    background-color: #ff0000 !important;
+    border-color:  #d1d5db!important;
+
+    color: #ffffff !important;
+}
+
+/* 강제퇴장 버튼*/
+.project-kick-button {
+    min-width: 90px;
+
+    padding: 9px 18px;
+
+    background-color: #ffffff!important;
+    border-color: #f53333 !important;
+
+    color: #f53333 !important;
+
+    font-weight: 600;
+}
+
+.project-kick-button:hover {
+    background-color: #ff0000 !important;
+    border-color:  #ffffff!important;
+
+    color: #ffffff !important;
+}
+
+/* owner위임 버튼*/
+.project-owner-transfer-button {
+    min-width: 90px;
+
+    padding: 1px 18px;
+
+    background-color: #ffffff!important;
+    border-color: #006eff !important;
+
+    color: #006eff !important;
+
+    font-weight: 600;
+}
+
+.project-owner-transfer-button:hover {
+    background-color: #006eff !important;
+    border-color:  #d1d5db!important;
+
+    color: #ffffff !important;
+}
+
 /* =====================================================
     부트스트렙 valid,체크표시
 ===================================================== */
@@ -750,60 +664,6 @@
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%232563eb' d='M2.3 6.73.6 5.03c-.4-.4.2-1 .6-.6l1.1 1.1 4.1-4.1c.4-.4 1 .2.6.6l-4.7 4.7c-.2.2-.4.2-.6 0z'/%3e%3c/svg%3e");
 }
 
-/* =====================================================
-    Project Close
-===================================================== */
-
-.project-close-warning {
-    padding: 16px 18px;
-    margin-bottom: 22px;
-
-    background-color: #fff7ed;
-
-    border: 1px solid #fed7aa;
-    border-radius: 10px;
-
-    color: #9a3412;
-
-    font-size: 13px;
-}
-
-.project-result-evaluation {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.project-result-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-
-    padding: 14px 16px;
-
-    background-color: #f8fafc;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-}
-
-.project-result-content {
-    flex: 1;
-
-    min-width: 0;
-
-    font-size: 14px;
-    color: #334155;
-}
-
-.project-result-actions {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-
-    flex-shrink: 0;
-}
 
 /* =====================================================
     Project Modal
@@ -853,83 +713,682 @@
     align-items: center;
     gap: 8px;
 }
-
 /* =====================================================
-    Project Pagination
+    Project Header - Design
 ===================================================== */
 
-.project-pagination {
-    display: flex;
-    justify-content: center;
-
-    margin-top: 28px;
-}
-
-.project-pagination .page-link {
-    color: #475569;
-
-    border-color: #e5e7eb;
-}
-
-.project-pagination .page-item.active .page-link {
-    background-color: #2563eb;
-    border-color: #2563eb;
-
-    color: white;
-}
-/* =====================================================
-    Project 모바일
-===================================================== */
-
-@media (max-width: 768px) {
-
-    .project-page-header {
-        align-items: flex-start;
-        flex-direction: column;
-
-        gap: 10px;
-    }
-
-    .project-page-title {
-        font-size: 21px;
-    }
-
-    .project-form-card {
-        padding: 20px 16px;
-    }
-
-    .project-form-actions {
-        flex-direction: column-reverse;
-    }
-
-    .project-form-actions .btn {
-        width: 100%;
-    }
-
-    .project-result-row {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .project-result-actions {
-        width: 100%;
-    }
-
-    .project-result-actions .btn {
+    .project-header-main {
+        min-width: 0;
         flex: 1;
     }
 
-    .project-member-actions {
-        flex-wrap: wrap;
-        justify-content: flex-end;
+    .project-header-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        margin-bottom: 7px;
     }
 
-    .project-search-area {
-        align-items: stretch;
-        flex-direction: column;
+
+    /* 공개 범위 */
+
+    .project-visibility {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        flex-shrink: 0;
     }
 
-    .project-search-input {
-        max-width: none;
+    .project-visibility.public {
+        color: #2563eb;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
     }
+
+    .project-visibility.private {
+        color: #64748b;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+
+    /* 오른쪽 */
+
+    .project-header-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        font-size: 14px;
+    }
+
+    .project-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+
+    /* 기대결과 / 멤버관리 */
+
+    .project-header-button {
+        padding: 6px 11px !important;
+
+        background-color: #ffffff !important;
+
+        border: 1px solid #dbe3ee !important;
+        border-radius: 7px !important;
+
+        color: #475569 !important;
+
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+
+    .project-header-button:hover {
+        color: #2563eb !important;
+
+        border-color: #93c5fd !important;
+        background-color: #eff6ff !important;
+    }
+
+
+    /* 상태 */
+
+    .project-header-status {
+        display: inline-flex;
+        align-items: center;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .project-header-status.active {
+        color: #15803d;
+        background-color: #dcfce7;
+    }
+
+    .project-header-status.closed {
+        color: #64748b;
+        background-color: #f1f5f9;
+    }
+
+
+    /* 프로젝트 권한 */
+
+    .project-header-role {
+        display: inline-flex;
+        align-items: center;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        color: #2563eb;
+        background-color: #eff6ff;
+
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+/* =====================================================
+    Project Manage Dropdown
+===================================================== */
+
+    .project-manage-dropdown {
+        padding: 7px 13px !important;
+
+        background-color: #2563eb !important;
+
+        border: 1px solid #2563eb !important;
+        border-radius: 7px !important;
+
+        color: #ffffff !important;
+
+        font-size: 13px !important;
+        font-weight: 600 !important;
+    }
+
+    .project-manage-dropdown:hover,
+    .project-manage-dropdown:focus,
+    .project-manage-dropdown:active,
+    .project-manage-dropdown.show {
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+
+        box-shadow: none !important;
+    }
+
+
+    .project-manage-menu {
+        min-width: 175px;
+
+        margin-top: 6px !important;
+        padding: 6px;
+
+        border: 1px solid #e5e7eb !important;
+        border-radius: 9px !important;
+
+        box-shadow:
+            0 8px 24px rgba(15, 23, 42, 0.12);
+    }
+
+
+    .project-manage-menu .dropdown-item {
+        padding: 9px 11px;
+
+        border-radius: 6px;
+
+        color: #374151;
+
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .project-manage-menu .dropdown-item:hover {
+        color: #2563eb;
+        background-color: #eff6ff;
+    }
+
+
+    /* 삭제만 위험 색상 */
+
+    .project-manage-menu
+    .project-manage-delete {
+        color: #dc2626;
+    }
+
+    .project-manage-menu
+    .project-manage-delete:hover {
+        color: #b91c1c;
+        background-color: #fef2f2;
+    }
+
+
+    /* 프로젝트 활성화 */
+
+    .project-activate-button {
+        min-width: auto !important;
+
+        padding: 7px 13px !important;
+
+        font-size: 13px !important;
+    }
+
+/* =====================================================
+    Project Expected Result Modal
+===================================================== */
+
+/* 기대결과 등록 */
+
+    .project-result-add-area {
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+
+        padding: 14px;
+        margin-bottom: 20px;
+
+        background-color: #f8fafc;
+
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+    .project-result-input {
+        min-height: 40px;
+
+        border-color: #d1d5db !important;
+        border-radius: 7px !important;
+
+        font-size: 13px !important;
+    }
+
+    .project-result-input:focus {
+        border-color: #2563eb !important;
+
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    }
+
+    .project-result-add-button {
+        min-width: 70px !important;
+        flex-shrink: 0;
+
+        padding: 8px 15px !important;
+
+        font-size: 13px !important;
+    }
+
+
+/* =====================================================
+    Expected Result List
+===================================================== */
+
+    .project-result-list {
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .project-result-list-item {
+        padding: 16px 8px !important;
+
+        border-color: #f1f5f9 !important;
+    }
+
+    .project-result-list-item:hover {
+        background-color: #fafbfc;
+    }
+
+    .project-result-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 16px;
+    }
+
+
+    /* 왼쪽 내용 */
+
+    .project-result-main {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        flex: 1;
+        min-width: 0;
+    }
+
+    .project-result-order {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+
+        width: 28px;
+        height: 28px;
+
+        flex-shrink: 0;
+
+        border-radius: 50%;
+
+        background-color: #eff6ff;
+        color: #2563eb;
+
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .project-result-content {
+        min-width: 0;
+
+        font-size: 14px;
+        color: #374151;
+
+        word-break: break-word;
+    }
+
+
+    /* 수정 입력창 */
+
+    .project-result-edit-input {
+        min-height: 36px;
+
+        border-color: #2563eb !important;
+
+        font-size: 13px !important;
+
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.08) !important;
+    }
+
+
+    /* 오른쪽 버튼 */
+
+    .project-result-actions {
+        display: flex;
+        align-items: center;
+
+        gap: 7px;
+
+        flex-shrink: 0;
+    }
+
+
+    /* 수정 */
+
+    .project-result-edit-button {
+        background-color: #ffffff !important;
+
+        border: 1px solid #93c5fd !important;
+
+        color: #2563eb !important;
+
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    .project-result-edit-button:hover {
+        background-color: #eff6ff !important;
+        border-color: #2563eb !important;
+
+        color: #1d4ed8 !important;
+    }
+
+
+    /* 저장 */
+
+    .project-result-save-button {
+        background-color: #2563eb !important;
+        border: 1px solid #2563eb !important;
+
+        color: #ffffff !important;
+
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    .project-result-save-button:hover {
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+    }
+
+
+    /* 수정 취소 */
+
+    .project-result-cancel-button {
+        background-color: #ffffff !important;
+
+        border: 1px solid #d1d5db !important;
+
+        color: #64748b !important;
+
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    .project-result-cancel-button:hover {
+        background-color: #f8fafc !important;
+        border-color: #9ca3af !important;
+
+        color: #374151 !important;
+    }
+
+
+    /* 삭제 */
+
+    .project-result-delete-button {
+        background-color: #ffffff !important;
+
+        border: 1px solid #fecaca !important;
+
+        color: #dc2626 !important;
+
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    .project-result-delete-button:hover {
+        background-color: #fef2f2 !important;
+        border-color: #dc2626 !important;
+
+        color: #b91c1c !important;
+    }
+
+
+    /* 기대결과 없음 */
+
+    .project-result-empty {
+        padding: 60px 20px;
+
+        text-align: center;
+
+        color: #9ca3af;
+
+        font-size: 14px;
+    }
+
+    /* =====================================================
+    My Project List
+===================================================== */
+
+.my-project-card {
+    position: relative;
+
+    border: 1px solid #e5e7eb !important;
+    border-radius: 13px !important;
+
+    background-color: #ffffff;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.04);
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+
+/* 카드 상단 공통색 선 */
+.my-project-card:hover {
+    transform: translateY(-3px);
+
+    border-color: #bfdbfe !important;
+
+    box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.09);
+}
+
+
+.my-project-card-body {
+    display: flex;
+    flex-direction: column;
+
+    padding: 24px !important;
+}
+
+
+/* =====================================================
+    Card Header
+===================================================== */
+
+.my-project-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 14px;
+}
+
+
+.my-project-title {
+    margin: 0 !important;
+
+    color: #111827;
+
+    font-size: 17px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.4;
+}
+
+
+/* =====================================================
+    Project Role
+===================================================== */
+
+.my-project-role {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    min-width: 68px;
+
+    padding: 4px 9px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* OWNER */
+
+.my-project-role.owner {
+    color: #ffffff;
+    background-color: #2563eb;
+}
+
+
+/* MANAGER */
+
+.my-project-role.manager {
+    color: #2563eb;
+
+    background-color: #eff6ff;
+
+    border: 1px solid #bfdbfe;
+}
+
+
+/* MEMBER */
+
+.my-project-role.member {
+    color: #64748b;
+
+    background-color: #f1f5f9;
+
+    border: 1px solid #e2e8f0;
+}
+
+
+/* =====================================================
+    Project Purpose
+===================================================== */
+
+.my-project-purpose {
+    min-height: 42px;
+
+    margin-top: 18px !important;
+    margin-bottom: 0 !important;
+
+    color: #64748b !important;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+
+/* =====================================================
+    Meta
+===================================================== */
+
+.my-project-meta {
+    display: flex;
+    align-items: center;
+
+    margin-top: 18px;
+}
+
+
+/* =====================================================
+    Project Period
+===================================================== */
+
+.my-project-period {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    margin-top: 18px;
+    padding-top: 16px;
+
+    border-top: 1px solid #f1f5f9;
+}
+
+
+.my-project-period-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 15px;
+
+    font-size: 12px;
+}
+
+
+.my-project-period-row span {
+    color: #9ca3af;
+}
+
+
+.my-project-period-row strong {
+    color: #475569;
+
+    font-weight: 500;
+}
+
+
+/* =====================================================
+    Empty
+===================================================== */
+
+.my-project-empty {
+    padding: 80px 20px;
+
+    background-color: #ffffff;
+
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+
+    text-align: center;
+}
+
+
+.my-project-empty-title {
+    color: #374151;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.my-project-empty-description {
+    margin-top: 7px;
+
+    color: #9ca3af;
+
+    font-size: 13px;
 }
