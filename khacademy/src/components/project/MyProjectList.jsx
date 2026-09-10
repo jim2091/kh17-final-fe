@@ -3,7 +3,6 @@ import { Badge, Card, Col, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
-// import "../Project.css";
 
 export default function MyProjectList() {
     //프로젝트 목록
@@ -59,93 +58,152 @@ export default function MyProjectList() {
             </div>
         )
     }
-    return (<>
-       
-       {/* 제목 */}
-       <Row className="mt-4 mb-4">
-            <Col>
-                <h3 className="fw-bold">
-                    내 프로젝트
-                </h3>
-            </Col>
-            
-            <div className="text-muted">
-                현재 참여하고 있는 프로젝트입니다.
+    return (
+        <div className="project-page">
+
+            {/* 페이지 제목 */}
+            <div className="project-page-header mt-4 mb-4">
+
+                <div className="ms-3">
+                    <h3 className="project-page-title">
+                        내 프로젝트
+                    </h3>
+                </div>
+
+                {/* 프로젝트 개수 */}
+                <div className="project-page-count ms-3">
+                    참여 프로젝트
+                    <strong>
+                        {projectList.length}
+                    </strong>
+                    개
+                </div>
+
             </div>
-       </Row>
 
-       {/* 프로젝트가 없는 경우 */}
-       {projectList.length === 0 && (
-            <Row>
-                <Col>
-                    <div className="text-center text-muted py-5">
 
-                        <h5>
-                            참여 중인 프로젝트가 없습니다.
-                        </h5>
+            {/* 프로젝트가 없는 경우 */}
+            {projectList.length === 0 ? (
+
+                <div className="my-project-empty">
+
+                    <div className="my-project-empty-title">
+                        참여 중인 프로젝트가 없습니다.
                     </div>
-                </Col>
-            </Row>
-       )}
 
-       {/* 프로젝트 목록 */}
-       <Row>
-        {projectList.map(project =>(
-            <Col key={project.projectNo} xs={12} md={6}
-                    xl={4} className="mb-4">
-                <Card className="h-100 project-card"
-                    onClick={()=> moveProject(project.projectNo)}
-                    style={{cursor:"pointer"}}>
+                    <div className="my-project-empty-description">
+                        공개 프로젝트에 참여하거나 새로운 프로젝트를 만들어보세요.
+                    </div>
 
-                    <Card.Body>
-                        {/* 프로젝트 제목 */}
-                        <div className="d-flex justify-content-between align-item-start">
-                            <Card.Title className="fw-bold">
-                                {project.projectName}
-                            </Card.Title>
+                </div>
 
-                            {/* 권한 */}
-                            <Badge
-                                bg={{
-                                    owner: "primary",
-                                    manager: "success",
-                                    member: "secondary"
-                                }[project.projectMemberRole]}
+            ) : (
+
+                /* 프로젝트 목록 */
+                <Row>
+
+                    {projectList.map(project => (
+
+                        <Col
+                            key={project.projectNo}
+                            xs={12}
+                            md={6}
+                            xl={4}
+                            className="mb-4"
+                        >
+
+                            <Card
+                                className="h-100 my-project-card"
+                                onClick={() =>
+                                    moveProject(project.projectNo)
+                                }
                             >
-                                {project.projectMemberRole}
-                            </Badge>
-                        </div>
 
-                        {/* 프로젝트 목적 */}
-                        <Card.Text className="text-muted mt-3">
-                            {project.projectPurpose}
-                        </Card.Text>
+                                <Card.Body className="my-project-card-body">
 
-                        {/* 공개범위 */}
-                        <div className="mt-3">
+                                    {/* 상단 */}
+                                    <div className="my-project-card-header">
 
-                            <Badge
-                                bg={project.projectVisibility === "public" ? "info" : "secondary"}>
-                                    {project.projectVisibility === "public" ? "공개" : "비공개"}
-                            </Badge>
-                        </div>
+                                        {/* 프로젝트명 */}
+                                        <Card.Title className="my-project-title">
+                                            {project.projectName}
+                                        </Card.Title>
 
-                        {/* 프로젝트 기간 */}
-                        <div className="mt-3 small text-muted">
-                            <div>
-                                시작일 : {formatDate(project.projectStart)}
-                            </div>
 
-                            <div>
-                                마감일 : {formatDate(project.projectDeadline)}
-                            </div>
-                        </div>
+                                        {/* 프로젝트 권한 */}
+                                        <span
+                                            className={
+                                                `my-project-role ${project.projectMemberRole}`
+                                            }
+                                        >
+                                            {project.projectMemberRole?.toUpperCase()}
+                                        </span>
 
-                    </Card.Body>
-                </Card>
-            
-            </Col>
-        ))}
-       </Row>
-    </>)
+                                    </div>
+
+
+                                    {/* 프로젝트 목적 */}
+                                    <Card.Text className="my-project-purpose">
+                                        {project.projectPurpose}
+                                    </Card.Text>
+
+
+                                    {/* 공개 범위 */}
+                                    <div className="my-project-meta">
+
+                                        <span
+                                            className={
+                                                project.projectVisibility === "public"
+                                                    ? "project-visibility public"
+                                                    : "project-visibility private"
+                                            }
+                                        >
+                                            {project.projectVisibility === "public"
+                                                ? "공개"
+                                                : "비공개"
+                                            }
+                                        </span>
+
+                                    </div>
+
+
+                                    {/* 프로젝트 기간 */}
+                                    <div className="my-project-period">
+
+                                        <div className="my-project-period-row">
+                                            <span>
+                                                시작일
+                                            </span>
+
+                                            <strong>
+                                                {formatDate(project.projectStart)}
+                                            </strong>
+                                        </div>
+
+                                        <div className="my-project-period-row">
+                                            <span>
+                                                마감일
+                                            </span>
+
+                                            <strong>
+                                                {formatDate(project.projectDeadline)}
+                                            </strong>
+                                        </div>
+
+                                    </div>
+
+                                </Card.Body>
+
+                            </Card>
+
+                        </Col>
+
+                    ))}
+
+                </Row>
+
+            )}
+
+        </div>
+    );
 }

@@ -1,10 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
-
-import "./Project.css";
 import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "../utils/reaxios";
 import { toast } from "react-toastify";
-import { Badge, Button, Spinner } from "react-bootstrap";
+import { Badge, Button, Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import ProjectMemberModal from "../components/project/ProjectMemberModal";
 import ProjectExpectedResultModal from "../components/project/ProjectExpectedResultModal";
@@ -100,90 +98,168 @@ export default function ProjectHeader({project, loadProject}) {
     return (
         <div className="project-header">
 
-            {/* 프로젝트 기본 정보 */}
+            {/* 왼쪽 - 프로젝트 정보 */}
             <div className="project-header-main">
 
-                <div className="d-flex align-items-center">
-                    {/* 프로젝트 제목 */}
+                <div className="project-header-title-row">
+
                     <div className="project-title">
                         {project.projectName}
                     </div>
 
-                    {/* 프로젝트 공개범위 */}
-                    <Badge
-                        bg={project.projectVisibility === "public" ? "info" : "secondary"}>
-                            {project.projectVisibility === "public" ? "공개" : "비공개"}
-                    </Badge>
+                    <span
+                        className={
+                            project.projectVisibility === "public"
+                                ? "project-visibility public"
+                                : "project-visibility private"
+                        }
+                    >
+                        {project.projectVisibility === "public"
+                            ? "공개"
+                            : "비공개"
+                        }
+                    </span>
+
+                    {/* 프로젝트 상태 */}
+                    <span
+                        className={
+                            isActive
+                                ? "project-header-status active"
+                                : "project-header-status closed"
+                        }
+                    >
+                        {isActive
+                            ? "진행중"
+                            : "종료"
+                        }
+                    </span>
+
+
+                    {/* 프로젝트 권한 */}
+                    <span className="project-header-role">
+                        {project.projectMemberRole
+                            ?.toUpperCase()}
+                    </span>
+
                 </div>
-                
-                    {/* 프로젝트 설명 */}
-                    <div className="project-description">
-                        {project.projectPurpose}                    
-                    </div>
+
+
+                <div className="project-description">
+                    {project.projectPurpose}
+                </div>
+
             </div>
 
-            {/* 오른쪽 영역 */}
+
+            {/* 오른쪽 - 관리 영역 */}
             <div className="project-header-info">
-                <Button size="sm" variant="outline-secondary"
-                        onClick={()=> setShowResult(true)}>
+                    
+                {/* 기능 버튼 */}
+                <div className="project-header-actions">
+
+                    <Button
+                        size="sm"
+                        className="project-header-button"
+                        onClick={() =>
+                            setShowResult(true)
+                        }
+                    >
                         기대결과
-                </Button>
+                    </Button>
 
-                <Button size="sm" variant="outline-secondary"
-                        onClick={()=> setShowMember(true)}>
+                    <Button
+                        size="sm"
+                        className="project-header-button"
+                        onClick={() =>
+                            setShowMember(true)
+                        }
+                    >
                         멤버관리
-                </Button>
-                <ProjectMemberModal 
-                    show={showMember}
-                    onHide={()=>setShowMember(false)}
-                    projectNo={projectNo}
-                    project = {project}
-                    loadProject = {loadProject}
-                />
-                <ProjectExpectedResultModal 
-                    show={showResult} 
-                    onHide={()=>setShowResult(false)}
-                    projectNo={projectNo} 
-                    project={project}
-                />
-                {/* 상태 */}
-                <Badge
-                    bg={project.projectStatus === "active" ? "success" : "secondary"}>
-                        {project.projectStatus === "active" ? "진행중" : "종료"}
-                </Badge>
+                    </Button>
 
-                {/* 현재 사용자의 프로젝트 권한 */}
-                <Badge bg="primary">
-                    {project.projectMemberRole}
-                </Badge>
+                </div>
 
-                {/* active 프로젝트 owner */}
+                {/* active OWNER 관리 */}
                 {isActive && isOwner && (
-                    <div className="d-flex me-2 gap-1">
-                        <Button size="sm" variant="outline-primary"
-                                onClick={moveEdit}>
-                            수정
-                        </Button>
 
-                        <Button size="sm" variant="outline-warning"
-                                onClick={moveClose}>
-                            종료
-                        </Button>
+                    <Dropdown align="end">
 
-                        <Button size="sm" variant="outline-danger"
-                                onClick={deleteProject}>
-                            삭제
-                        </Button>
-                    </div>
+                        <Dropdown.Toggle
+                            size="sm"
+                            className="project-manage-dropdown"
+                        >
+                            프로젝트 관리
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu
+                            className="project-manage-menu"
+                        >
+
+                            <Dropdown.Item
+                                onClick={moveEdit}
+                            >
+                                프로젝트 수정
+                            </Dropdown.Item>
+
+                            <Dropdown.Item
+                                onClick={moveClose}
+                            >
+                                프로젝트 종료
+                            </Dropdown.Item>
+
+                            <Dropdown.Divider/>
+
+                            <Dropdown.Item
+                                className="project-manage-delete"
+                                onClick={deleteProject}
+                            >
+                                프로젝트 삭제
+                            </Dropdown.Item>
+
+                        </Dropdown.Menu>
+
+                    </Dropdown>
+
                 )}
-                {/* closed 프로젝트 owner */}
+
+
+                {/* closed OWNER */}
                 {isClosed && isOwner && (
-                    <Button size="sm" variant="success"
-                            onClick={activateProject}>
+
+                    <Button
+                        size="sm"
+                        className="project-primary-button project-activate-button"
+                        onClick={activateProject}
+                    >
                         프로젝트 활성화
                     </Button>
+
                 )}
+
             </div>
+
+
+            {/* 멤버 모달 */}
+            <ProjectMemberModal
+                show={showMember}
+                onHide={() =>
+                    setShowMember(false)
+                }
+                projectNo={projectNo}
+                project={project}
+                loadProject={loadProject}
+            />
+
+
+            {/* 기대결과 모달 */}
+            <ProjectExpectedResultModal
+                show={showResult}
+                onHide={() =>
+                    setShowResult(false)
+                }
+                projectNo={projectNo}
+                project={project}
+            />
 
         </div>
     );

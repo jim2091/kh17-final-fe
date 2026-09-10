@@ -194,120 +194,228 @@ export default function ProjectMemberModal({
     },[projectNo,loadMemberList]);
 
     return(
-        <Modal show={show} onHide={onHide} centered size="lg">
-            <Modal.Header closeButton>
-                <Modal.Title>
-                    프로젝트 멤버
-                </Modal.Title>
+        <Modal
+            show={show}
+            onHide={onHide}
+            centered
+            size="lg"
+            className="project-modal"
+        >
+
+            {/* 헤더 */}
+            <Modal.Header
+                closeButton
+                className="project-modal-header"
+            >
+                <div>
+                    <Modal.Title className="project-modal-title">
+                        프로젝트 멤버
+                    </Modal.Title>
+
+                    <div className="project-modal-description">
+                        프로젝트에 참여중인 멤버와 권한을 관리할 수 있습니다.
+                    </div>
+                </div>
             </Modal.Header>
 
-            <Modal.Body>
-                {/* 인원수 */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="text-muted">
+
+            <Modal.Body className="project-modal-body">
+
+                {/* 참여 인원 */}
+                <div className="project-modal-count">
+
+                    <div>
                         현재 참여 인원
                     </div>
 
-                    <Badge bg="primary">
+                    <span className="project-member-count">
                         {memberList.length}명
-                    </Badge>
+                    </span>
+
                 </div>
+
 
                 {/* 로딩 */}
                 {loading === true ? (
-                    <div className="text-center py-5">
-                        <Spinner animation="border"/>
-                        <div className="mt-2">
+
+                    <div className="project-modal-loading">
+
+                        <Spinner
+                            animation="border"
+                            className="project-modal-spinner"
+                        />
+
+                        <div>
                             멤버 정보를 불러오는 중입니다...
                         </div>
+
                     </div>
+
                 ) : (
-                    <ListGroup variant="flush">
+
+                    <ListGroup
+                        variant="flush"
+                        className="project-member-list"
+                    >
+
                         {memberList.map(member => (
-                            <ListGroup.Item key={member.projectMemberNo}>
-                                <div className="d-flex justify-content-between align-items-center">
+
+                            <ListGroup.Item
+                                key={member.projectMemberNo}
+                                className="project-modal-list-item"
+                            >
+
+                                <div className="project-member-row">
+
                                     {/* 사원 정보 */}
-                                    <div>
-                                        <div className="fw-bold">
+                                    <div className="project-member-info">
+
+                                        <div className="project-member-name">
                                             {member.empName}
                                         </div>
 
-                                        {member.projectMemberJob &&(
-                                            <div className="small text-muted mt-1">
+                                        {member.projectMemberJob && (
+                                            <div className="project-member-job">
                                                 {member.projectMemberJob}
                                             </div>
                                         )}
+
                                     </div>
-                                    {/* 권한 */}
-                                    <div className="d-flex align-items-center gap-2">
-                                        {/* owner */}
+
+
+                                    {/* 권한 / 관리 */}
+                                    <div className="project-member-actions">
+
+                                        {/* OWNER */}
                                         {member.projectMemberRole === "owner" ? (
-                                            <Badge bg="primary">
+
+                                            <span className="project-role-badge owner">
                                                 OWNER
-                                            </Badge>
+                                            </span>
+
                                         ) : isOwner && isClosed === false ? (
-                                            <Form.Select size="sm"
+
+                                            /* OWNER가 다른 멤버 권한 변경 */
+                                            <Form.Select
+                                                size="sm"
+                                                className="project-member-role-select"
                                                 value={member.projectMemberRole}
-                                                onChange ={(e)=> changeMemberRole(member,e.target.value)}>
+                                                onChange={(e) =>
+                                                    changeMemberRole(
+                                                        member,
+                                                        e.target.value
+                                                    )
+                                                }
+                                            >
 
-                                                    <option value="manager">
-                                                        MANAGER
-                                                    </option>
+                                                <option value="manager">
+                                                    MANAGER
+                                                </option>
 
-                                                    <option value="member">
-                                                        MEMBER
-                                                    </option>
+                                                <option value="member">
+                                                    MEMBER
+                                                </option>
+
                                             </Form.Select>
-                                        ) :(
-                                           <Badge bg={member.projectMemberRole === "manager" ? "success" : "secondary"}>
+
+                                        ) : (
+
+                                            /* 일반 사용자는 보기만 */
+                                            <span
+                                                className={
+                                                    member.projectMemberRole === "manager"
+                                                        ? "project-role-badge manager"
+                                                        : "project-role-badge member"
+                                                }
+                                            >
                                                 {member.projectMemberRole.toUpperCase()}
-                                           </Badge>
+                                            </span>
+
                                         )}
 
-                                        {/* owner위임 */}
-                                        {isOwner && isClosed === false && 
-                                                member.projectMemberRole !== "owner" &&(
-                                            <Button size="sm" variant="outline-danger"
-                                                    onClick={()=> changeOwner(member)}>
-                                                owner 위임
+
+                                        {/* OWNER 위임 */}
+                                        {isOwner &&
+                                            isClosed === false &&
+                                            member.projectMemberRole !== "owner" && (
+
+                                            <Button
+                                                size="sm"
+                                                className="project-owner-transfer-button"
+                                                onClick={() =>
+                                                    changeOwner(member)
+                                                }
+                                            >
+                                                OWNER 위임
                                             </Button>
 
                                         )}
-                                        {isOwner && isClosed === false &&
-                                                member.projectMemberRole !== "owner" &&(
-                                            <Button size="sm" variant="outline-danger"
-                                                    onClick={()=> kickMember(member)}>
+
+
+                                        {/* 강제퇴장 */}
+                                        {isOwner &&
+                                            isClosed === false &&
+                                            member.projectMemberRole !== "owner" && (
+
+                                            <Button
+                                                size="sm"
+                                                className="project-kick-button"
+                                                onClick={() =>
+                                                    kickMember(member)
+                                                }
+                                            >
                                                 강제퇴장
                                             </Button>
-                                                        
+
                                         )}
 
                                     </div>
+
                                 </div>
+
                             </ListGroup.Item>
+
                         ))}
+
                     </ListGroup>
+
                 )}
+
             </Modal.Body>
 
-            <Modal.Footer>
-                {/* OWNER */}
+
+            {/* 하단 */}
+            <Modal.Footer className="project-modal-footer">
+
+                {/* 멤버 초대 */}
                 {canInvite && isClosed === false && (
-                    <Button variant="primary"
-                        onClick={()=>{
-                            toast.info("아직안됌")
-                        }}>
+
+                    <Button
+                        className="project-primary-button"
+                        onClick={() => {
+                            toast.info("아직안됌");
+                        }}
+                    >
                         멤버 초대
                     </Button>
+
                 )}
 
-                {/* 프로젝트 초대 */}
+
+                {/* 프로젝트 탈퇴 */}
                 {isClosed === false && (
-                    <Button variant="outline-danger" onClick={leaveProject}>
+
+                    <Button
+                        className="project-leave-button"
+                        onClick={leaveProject}
+                    >
                         프로젝트 탈퇴
                     </Button>
+
                 )}
+
             </Modal.Footer>
+
         </Modal>
     );
 }
