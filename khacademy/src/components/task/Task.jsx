@@ -48,14 +48,17 @@ export default function Task() {
   };
 
   const loginUser = getDynamicLoginUser();
+  //숨김 처리를 위한 현재 로그인한 사원번호
   const currentEmpNo = Number(loginUser?.empNo || loginUser?.memberNo || 0);
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projectMembers, setProjectMembers] = useState([]);
 
+  //사번과 프로젝트 번호를 결합하여 개인별 키 생성
   const storageKey = `kanban_hidden_tasks_${currentEmpNo}_${projectNo}`;
 
+  // 초기 렌더링 시 localStorage 에서 숨김 처리된 업무를 읽어옴
   const [hiddenTaskNos, setHiddenTaskNos] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -65,9 +68,11 @@ export default function Task() {
     }
   });
 
+
   const [isHideMode, setIsHideMode] = useState(false);
   const [tempHiddenNos, setTempHiddenNos] = useState([]);
 
+  //사원번호나 프로젝트 번호가 바뀔 때 동기화 실시
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -77,6 +82,29 @@ export default function Task() {
     }
   }, [storageKey]);
 
+  //근데 숨김만 되고 복구가 안됨
+  /*
+  // 개별 숨김 토글
+  const handleToggleHidden = (taskNo, e) => {
+    if (e) e.stopPropagation(); // 드로어 이벤트 차단
+
+    setHiddenTaskNos((prev) => {
+      const updated = prev.includes(taskNo)
+      ? prev.filter((id) => id !== taskNo) // 이미 숨겨져 있으면 숨김 해제
+      : [...prev, taskNo];                 // 아니면 숨김 목록에 추가
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
+    });
+  };
+  
+  // 전체 복구
+  const handleRestoreAll = () => {
+    setHiddenTaskNos([]);
+    localStorage.removeItem(storageKey);
+  };
+  */
+
+  //숨김
   const handleEnterHideMode = () => {
     setTempHiddenNos([...hiddenTaskNos]);
     setIsHideMode(true);
@@ -96,6 +124,7 @@ export default function Task() {
     toast.success("업무 숨김 설정이 적용되었습니다.");
   };
 
+  //숨김 취소 처리
   const handleCancelHideMode = () => {
     setTempHiddenNos([]);
     setIsHideMode(false);
@@ -169,45 +198,24 @@ export default function Task() {
     return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name);
   };
 
+  //첨부파일 확장자에 따라 다른 뱃지
+  const getBadgeClass = (ext) => {
+    if (["pdf"].includes(ext)) return "badge-pdf";
+    if (["doc", "docx", "hwp", "hwpx", "txt"].includes(ext)) return "badge-doc";
+    if (["xls", "xlsx", "csv"].includes(ext)) return "badge-xls";
+    if (["ppt", "pptx"].includes(ext)) return "badge-ppt";
+    if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "badge-zip";
+    return "";
+  };
+
   const renderFileTypeBadge = (file) => {
     const name = file.attachName || "";
     const rawExt = name.includes(".") ? name.split(".").pop().trim() : "FILE";
     const extUpper = rawExt.toUpperCase();
     const extLower = rawExt.toLowerCase();
 
-    let bgColor = "#f1f5f9";
-    let textColor = "#475569";
-
-    if (["pdf"].includes(extLower)) {
-      bgColor = "#fee2e2";
-      textColor = "#dc2626";
-    } else if (["doc", "docx", "hwp", "hwpx", "txt"].includes(extLower)) {
-      bgColor = "#e0e7ff";
-      textColor = "#4338ca";
-    } else if (["xls", "xlsx", "csv"].includes(extLower)) {
-      bgColor = "#dcfce7";
-      textColor = "#15803d";
-    } else if (["ppt", "pptx"].includes(extLower)) {
-      bgColor = "#ffedd5";
-      textColor = "#ea580c";
-    } else if (["zip", "rar", "7z", "tar", "gz"].includes(extLower)) {
-      bgColor = "#fef3c7";
-      textColor = "#d97706";
-    }
-
     return (
-      <span
-        style={{
-          backgroundColor: bgColor,
-          color: textColor,
-          padding: "2px 6px",
-          borderRadius: "4px",
-          fontSize: "11px",
-          fontWeight: "bold",
-          letterSpacing: "0.02em",
-          flexShrink: 0
-        }}
-      >
+      <span className={`file-ext-badge ${getBadgeClass(extLower)}`}>
         {extUpper}
       </span>
     );
@@ -273,6 +281,7 @@ export default function Task() {
     setIsEditing(false);
   }, []);
 
+  //웹소켓을 이용한 칸반변경 이벤트 실시간 수신 처리
   useEffect(() => {
     if (!projectNo) return;
 
@@ -293,6 +302,7 @@ export default function Task() {
             return;
           }
 
+          //업무 이동 시
           switch (event.eventType) {
             case "TASK_MOVED":
               setTasks((prev) =>
@@ -309,10 +319,12 @@ export default function Task() {
               );
               break;
 
+            //업무 생성 시
             case "TASK_CREATED":
               fetchTasks(projectNo, false);
               break;
 
+            //업무 수정 시
             case "TASK_UPDATED":
               fetchTasks(projectNo, false);
               setSelectedTask((prev) => {
@@ -324,7 +336,8 @@ export default function Task() {
                 return prev;
               });
               break;
-
+            
+            //업무 삭제 시
             case "TASK_DELETED":
               fetchTasks(projectNo, false);
               setSelectedTask((prev) => {
@@ -336,6 +349,8 @@ export default function Task() {
               });
               break;
 
+
+              //각종 댓글 이벤트 시
             case "COMMENT_ADDED":
             case "COMMENT_UPDATED":
             case "COMMENT_DELETED":
@@ -655,6 +670,9 @@ export default function Task() {
 
   if (loading) return <div className="kanban-loading">칸반 보드를 불러오는 중...</div>;
 
+
+
+  //view
   return (
     <div className="custom-kanban-page">
       <div className="kanban-title-bar">
