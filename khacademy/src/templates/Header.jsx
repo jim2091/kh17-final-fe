@@ -37,7 +37,7 @@ export default function Header({ toggleSidebar }) {
 
     const logoutAction = useSetAtom(logoutActionState);
 
-    
+    const [showProfile, setShowProfile] = useState(false);
 
     // const { users } = useWebSocket();
 
@@ -126,7 +126,12 @@ export default function Header({ toggleSidebar }) {
                     </>)}
                     {isLogin === true && (<>
 
-                        <OverlayTrigger trigger="click" placement="bottom" rootClose={true}
+                        <OverlayTrigger 
+                        trigger="click" 
+                        placement="bottom" 
+                        rootClose={true}
+                        show={showProfile}
+                        onToggle={setShowProfile}
                             overlay={
                                 <Popover id="popover-positioned-bottom">
                                     <Popover.Body>
@@ -134,17 +139,19 @@ export default function Header({ toggleSidebar }) {
                                             <Card.Body>
                                                 <Row className="align-items-center">
                                                     <Col xs="auto">
-                                                        <Link to="/me">
+                                                        <Link to="/me" onClick={()=>setShowProfile(false)}>
                                                             <Image className="header-img rounded-3"
                                                              src={attachNo === null ? NoImage : profileUrl}
                                                                />
                                                         </Link>
                                                     </Col>
                                                     <Col>
-                                                        <Link to="/me" className="text-decoration-none">
+                                                        <Link to="/me" className="text-decoration-none"
+                                                         onClick={()=>setShowProfile(false)}>
                                                             <div>{empName}</div>
                                                         </Link>
-                                                        <Link to="/me" className="text-decoration-none">
+                                                        <Link to="/me" className="text-decoration-none"
+                                                         onClick={()=>setShowProfile(false)}>
                                                             <div>{empEmail}</div>
                                                         </Link>
                                                     </Col>
@@ -163,7 +170,10 @@ export default function Header({ toggleSidebar }) {
                                             <button
                                                 type="button"
                                                 className={`header-presence-option ${myPresence === "ONLINE" ? "selected" : ""}`}
-                                                onClick={() => changePresence("ONLINE")}
+                                                onClick={() => {
+                                                    changePresence("ONLINE");
+                                                    setShowProfile(false);
+                                                }}
                                             >
                                                 <span className="header-presence-dot online"></span>
                                                 온라인
@@ -171,7 +181,10 @@ export default function Header({ toggleSidebar }) {
                                             <button
                                                 type="button"
                                                 className={`header-presence-option ${myPresence === "AWAY" ? "selected" : ""}`}
-                                                onClick={() => changePresence("AWAY")}
+                                                onClick={() => {
+                                                    changePresence("AWAY");
+                                                    setShowProfile(false);
+                                                }}
                                             >
                                                 <span className="header-presence-dot away"></span>
                                                 자리비움
@@ -185,7 +198,10 @@ export default function Header({ toggleSidebar }) {
                                                     {isAdmin === true && (<>
                                                         <div className="header-presence-title">
                                                                 <button type="botton" 
-                                                                 onClick={() => navigate("/invite")}
+                                                                 onClick={() => {
+                                                                    navigate("/invite");
+                                                                    setShowProfile(false);
+                                                                 }}
                                                                     className="header-presence-option">
                                                                         <span className="header-dot"></span>
                                                                     사용자 초대하기
@@ -193,7 +209,10 @@ export default function Header({ toggleSidebar }) {
                                                         </div>
                                                         <div className="header-presence-title">
                                                                 <button type="button" 
-                                                                 onClick={() => navigate("/users")}
+                                                                 onClick={() => {
+                                                                    navigate("/users");
+                                                                    setShowProfile(false);
+                                                                 }}
                                                                     className="header-presence-option">
                                                                         <span className="header-dot"></span>
                                                                     관리

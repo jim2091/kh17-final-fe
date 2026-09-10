@@ -302,53 +302,21 @@ export default function Edit() {
                     </div>
                 </Card>
             </Row>
-            {/* <Row className="mt-5">
-
-                <div className="d-flex w-100">
-                    <Button as="label" variant="secondary">
-
-                        <Form.Control type="file" accept="image/*" name="empProfile"
-                            onChange={changeProfileImage}
-                            ref={empProfileRef} className="d-none"></Form.Control>
-
-                    </Button>
-                    {empProfile !== null && (
-                        <Button variant="secondary" onClick={clearEmpProfile}
-                            className="ms-2">
-                            <FaXmark />
-                        </Button>
-                    )}
-                </div>
-            </Row> */}
+            
 
             <Row className="mt-4">
                 <Col>
-                    {emp.empName} 님의 정보
+                    <span className="fs-3 text-nowrap">{emp.empName}</span>
+                    <span className="ms-3 text-secondary">{emp.deptName}</span>
+                    <span className="ms-3 text-secondary">{emp.positionName}</span>
+                    <span className="ms-3 text-secondary">{emp.empEmail}</span>
                 </Col>
             </Row>
-            <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info text-center">이메일</Col>
-                <Col sm={9} className="text-secondary">
-                    <span>{emp.empEmail}</span>
-                </Col>
-            </Row>
-            <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info text-center">부서</Col>
-                <Col sm={9} className="text-secondary">
-                    <span>{emp.deptName}</span>
-                </Col>
-            </Row>
-            <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info text-center">직급</Col>
-                <Col sm={9} className="text-secondary">
-                    <span>{emp.positionName}</span>
-                </Col>
-            </Row>
+            <div className="profile-line mt-1"></div>
+            
 
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info text-center">
-                    <span>생년월일</span>
-                </Form.Label>
+                <Col sm={3} className="fw-bold">생년월일</Col>
                 <Col sm={9}>
                     <DatePicker name="empBirth"
                         locale={ko}
@@ -362,17 +330,13 @@ export default function Edit() {
                         wrapperClassName="w-100"
                         onBlur={checkEmpBirth}
                         className={result.empBirth}
-                        showYearDropdown
-                        showMonthDropdown
                         dropdownMode="select"
                     />
                     <div className="invalid-feedback">올바른 날짜 형식이 아닙니다</div>
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info text-center">
-                    <span>연락처</span>
-                </Form.Label>
+                <Col sm={3} className="fw-bold">연락처</Col>
                 <Col sm={9}>
                     <Form.Control type="text" inputMode="tel" name="empContact"
                         value={emp.empContact ?? ""} onChange={changeStringValue}
@@ -382,9 +346,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info text-center">
-                    <span>주소</span>
-                </Form.Label>
+                <Col sm={3} className="fw-bold">주소</Col>
                 <Col sm={9}>
                     <div className="d-flex">
                         <Form.Control type="text" inputMode="numeric"
@@ -393,12 +355,12 @@ export default function Edit() {
                             className={`${result.empPost} w-auto d-inline-block`}
                             placeholder="우편번호"
                         />
-                        <Button variant="success" className="ms-2"
+                        <Button className="ms-2 mypage-edit"
                             onClick={addressSearch}>
                             <FaMagnifyingGlass />
                             <span className="d-none d-lg-inline-block">우편번호 검색</span>
                         </Button>
-                        <Button variant="danger" className="ms-2" onClick={clearAddress}
+                        <Button className="ms-2 mypage-edit" onClick={clearAddress}
                             style={
                                 {
                                     opacity: isAddressWritten === true ? 100 : 0,
@@ -433,12 +395,12 @@ export default function Edit() {
             </Row>
 
             <Row className="mt-4">
-                <Col sm={3} className="fw-bold text-info">비밀번호 변경</Col>
+                <Col sm={3} className="fw-bold">비밀번호 변경</Col>
                 <Col><hr /></Col>
             </Row>
 
             <Row className="mt-4">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold">
                     <FaAsterisk className="text-danger"/>
                     <span className="ms-2">기존 비밀번호</span>
                     {visible.prevEmpPassword === true ? (
@@ -463,7 +425,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-2">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold">
                     <span>새 비밀번호</span>
                     {visible.newEmpPassword1 === true ? (
                         <FaEye className="text-warning ms-4" onClick={e => {
@@ -486,7 +448,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <Row className="mt-2">
-                <Form.Label column sm={3} className="fw-bold text-info">
+                <Form.Label column sm={3} className="fw-bold">
                     <span>새 비밀번호 확인</span>
                     {visible.newEmpPassword2 === true ? (
                         <FaEye className="text-warning ms-4" onClick={e => {
