@@ -148,9 +148,11 @@
 /* 3단 칸반 보드 그리드 */
 .custom-kanban-board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
   gap: 20px;
   align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 16px;
 }
 
 /* 개별 컬럼 컨테이너 */
