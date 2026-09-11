@@ -13,6 +13,8 @@ import MessageInput from "./MessageInput";
 
 import "./Chat.css";
 
+import RecordLinkModal from "../records/RecordLinkModal";
+
 export default function Chat() {
     //● state
     const {projectNo} = useParams(); 
@@ -34,6 +36,10 @@ export default function Chat() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     //채널 구독 effect에서 channels를 연관항목에 넣지 않고 현재 채널을 알기 위한 Ref
     const selectedChannelRef = useRef(null);
+
+    //Record 연결 대상 메시지
+    const [recordTargetMessage, setRecordTargetMessage] = useState(null);
+    const [recordModalOpen, setRecordModalOpen] = useState(false);
 
 
     //● 채널 목록 불러오기
@@ -270,6 +276,18 @@ export default function Chat() {
         }
     };
 
+    //메세지를 Record로 남기기
+    const handleRecord = useCallback((message) => {
+        setRecordTargetMessage(message);
+        setRecordModalOpen(true);
+
+    }, []);
+
+    const closeRecordModal = useCallback(() => {
+        setRecordModalOpen(false);
+        setRecordTargetMessage(null);
+    }, []);
+
     // 구독 관리 effect
     useEffect(()=>{
         if(channels.length === 0) return;
@@ -455,6 +473,7 @@ export default function Chat() {
                     onLoadMore={loadMoreMessages}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onRecord={handleRecord}
                     isClosed={isClosed}
                 />
 
@@ -473,5 +492,17 @@ export default function Chat() {
 
             </div>
         </div>
+
+        {recordTargetMessage && (
+            <RecordLinkModal
+                show={recordModalOpen}
+                onHide={closeRecordModal}
+                projectNo={projectNo}
+                relatedType="MESSAGE"
+                relatedNo={recordTargetMessage.no}
+                relatedTitle={recordTargetMessage.content}
+            />
+        )}
+
     </>)
 }

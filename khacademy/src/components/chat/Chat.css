@@ -545,8 +545,20 @@
 
 /* 메세지 메뉴 */
 .message-menu-wrapper {
-     position: relative;
-     margin-top: 3px;
+     position: absolute;
+     bottom: 0;
+     margin-top: 0;
+     z-index: 20;
+}
+
+/* 상대방 메시지 - 말풍선 오른쪽 */
+.message-outer:not(.my) .message-menu-wrapper {
+    left: calc(100% + 4px);
+}
+
+/* 내 메시지 - 말풍선 왼쪽 */
+.message-outer.my .message-menu-wrapper {
+    right: calc(100% + 4px);
 }
 
 .message-menu-button {
@@ -586,6 +598,18 @@
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
+/* 상대방 메시지 - 오른쪽의 ...에서 왼쪽으로 메뉴 펼치기 */
+.message-outer:not(.my) .message-menu {
+    right: 0;
+    left: auto;
+}
+
+/* 내 메시지 - 왼쪽의 ...에서 오른쪽으로 메뉴 펼치기 */
+.message-outer.my .message-menu {
+    left: 0;
+    right: auto;
+}
+
 .message-menu button {
     width: 100%;
     display: flex;
@@ -600,11 +624,15 @@
     cursor: pointer;
 }
 
+.message-menu button span {
+    white-space: nowrap;
+}
+
 .message-menu button:hover {
     background-color: #f5f6f8;
 }
 
-.message-menu button:last-child:hover {
+.message-menu .message-menu-delete:hover {
     background-color: #fff1f1;
     color: #dc3545;
 }

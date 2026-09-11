@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
 import "./Files.css";
-
+import RecordLinkModal from "../records/RecordLinkModal";
 
 /*
  * ==================================================
@@ -70,6 +70,14 @@ export default function Files({
 
     // 파일 input
     const fileInputRef = useRef(null);
+
+    // Record 연결
+    const [recordModalOpen, setRecordModalOpen] = useState(false);
+    const [recordTargetFile, setRecordTargetFile] = useState(null);
+
+    const {project} = useOutletContext();
+
+    const isClosed = project?.projectStatus === "closed";
 
 
     // ==================================================
@@ -911,6 +919,19 @@ export default function Files({
 
     };
 
+    // ==================================================
+    // Record로 남기기
+    // ==================================================
+    const handleRecord = (file) => {
+        setRecordTargetFile(file);
+        setRecordModalOpen(true);
+    };
+
+    const closeRecordModal = () => {
+        setRecordModalOpen(false);
+        setRecordTargetFile(null);
+    }
+
 
     // ==================================================
     // 파일 크기
@@ -1335,6 +1356,27 @@ export default function Files({
 
     };
 
+    // ==================================================
+    // Record 아이콘
+    // ==================================================
+
+    const RecordIcon = () => {
+        return (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M6 3h12v18H6z" />
+                <path d="M9 8h6" />
+                <path d="M9 12h6" />
+                <path d="M9 16h4" />
+            </svg>
+        );
+    };
 
     // ==================================================
     // 화면
@@ -1451,6 +1493,9 @@ export default function Files({
                             크기
                         </div>
 
+                        <div className="files-col-record">
+                            Record
+                        </div>
 
                         <div className="files-col-delete">
                             삭제
@@ -1647,6 +1692,22 @@ export default function Files({
 
                                     </div>
 
+                                    {/* Record */}
+                                    <div className="files-col-record">
+                                        {!isClosed && (
+                                            <button
+                                                type="button"
+                                                className="files-record-button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRecord(file);
+                                                }}
+                                                title="Record로 남기기"
+                                            >
+                                                <RecordIcon/>
+                                            </button>
+                                        )}
+                                    </div>
 
                                     {/* 삭제 */}
 
@@ -1863,6 +1924,18 @@ export default function Files({
 
                 </div>
 
+            )}
+
+            {/* record 모달 */}
+            {recordTargetFile && (
+                <RecordLinkModal
+                    show={recordModalOpen}
+                    onHide={closeRecordModal}
+                    projectNo={projectNo}
+                    relatedType="ATTACH"
+                    relatedNo={recordTargetFile.attachNo}
+                    relatedTitle={recordTargetFile.attachName}
+                />
             )}
 
         </div>
