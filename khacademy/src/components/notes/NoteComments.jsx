@@ -48,7 +48,7 @@ export default function NoteComments({ noteNo, projectNo }) {
 
   // 인라인 미리보기를 지원하는 확장자 판별
   const canPreview = (fileName = "") => {
-    return /\.(docx|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
+    return /\.(docx|doc|hwp|hwpx|xlsx|xls|pptx|ppt|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
   };
 
   const { empNo: myEmpNo, empName: myEmpName } = getLoginUserInfo();

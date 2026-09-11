@@ -866,7 +866,6 @@ export default function Task() {
       <div className="kanban-title-bar">
         <div className="kanban-title-text">
           <h2>프로젝트 #{projectNo} 업무 보드</h2>
-          <p>카드를 드래그하여 상태를 변경하고, 클릭하여 상세 내역을 열람하세요.</p>
         </div>
 
         {/* 우측 상단 액션 그룹 */}
@@ -1332,7 +1331,6 @@ export default function Task() {
                         }}
                       >
                         <RotateCcw size={12} />
-                        복구
                       </button>
                     </div>
                   );

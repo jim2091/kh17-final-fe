@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
 import {
   ArrowLeft,
@@ -14,31 +14,44 @@ import Swal from "sweetalert2";
 import DocxPreview from "../docx-preview/DocxPreview";
 import NoteComments from "./NoteComments";
 import "./NoteDetail.css";
-import RecordLinkModal from "../records/RecordLinkModal";
-import { isCancel } from "axios";
 
 // 인라인 미리보기를 지원하는 확장자 판별 헬퍼
 const canPreview = (fileName = "") => {
-  return /\.(docx|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
+  return /\.(docx|doc|hwp|hwpx|xlsx|xls|pptx|ppt|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
 };
 
 export default function NoteDetail() {
   const { projectNo, noteNo } = useParams();
   const navigate = useNavigate();
 
-  const {project} = useOutletContext();
-  const isClosed = project?.projectStatus === "closed";
-
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
-
-  //Record 연결 모달
-  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   // 통합 문서 온라인 미리보기 대상 상태 { attachNo, fileName }
   const [previewDocx, setPreviewDocx] = useState(null);
 
-  // 노트 상세 정보 및 첨부파일 목록 조회
+  // 1. 로그인 유저의 사번/멤버 식별 정보 추출 (localStorage & sessionStorage)
+  const loginUserInfo = useMemo(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const val = localStorage.getItem(key);
+        if (val && val.includes("empNo")) {
+          const parsed = JSON.parse(val);
+          if (parsed && parsed.empNo) return parsed;
+        }
+      }
+    } catch (e) {}
+
+    const directEmpNo = Number(
+      localStorage.getItem("empNo") ||
+      sessionStorage.getItem("empNo") ||
+      0
+    );
+    return { empNo: directEmpNo };
+  }, []);
+
+  // 2. 노트 상세 정보 및 첨부파일 목록 조회
   const loadNoteDetail = useCallback(async () => {
     if (!noteNo || isNaN(Number(noteNo))) return;
 
@@ -60,11 +73,36 @@ export default function NoteDetail() {
     loadNoteDetail();
   }, [loadNoteDetail]);
 
+  // 3. 본인 작성 여부 판별 (사번 or 멤버 번호 일치 검사)
+  const isOwner = useMemo(() => {
+    if (!note) return false;
+
+    const currentEmpNo = Number(loginUserInfo?.empNo || 0);
+    const noteEmpNo = Number(note.empNo || note.writerEmpNo || 0);
+
+    // 작성자 사번(empNo) 기준 일치 여부 확인
+    if (currentEmpNo > 0 && noteEmpNo > 0) {
+      return currentEmpNo === noteEmpNo;
+    }
+
+    // 프로젝트 멤버 번호(projectMemberNo)가 저장되어 있는 경우 추가 대조
+    const currentMemberNo = Number(
+      localStorage.getItem(`project_${projectNo}_memberNo`) || 0
+    );
+    const noteWriterNo = Number(note.noteWriterNo || 0);
+    if (currentMemberNo > 0 && noteWriterNo > 0) {
+      return currentMemberNo === noteWriterNo;
+    }
+
+    return false;
+  }, [note, loginUserInfo, projectNo]);
+
   // 첨부파일 다운로드 핸들러
   const handleDownloadFile = async (attachNo, attachName) => {
     try {
       const res = await apiClient.get(`/attach/${attachNo}`, {
-        responseType: "blob"
+        responseType: "blob",
+        timeout: 0,
       });
 
       const blob = new Blob([res.data]);
@@ -75,7 +113,7 @@ export default function NoteDetail() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
     } catch (err) {
       console.error("다운로드 실패:", err);
       toast.error("파일 다운로드에 실패했습니다.");
@@ -103,7 +141,11 @@ export default function NoteDetail() {
       navigate(`/projects/${projectNo}/note`);
     } catch (e) {
       console.error("노트 삭제 실패:", e);
-      toast.error("노트 삭제에 실패했습니다.");
+      if (e.response?.status === 403) {
+        toast.error("노트 삭제 권한이 없습니다. (작성자 본인만 삭제 가능)");
+      } else {
+        toast.error("노트 삭제에 실패했습니다.");
+      }
     }
   };
 
@@ -122,34 +164,26 @@ export default function NoteDetail() {
         >
           <ArrowLeft size={15} /> 목록으로
         </button>
-        <div className="note-top-action-group">
-          
-          {!isClosed && (
+
+        {/* 작성자 본인일 때만 수정/삭제 버튼 노출 */}
+        {isOwner && (
+          <div className="note-top-action-group">
             <button
               type="button"
               className="btn-note-nav-outline"
-              onClick={() => setRecordModalOpen(true)}
+              onClick={() => navigate(`/projects/${projectNo}/note/${noteNo}/edit`)}
             >
-              <FileText size={14} />
-              Record로 남기기
+              <Edit3 size={14} /> 수정
             </button>
-          )}
-
-          <button
-            type="button"
-            className="btn-note-nav-outline"
-            onClick={() => navigate(`/projects/${projectNo}/note/${noteNo}/edit`)}
-          >
-            <Edit3 size={14} /> 수정
-          </button>
-          <button
-            type="button"
-            className="btn-note-nav-danger"
-            onClick={handleDeleteNote}
-          >
-            <Trash2 size={14} /> 삭제
-          </button>
-        </div>
+            <button
+              type="button"
+              className="btn-note-nav-danger"
+              onClick={handleDeleteNote}
+            >
+              <Trash2 size={14} /> 삭제
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 본체 상세 카드 */}
@@ -181,7 +215,6 @@ export default function NoteDetail() {
                     {f.attachName} ({(f.attachSize / 1024).toFixed(1)} KB)
                   </span>
 
-                  {/* 👈 워드, PDF, 이미지, 텍스트 모두 지원하는 통합 미리보기 버튼 */}
                   {canPreview(f.attachName) && (
                     <button
                       type="button"
@@ -215,7 +248,7 @@ export default function NoteDetail() {
       {/* 분리된 댓글 컴포넌트 */}
       <NoteComments noteNo={noteNo} projectNo={projectNo} />
 
-      {/* 통합 DocxPreview 컴포넌트 (Word, PDF, 이미지, 텍스트 통합 뷰어) */}
+      {/* 통합 DocxPreview 컴포넌트 (Word, HWP, PDF, 이미지, 텍스트 통합 뷰어) */}
       {previewDocx && (
         <DocxPreview
           attachNo={previewDocx.attachNo}
@@ -223,16 +256,6 @@ export default function NoteDetail() {
           onClose={() => setPreviewDocx(null)}
         />
       )}
-
-      {/* Record 연결 모달 */}
-      <RecordLinkModal
-        show={recordModalOpen}
-        onHide={() => setRecordModalOpen(false)}
-        projectNo={projectNo}
-        relatedType="NOTE"
-        relatedNo={note.noteNo}
-        relatedTitle={note.noteTitle}
-      />
     </div>
   );
 }
