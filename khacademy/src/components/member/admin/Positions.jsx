@@ -4,10 +4,10 @@ import { FaPlus } from "react-icons/fa6";
 import { apiClient } from "@utils/reaxios";
 import Modal from 'react-bootstrap/Modal';
 import { toast } from "react-toastify";
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
 import Swal from "sweetalert2";
 import Pagination from 'react-bootstrap/Pagination';
+import Offcanvas from 'react-bootstrap/Offcanvas';
+import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 
 function MyVerticallyCenteredModal(props) {
     const [position, setPosition] = useState({
@@ -135,13 +135,16 @@ export default function Positions() {
         positionNo: null,
         positionName: "",
         positionInfo: "",
+        positionOrder: 0,
         positionBlock: "",
     });
+    const [show, setShow] = useState(false);
 
-    const [showPopover, setShowPopover] = useState(null);
     const [page, setPage] = useState({
         page: 1,
         size: 10,
+        sort: "positionNo",
+        direction : "asc",
 
     });
     const [count, setCount] = useState(0);
@@ -154,6 +157,7 @@ export default function Positions() {
         setPositionList(data.list);
         setCount(data.count);
     }, [page]);
+
     useEffect(() => {
         loadData();
     }, [loadData]);
@@ -165,11 +169,16 @@ export default function Positions() {
             [name]: value
         }));
     }, []);
+    const changeNumericValue = useCallback((e) => {
+        const { name, value } = e.target;
 
-    const setData = useCallback((position) => {
+        setSelectedPosition({
+            ...selectedPosition,//나머지 유지
+            [name]: value
+        });
+    }, [selectedPosition]);
 
-        setSelectedPosition(position);
-    }, []);
+
 
     const changeData = useCallback(async () => {
         const result = await Swal.fire({
@@ -186,9 +195,10 @@ export default function Positions() {
             await apiClient.put("/position/edit", selectedPosition);
             toast.success("직급 정보가 수정되었습니다");
 
+            setShow(false);
+
             loadData();
 
-            setShowPopover(null);
         }
         catch (e) {
             console.log("e : ", e);
@@ -197,6 +207,7 @@ export default function Positions() {
         setSelectedPosition({});
 
     }, [selectedPosition, loadData]);
+
     const totalPage = useMemo(() => {
         return Math.ceil(count / page.size);
     }, [count, page]);
@@ -215,7 +226,10 @@ export default function Positions() {
     return (<>
 
         <Col className="d-flex justify-content-between align-items-center p-5">
-            <h1>직급관리</h1>
+            <div>
+                <h3>직급 목록</h3>
+                <span className="text-muted">총 직급 : {count}개</span>
+            </div>
             <Button variant="primary" onClick={() => setModalShow(true)}>
                 <FaPlus />추가
             </Button>
@@ -225,106 +239,154 @@ export default function Positions() {
                 onAdd={loadData}
             />
         </Col>
-        <Card className="user-header fw-bold border-0">
-            <Card.Body>
-                <Row>
-                    <Col sm={2} className="text-nowrap">직급번호</Col>
-                    <Col sm={2} className="text-nowrap">직급이름</Col>
-                    <Col className="text-nowrap">직급설명</Col>
-                    <Col className="text-nowrap">활성화상태</Col>
+        <Table className="member-table">
+            <thead>
+                <tr>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "positionNo",
+                        direction: prev.sort === "positionNo" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>직급번호</span>
+                        {page.sort === "positionNo" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "positionName",
+                        direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>직급이름</span>
+                        {page.sort === "positionName" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                    <th>직급설명</th>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "positionOrder",
+                        direction: prev.sort === "positionOrder" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>직급순서</span>
+                        {page.sort === "positionOrder" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "positionBlock",
+                        direction: prev.sort === "positionBlock" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>상태</span>
+                        {page.sort === "positionBlock" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {positionList.map((position) => (
+                    <tr key={position.positionNo} className="member-table-item"
+                        onClick={() => {
+                            setShow(true);
+                            setSelectedPosition(position);
+                        }}>
+                        <td>{position.positionNo}</td>
+                        <td>{position.positionName}</td>
+                        <td>{position.positionInfo}</td>
+                        <td>{position.positionOrder}</td>
+                        <td>{position.positionBlock}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </Table>
+        <Offcanvas show={show}
+            onHide={() => setShow(false)}
+            placement="end"
+            style={{ width: "800px" }}
+        >
+            {selectedPosition && (<>
+                <Offcanvas.Header closeButton>
+                    <div>
+                        <div>
+                            <Offcanvas.Title>직급 정보</Offcanvas.Title>
+                        </div>
 
-                </Row>
-            </Card.Body>
-        </Card>
+                        <div className="profile-line"></div>
+                    </div>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>직급명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="positionName"
+                                value={selectedPosition.positionName}
+                                onChange={changeStringValue} className="w-100">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>하는 일</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
+                                onChange={changeStringValue} className="w-100">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>직급 순서</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="positionOrder"
+                                value={selectedPosition.positionOrder}
+                                onChange={changeNumericValue} className="w-100">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>활성화여부</Form.Label>
+                        <Col sm={9}>
+                            <Form.Check type="radio"
+                                name="positionBlock"
+                                value="Y"
+                                className="d-inline-block"
+                                label="Y"
+                                checked={selectedPosition.positionBlock === "Y"}
+                                onChange={changeStringValue}
+                            >
+                            </Form.Check>
+                            <Form.Check type="radio"
+                                name="positionBlock"
+                                value="N"
+                                className="d-inline-block"
+                                label="N"
+                                checked={selectedPosition.positionBlock === "N"}
+                                onChange={changeStringValue}
+                            >
+                            </Form.Check>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Button onClick={changeData}>
+                            <span>수정</span>
+                        </Button>
+                    </Row>
+                </Offcanvas.Body>
+            </>)}
+        </Offcanvas>
 
-        {positionList.map((position) => (
-            <Card key={position.positionNo} className="mt-2 card">
-                <OverlayTrigger
-                    trigger="click"
-                    placement="bottom"
-                    rootClose={true}
-                    show={showPopover === position.positionNo}
-                    onToggle={(nextShow) => {
-                        setShowPopover(nextShow ? position.positionNo : null);
-                    }}
-                    overlay={
-                        <Popover id={`popover-positioned-bottom`} className="user-popover">
-                            <Popover.Header as="h3">{position.positionName}</Popover.Header>
-                            <Popover.Body>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>직급명</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Control type="text" name="positionName" value={selectedPosition.positionName}
-                                            onChange={changeStringValue} className="w-100">
-                                        </Form.Control>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>하는 일</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Control type="text" name="positionInfo" value={selectedPosition.positionInfo}
-                                            onChange={changeStringValue} className="w-100">
-                                        </Form.Control>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>활성화여부</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Check type="radio"
-                                            name="positionBlock"
-                                            value="Y"
-                                            className="d-inline-block"
-                                            label="Y"
-                                            checked={selectedPosition.positionBlock === "Y"}
-                                            onChange={changeStringValue}
-                                        >
-                                        </Form.Check>
-                                        <Form.Check type="radio"
-                                            name="positionBlock"
-                                            value="N"
-                                            className="d-inline-block"
-                                            label="N"
-                                            checked={selectedPosition.positionBlock === "N"}
-                                            onChange={changeStringValue}
-                                        >
-                                        </Form.Check>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Button onClick={changeData}>
-                                        <span>수정</span>
-                                    </Button>
-                                </Row>
-
-                            </Popover.Body>
-                        </Popover>
-                    }
-                >
-                    <Card.Body onClick={() => {
-                        setData(position);
-                        setShowPopover(
-                            showPopover === position.positionNo ? null : position.positionNo
-                        )
-                    }}>
-                        <Row>
-                            <Col sm={2} className="text-nowrap">{position.positionNo}</Col>
-                            <Col sm={2} className="text-nowrap">{position.positionName}</Col>
-                            <Col className="text-nowrap text-truncate">{position.positionInfo}</Col>
-                            <Col className="text-nowrap">{position.positionBlock}</Col>
-
-                            {/* <Button variant="secondary" onClick={() => {
-                                    setData(position);
-                                    setShowPopover(
-                                        showPopover === position.positionNo ? null : position.positionNo
-                                    )
-                                }}>
-                                    <FaMagnifyingGlass />
-                                </Button> */}
-                        </Row>
-                    </Card.Body>
-                </OverlayTrigger>
-            </Card>
-        ))}
         <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
             <Pagination.Prev
                 disabled={pageGroup === 1}
