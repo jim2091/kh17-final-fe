@@ -14,8 +14,6 @@ import Swal from "sweetalert2";
 import DocxPreview from "../docx-preview/DocxPreview";
 import NoteComments from "./NoteComments";
 import "./NoteDetail.css";
-import RecordLinkModal from "../records/RecordLinkModal";
-import { isCancel } from "axios";
 
 // 인라인 미리보기를 지원하는 확장자 판별 헬퍼
 const canPreview = (fileName = "") => {
@@ -26,14 +24,8 @@ export default function NoteDetail() {
   const { projectNo, noteNo } = useParams();
   const navigate = useNavigate();
 
-  const {project} = useOutletContext();
-  const isClosed = project?.projectStatus === "closed";
-
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
-
-  //Record 연결 모달
-  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   // 통합 문서 온라인 미리보기 대상 상태 { attachNo, fileName }
   const [previewDocx, setPreviewDocx] = useState(null);
@@ -264,16 +256,6 @@ export default function NoteDetail() {
           onClose={() => setPreviewDocx(null)}
         />
       )}
-
-      {/* Record 연결 모달 */}
-      <RecordLinkModal
-        show={recordModalOpen}
-        onHide={() => setRecordModalOpen(false)}
-        projectNo={projectNo}
-        relatedType="NOTE"
-        relatedNo={note.noteNo}
-        relatedTitle={note.noteTitle}
-      />
     </div>
   );
 }
