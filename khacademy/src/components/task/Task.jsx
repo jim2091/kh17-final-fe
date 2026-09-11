@@ -16,13 +16,15 @@ import {
   Search,
   Archive,
   ArrowLeft,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
 import { apiClient } from "@utils/reaxios";
 import { isLoginState } from "@utils/storage";
 import "./Task.css";
 import TaskComments from "./TaskComments";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
+import RecordLinkModal from "../records/RecordLinkModal";
 
 const COLUMNS = [
   { id: "TODO", title: "To Do", colorClass: "col-todo" },
@@ -173,6 +175,8 @@ export default function Task() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [taskFiles, setTaskFiles] = useState([]);
+    //Record 연결 모달
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false);
@@ -351,6 +355,7 @@ export default function Task() {
     setSelectedTask(null);
     setTaskFiles([]);
     setIsEditing(false);
+    setRecordModalOpen(false);
   }, []);
 
   useEffect(() => {
@@ -1621,6 +1626,15 @@ export default function Task() {
                       닫기
                     </button>
                     {isClosed === false && (
+                      <button
+                        className="btn-record-link"
+                        onClick={() => setRecordModalOpen(true)}
+                      >
+                        <FileText size={15} />
+                        Record로 남기기
+                      </button>
+                    )}
+                    {isClosed === false && (
                       <button className="btn-edit-trigger" onClick={handleStartEdit}>
                         수정하기
                       </button>
@@ -1880,6 +1894,18 @@ export default function Task() {
           </div>
         ) : null}
       </aside>
+      {/* RecordLinkModal */}
+      {selectedTask && (
+        <RecordLinkModal
+          show={recordModalOpen}
+          onHide={() => setRecordModalOpen(false)}
+          projectNo={projectNo}
+          relatedType="TASK"
+          relatedNo={selectedTask.taskNo}
+          relatedTitle={selectedTask.taskTitle}
+        />
+      )}
     </div>
+
   );
 }
