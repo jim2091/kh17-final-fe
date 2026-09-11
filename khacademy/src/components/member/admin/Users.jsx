@@ -128,7 +128,7 @@ export default function Users() {
             ...selectedEmp,//나머지 유지
             [name]: value
         });
-    }, []);
+    }, [selectedEmp]);
     const changeDataValue = useCallback((e) => {
         const { name, value } = e.target;
 
@@ -136,7 +136,7 @@ export default function Users() {
             ...editData,//나머지 유지
             [name]: value
         });
-    }, []);
+    }, [editData]);
 
     const search = useCallback(async (e) => {
 
