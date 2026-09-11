@@ -56,86 +56,179 @@ export default function ArcheiveProjectList() {
             </div>
         );
     }
-    return (<>
-        <div className="container mt-4">
+    return (
+        <div className="project-page archive-project-page">
+
             {/* 제목 */}
-            <div className="mb-4">
-                <h3>프로젝트 아카이브</h3>
+            <div className="project-page-header mt-4 mb-4">
 
-                <div className="text-muted">
-                    종료된 프로젝트 목록입니다.
-                </div>
-            </div>
+                <div>
+                    <h3 className="project-page-title">
+                        프로젝트 아카이브
+                    </h3>
 
-            {/* 프로젝트가 없는 경우 */}
-            {projectList.length === 0 ?(
-                <div className="text-center text-muted border rounded py-5">
-                    종료된 프로젝트가 없습니다.
+                    <p className="project-page-description">
+                        종료된 프로젝트 목록입니다.
+                    </p>
                 </div>
-            ):(<>
-               {/* 프로젝트 개수 */}
-               <div className="mb-3">
-                    총{" "}
+
+                <div className="project-page-count">
+                    전체
                     <strong>
                         {projectList.length}
                     </strong>
-                    개의 프로젝트
-               </div>
+                    개
+                </div>
 
-               {/* 목록 */}
-               <ListGroup>
-                    {projectList.map(project =>(
-                        <ListGroup.Item key={project.projectNo} action 
-                            onClick={()=>navigate(`/projects/${project.projectNo}/task`)}>
-                            <div className="d-flex justify-content-between align-items-center">
-                                {/* 왼쪽 */}
-                                <div>
-                                    {/* 프로젝트명 */}
-                                    <div className="d-flex align-items-center gap-2">
-                                        <span className="fw-bold">
+            </div>
+
+
+            {/* 프로젝트가 없는 경우 */}
+            {projectList.length === 0 ? (
+
+                <div className="archive-project-empty">
+
+                    <div className="archive-project-empty-title">
+                        종료된 프로젝트가 없습니다.
+                    </div>
+
+                    <div className="archive-project-empty-description">
+                        종료된 프로젝트가 생기면 이곳에서 다시 확인할 수 있습니다.
+                    </div>
+
+                </div>
+
+            ) : (
+
+                <div className="archive-project-panel">
+
+                    {/* 목록 헤더 */}
+                    <div className="archive-project-list-header">
+
+                        <div>
+                            프로젝트
+                        </div>
+
+                        <div>
+                            프로젝트 목적
+                        </div>
+
+                        <div>
+                            프로젝트 기간
+                        </div>
+
+                        <div className="text-center">
+                            상태
+                        </div>
+
+                        <div className="text-center">
+                            내 역할
+                        </div>
+
+                    </div>
+
+
+                    {/* 목록 */}
+                    <ListGroup variant="flush">
+
+                        {projectList.map(project => (
+
+                            <ListGroup.Item
+                                key={project.projectNo}
+                                action
+                                className="archive-project-list-item"
+                                onClick={() =>
+                                    navigate(
+                                        `/projects/${project.projectNo}/task`
+                                    )
+                                }
+                            >
+
+                                <div className="archive-project-row">
+
+                                    {/* 프로젝트명 / 공개범위 */}
+                                    <div className="archive-project-name-area">
+
+                                        <div className="archive-project-name">
                                             {project.projectName}
-                                        </span>
-                                        {/* 종료 */}
-                                        <Badge bg="secondary">
-                                            종료
-                                        </Badge>
-                                        {/* 공개범위 */}
-                                        <Badge bg={
-                                            project.projectVisibility
-                                            === "public" ? "info" : "dark"
-                                        }>
-                                            {
-                                                project.projectVisibility
-                                                === "public" ? "공개" : "비공개"
+                                        </div>
+
+                                        <span
+                                            className={
+                                                project.projectVisibility === "public"
+                                                    ? "project-visibility public"
+                                                    : "project-visibility private"
                                             }
-                                        </Badge>
+                                        >
+                                            {project.projectVisibility === "public"
+                                                ? "공개"
+                                                : "비공개"
+                                            }
+                                        </span>
+
                                     </div>
+
 
                                     {/* 프로젝트 목적 */}
-                                    <div className="text-muted mt-2">
+                                    <div className="archive-project-purpose">
                                         {project.projectPurpose}
-                                    </div> 
+                                    </div>
+
 
                                     {/* 기간 */}
-                                    <div className="small text-muted mt-2">
-                                        {formatDate(project.projectStart)}
-                                        {" ~ "}
-                                        {formatDate(project.projectDeadline)}
+                                    <div className="archive-project-period">
+
+                                        {formatDate(
+                                            project.projectStart
+                                        )}
+
+                                        <span>
+                                            ~
+                                        </span>
+
+                                        {formatDate(
+                                            project.projectDeadline
+                                        )}
+
                                     </div>
+
+
+                                    {/* 종료 상태 */}
+                                    <div className="text-center">
+
+                                        <span className="archive-project-status">
+                                            종료
+                                        </span>
+
+                                    </div>
+
+
+                                    {/* 내 역할 */}
+                                    <div className="text-center">
+
+                                        <span
+                                            className={
+                                                `archive-project-role ${project.projectMemberRole}`
+                                            }
+                                        >
+                                            {project.projectMemberRole
+                                                ?.toUpperCase()}
+                                        </span>
+
+                                    </div>
+
                                 </div>
 
-                                {/* 오른쪽 - 내역할 */}
-                                <div>
-                                    <Badge bg="primary">
-                                        {project.projectMemberRole?.toUpperCase()}
-                                    </Badge>
-                                </div>
-                            </div>
-                        </ListGroup.Item>
-                    ))}
-               </ListGroup>
+                            </ListGroup.Item>
 
-            </>)}
+                        ))}
+
+                    </ListGroup>
+
+                </div>
+
+            )}
+
         </div>
-    </>)
+    );
 }
