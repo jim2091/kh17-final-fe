@@ -33,18 +33,65 @@
 
 
 /* ==========================================
-   검색 + 업로드
+   검색 + 정렬 + 업로드
 ========================================== */
 
 .files-toolbar {
     width: 100%;
-    height: 57px;
+    min-height: 57px;
 
     box-sizing: border-box;
 
     display: flex;
     align-items: center;
-    justify-content: space-between;
+
+    gap: 12px;
+}
+
+
+/* ==========================================
+   검색 전체 영역
+========================================== */
+
+.files-search-area {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+/* ==========================================
+   검색 종류
+========================================== */
+
+.files-search-type {
+    width: 90px;
+    height: 34px;
+
+    box-sizing: border-box;
+
+    padding: 0 25px 0 10px;
+
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+
+    outline: none;
+
+    background: #fff;
+    color: #3c4043;
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.files-search-type:focus {
+    border-color: #9aa0a6;
 }
 
 
@@ -57,7 +104,14 @@
 
     width: 300px;
     height: 34px;
+
+    flex: 0 0 auto;
 }
+
+
+/* ==========================================
+   검색 input
+========================================== */
 
 .files-search input {
     width: 100%;
@@ -65,7 +119,7 @@
 
     box-sizing: border-box;
 
-    padding: 0 40px 0 38px;
+    padding: 0 40px 0 12px;
 
     border: 1px solid #dadce0;
     border-radius: 4px;
@@ -78,22 +132,26 @@
     color: #202124;
 }
 
+
 .files-search input::placeholder {
     color: #777;
 }
+
 
 .files-search input:focus {
     border-color: #9aa0a6;
 }
 
 
-/* 검색 버튼 */
+/* ==========================================
+   검색 버튼
+========================================== */
 
 .files-search button {
     position: absolute;
 
     top: 3px;
-    left: 4px;
+    right: 4px;
 
     width: 28px;
     height: 28px;
@@ -101,6 +159,7 @@
     padding: 0;
 
     border: none;
+
     background: transparent;
 
     display: flex;
@@ -110,16 +169,106 @@
     cursor: pointer;
 }
 
+
 .files-search button:hover {
     background: #f1f3f4;
+
     border-radius: 50%;
 }
+
 
 .files-search button svg {
     width: 18px;
     height: 18px;
 
     stroke: #5f6368;
+}
+
+
+/* ==========================================
+   검색 초기화
+========================================== */
+
+.files-search-reset {
+    height: 34px;
+
+    padding: 0 10px;
+
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+
+    background: #fff;
+
+    color: #5f6368;
+
+    font-size: 11px;
+
+    cursor: pointer;
+
+    flex: 0 0 auto;
+}
+
+
+.files-search-reset:hover {
+    background: #f8f9fa;
+}
+
+
+/* ==========================================
+   정렬 영역
+========================================== */
+
+.files-sort-area {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    flex: 0 0 auto;
+}
+
+
+/* ==========================================
+   정렬 글자
+========================================== */
+
+.files-sort-label {
+    color: #5f6368;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   정렬 select
+========================================== */
+
+.files-sort-select {
+    width: 105px;
+    height: 34px;
+
+    box-sizing: border-box;
+
+    padding: 0 25px 0 10px;
+
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+
+    outline: none;
+
+    background: #fff;
+    color: #3c4043;
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+
+.files-sort-select:focus {
+    border-color: #9aa0a6;
 }
 
 
@@ -156,20 +305,28 @@
     transition:
         background-color 0.15s ease,
         box-shadow 0.15s ease;
+
+    flex: 0 0 auto;
 }
+
 
 .files-upload-button:hover {
     background: #f8f9fa;
 
     box-shadow:
-        0 1px 2px rgba(60, 64, 67, 0.15);
+        0 1px 2px
+        rgba(60, 64, 67, 0.15);
 }
+
 
 .files-upload-button:disabled {
     opacity: 0.5;
+
     cursor: not-allowed;
+
     box-shadow: none;
 }
+
 
 .files-upload-button svg {
     width: 15px;
@@ -179,7 +336,9 @@
 }
 
 
-/* 실제 input */
+/* ==========================================
+   실제 input
+========================================== */
 
 .files-hidden-input {
     display: none;
@@ -211,7 +370,8 @@
 .files-list-header {
     display: grid;
 
-    grid-template-columns: var(--file-col);
+    grid-template-columns:
+        var(--file-col);
 
     align-items: center;
 
@@ -239,7 +399,8 @@
 .files-list-row {
     display: grid;
 
-    grid-template-columns: var(--file-col);
+    grid-template-columns:
+        var(--file-col);
 
     align-items: center;
 
@@ -267,9 +428,11 @@
     cursor: pointer;
 }
 
+
 .files-image-row:hover {
     background: #f7f7ff;
 }
+
 
 .files-image-row:active {
     background: #f0efff;
@@ -292,6 +455,7 @@
 .files-list-header > div,
 .files-list-row > div {
     min-width: 0;
+
     box-sizing: border-box;
 }
 
@@ -307,6 +471,7 @@
     align-items: center;
 }
 
+
 .files-file-name {
     display: flex;
     align-items: center;
@@ -319,6 +484,7 @@
 
     overflow: hidden;
 }
+
 
 .files-name-text {
     display: block;
@@ -359,10 +525,6 @@
 
     font-size: 11px;
 
-    /*
-     * 출처 클릭 영역이 파일 행 전체 클릭과 충돌하지 않도록
-     * 출처 자체를 별도의 클릭 영역으로 사용
-     */
     cursor: default;
 
     transition:
@@ -372,7 +534,7 @@
 
 
 /* ==========================================
-   출처 - 원본으로 이동 가능
+   출처 - 원본 이동 가능
 ========================================== */
 
 .files-col-source.files-source-clickable {
@@ -382,6 +544,7 @@
 
     cursor: pointer;
 }
+
 
 .files-col-source.files-source-clickable:hover {
     color: #4338ca;
@@ -486,6 +649,7 @@
     overflow: hidden;
 }
 
+
 .files-icon svg {
     width: 22px;
     height: 22px;
@@ -518,6 +682,7 @@
     justify-content: center;
 }
 
+
 .files-image-thumbnail img {
     width: 100%;
     height: 100%;
@@ -528,7 +693,9 @@
 }
 
 
-/* 이미지 로딩 실패 */
+/* ==========================================
+   이미지 로딩 실패
+========================================== */
 
 .files-image-fallback {
     position: absolute;
@@ -560,6 +727,7 @@
     color: #fff;
 }
 
+
 .files-icon-pdf span {
     font-size: 9px;
 }
@@ -573,6 +741,7 @@
     background: #4285f4;
     color: #fff;
 }
+
 
 .files-icon-word span {
     font-size: 16px;
@@ -588,6 +757,7 @@
     color: #fff;
 }
 
+
 .files-icon-excel span {
     font-size: 16px;
 }
@@ -602,6 +772,7 @@
     color: #fff;
 }
 
+
 .files-icon-powerpoint span {
     font-size: 16px;
 }
@@ -615,6 +786,7 @@
     background: #fbbc04;
     color: #fff;
 }
+
 
 .files-icon-zip span {
     font-size: 8px;
@@ -656,9 +828,11 @@
     cursor: pointer;
 }
 
+
 .files-download-button:hover {
     background: #e8eaed;
 }
+
 
 .files-download-button svg {
     width: 17px;
@@ -693,9 +867,11 @@
         background-color 0.15s ease;
 }
 
+
 .files-delete-button:hover {
     background: #fce8e6;
 }
+
 
 .files-delete-button svg {
     width: 17px;
@@ -723,9 +899,11 @@
     font-size: 13px;
 }
 
+
 .files-empty-icon {
     margin-bottom: 10px;
 }
+
 
 .files-empty-icon svg {
     width: 42px;
@@ -733,9 +911,9 @@
 }
 
 
-/* ==================================================
+/* ==========================================
    이미지 미리보기 OVERLAY
-================================================== */
+========================================== */
 
 .files-preview-overlay {
     position: fixed;
@@ -745,6 +923,7 @@
     z-index: 9999;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -752,7 +931,8 @@
 
     box-sizing: border-box;
 
-    background: rgba(20, 20, 30, 0.78);
+    background:
+        rgba(20, 20, 30, 0.78);
 
     animation:
         files-preview-fade-in
@@ -761,9 +941,9 @@
 }
 
 
-/* ==================================================
+/* ==========================================
    미리보기 모달
-================================================== */
+========================================== */
 
 .files-preview-modal {
     width: min(900px, 92vw);
@@ -779,7 +959,8 @@
     background: #fff;
 
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.35);
+        0 20px 60px
+        rgba(0, 0, 0, 0.35);
 
     animation:
         files-preview-modal-in
@@ -788,9 +969,9 @@
 }
 
 
-/* ==================================================
+/* ==========================================
    미리보기 헤더
-================================================== */
+========================================== */
 
 .files-preview-header {
     flex: 0 0 56px;
@@ -811,7 +992,9 @@
 }
 
 
-/* 파일명 */
+/* ==========================================
+   미리보기 파일명
+========================================== */
 
 .files-preview-title {
     min-width: 0;
@@ -821,6 +1004,7 @@
 
     gap: 9px;
 }
+
 
 .files-preview-title span {
     max-width: 500px;
@@ -838,7 +1022,9 @@
 }
 
 
-/* 이미지 아이콘 */
+/* ==========================================
+   이미지 아이콘
+========================================== */
 
 .files-preview-image-icon {
     width: 28px;
@@ -853,8 +1039,10 @@
     border-radius: 6px;
 
     background: #5b4df8;
+
     color: #fff;
 }
+
 
 .files-preview-image-icon svg {
     width: 16px;
@@ -862,9 +1050,9 @@
 }
 
 
-/* ==================================================
+/* ==========================================
    미리보기 우측 버튼
-================================================== */
+========================================== */
 
 .files-preview-actions {
     flex: 0 0 auto;
@@ -874,6 +1062,7 @@
 
     gap: 2px;
 }
+
 
 .files-preview-actions button {
     width: 36px;
@@ -895,9 +1084,11 @@
     color: #5f6368;
 }
 
+
 .files-preview-actions button:hover {
     background: #f1f3f4;
 }
+
 
 .files-preview-actions button svg {
     width: 19px;
@@ -905,9 +1096,9 @@
 }
 
 
-/* ==================================================
+/* ==========================================
    이미지 영역
-================================================== */
+========================================== */
 
 .files-preview-body {
     position: relative;
@@ -930,7 +1121,9 @@
 }
 
 
-/* 실제 큰 이미지 */
+/* ==========================================
+   실제 큰 이미지
+========================================== */
 
 .files-preview-image {
     display: block;
@@ -946,13 +1139,14 @@
     user-select: none;
 
     box-shadow:
-        0 3px 12px rgba(0, 0, 0, 0.08);
+        0 3px 12px
+        rgba(0, 0, 0, 0.08);
 }
 
 
-/* ==================================================
+/* ==========================================
    미리보기 이미지 오류
-================================================== */
+========================================== */
 
 .files-preview-error {
     display: flex;
@@ -968,17 +1162,20 @@
     text-align: center;
 }
 
+
 .files-preview-error strong {
     color: #4b5563;
 
     font-size: 14px;
 }
 
+
 .files-preview-error span {
     font-size: 12px;
 
     color: #9ca3af;
 }
+
 
 .files-preview-error-icon {
     width: 54px;
@@ -997,15 +1194,16 @@
     color: #9ca3af;
 }
 
+
 .files-preview-error-icon svg {
     width: 30px;
     height: 30px;
 }
 
 
-/* ==================================================
+/* ==========================================
    애니메이션
-================================================== */
+========================================== */
 
 @keyframes files-preview-fade-in {
 
@@ -1016,7 +1214,6 @@
     to {
         opacity: 1;
     }
-
 }
 
 
@@ -1024,20 +1221,39 @@
 
     from {
         opacity: 0;
-        transform: scale(0.97);
+
+        transform:
+            scale(0.97);
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
-    }
 
+        transform:
+            scale(1);
+    }
 }
 
 
-/* ==================================================
+/* ==========================================
    반응형
-================================================== */
+========================================== */
+
+@media (max-width: 1100px) {
+
+    .files-search {
+        width: 240px;
+    }
+
+    .files-search-type {
+        width: 80px;
+    }
+
+    .files-sort-select {
+        width: 95px;
+    }
+}
+
 
 @media (max-width: 1000px) {
 
@@ -1051,9 +1267,27 @@
             80px
             100px
             65px;
+    }
+}
 
+
+@media (max-width: 800px) {
+
+    .files-toolbar {
+        flex-wrap: wrap;
+
+        align-items: center;
+
+        padding-bottom: 8px;
     }
 
+    .files-search-area {
+        flex: 1 1 100%;
+    }
+
+    .files-sort-area {
+        margin-left: auto;
+    }
 }
 
 
@@ -1061,11 +1295,37 @@
 
     .files-toolbar {
         gap: 10px;
+
+        align-items: flex-start;
+    }
+
+
+    .files-search-area {
+        width: 100%;
+
+        flex-wrap: wrap;
     }
 
 
     .files-search {
-        width: 100%;
+        width: calc(100% - 100px);
+    }
+
+
+    .files-search-type {
+        width: 90px;
+    }
+
+
+    .files-sort-area {
+        width: auto;
+
+        margin-left: 0;
+    }
+
+
+    .files-sort-select {
+        width: 105px;
     }
 
 
@@ -1086,7 +1346,6 @@
             60px
             75px
             60px;
-
     }
 
 
@@ -1119,5 +1378,4 @@
     .files-preview-title span {
         max-width: 200px;
     }
-
 }
