@@ -73,6 +73,8 @@ function App() {
         <Route path="/projects/public" element={<PublicProjectList />} />
         {/* 아카이브 목록 */}
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
+        {/* 종료 화면 */}
+        <Route path="/projects/:projectNo/close" element={<ProjectClose />} />
 
         {/* 로그인 화면 */}
         <Route path="/login" element={<Login />} />
@@ -122,7 +124,6 @@ function App() {
 
           <Route path="files" element={<Files />} />
           <Route path="records" element={<Records />} />
-          <Route path="close" element={<ProjectClose />} />
         </Route>
         <Route path="/emp/inactive" element={<EmpInactive />} />
       </Route>

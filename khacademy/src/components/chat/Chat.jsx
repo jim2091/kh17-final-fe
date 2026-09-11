@@ -13,6 +13,8 @@ import MessageInput from "./MessageInput";
 
 import "./Chat.css";
 
+import RecordLinkModal from "../records/RecordLinkModal";
+
 export default function Chat() {
     //● state
     const {projectNo} = useParams(); 
@@ -34,6 +36,10 @@ export default function Chat() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     //채널 구독 effect에서 channels를 연관항목에 넣지 않고 현재 채널을 알기 위한 Ref
     const selectedChannelRef = useRef(null);
+
+    //Record 연결 대상 메시지
+    const [recordTargetMessage, setRecordTargetMessage] = useState(null);
+    const [recordModalOpen, setRecordModalOpen] = useState(false);
 
 
     //● 채널 목록 불러오기
@@ -189,7 +195,9 @@ export default function Chat() {
     //● 메세지 전송
     const sendMessage = useCallback(() => {
 
-        //(1) 메세지를 전송할 수 있는 상태인지 검증
+        //(1)종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
+        //(2) 메세지를 전송할 수 있는 상태인지 검증
         if (!selectedChannel) return;//채널을 선택하지 않았으면 전송하지 않음
         if(input.trim() === "") return;//입력값이 비어있으면 전송하지 않음
         
@@ -198,7 +206,7 @@ export default function Chat() {
             return;//WebSocket 연결이 안됐으면 전송하지 않음
         }
 
-        //(2) 메세지 전송을 위한 JSON 데이터 생성
+        //(3) 메세지 전송을 위한 JSON 데이터 생성
         const json = { content : input };
 
         client.publish({
@@ -206,14 +214,17 @@ export default function Chat() {
             body: JSON.stringify(json)
         });
 
-        //(3) 메세지 입력창 비우기
+        //(4) 메세지 입력창 비우기
         setInput("");
 
-    }, [input, selectedChannel]);
+    }, [input, selectedChannel,isClosed]);
 
 
     //● 메세지 삭제 
     const handleDelete = async(message) => {
+
+        //종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
 
         const result = await Swal.fire({
             title: "메세지를 삭제하시겠습니까?",
@@ -240,6 +251,9 @@ export default function Chat() {
 
     //● 메세지 수정
     const handleEdit = async(message) => {
+        //종료 프로젝트는 메세지 전송 불가
+        if(isClosed)return;
+
         const content = window.prompt(
             "메시지를 수정하세요.",
             message.content
@@ -261,6 +275,18 @@ export default function Chat() {
             console.error("메시지 수정 실패", e);
         }
     };
+
+    //메세지를 Record로 남기기
+    const handleRecord = useCallback((message) => {
+        setRecordTargetMessage(message);
+        setRecordModalOpen(true);
+
+    }, []);
+
+    const closeRecordModal = useCallback(() => {
+        setRecordModalOpen(false);
+        setRecordTargetMessage(null);
+    }, []);
 
     // 구독 관리 effect
     useEffect(()=>{
@@ -447,15 +473,36 @@ export default function Chat() {
                     onLoadMore={loadMoreMessages}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onRecord={handleRecord}
+                    isClosed={isClosed}
                 />
 
+            {isClosed === false ? (
                 <MessageInput 
                     input={input}
                     setInput={setInput}
                     onSend={sendMessage}
                 />
 
+            ):(
+                <div>
+                    종료된 프로젝트에서는 메세지를 작성할 수 없습니다.
+                </div>
+            )}
+
             </div>
         </div>
+
+        {recordTargetMessage && (
+            <RecordLinkModal
+                show={recordModalOpen}
+                onHide={closeRecordModal}
+                projectNo={projectNo}
+                relatedType="MESSAGE"
+                relatedNo={recordTargetMessage.no}
+                relatedTitle={recordTargetMessage.content}
+            />
+        )}
+
     </>)
 }

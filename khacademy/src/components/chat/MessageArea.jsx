@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { HiOutlineDotsHorizontal } from "react-icons/hi";
 import { FaTrashAlt } from "react-icons/fa";
 import { FaPenToSquare } from "react-icons/fa6";
-import { FiAlertCircle } from "react-icons/fi";
+import { FiAlertCircle, FiFileText } from "react-icons/fi";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
 dayjs.locale("ko");
@@ -14,7 +14,9 @@ export default function MessageArea(
         messages = [], 
         onLoadMore,
         onEdit,
-        onDelete
+        onDelete,
+        onRecord,
+        isClosed
     }
 ) {
     //● state
@@ -208,7 +210,7 @@ export default function MessageArea(
                                     </div>
 
                                     {/* 내가 보낸 메세지이고 삭제되지 않은 경우 */}
-                                    {isMine && message.deleted !== "Y" && (
+                                    {message.deleted !== "Y" && (isMine || (isClosed === false)) && (
                                         <div className="message-menu-wrapper">
                                             <button 
                                                 className="message-menu-button"
@@ -228,26 +230,45 @@ export default function MessageArea(
                                             {/* 메뉴 */}
                                             {menuMessageNo === message.no && (
                                                 <div className="message-menu" onClick={(e) => e.stopPropagation()}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            onEdit(message);
-                                                            setMenuMessageNo(null);
-                                                        }}
-                                                    >
-                                                        <FaPenToSquare />
-                                                        <span>수정</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setMenuMessageNo(null);
-                                                            onDelete(message);
-                                                        }}
-                                                    >
-                                                        <FaTrashAlt />
-                                                        <span>삭제</span>
-                                                    </button>
+                                                    
+                                                    {/* Record는 프로젝트 멤버라면 사용 가능 */}
+                                                    {isClosed === false && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                onRecord(message);
+                                                                setMenuMessageNo(null);
+                                                            }}
+                                                        >
+                                                            <FiFileText />
+                                                            <span>Record로 남기기</span>
+                                                        </button>
+                                                    )}
+
+                                                    {/* 수정/삭제는 내 매세지만 */}
+                                                    {isMine && (<>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                onEdit(message);
+                                                                setMenuMessageNo(null);
+                                                            }}
+                                                        >
+                                                            <FaPenToSquare />
+                                                            <span>수정</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="message-menu-delete"
+                                                            onClick={() => {
+                                                                setMenuMessageNo(null);
+                                                                onDelete(message);
+                                                            }}
+                                                        >
+                                                            <FaTrashAlt />
+                                                            <span>삭제</span>
+                                                        </button>
+                                                    </>)}
                                                 </div>
                                             )}
                                         </div>

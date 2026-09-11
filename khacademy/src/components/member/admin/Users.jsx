@@ -12,6 +12,7 @@ import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import { BiSolidDownArrow, BiSolidUpArrow  } from "react-icons/bi";
 
 
 
@@ -127,7 +128,7 @@ export default function Users() {
             ...selectedEmp,//나머지 유지
             [name]: value
         });
-    }, []);
+    }, [selectedEmp]);
     const changeDataValue = useCallback((e) => {
         const { name, value } = e.target;
 
@@ -135,7 +136,7 @@ export default function Users() {
             ...editData,//나머지 유지
             [name]: value
         });
-    }, []);
+    }, [editData]);
 
     const search = useCallback(async (e) => {
 
@@ -684,9 +685,9 @@ export default function Users() {
                         }))}>
                             <span>사번/이름</span>
                             {page.sort === "empName" && page.direction === "asc" ? (
-                                <FaArrowDown className="ms-2" />
+                                <BiSolidDownArrow className="ms-2" />
                             ) : (
-                                <FaArrowUp className="ms-2" />
+                                <BiSolidUpArrow className="ms-2" />
                             )}
 
                         </th>
@@ -700,9 +701,9 @@ export default function Users() {
                         }))}>
                             <span>이메일</span>
                             {page.sort === "empEmail" && page.direction === "asc" ? (
-                                <FaArrowDown className="ms-2" />
+                                <BiSolidDownArrow className="ms-2" />
                             ) : (
-                                <FaArrowUp className="ms-2" />
+                                <BiSolidUpArrow className="ms-2" />
                             )}
                         </th>
                         <th onClick={() => setPage(prev => ({
@@ -713,9 +714,9 @@ export default function Users() {
                         }))}>
                             <span>부서</span>
                             {page.sort === "deptName" && page.direction === "asc" ? (
-                                <FaArrowDown className="ms-2" />
+                                <BiSolidDownArrow className="ms-2" />
                             ) : (
-                                <FaArrowUp className="ms-2" />
+                                <BiSolidUpArrow className="ms-2" />
                             )}
                         </th>
                         <th onClick={() => setPage(prev => ({
@@ -726,9 +727,9 @@ export default function Users() {
                         }))}>
                             <span>직급</span>
                             {page.sort === "positionName" && page.direction === "asc" ? (
-                                <FaArrowDown className="ms-2" />
+                                <BiSolidDownArrow className="ms-2" />
                             ) : (
-                                <FaArrowUp className="ms-2" />
+                                <BiSolidUpArrow className="ms-2" />
                             )}
                         </th>
                         <th>생일</th>
@@ -742,9 +743,9 @@ export default function Users() {
                         }))}>
                             <span>계정상태</span>
                             {page.sort === "empState" && page.direction === "asc" ? (
-                                <FaArrowDown className="ms-2" />
+                                <BiSolidDownArrow className="ms-2" />
                             ) : (
-                                <FaArrowUp className="ms-2" />
+                                <BiSolidUpArrow className="ms-2" />
                             )}
                         </th>
                     </tr>

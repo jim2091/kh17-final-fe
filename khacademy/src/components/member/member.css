@@ -77,7 +77,7 @@
     opacity : 0.4;
 }
 .profile-img {
-    width: 200px;
+    width: 150px;
     object-fit: cover;
 }
 .swal2-container {
@@ -88,15 +88,15 @@
     max-width: 400px;
 }
 .my-pagination .page-link {
-    color: #012949 !important;
-    background-color: #2563eb !important;
-    border-color: #0b5999 !important;
+    color: #c7dbec !important;
+    background-color: white !important;
+    border-color: white !important;
 }
 
 .my-pagination .page-item.active .page-link {
-    color: #c7dbec !important;
-    background-color: #2563eb!important;
-    border-color: #025497 !important;
+    color: #012949 !important;
+    background-color: white!important;
+    border-color: white !important;
     font-weight: bold;
 }
 
@@ -122,6 +122,22 @@
     height: 3px;
     background-color: #2563eb;
     margin-top: 10px;
+}
+.mypage-edit{
+    background-color: white !important;
+    border: 1px solid #ddd !important;
+    color: #555 !important;
+    box-shadow: none !important;
+    padding : 2px 4px;
+    border-radius: 0%;
+}
+.mypage-edit:hover,
+.mypage-edit:focus,
+.mypage-edit:active {
+    background-color: white !important;
+    border-color: #ccc !important;
+    color: #333 !important;
+    box-shadow: none !important;
 }
 .autocomplete {
     position: absolute;

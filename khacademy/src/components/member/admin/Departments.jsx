@@ -10,7 +10,9 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Swal from "sweetalert2";
 import Pagination from 'react-bootstrap/Pagination';
+import Offcanvas from 'react-bootstrap/Offcanvas';
 // import "../member.css";
+import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 
 function MyVerticallyCenteredModal(props) {
     const [dept, setDept] = useState({
@@ -139,12 +141,13 @@ export default function Departments() {
         deptBlock: "",
     });
 
-    const [showPopover, setShowPopover] = useState(null);
+    const [show, setShow] = useState(false);
 
     const [page, setPage] = useState({
         page: 1,
         size: 10,
-
+        sort: "deptNo",
+        direction:"asc",
     });
     const [count, setCount] = useState(0);
 
@@ -161,11 +164,7 @@ export default function Departments() {
     useEffect(() => {
         loadData();
     }, [loadData]);
-    // console.log("deptList ;", deptList);
 
-    // if (deptList === null) {
-    //     return (<h1>로딩중인 화면</h1>);
-    // }
     const changeStringValue = useCallback(e => {
         const { name, value } = e.target;
         setSelectedDept(prev => ({
@@ -174,10 +173,6 @@ export default function Departments() {
         }));
     }, []);
 
-    const setData = useCallback((dept) => {
-
-        setSelectedDept(dept);
-    }, []);
 
     const changeData = useCallback(async () => {
         const result = await Swal.fire({
@@ -192,10 +187,8 @@ export default function Departments() {
         try {
             await apiClient.put("/dept/edit", selectedDept);
             toast.success("수정되었습니다.");
-
+            setShow(false);
             loadData();
-
-            setShowPopover(null);
 
         }
         catch (e) {
@@ -225,7 +218,11 @@ export default function Departments() {
     return (<>
 
         <Col className="d-flex justify-content-between align-items-center p-5">
-            <h1>부서관리</h1>
+            <div>
+                <h3>부서 목록</h3>
+                <span className="text-muted">총 부서 : {count}개</span>
+            </div>
+            
             <Button variant="primary" onClick={() => setModalShow(true)}>
                 <FaPlus />추가
             </Button>
@@ -235,106 +232,132 @@ export default function Departments() {
                 onAdd={loadData}
             />
         </Col>
-        <Card className="user-header fw-bold border-0">
-            <Card.Body>
-                <Row>
-                    <Col className="text-nowrap">부서번호</Col>
-                    <Col className="text-nowrap">부서이름</Col>
-                    <Col className="text-nowrap">부서설명</Col>
-                    <Col className="text-nowrap">활성화상태</Col>
 
-                </Row>
-            </Card.Body>
-        </Card>
+        <Table className="member-table">
+            <thead>
+                <tr>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "deptNo",
+                        direction: prev.sort === "deptNo" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>부서번호</span>
+                        {page.sort === "deptNo" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "deptName",
+                        direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>부서이름</span>
+                        {page.sort === "deptName" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                    <th>부서설명</th>
+                    <th onClick={() => setPage(prev => ({
+                        ...prev,
+                        page: 1,
+                        sort: "deptBlock",
+                        direction: prev.sort === "deptBlock" && prev.direction === "asc" ? "desc" : "asc",
+                    }))}>
+                        <span>상태</span>
+                        {page.sort === "deptBlock" && page.direction === "asc" ? (
+                            <BiSolidDownArrow className="ms-2" />
+                        ) : (
+                            <BiSolidUpArrow className="ms-2" />
+                        )}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {deptList.map((dept) => (
+                    <tr key={dept.deptNo} className="member-table-item"
+                        onClick={() => {
+                            setShow(true);
+                            setSelectedDept(dept);
+                        }}>
+                        <td>{dept.deptNo}</td>
+                        <td>{dept.deptName}</td>
+                        <td>{dept.deptInfo}</td>
+                        <td>{dept.deptBlock}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </Table>
+        <Offcanvas show={show}
+            onHide={() => setShow(false)}
+            placement="end"
+            style={{ width: "800px" }}
+        >
+            {selectedDept && (<>
+                <Offcanvas.Header closeButton>
+                    <div>
+                        <div>
+                            <Offcanvas.Title>부서 정보</Offcanvas.Title>
+                        </div>
 
-        {deptList.map((dept) => (
-            <Card key={dept.deptNo} className="mt-2 card">
-                <OverlayTrigger
-                    trigger="click"
-                    placement="bottom"
-                    rootClose={true}
-                    show={showPopover === dept.deptNo}
-                    onToggle={(nextShow) => {
-                        setShowPopover(nextShow ? dept.deptNo : null);
-                    }}
-                    overlay={
-                        <Popover id={`popover-positioned-bottom`} className="user-popover">
-                            <Popover.Header as="h3">{dept.deptName}</Popover.Header>
-                            <Popover.Body>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>부서명</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Control type="text" name="deptName" value={selectedDept.deptName}
-                                            onChange={changeStringValue} className="w-100">
-                                        </Form.Control>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>하는 일</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Control type="text" name="deptInfo" value={selectedDept.deptInfo}
-                                            onChange={changeStringValue} className="w-100">
-                                        </Form.Control>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Form.Label column sm={3}>활성화여부</Form.Label>
-                                    <Col sm={9}>
-                                        <Form.Check type="radio"
-                                            name="deptBlock"
-                                            value="Y"
-                                            className="d-inline-block"
-                                            label="Y"
-                                            checked={selectedDept.deptBlock === "Y"}
-                                            onChange={changeStringValue}
-                                        >
-                                        </Form.Check>
-                                        <Form.Check type="radio"
-                                            name="deptBlock"
-                                            value="N"
-                                            className="d-inline-block"
-                                            label="N"
-                                            checked={selectedDept.deptBlock === "N"}
-                                            onChange={changeStringValue}
-                                        >
-                                        </Form.Check>
-                                    </Col>
-                                </Row>
-                                <Row className="mt-4">
-                                    <Button onClick={changeData}>
-                                        <span>수정</span>
-                                    </Button>
-                                </Row>
-
-                            </Popover.Body>
-                        </Popover>
-                    }
-                >
-                    {/* <Button variant="secondary" onClick={() => {
-                        setData(dept);
-                        setShowPopover(
-                            showPopover === dept.deptNo ? null : dept.deptNo
-                        )
-                    }}>
-                        <FaMagnifyingGlass />
-                    </Button> */}
-
-                    <Card.Body onClick={() => {
-                        setData(dept);
-                        setShowPopover(
-                            showPopover === dept.deptNo ? null : dept.deptNo
-                        )
-                    }}>
-                        <Row>
-                            <Col className="text-nowrap">{dept.deptNo}</Col>
-                            <Col className="text-nowrap">{dept.deptName}</Col>
-                            <Col className="text-nowrap text-truncate">{dept.deptInfo}</Col>
-                            <Col className="text-nowrap">{dept.deptBlock}</Col>
-                        </Row>
-                    </Card.Body>
-                </OverlayTrigger>
-            </Card>
-        ))}
+                        <div className="profile-line"></div>
+                    </div>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>부서명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="deptName"
+                                value={selectedDept.deptName}
+                                onChange={changeStringValue} className="w-100">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>하는 일</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="deptInfo"
+                                value={selectedDept.deptInfo}
+                                onChange={changeStringValue} className="w-100">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>활성화여부</Form.Label>
+                        <Col sm={9}>
+                            <Form.Check type="radio"
+                                name="deptBlock"
+                                value="Y"
+                                className="d-inline-block"
+                                label="Y"
+                                checked={selectedDept.deptBlock === "Y"}
+                                onChange={changeStringValue}
+                            >
+                            </Form.Check>
+                            <Form.Check type="radio"
+                                name="deptBlock"
+                                value="N"
+                                className="d-inline-block"
+                                label="N"
+                                checked={selectedDept.deptBlock === "N"}
+                                onChange={changeStringValue}
+                            >
+                            </Form.Check>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Button onClick={changeData}>
+                            <span>수정</span>
+                        </Button>
+                    </Row>
+                </Offcanvas.Body>
+            </>)}
+        </Offcanvas>
         <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
             <Pagination.Prev
                 disabled={pageGroup === 1}

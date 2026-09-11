@@ -12,6 +12,8 @@ export default function Records() {
     const {projectNo} = useParams();
     const {project} = useOutletContext();
 
+    const isClosed = project?.projectStatus === "closed";
+
     //목록
     const [recordList, setRecordList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,6 +65,13 @@ export default function Records() {
         || project?.projectMemberRole === "manager";
 
     const canManageRecord = isRecordWritter || isManagerOrOwner;
+
+    //Record 수정/삭제/ISSUE 상태 변경 가능 여부
+    const canChangeRecord = canManageRecord && !isClosed;
+
+    //이슈 해결 모달
+    const [resolveModalOpen, setResolveModalOpen] = useState(false);
+    const [issueResolution, setIssueResoltion] = useState("");
 
     //목록 조회
     const loadRecordList = useCallback(async () => {
@@ -336,6 +345,79 @@ export default function Records() {
         }
     }, [selectedRecord]);
 
+    // 이슈 해결 모달 열기
+    const openResolveModal = useCallback(() => {
+        setIssueResoltion("");
+        setResolveModalOpen(true);
+    }, []);
+
+    // 이슈 해결 처리
+    const resolveIssue = useCallback(async () => {
+
+        if(!selectedRecord) return;
+
+        if(issueResolution.trim().length === 0) {
+            toast.warning("해결 내용을 입력해주세요");
+            return;
+        }
+
+        try {
+            await apiClient.put(
+                `/record/${selectedRecord.projectRecordNo}/resolve`,
+                {
+                    projectRecordIssueResolution: issueResolution
+                }
+            );
+
+            toast.success("이슈가 해결 처리되었습니다");
+
+            //해결 모달 닫기
+            setResolveModalOpen(false);
+            setIssueResoltion("");
+
+            //목록 최신화
+            await loadRecordList();
+
+            //상세 최신화(열려 있었지만 최신으로 다시 열려고)
+            await openDetail(selectedRecord.projectRecordNo);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("이슈 해결 처리에 실패했습니다");
+        }
+
+    }, [selectedRecord, issueResolution]);
+
+    //이슈 다시 열기
+    const reopenIssue = useCallback(async () => {
+        
+        if(!selectedRecord) return;
+
+        const result = await Swal.fire({
+            title: "이슈를 다시 여시겠습니까?",
+            text: "기존 해결 내용과 해결 시간이 초기화됩니다",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "다시 열기",
+            cancelButtonText: "취소"
+        });
+
+        if(!result.isConfirmed) return;
+
+        try {
+            await apiClient.put(`/record/${selectedRecord.projectRecordNo}/reopen`);
+
+            toast.success("이슈가 다시 열렸습니다");
+
+            await loadRecordList();
+            await openDetail(selectedRecord.projectRecordNo);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("이슈 다시 열기에 실패했습니다")
+        }
+    }, [selectedRecord]);
+
     //타입 한글 변환
     const getTypeName = (type) => {
         switch(type) {
@@ -489,10 +571,12 @@ export default function Records() {
                     </div>
                 </div>
 
-                <Button variant="primary" onClick={openAddModal}>
-                    <Plus size={16} className="me-1" />
-                    새 기록 작성
-                </Button>
+                {!isClosed && (
+                    <Button variant="primary" onClick={openAddModal}>
+                        <Plus size={16} className="me-1" />
+                        새 기록 작성
+                    </Button>
+                )}
             </div>
 
             {/* 목록 */}
@@ -910,7 +994,7 @@ export default function Records() {
 
                 <Modal.Footer className="record-detail-footer">
                     <div>
-                        {canManageRecord && (
+                        {canChangeRecord && (
                             <Button
                                 variant="danger"
                                 onClick={deleteRecord}
@@ -921,7 +1005,34 @@ export default function Records() {
                     </div>
 
                     <div className="record-detail-footer-actions">
-                        {canManageRecord && (<>
+
+                        {canChangeRecord 
+                            && selectedRecord?.projectRecordType === "ISSUE"
+                            && selectedRecord?.projectRecordIssueStatus === "OPEN"
+                            && (
+                                <Button
+                                    variant="success"
+                                    onClick={openResolveModal}
+                                >
+                                    해결 처리
+                                </Button>
+                            )
+                        }
+
+                        {canChangeRecord 
+                            && selectedRecord?.projectRecordType === "ISSUE"
+                            && selectedRecord?.projectRecordIssueStatus === "RESOLVED"
+                            && (
+                                <Button
+                                    variant="outline-warning"
+                                    onClick={reopenIssue}
+                                >
+                                    다시 열기
+                                </Button>
+                            )
+                        }
+
+                        {canChangeRecord && (<>
 
                             <Button
                                 variant="primary"
@@ -1088,6 +1199,51 @@ export default function Records() {
                         onClick={editRecord}    
                     >
                         수정
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* 이슈 해결 모달 */}
+            <Modal
+                show={resolveModalOpen}
+                onHide={() => setResolveModalOpen(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        이슈 해결
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <FormGroup>
+                        <FormLabel>
+                            해결 내용
+                        </FormLabel>
+
+                        <Form.Control
+                            as="textarea"
+                            rows={5}
+                            value={issueResolution}
+                            onChange={e => setIssueResoltion(e.target.value)}
+                            placeholder="이슈를 어떻게 해결했는지 입력하세요"
+                        />
+                    </FormGroup>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setResolveModalOpen(false)}
+                    >
+                        취소
+                    </Button>
+
+                    <Button
+                        variant="success"
+                        onClick={resolveIssue}
+                    >
+                        해결 완료
                     </Button>
                 </Modal.Footer>
             </Modal>
