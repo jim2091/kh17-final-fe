@@ -1256,3 +1256,25 @@
   background-color: #f1f5f9;
   color: #0f172a;
 }
+
+
+/* Record로 남기기 버튼 */
+.btn-record-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  background-color: #eef2ff;
+  border: 1px solid#c7d2fe;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-record-link:hover {
+  background-color: #e0e7ff;
+  border-color: #a5b4fc;
+}
