@@ -5,6 +5,7 @@ import {
   List,
   FileText,
   LayoutGrid,
+  AlignLeft,
   Search,
   Plus,
   Calendar
@@ -12,14 +13,14 @@ import {
 import { toast } from "react-toastify";
 import "./Notes.css";
 
-// 이미지 파일 판별 헬퍼
+// 1. 이미지 파일 판별 헬퍼
 const isImageFile = (fileName = "") => {
-  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
+  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName || "");
 };
 
-// 워드 파일 판별 헬퍼
-const isDocxFile = (fileName = "") => {
-  return (fileName || "").toLowerCase().endsWith(".docx");
+// 2. 문서 파일 판별 헬퍼 (워드, 한글, PDF, 엑셀, PPT, 텍스트 등 전체 지원)
+const isDocFile = (fileName = "") => {
+  return /\.(docx|doc|hwp|hwpx|pdf|xlsx|xls|pptx|ppt|txt|log|csv|md)$/i.test(fileName || "");
 };
 
 export default function Notes() {
@@ -30,7 +31,7 @@ export default function Notes() {
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
 
-  // 필터 모드: 'ALL'(전체글) | 'DOCX'(워드 파일 첨부글) | 'IMAGE'(사진 첨부글)
+  // 필터 모드: 'ALL'(전체글) | 'DOC'(문서 파일 첨부글) | 'IMAGE'(사진 첨부글) | 'TEXT'(첨부파일 없는 일반글)
   const [fileFilter, setFileFilter] = useState("ALL");
 
   // 본문 20자 이상일 때 10자 말줄임 처리
@@ -82,18 +83,31 @@ export default function Notes() {
 
   // 검색어 및 첨부파일 조건 필터링
   const filteredNotes = notes.filter((note) => {
+    // 1. 검색어 필터링 (제목 및 본문)
     const matchesKeyword =
       (note.noteTitle || "").toLowerCase().includes(searchKeyword.toLowerCase()) ||
       (note.noteContent || "").toLowerCase().includes(searchKeyword.toLowerCase());
 
     if (!matchesKeyword) return false;
 
+    const files = note.files || [];
+
+    // 2. 문서 첨부글 필터 (워드, 한글, PDF, 엑셀 등 문서가 1개 이상 포함된 글)
+    if (fileFilter === "DOC") {
+      return files.some((f) => isDocFile(f.attachName));
+    }
+
+    // 3. 사진 첨부글 필터 (이미지가 1개 이상 포함된 글)
     if (fileFilter === "IMAGE") {
-      return (note.files || []).some((f) => isImageFile(f.attachName));
+      return files.some((f) => isImageFile(f.attachName));
     }
-    if (fileFilter === "DOCX") {
-      return (note.files || []).some((f) => isDocxFile(f.attachName));
+
+    // 4. 일반 글 필터 (첨부파일이 하나도 없는 순수 텍스트 글)
+    if (fileFilter === "TEXT") {
+      return files.length === 0;
     }
+
+    // 'ALL'은 전체 통과
     return true;
   });
 
@@ -127,9 +141,9 @@ export default function Notes() {
           </button>
           <button
             type="button"
-            className={`btn-icon-filter ${fileFilter === "DOCX" ? "active" : ""}`}
-            onClick={() => setFileFilter("DOCX")}
-            title="워드/문서 첨부글"
+            className={`btn-icon-filter ${fileFilter === "DOC" ? "active" : ""}`}
+            onClick={() => setFileFilter("DOC")}
+            title="문서(워드/한글/PDF) 첨부글"
           >
             <FileText size={17} strokeWidth={2.2} />
           </button>
@@ -140,6 +154,14 @@ export default function Notes() {
             title="사진/이미지 첨부글"
           >
             <LayoutGrid size={17} strokeWidth={2.2} />
+          </button>
+          <button
+            type="button"
+            className={`btn-icon-filter ${fileFilter === "TEXT" ? "active" : ""}`}
+            onClick={() => setFileFilter("TEXT")}
+            title="일반 글 (첨부파일 없음)"
+          >
+            <AlignLeft size={17} strokeWidth={2.2} />
           </button>
         </div>
 
@@ -175,13 +197,16 @@ export default function Notes() {
                   {note.noteUtime && <span className="note-list-edited-badge">수정됨</span>}
                 </div>
 
-                {/* 썸네일 영역: 클릭 이벤트 차단 없이 카드를 누르면 자연스럽게 상세로 이동 */}
+                {/* 썸네일 영역 (이미지 로드 실패 시 깨진 이미지 아이콘 방어) */}
                 {firstImg && (
                   <div className="note-card-thumb-wrap">
                     <img
                       src={`http://localhost:8080/api/attach/${firstImg.attachNo}`}
                       alt={firstImg.attachName}
                       className="note-card-thumb-img"
+                      onError={(e) => {
+                        e.currentTarget.parentElement.style.display = "none";
+                      }}
                     />
                   </div>
                 )}
