@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
@@ -92,7 +93,6 @@ export default function Files({
     sourceNo = null,
 }) {
 
-
     // ==================================================
     // 프로젝트 번호
     // ==================================================
@@ -131,11 +131,6 @@ export default function Files({
     // ==================================================
     // 프로젝트 상태
     // ==================================================
-    //
-    // open / active / closed 등
-    //
-    // closed인 경우 파일 업로드 버튼을 숨깁니다.
-    //
 
     const [projectStatus, setProjectStatus] = useState("");
 
@@ -197,10 +192,6 @@ export default function Files({
     // ==================================================
     // 프로젝트 종료 여부
     // ==================================================
-    //
-    // DB에서 CLOSED / closed 어느 형태로 와도
-    // 정상적으로 종료 프로젝트로 인식하도록 처리합니다.
-    //
 
     const isProjectClosed =
         String(projectStatus || "").toLowerCase() === "closed";
@@ -248,11 +239,9 @@ export default function Files({
             return false;
         }
 
-
         if (!hasSourceNo(file)) {
             return false;
         }
-
 
         return [
             "NOTE",
@@ -276,13 +265,11 @@ export default function Files({
 
         e.stopPropagation();
 
-
         if (
             !isSourceClickable(file)
         ) {
             return;
         }
-
 
         const sourceType =
             file.attachSource;
@@ -338,7 +325,6 @@ export default function Files({
                         `/note/comment/${sourceNo}`
                     );
 
-
                 const comment =
                     response.data;
 
@@ -378,7 +364,6 @@ export default function Files({
                         `/task/comment/${sourceNo}`
                     );
 
-
                 const comment =
                     response.data;
 
@@ -412,12 +397,10 @@ export default function Files({
                 error
             );
 
-
             console.error(
                 "서버 응답:",
                 error.response?.data
             );
-
 
             alert(
                 error.response?.data?.message ||
@@ -545,6 +528,18 @@ export default function Files({
             );
 
 
+            console.log(
+                "로그인 사용자:",
+                response.data?.loginUser
+            );
+
+
+            console.log(
+                "로그인 사용자 역할:",
+                response.data?.loginRole
+            );
+
+
             setFiles(
                 Array.isArray(
                     response.data?.files
@@ -565,10 +560,6 @@ export default function Files({
                 ""
             );
 
-
-            // ==================================================
-            // 프로젝트 상태 저장
-            // ==================================================
 
             setProjectStatus(
                 response.data?.projectStatus ||
@@ -645,12 +636,6 @@ export default function Files({
         const newType =
             e.target.value;
 
-
-        /*
-         * 검색 종류만 변경합니다.
-         *
-         * 기존 검색어는 유지합니다.
-         */
 
         setSearchType(
             newType
@@ -1415,6 +1400,84 @@ export default function Files({
 
 
     // ==================================================
+    // 삭제 권한
+    // ==================================================
+    //
+    // owner   : 모든 파일 삭제 가능
+    // manager : 모든 파일 삭제 가능
+    // member  : 본인이 업로드한 파일만 삭제 가능
+    //
+    // 백엔드에서도 동일한 권한 검사를 수행해야 합니다.
+    //
+
+    const canDeleteFile = (file) => {
+
+        const role =
+            String(
+                loginRole || ""
+            ).toLowerCase();
+
+
+        const currentUser =
+            String(
+                loginUser ?? ""
+            );
+
+
+        const uploader =
+            String(
+                file?.attachUploader ?? ""
+            );
+
+
+        // ==================================================
+        // 프로젝트 owner
+        // ==================================================
+
+        if (
+            role === "owner"
+        ) {
+
+            return true;
+        }
+
+
+        // ==================================================
+        // 프로젝트 manager
+        // ==================================================
+
+        if (
+            role === "manager"
+        ) {
+
+            return true;
+        }
+
+
+        // ==================================================
+        // 프로젝트 member
+        // ==================================================
+
+        if (
+            role === "member"
+        ) {
+
+            return (
+                currentUser !== "" &&
+                currentUser === uploader
+            );
+        }
+
+
+        // ==================================================
+        // 그 외
+        // ==================================================
+
+        return false;
+    };
+
+
+    // ==================================================
     // 파일 크기
     // ==================================================
 
@@ -1894,9 +1957,6 @@ export default function Files({
 
     // ==================================================
     // 검색 영역
-    //
-    // 파일명 / 출처 / 업로더 / 파일 형태
-    // 전부 동일한 text input 사용
     // ==================================================
 
     const renderSearchInput = () => {
@@ -1969,14 +2029,9 @@ export default function Files({
                 <div className="files-toolbar">
 
 
-                    {/* ==================================================
-                        검색 영역
-                    ================================================== */}
+                    {/* 검색 영역 */}
 
                     <div className="files-search-area">
-
-
-                        {/* 검색 종류 */}
 
                         <select
                             className="files-search-type"
@@ -2003,14 +2058,10 @@ export default function Files({
                         </select>
 
 
-                        {/* 검색 입력 */}
-
                         <div className="files-search">
 
                             {renderSearchInput()}
 
-
-                            {/* 검색 버튼 */}
 
                             <button
                                 type="button"
@@ -2024,11 +2075,8 @@ export default function Files({
 
                             </button>
 
-
                         </div>
 
-
-                        {/* 검색 초기화 */}
 
                         {keyword && (
 
@@ -2047,12 +2095,9 @@ export default function Files({
                     </div>
 
 
-                    {/* ==================================================
-                        정렬
-                    ================================================== */}
+                    {/* 정렬 */}
 
                     <div className="files-sort-area">
-
 
                         <select
                             className="files-sort-select"
@@ -2082,7 +2127,7 @@ export default function Files({
 
                     {/* ==================================================
                         업로드
-                        종료된 프로젝트에서는 버튼 자체를
+                        종료 프로젝트에서는 버튼 자체를
                         렌더링하지 않습니다.
                     ================================================== */}
 
@@ -2115,8 +2160,6 @@ export default function Files({
 
                     )}
 
-
-                    {/* 실제 파일 input */}
 
                     <input
                         ref={fileInputRef}
@@ -2176,9 +2219,7 @@ export default function Files({
                     </div>
 
 
-                    {/* ==================================================
-                        로딩
-                    ================================================== */}
+                    {/* 로딩 */}
 
                     {loading && (
 
@@ -2191,9 +2232,7 @@ export default function Files({
                     )}
 
 
-                    {/* ==================================================
-                        파일 없음
-                    ================================================== */}
+                    {/* 파일 없음 */}
 
                     {!loading &&
                         files.length === 0 && (
@@ -2234,9 +2273,7 @@ export default function Files({
                         )}
 
 
-                    {/* ==================================================
-                        파일 목록
-                    ================================================== */}
+                    {/* 파일 목록 */}
 
                     {!loading &&
                         sortedFiles.map((file) => {
@@ -2411,20 +2448,14 @@ export default function Files({
                                         )}
                                     </div>
 
-                                    {/* 삭제 */}
+                                    {/* ==================================================
+                                        삭제
+                                    ================================================== */}
 
                                     <div className="files-col-delete">
 
                                         {
-                                            loginUser ===
-                                                String(
-                                                    file.attachUploader
-                                                ) &&
-                                            (
-                                                loginRole === "owner" ||
-                                                loginRole === "manager" ||
-                                                loginRole === ""
-                                            ) && (
+                                            canDeleteFile(file) && (
 
                                                 <button
                                                     type="button"
@@ -2446,6 +2477,7 @@ export default function Files({
                                                     <DeleteIcon />
 
                                                 </button>
+
                                             )
                                         }
 
@@ -2487,7 +2519,6 @@ export default function Files({
                         {/* 미리보기 헤더 */}
 
                         <div className="files-preview-header">
-
 
                             <div className="files-preview-title">
 
@@ -2577,9 +2608,7 @@ export default function Files({
                         </div>
 
 
-                        {/* ==================================================
-                            이미지 영역
-                        ================================================== */}
+                        {/* 이미지 영역 */}
 
                         <div className="files-preview-body">
 
@@ -2609,7 +2638,6 @@ export default function Files({
                             ) : (
 
                                 <div className="files-preview-error">
-
 
                                     <div className="files-preview-error-icon">
 
@@ -2676,3 +2704,4 @@ export default function Files({
         </div>
     );
 }
+
