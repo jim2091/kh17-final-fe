@@ -359,6 +359,7 @@
         100px
         65px
         85px
+        65px
         65px;
 }
 
@@ -627,6 +628,14 @@
     justify-content: center;
 }
 
+/* record */
+.files-col-record {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 /* ==========================================
    파일 아이콘 공통
@@ -1378,4 +1387,36 @@
     .files-preview-title span {
         max-width: 200px;
     }
+
+}
+
+
+/* record 아이콘 */
+.files-record-button {
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+.files-record-button:hover {
+    background: #f1f3f4;
+}
+
+.files-record-button svg {
+    width: 17px;
+    height: 17px;
+
+    stroke: #5f6368;
 }

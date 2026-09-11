@@ -12,6 +12,8 @@ export default function Records() {
     const {projectNo} = useParams();
     const {project} = useOutletContext();
 
+    const isClosed = project?.projectStatus === "closed";
+
     //목록
     const [recordList, setRecordList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,6 +65,9 @@ export default function Records() {
         || project?.projectMemberRole === "manager";
 
     const canManageRecord = isRecordWritter || isManagerOrOwner;
+
+    //Record 수정/삭제/ISSUE 상태 변경 가능 여부
+    const canChangeRecord = canManageRecord && !isClosed;
 
     //이슈 해결 모달
     const [resolveModalOpen, setResolveModalOpen] = useState(false);
@@ -566,10 +571,12 @@ export default function Records() {
                     </div>
                 </div>
 
-                <Button variant="primary" onClick={openAddModal}>
-                    <Plus size={16} className="me-1" />
-                    새 기록 작성
-                </Button>
+                {!isClosed && (
+                    <Button variant="primary" onClick={openAddModal}>
+                        <Plus size={16} className="me-1" />
+                        새 기록 작성
+                    </Button>
+                )}
             </div>
 
             {/* 목록 */}
@@ -987,7 +994,7 @@ export default function Records() {
 
                 <Modal.Footer className="record-detail-footer">
                     <div>
-                        {canManageRecord && (
+                        {canChangeRecord && (
                             <Button
                                 variant="danger"
                                 onClick={deleteRecord}
@@ -999,7 +1006,7 @@ export default function Records() {
 
                     <div className="record-detail-footer-actions">
 
-                        {canManageRecord
+                        {canChangeRecord 
                             && selectedRecord?.projectRecordType === "ISSUE"
                             && selectedRecord?.projectRecordIssueStatus === "OPEN"
                             && (
@@ -1012,7 +1019,7 @@ export default function Records() {
                             )
                         }
 
-                        {canManageRecord
+                        {canChangeRecord 
                             && selectedRecord?.projectRecordType === "ISSUE"
                             && selectedRecord?.projectRecordIssueStatus === "RESOLVED"
                             && (
@@ -1025,7 +1032,7 @@ export default function Records() {
                             )
                         }
 
-                        {canManageRecord && (<>
+                        {canChangeRecord && (<>
 
                             <Button
                                 variant="primary"
