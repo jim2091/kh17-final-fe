@@ -138,7 +138,7 @@ export default function NoteDetail() {
     try {
       await apiClient.delete(`/note/${noteNo}`);
       toast.success("노트가 삭제되었습니다.");
-      navigate(`/projects/${projectNo}/note`);
+      navigate(`/projects/${projectNo}/notes`);
     } catch (e) {
       console.error("노트 삭제 실패:", e);
       if (e.response?.status === 403) {
