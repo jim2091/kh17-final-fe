@@ -1,6 +1,5 @@
-import { Button, Col, Form, Row, Card, Badge, Table, ListGroup } from "react-bootstrap";
-import { FaArrowDown, FaArrowUp, FaCircle, FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Button, Col, Form, Row, Badge, Table, ListGroup } from "react-bootstrap";
+import { FaMagnifyingGlass} from "react-icons/fa6";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import "../member.css";
@@ -49,7 +48,7 @@ export default function Users() {
 
 
     const [checked, setChecked] = useState([]);
-    console.log("선택된 회원번호 : ", checked);
+    // console.log("선택된 회원번호 : ", checked);
 
     const [stateChecked, setStateChecked] = useState([]);
     // console.log("변경할 사항 : ", stateChecked);
