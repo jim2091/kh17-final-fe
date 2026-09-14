@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAtomValue } from "jotai";
 import Swal from "sweetalert2";
@@ -35,6 +35,9 @@ const COLUMNS = [
 export default function Task() {
   const { projectNo } = useParams();
   const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryTaskNo = searchParams.get("taskNo");
 
   const { project } = useOutletContext();
   const isClosed = project?.projectStatus === "closed";
@@ -175,7 +178,8 @@ export default function Task() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [taskFiles, setTaskFiles] = useState([]);
-    //Record 연결 모달
+  
+  // Record 연결 모달
   const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   // 수정 모드 상태
@@ -358,6 +362,50 @@ export default function Task() {
     setRecordModalOpen(false);
   }, []);
 
+  const handleCardClick = useCallback(async (taskNo) => {
+    if (isDragging) return;
+    setIsEditing(false);
+
+    setTasks((currentTasks) => {
+      const localTarget = currentTasks.find((t) => t.taskNo === taskNo);
+      if (localTarget) {
+        setSelectedTask(localTarget);
+      }
+      return currentTasks;
+    });
+
+    setDrawerOpen(true);
+    fetchTaskFiles(taskNo);
+
+    try {
+      setDrawerLoading(true);
+      const res = await apiClient.get(`/task/${taskNo}`);
+      if (res.data) {
+        setSelectedTask(res.data);
+      }
+    } catch (error) {
+      console.warn("단건 상세 로딩 실패:", error);
+    } finally {
+      setDrawerLoading(false);
+    }
+  }, [isDragging, fetchTaskFiles]);
+
+  // 💡 [핵심 보정] 알림 클릭 시 queryTaskNo 감지하여 즉시 드로어 열기
+  useEffect(() => {
+    if (!queryTaskNo) return;
+
+    const targetNo = Number(queryTaskNo);
+    if (targetNo > 0) {
+      handleCardClick(targetNo);
+
+      // 드로어를 열고 주소창의 파라미터는 깔끔하게 제거
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("taskNo");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [queryTaskNo, searchParams, setSearchParams, handleCardClick]);
+
+  // 웹소켓 실시간 이벤트 구독
   useEffect(() => {
     if (!projectNo) return;
 
@@ -479,31 +527,6 @@ export default function Task() {
     return !editCollaborators.includes(m.projectMemberNo);
   });
 
-  const handleCardClick = async (taskNo) => {
-    if (isDragging) return;
-    setIsEditing(false);
-
-    const localTarget = tasks.find((t) => t.taskNo === taskNo);
-    if (localTarget) {
-      setSelectedTask(localTarget);
-      setDrawerOpen(true);
-    }
-
-    fetchTaskFiles(taskNo);
-
-    try {
-      setDrawerLoading(true);
-      const res = await apiClient.get(`/task/${taskNo}`);
-      if (res.data) {
-        setSelectedTask(res.data);
-      }
-    } catch (error) {
-      console.warn("단건 상세 로딩 실패:", error);
-    } finally {
-      setDrawerLoading(false);
-    }
-  };
-
   const handleStartEdit = () => {
     if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 수정 불가합니다.");
@@ -555,7 +578,6 @@ export default function Task() {
     );
   };
 
-  // SweetAlert2 적용 소프트 삭제
   const handleDeleteTask = async () => {
     if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 삭제할 수 없습니다.");
@@ -613,7 +635,6 @@ export default function Task() {
     }
   };
 
-  // 보관함 모달 내에서 다른 상태(TODO / IN_PROGRESS)로 즉시 복귀시키는 함수
   const handleMoveFromArchive = async (taskNo, targetStatus) => {
     if (isClosed) {
       toast.warning("종료된 프로젝트의 업무는 상태를 변경할 수 없습니다.");
@@ -686,6 +707,7 @@ export default function Task() {
     }
   };
 
+  // 💡 [핵심 보정] 업무 본체 수정과 함께 분리된 협업자 교체 API를 동시 호출
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -723,9 +745,16 @@ export default function Task() {
 
     try {
       setUpdating(true);
+
+      // 1. 업무 기본 정보 수정
       await apiClient.put("/task/", payload);
+
+      // 2. 💡 [핵심] 분리된 협업자 컨트롤러의 전체 교체(replace) API 호출
+      await apiClient.put(`/task-collabo/${selectedTask.taskNo}`, editCollaborators);
+
       toast.success("업무 내용이 성공적으로 수정되었습니다.");
 
+      // 최신 상세 내역 및 목록 재조회
       const detailRes = await apiClient.get(`/task/${selectedTask.taskNo}`);
       if (detailRes.data) {
         setSelectedTask(detailRes.data);
@@ -1179,7 +1208,6 @@ export default function Task() {
                       </div>
                     </div>
 
-                    {/* 원클릭 상태 되돌리기 액션 버튼 그룹 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                       <button
                         type="button"
@@ -1892,6 +1920,7 @@ export default function Task() {
           </div>
         ) : null}
       </aside>
+
       {/* RecordLinkModal */}
       {selectedTask && (
         <RecordLinkModal
@@ -1904,6 +1933,5 @@ export default function Task() {
         />
       )}
     </div>
-
   );
 }
