@@ -1,9 +1,11 @@
-import { Col, Row, Card } from "react-bootstrap";
+import { Col, Row, Card, Table } from "react-bootstrap";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { apiClient } from "@utils/reaxios";
 import "./member.css";
 import "@templates/project.css";
 import Pagination from 'react-bootstrap/Pagination';
+import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
+import NoImage from "@assets/noimages.png";
 
 
 
@@ -20,6 +22,15 @@ export default function Members() {
     });
 
     const [count, setCount] = useState(0);
+    
+    const tabs = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ",
+        "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+
+    const [activeTab, setActiveTab] = useState("");
+
+    const [isSearch, setIsSearch] = useState(false);
+
+    const [selectedEmp, setSelectedEmp] = useState({});
 
 
 
@@ -28,10 +39,12 @@ export default function Members() {
 
 
     const loadData = useCallback(async () => {
+        if (isSearch) return;
         const { data } = await apiClient.post("/member/", page);
 
         setEmpList(data.list);
         setCount(data.count);
+        setChecked([]);
 
 
 
@@ -43,56 +56,188 @@ export default function Members() {
 
     }, [loadData]);
 
+    const searchInitial = useCallback(async (tab) => {
+        setActiveTab(tab);
+
+        const newPage = {
+            ...page,
+            page: 1,
+            sort: "empNo",
+
+        }
+        setPage(newPage);
+        setIsSearch(true);
+
+        const { data } = await apiClient.post("/member/initial", {
+            tab: tab,
+            pageVO: newPage,
+        });
+
+        // setPage(prev=>({...prev, page : 1}));
+        setEmpList(data.list);
+        setCount(data.count);
+    }, [page]);
+
     const totalPage = useMemo(() => {
-            return Math.ceil(count / page.size);
-        }, [count, page]);
-    
-        const pageGroup = useMemo(() => {
-            return Math.ceil(page.page / 5);
-        }, [page]);
-    
-        const startPage = useMemo(() => {
-            return (pageGroup - 1) * 5 + 1;
-        }, [pageGroup]);
-    
-        const endPage = useMemo(() => {
-            return Math.min(pageGroup * 5, totalPage);
-        }, [pageGroup, totalPage]);
-    
+        return Math.ceil(count / page.size);
+    }, [count, page]);
+
+    const pageGroup = useMemo(() => {
+        return Math.ceil(page.page / 5);
+    }, [page]);
+
+    const startPage = useMemo(() => {
+        return (pageGroup - 1) * 5 + 1;
+    }, [pageGroup]);
+
+    const endPage = useMemo(() => {
+        return Math.min(pageGroup * 5, totalPage);
+    }, [pageGroup, totalPage]);
+
 
 
     return (<>
         <div className="p-4">
-            <Row className="user-header py-2 fw-bold">
-                <Col className="text-nowrap">이름</Col>
-                <Col className="d-none d-md-block text-nowrap">이메일</Col>
-                <Col className="text-nowrap">부서</Col>
-                <Col className="text-nowrap">직급</Col>
-                <Col className="d-none d-md-block text-nowrap">생년월일</Col>
-                <Col className="d-none d-md-block text-nowrap">연락처</Col>
-                <Col className="d-none d-md-block text-nowrap">주소</Col>
-            </Row>
 
+            <div className="tabs mt-2">
+                <span className={`mb-1 tab ${activeTab === "전체" ? "active" : ""}`}
+                    onClick={
+                        () => {
+                            setActiveTab("전체");
+                            setIsSearch(false);
+                            setPage(prev => ({
+                                ...prev,
+                                sort: "empNo",
+                                direction: "asc",
+                            }));
+                        }
+                    }>전체</span>
+                {tabs.map((tab) => (
+                    <div key={tab}
+                        className={`mb-1 tab ${activeTab === tab ? "active" : ""}`}
+                        onClick={() => searchInitial(tab)}>
+                        <span>{tab}</span>
+                    </div>
+                ))}
+                <span className="divider"></span>
+            </div>
+            <Table className="member-table">
+                <thead>
+                    <tr>
+                        {/* <th>
+                            <Form.Check
+                                className="big-checkbox"
+                                checked={
+                                    empList.length > 0 &&
+                                    checked.length === empList.length
+                                }
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setChecked(empList.map(emp => emp.empNo));
+                                    } else {
+                                        setChecked([]);
+                                    }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                            ></Form.Check>
+                        </th> */}
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "empName",
+                            direction: prev.sort === "empName" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
+                            <span>이름</span>
+                            {page.sort === "empName" && page.direction === "asc" ? (
+                                <BiSolidDownArrow className="ms-2" />
+                            ) : (
+                                <BiSolidUpArrow className="ms-2" />
+                            )}
 
-            {empList.map((emp) => {
-                return (<>
+                        </th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "empEmail",
+                            direction: prev.sort === "empEmail" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
+                            <span>이메일</span>
+                            {page.sort === "empEmail" && page.direction === "asc" ? (
+                                <BiSolidDownArrow className="ms-2" />
+                            ) : (
+                                <BiSolidUpArrow className="ms-2" />
+                            )}
+                        </th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "deptName",
+                            direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
+                            <span>부서</span>
+                            {page.sort === "deptName" && page.direction === "asc" ? (
+                                <BiSolidDownArrow className="ms-2" />
+                            ) : (
+                                <BiSolidUpArrow className="ms-2" />
+                            )}
+                        </th>
+                        <th onClick={() => setPage(prev => ({
+                            ...prev,
+                            page: 1,
+                            sort: "positionName",
+                            direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
+                        }))}>
+                            <span>직급</span>
+                            {page.sort === "positionName" && page.direction === "asc" ? (
+                                <BiSolidDownArrow className="ms-2" />
+                            ) : (
+                                <BiSolidUpArrow className="ms-2" />
+                            )}
+                        </th>
+                        <th>생일</th>
+                        <th>연락처</th>
+                        <th>주소</th>
+                    </tr>
+                </thead>
 
-                    <Card key={emp.empNo} className="mt-2 card">
-
-                        <Card.Body>
-                            <Row>
-                                <Col className="text-nowrap">{emp.empName}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empEmail}</Col>
-                                <Col className="text-truncate text-nowrap">{emp.deptName}</Col>
-                                <Col className="text-truncate text-nowrap">{emp.positionName}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empBirth}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empContact}</Col>
-                                <Col className="d-none d-lg-block text-truncate text-nowrap">{emp.empAddress1}</Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </>);
-            })}
+                <tbody>
+                    {empList.map((emp) => (
+                        <tr onClick={() => {
+                            setSelectedEmp(emp);
+                            setShow(true);
+                        }}
+                            key={emp.empNo}
+                            className="member-table-item">
+                            <td>
+                                <div className="d-flex align-items-center">
+                                {emp.attachNo ? (
+                                    <img
+                                        src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
+                                        className="list-img ms-3"
+                                    />
+                                ) : (
+                                    <img
+                                        src={NoImage}
+                                        className="list-img ms-3"
+                                    />
+                                )}
+                                {emp.empName === null ? (
+                                    <span className="ms-2">이름없음</span>
+                                ) : (<>
+                                    <span className="ms-2">{emp.empName}</span>
+                                </>)}</div>
+                            </td>
+                            <td>{emp.empEmail}</td>
+                            <td>{emp.deptName}</td>
+                            <td>{emp.positionName}</td>
+                            <td>{emp.empBirth}</td>
+                            <td>{emp.empContact}</td>
+                            <td>{emp.empAddress1}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+            
             <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
                 <Pagination.Prev
                     disabled={pageGroup === 1}

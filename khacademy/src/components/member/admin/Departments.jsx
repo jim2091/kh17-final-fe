@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { Button, Col, Row, Table, Form, Card } from "react-bootstrap";
+import { Button, Col, Row, Table, Form, Card, Badge } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 // import { Link, useNavigate } from "react-router-dom";
@@ -129,6 +129,35 @@ function MyVerticallyCenteredModal(props) {
 
 export default function Departments() {
 
+    const [dept, setDept] = useState({
+        deptName: "",
+        deptInfo: "",
+        deptBlock: "",
+    });
+
+    const changeDeptValue = useCallback(e => {
+        const { name, value } = e.target;
+        setDept(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }, []);
+
+    const sendData = useCallback(async () => {
+
+        await apiClient.post("/dept/add", dept);
+        toast.success("부서가 추가되었습니다.");
+
+        setDept({
+            deptName: "",
+            deptInfo: "",
+            deptBlock: "",
+        });
+
+
+
+    }, [dept]);
+
     const [deptList, setDeptList] = useState([]);
 
     const [modalShow, setModalShow] = useState(false);
@@ -147,7 +176,7 @@ export default function Departments() {
         page: 1,
         size: 10,
         sort: "deptNo",
-        direction:"asc",
+        direction: "asc",
     });
     const [count, setCount] = useState(0);
 
@@ -216,83 +245,180 @@ export default function Departments() {
         return Math.min(pageGroup * 5, totalPage);
     }, [pageGroup, totalPage]);
     return (<>
+        <div>
+            <div className="department-main">
+                <div className="department-card">
+                    <Col className="d-flex justify-content-between align-items-center p-5">
+                        <div>
 
-        <Col className="d-flex justify-content-between align-items-center p-5">
-            <div>
-                <h3>부서 목록</h3>
-                <span className="text-muted">총 부서 : {count}개</span>
+                            <h3>부서 목록</h3>
+                            <span className="text-muted">총 부서 : {count}개</span>
+                        </div>
+
+                    </Col>
+
+
+                    <Table className="member-table">
+                        <thead>
+                            <tr>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "deptNo",
+                                    direction: prev.sort === "deptNo" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>부서번호</span>
+                                    {page.sort === "deptNo" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "deptName",
+                                    direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>부서이름</span>
+                                    {page.sort === "deptName" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                                <th>부서설명</th>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "deptBlock",
+                                    direction: prev.sort === "deptBlock" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>상태</span>
+                                    {page.sort === "deptBlock" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {deptList.map((dept) => (
+                                <tr key={dept.deptNo}
+                                    className="member-table-item"
+                                    onClick={() => {
+                                        setShow(true);
+                                        setSelectedDept(dept);
+                                    }}>
+                                    <td>{dept.deptNo}</td>
+                                    <td>{dept.deptName}</td>
+                                    <td>{dept.deptInfo}</td>
+                                    <td>
+                                        {dept.deptBlock}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                    <div className="member-table">
+                    </div>
+                    <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
+                        <Pagination.Prev
+                            disabled={pageGroup === 1}
+                            onClick={() =>
+                                setPage(prev => ({
+                                    ...prev,
+                                    page: startPage - 1
+                                }))
+                            }
+                        />
+                        {Array.from(
+                            { length: endPage - startPage + 1 },
+                            (_, index) => startPage + index)
+                            .map(pageNumber => (
+
+                                <Pagination.Item
+                                    key={pageNumber}
+                                    active={page.page === pageNumber}
+                                    onClick={() =>
+                                        setPage(prev => ({
+                                            ...prev,
+                                            page: pageNumber
+                                        }))}
+                                >{pageNumber}</Pagination.Item>
+
+                            ))}
+
+
+                        <Pagination.Next
+                            disabled={endPage === totalPage}
+                            onClick={() =>
+                                setPage(prev => ({
+                                    ...prev,
+                                    page: endPage + 1
+                                }))
+                            }
+                        />
+                    </Pagination>
+
+                </div>
+
+                <div className="department-side">
+                    <div>
+                        <div>
+                            <h4>새 부서 추가</h4>
+                        </div>
+
+                        <div className="profile-line"></div>
+                    </div>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>부서명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="deptName" value={dept.deptName}
+                                onChange={changeDeptValue} className="w-100 d-inline-block">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>부서설명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="deptInfo" value={dept.deptInfo}
+                                onChange={changeDeptValue} className="w-100 d-inline-block">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>활성화여부</Form.Label>
+                        <Col sm={9}>
+                            <Form.Check type="radio"
+                                name="deptBlock"
+                                value="Y"
+                                className="d-inline-block"
+                                label="Y"
+                                checked={dept.deptBlock === "Y"}
+                                onChange={changeDeptValue}
+                            >
+                            </Form.Check>
+                            <Form.Check type="radio"
+                                name="deptBlock"
+                                value="N"
+                                className="d-inline-block"
+                                label="N"
+                                checked={dept.deptBlock === "N"}
+                                onChange={changeDeptValue}
+                            >
+                            </Form.Check>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col className="text-end">
+                            <Button onClick={sendData}>Add</Button>
+                        </Col>
+                    </Row>
+                </div>
             </div>
-            
-            <Button variant="primary" onClick={() => setModalShow(true)}>
-                <FaPlus />추가
-            </Button>
-            <MyVerticallyCenteredModal
-                show={modalShow}
-                onHide={() => setModalShow(false)}
-                onAdd={loadData}
-            />
-        </Col>
-
-        <Table className="member-table">
-            <thead>
-                <tr>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "deptNo",
-                        direction: prev.sort === "deptNo" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>부서번호</span>
-                        {page.sort === "deptNo" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "deptName",
-                        direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>부서이름</span>
-                        {page.sort === "deptName" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                    <th>부서설명</th>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "deptBlock",
-                        direction: prev.sort === "deptBlock" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>상태</span>
-                        {page.sort === "deptBlock" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {deptList.map((dept) => (
-                    <tr key={dept.deptNo} className="member-table-item"
-                        onClick={() => {
-                            setShow(true);
-                            setSelectedDept(dept);
-                        }}>
-                        <td>{dept.deptNo}</td>
-                        <td>{dept.deptName}</td>
-                        <td>{dept.deptInfo}</td>
-                        <td>{dept.deptBlock}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </Table>
+        </div>
         <Offcanvas show={show}
             onHide={() => setShow(false)}
             placement="end"
@@ -358,44 +484,6 @@ export default function Departments() {
                 </Offcanvas.Body>
             </>)}
         </Offcanvas>
-        <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
-            <Pagination.Prev
-                disabled={pageGroup === 1}
-                onClick={() =>
-                    setPage(prev => ({
-                        ...prev,
-                        page: startPage - 1
-                    }))
-                }
-            />
-            {Array.from(
-                { length: endPage - startPage + 1 },
-                (_, index) => startPage + index)
-                .map(pageNumber => (
-
-                    <Pagination.Item
-                        key={pageNumber}
-                        active={page.page === pageNumber}
-                        onClick={() =>
-                            setPage(prev => ({
-                                ...prev,
-                                page: pageNumber
-                            }))}
-                    >{pageNumber}</Pagination.Item>
-
-                ))}
-
-
-            <Pagination.Next
-                disabled={endPage === totalPage}
-                onClick={() =>
-                    setPage(prev => ({
-                        ...prev,
-                        page: endPage + 1
-                    }))
-                }
-            />
-        </Pagination>
 
 
     </>)
