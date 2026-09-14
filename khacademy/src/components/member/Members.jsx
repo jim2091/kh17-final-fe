@@ -208,25 +208,8 @@ export default function Members() {
                         }}
                             key={emp.empNo}
                             className="member-table-item">
-                            <td className="d-flex align-items-center">
-                                {/* <Form.Check
-                                    className="big-checkbox"
-                                    checked={checked.includes(emp.empNo)}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setChecked(prev => [
-                                                ...prev,
-                                                emp.empNo
-                                            ]);
-                                        } else {
-                                            setChecked(prev =>
-                                                prev.filter(empNo => empNo !== emp.empNo)
-                                            );
-                                        }
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                ></Form.Check> */}
-
+                            <td>
+                                <div className="d-flex align-items-center">
                                 {emp.attachNo ? (
                                     <img
                                         src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
@@ -242,7 +225,7 @@ export default function Members() {
                                     <span className="ms-2">이름없음</span>
                                 ) : (<>
                                     <span className="ms-2">{emp.empName}</span>
-                                </>)}
+                                </>)}</div>
                             </td>
                             <td>{emp.empEmail}</td>
                             <td>{emp.deptName}</td>

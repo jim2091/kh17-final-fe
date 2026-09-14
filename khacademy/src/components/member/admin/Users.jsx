@@ -758,7 +758,10 @@ export default function Users() {
                         }}
                             key={emp.empNo}
                             className="member-table-item">
-                            <td className="d-flex align-items-center">
+                            <td>
+                                <div  className="d-flex align-items-center">
+
+                                
                                 <Form.Check
                                     className="big-checkbox"
                                     checked={checked.includes(emp.empNo)}
@@ -787,7 +790,7 @@ export default function Users() {
                                         src={NoImage}
                                         className="list-img ms-3"
                                     />
-                                )}</td>
+                                )}</div></td>
                             <td>
                                 {emp.empName === null ? (
                                     <span className="ms-2">{emp.empNo}/이름없음</span>

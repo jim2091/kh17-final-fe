@@ -9,14 +9,15 @@ import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 
-function MyVerticallyCenteredModal(props) {
+
+export default function Positions() {
     const [position, setPosition] = useState({
         positionName: "",
         positionInfo: "",
         positionBlock: "",
     });
 
-    const changeStringValue = useCallback(e => {
+    const changePositionValue = useCallback(e => {
         const { name, value } = e.target;
         setPosition(prev => ({
             ...prev,
@@ -35,100 +36,15 @@ function MyVerticallyCenteredModal(props) {
             positionBlock: "",
         });
 
-        // 부모에게 "추가 완료"를 알림
-        props.onAdd();
-
-        // 모달 닫기
-        props.onHide();
-
-    }, [position, props]);
+        loadData();
 
 
 
+    }, [position]);
 
-    return (
-        <Modal
-            {...props}
-            onHide={() => {
-                setPosition({
-                    positionName: "",
-                    positionInfo: "",
-                    positionBlock: "",
-                });
-
-                props.onHide();
-            }}
-            size="lg"
-            aria-labelledby="contained-modal-title-vcenter"
-            centered
-        >
-            <Modal.Header closeButton>
-                <Modal.Title id="contained-modal-title-vcenter">
-                    직급 추가
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>직급명</Form.Label>
-                    <Col sm={9}>
-                        <Form.Control type="text" name="positionName" value={position.positionName}
-                            onChange={changeStringValue} className="w-50 d-inline-block">
-                        </Form.Control>
-                    </Col>
-                </Row>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>직급설명</Form.Label>
-                    <Col sm={9}>
-                        <Form.Control type="text" name="positionInfo" value={position.positionInfo}
-                            onChange={changeStringValue} className="w-50 d-inline-block">
-                        </Form.Control>
-                    </Col>
-                </Row>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>활성화여부</Form.Label>
-                    <Col sm={9}>
-                        <Form.Check type="radio"
-                            name="positionBlock"
-                            value="Y"
-                            className="d-inline-block"
-                            label="Y"
-                            checked={position.positionBlock === "Y"}
-                            onChange={changeStringValue}
-                        >
-                        </Form.Check>
-                        <Form.Check type="radio"
-                            name="positionBlock"
-                            value="N"
-                            className="d-inline-block"
-                            label="N"
-                            checked={position.positionBlock === "N"}
-                            onChange={changeStringValue}
-                        >
-                        </Form.Check>
-                    </Col>
-                </Row>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button onClick={sendData}>Add</Button>
-                <Button onClick={() => {
-                    setPosition({
-                        positionName: "",
-                        positionInfo: "",
-                        positionBlock: "",
-                    });
-                    props.onHide();
-                }}
-                >
-                    Close</Button>
-            </Modal.Footer>
-        </Modal>
-    );
-}
-export default function Positions() {
 
     const [positionList, setPositionList] = useState([]);
 
-    const [modalShow, setModalShow] = useState(false);
 
     const [selectedPosition, setSelectedPosition] = useState({
 
@@ -144,7 +60,7 @@ export default function Positions() {
         page: 1,
         size: 10,
         sort: "positionNo",
-        direction : "asc",
+        direction: "asc",
 
     });
     const [count, setCount] = useState(0);
@@ -224,95 +140,186 @@ export default function Positions() {
         return Math.min(pageGroup * 5, totalPage);
     }, [pageGroup, totalPage]);
     return (<>
+        <div>
+            <div className="department-main">
+                <div className="department-card">
+                    <Col className="d-flex justify-content-between align-items-center p-5">
+                        <div>
+                            <h3>직급 목록</h3>
+                            <span className="text-muted">총 직급 : {count}개</span>
+                        </div>
 
-        <Col className="d-flex justify-content-between align-items-center p-5">
-            <div>
-                <h3>직급 목록</h3>
-                <span className="text-muted">총 직급 : {count}개</span>
+
+                    </Col>
+                    <Table className="member-table">
+                        <thead>
+                            <tr>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "positionNo",
+                                    direction: prev.sort === "positionNo" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>직급번호</span>
+                                    {page.sort === "positionNo" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "positionName",
+                                    direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>직급이름</span>
+                                    {page.sort === "positionName" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                                <th>직급설명</th>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "positionOrder",
+                                    direction: prev.sort === "positionOrder" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>직급순서</span>
+                                    {page.sort === "positionOrder" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                                <th onClick={() => setPage(prev => ({
+                                    ...prev,
+                                    page: 1,
+                                    sort: "positionBlock",
+                                    direction: prev.sort === "positionBlock" && prev.direction === "asc" ? "desc" : "asc",
+                                }))}>
+                                    <span>상태</span>
+                                    {page.sort === "positionBlock" && page.direction === "asc" ? (
+                                        <BiSolidDownArrow className="ms-2" />
+                                    ) : (
+                                        <BiSolidUpArrow className="ms-2" />
+                                    )}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {positionList.map((position) => (
+                                <tr key={position.positionNo} className="member-table-item"
+                                    onClick={() => {
+                                        setShow(true);
+                                        setSelectedPosition(position);
+                                    }}>
+                                    <td>{position.positionNo}</td>
+                                    <td>{position.positionName}</td>
+                                    <td>{position.positionInfo}</td>
+                                    <td>{position.positionOrder}</td>
+                                    <td>{position.positionBlock}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                    <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
+                        <Pagination.Prev
+                            disabled={pageGroup === 1}
+                            onClick={() =>
+                                setPage(prev => ({
+                                    ...prev,
+                                    page: startPage - 1
+                                }))
+                            }
+                        />
+                        {Array.from(
+                            { length: endPage - startPage + 1 },
+                            (_, index) => startPage + index)
+                            .map(pageNumber => (
+
+                                <Pagination.Item
+                                    key={pageNumber}
+                                    active={page.page === pageNumber}
+                                    onClick={() =>
+                                        setPage(prev => ({
+                                            ...prev,
+                                            page: pageNumber
+                                        }))}
+                                >{pageNumber}</Pagination.Item>
+
+                            ))}
+
+
+                        <Pagination.Next
+                            disabled={endPage === totalPage}
+                            onClick={() =>
+                                setPage(prev => ({
+                                    ...prev,
+                                    page: endPage + 1
+                                }))
+                            }
+                        />
+                    </Pagination>
+                </div>
+                <div className="department-side">
+                    <div>
+                        <div>
+                            <h4>새 직급 추가</h4>
+                        </div>
+
+                        <div className="profile-line"></div>
+                    </div>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>직급명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="positionName" value={position.positionName}
+                                onChange={changePositionValue} className="w-100 d-inline-block">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4">
+                        <Form.Label column sm={3}>직급설명</Form.Label>
+                        <Col sm={9}>
+                            <Form.Control type="text" name="positionInfo" value={position.positionInfo}
+                                onChange={changePositionValue} className="w-100 d-inline-block">
+                            </Form.Control>
+                        </Col>
+                    </Row>
+                    <Row className="mt-4 d-flex">
+                        <Form.Label column sm={3}>활성화여부</Form.Label>
+                        <Col sm={9}>
+                            <Form.Check type="radio"
+                                name="positionBlock"
+                                value="Y"
+                                className="d-inline-block"
+                                label="Y"
+                                checked={position.positionBlock === "Y"}
+                                onChange={changePositionValue}
+                            >
+                            </Form.Check>
+                            <Form.Check type="radio"
+                                name="positionBlock"
+                                value="N"
+                                className="d-inline-block"
+                                label="N"
+                                checked={position.positionBlock === "N"}
+                                onChange={changePositionValue}
+                            >
+                            </Form.Check>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col className="text-end">
+                            <Button onClick={sendData}>Add</Button>
+                        </Col>
+                    </Row>
+
+                </div>
             </div>
-            <Button variant="primary" onClick={() => setModalShow(true)}>
-                <FaPlus />추가
-            </Button>
-            <MyVerticallyCenteredModal
-                show={modalShow}
-                onHide={() => setModalShow(false)}
-                onAdd={loadData}
-            />
-        </Col>
-        <Table className="member-table">
-            <thead>
-                <tr>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "positionNo",
-                        direction: prev.sort === "positionNo" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>직급번호</span>
-                        {page.sort === "positionNo" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "positionName",
-                        direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>직급이름</span>
-                        {page.sort === "positionName" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                    <th>직급설명</th>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "positionOrder",
-                        direction: prev.sort === "positionOrder" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>직급순서</span>
-                        {page.sort === "positionOrder" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                    <th onClick={() => setPage(prev => ({
-                        ...prev,
-                        page: 1,
-                        sort: "positionBlock",
-                        direction: prev.sort === "positionBlock" && prev.direction === "asc" ? "desc" : "asc",
-                    }))}>
-                        <span>상태</span>
-                        {page.sort === "positionBlock" && page.direction === "asc" ? (
-                            <BiSolidDownArrow className="ms-2" />
-                        ) : (
-                            <BiSolidUpArrow className="ms-2" />
-                        )}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {positionList.map((position) => (
-                    <tr key={position.positionNo} className="member-table-item"
-                        onClick={() => {
-                            setShow(true);
-                            setSelectedPosition(position);
-                        }}>
-                        <td>{position.positionNo}</td>
-                        <td>{position.positionName}</td>
-                        <td>{position.positionInfo}</td>
-                        <td>{position.positionOrder}</td>
-                        <td>{position.positionBlock}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </Table>
+        </div>
         <Offcanvas show={show}
             onHide={() => setShow(false)}
             placement="end"
@@ -387,44 +394,7 @@ export default function Positions() {
             </>)}
         </Offcanvas>
 
-        <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
-            <Pagination.Prev
-                disabled={pageGroup === 1}
-                onClick={() =>
-                    setPage(prev => ({
-                        ...prev,
-                        page: startPage - 1
-                    }))
-                }
-            />
-            {Array.from(
-                { length: endPage - startPage + 1 },
-                (_, index) => startPage + index)
-                .map(pageNumber => (
 
-                    <Pagination.Item
-                        key={pageNumber}
-                        active={page.page === pageNumber}
-                        onClick={() =>
-                            setPage(prev => ({
-                                ...prev,
-                                page: pageNumber
-                            }))}
-                    >{pageNumber}</Pagination.Item>
-
-                ))}
-
-
-            <Pagination.Next
-                disabled={endPage === totalPage}
-                onClick={() =>
-                    setPage(prev => ({
-                        ...prev,
-                        page: endPage + 1
-                    }))
-                }
-            />
-        </Pagination>
 
 
     </>)
