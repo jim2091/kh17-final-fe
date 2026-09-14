@@ -5,9 +5,7 @@
 .search-page {
     width: 100%;
     min-height: 100%;
-
     box-sizing: border-box;
-
     padding: 28px 32px 50px;
 
     font-family:
@@ -28,13 +26,10 @@
     margin-bottom: 28px;
 }
 
-
 .search-page-title {
     margin: 0;
-
     font-size: 28px;
     font-weight: 700;
-
     letter-spacing: -0.8px;
 }
 
@@ -45,11 +40,8 @@
 
 .search-content {
     display: flex;
-
     width: 100%;
-
     min-width: 0;
-
     border-top: 1px solid #222;
 }
 
@@ -60,39 +52,27 @@
 
 .search-filter {
     width: 190px;
-
     flex-shrink: 0;
-
     padding: 28px 24px 0 0;
-
     box-sizing: border-box;
 }
 
-
 .search-filter-title {
     margin-bottom: 20px;
-
     font-size: 15px;
     font-weight: 700;
-
     color: #222;
 }
 
-
 .search-filter-list {
     display: flex;
-
     flex-direction: column;
-
     gap: 14px;
 }
 
-
 .search-filter-item {
     display: flex;
-
     align-items: center;
-
     gap: 9px;
 
     width: 100%;
@@ -100,29 +80,22 @@
     cursor: pointer;
 
     font-size: 13px;
-
     color: #555;
 
     user-select: none;
 }
 
-
 .search-filter-item input {
     width: 16px;
     height: 16px;
-
     margin: 0;
-
     accent-color: #222;
-
     cursor: pointer;
 }
-
 
 .search-filter-item span {
     line-height: 16px;
 }
-
 
 .search-filter-item:hover span {
     color: #222;
@@ -135,7 +108,6 @@
 
 .search-result {
     min-width: 0;
-
     flex: 1;
 
     padding-left: 30px;
@@ -150,22 +122,17 @@
 
 .search-page-keyword {
     display: flex;
-
     align-items: center;
-
     gap: 7px;
 
     padding-top: 26px;
 
     font-size: 14px;
-
     color: #666;
 }
 
-
 .search-page-keyword strong {
     color: #222;
-
     font-weight: 700;
 }
 
@@ -176,18 +143,14 @@
 
 .search-result-summary {
     margin-top: 8px;
-
     margin-bottom: 22px;
 
     font-size: 13px;
-
     color: #777;
 }
 
-
 .search-result-summary strong {
     color: #222;
-
     font-weight: 700;
 }
 
@@ -200,12 +163,9 @@
     margin-bottom: 30px;
 }
 
-
 .search-section-header {
     display: flex;
-
     align-items: center;
-
     gap: 7px;
 
     height: 38px;
@@ -213,21 +173,16 @@
     border-bottom: 1px solid #222;
 }
 
-
 .search-section-header h2 {
     margin: 0;
 
     font-size: 16px;
-
     font-weight: 700;
-
     color: #222;
 }
 
-
 .search-section-header span {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -235,7 +190,6 @@
     height: 20px;
 
     padding: 0 6px;
-
     box-sizing: border-box;
 
     border-radius: 10px;
@@ -244,7 +198,6 @@
 
     font-size: 11px;
     font-weight: 600;
-
     color: #666;
 }
 
@@ -257,18 +210,14 @@
     width: 100%;
 }
 
-
 .search-result-item {
     display: flex;
-
     align-items: center;
 
     width: 100%;
-
     min-height: 76px;
 
     padding: 12px 8px;
-
     box-sizing: border-box;
 
     border-bottom: 1px solid #eeeeee;
@@ -279,9 +228,13 @@
     cursor: pointer;
 }
 
-
 .search-result-item:hover {
     background: #fafafa;
+}
+
+.search-result-item:focus-visible {
+    outline: 2px solid #222;
+    outline-offset: -2px;
 }
 
 
@@ -291,7 +244,6 @@
 
 .search-item-main {
     min-width: 0;
-
     flex: 1;
 
     margin-left: 14px;
@@ -309,31 +261,25 @@
 
     font-size: 14px;
     font-weight: 600;
-
     line-height: 20px;
 
     color: #222;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
-
 
 .search-item-sub {
     overflow: hidden;
 
     font-size: 12px;
-
     line-height: 18px;
 
     color: #888;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
-
 
 .search-item-project {
     overflow: hidden;
@@ -341,14 +287,34 @@
     margin-bottom: 4px;
 
     font-size: 11px;
-
     line-height: 16px;
 
     color: #888;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
+}
+
+
+/* ==========================================
+   기록 / 노트 내용
+========================================== */
+
+.search-item-content {
+    overflow: hidden;
+
+    margin-top: 6px;
+
+    font-size: 12px;
+    line-height: 18px;
+
+    color: #777;
+
+    text-overflow: ellipsis;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 
@@ -358,7 +324,6 @@
 
 .search-project-title-row {
     display: flex;
-
     align-items: center;
 
     min-width: 0;
@@ -366,15 +331,11 @@
     gap: 9px;
 }
 
-
 .search-project-title-row .search-item-title {
     min-width: 0;
-
     flex: 0 1 auto;
-
     margin-bottom: 5px;
 }
-
 
 .project-member-count {
     flex-shrink: 0;
@@ -382,7 +343,6 @@
     margin-bottom: 5px;
 
     font-size: 11px;
-
     line-height: 20px;
 
     color: #999;
@@ -397,31 +357,19 @@
 
 .search-user-result-item {
     cursor: pointer;
-
     user-select: none;
 }
-
 
 .search-user-result-item:hover {
     background: #f8f8f8;
 }
 
-
 .search-user-result-item:active {
     background: #f3f3f3;
 }
 
-
-.search-user-result-item:focus-visible {
-    outline: 2px solid #222;
-
-    outline-offset: -2px;
-}
-
-
 .search-user-avatar {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -447,9 +395,7 @@
 
 .search-user-arrow {
     display: flex;
-
     align-items: center;
-
     gap: 8px;
 
     flex-shrink: 0;
@@ -466,22 +412,18 @@
         color 0.15s ease;
 }
 
-
 .search-user-arrow-icon {
     font-size: 16px;
-
     line-height: 1;
 
     transition:
         transform 0.15s ease;
 }
 
-
 .search-user-result-item:hover
 .search-user-arrow {
     color: #555;
 }
-
 
 .search-user-result-item:hover
 .search-user-arrow-icon {
@@ -497,10 +439,8 @@
     min-width: 0;
 }
 
-
 .search-project-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -519,6 +459,22 @@
     font-weight: 700;
 }
 
+.search-project-result-item.project-clickable {
+    cursor: pointer;
+}
+
+.search-project-result-item.project-clickable:hover {
+    background: #fafafa;
+}
+
+.search-project-result-item.project-not-member {
+    cursor: default;
+}
+
+.search-project-result-item.project-not-member:hover {
+    background: transparent;
+}
+
 
 /* ==========================================
    프로젝트 참여 영역
@@ -526,7 +482,6 @@
 
 .search-project-action {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -535,10 +490,8 @@
     margin-left: 20px;
 }
 
-
 .project-role {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -546,7 +499,6 @@
     height: 30px;
 
     padding: 0 12px;
-
     box-sizing: border-box;
 
     border-radius: 6px;
@@ -557,34 +509,20 @@
     white-space: nowrap;
 }
 
-
-/* owner */
-
 .project-role.owner {
     border: 1px solid #222;
-
     background: #222;
-
     color: #fff;
 }
 
-
-/* 참여 중 */
-
 .project-role.member {
     border: 1px solid #ddd;
-
     background: #f5f5f5;
-
     color: #555;
 }
 
-
-/* 참여 버튼 */
-
 .project-join-button {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -592,15 +530,12 @@
     height: 30px;
 
     padding: 0 13px;
-
     box-sizing: border-box;
 
     border: 1px solid #222;
-
     border-radius: 6px;
 
     background: #fff;
-
     color: #222;
 
     font-family:
@@ -621,24 +556,18 @@
         transform 0.1s ease;
 }
 
-
 .project-join-button:hover {
     border-color: #222;
-
     background: #222;
-
     color: #fff;
 }
-
 
 .project-join-button:active {
     transform: translateY(1px);
 }
 
-
 .project-join-button:disabled {
     opacity: 0.6;
-
     cursor: wait;
 }
 
@@ -651,10 +580,8 @@
     min-width: 0;
 }
 
-
 .search-task-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -675,15 +602,114 @@
 
 
 /* ==========================================
+   기록
+========================================== */
+
+.search-record-result-item {
+    min-width: 0;
+    cursor: pointer;
+}
+
+.search-record-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    background: #f1f1f1;
+
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.search-record-result-item:hover {
+    background: #fafafa;
+}
+
+
+/* ==========================================
+   노트
+========================================== */
+
+.search-note-result-item {
+    min-width: 0;
+    cursor: pointer;
+}
+
+.search-note-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    background: #f1f1f1;
+
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.search-note-result-item:hover {
+    background: #fafafa;
+}
+
+
+/* ==========================================
+   결과 이동 화살표
+========================================== */
+
+.search-result-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    margin-left: 16px;
+
+    color: #aaa;
+
+    font-size: 17px;
+    line-height: 1;
+
+    transition:
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.search-result-item:hover
+.search-result-arrow {
+    color: #555;
+    transform: translateX(3px);
+}
+
+
+/* ==========================================
    파일 검색 결과
 ========================================== */
 
 .search-file-result-item {
     min-width: 0;
-
-    cursor: default;
 }
 
+.search-file-clickable {
+    cursor: pointer;
+}
 
 .search-file-result-item:hover {
     background: #fafafa;
@@ -703,7 +729,6 @@
     flex: 0 0 52px;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -712,12 +737,10 @@
     box-sizing: border-box;
 
     border: 1px solid #e5e5e5;
-
     border-radius: 7px;
 
     background: #f7f7f7;
 }
-
 
 .search-file-thumbnail img {
     display: block;
@@ -728,10 +751,8 @@
     object-fit: cover;
 }
 
-
 .search-file-thumbnail-fallback {
     position: absolute;
-
     inset: 0;
 
     display: none;
@@ -754,7 +775,6 @@
 
 .search-file-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -768,64 +788,44 @@
     border-radius: 7px;
 
     font-size: 11px;
-
     font-weight: 700;
 }
 
-
 .search-file-icon-pdf {
     border: 1px solid #f0d0d0;
-
     background: #fff5f5;
-
     color: #d9534f;
 }
 
-
 .search-file-icon-word {
     border: 1px solid #cfdcf5;
-
     background: #f3f7ff;
-
     color: #2b67c7;
 }
 
-
 .search-file-icon-excel {
     border: 1px solid #cfe5d5;
-
     background: #f3faf5;
-
     color: #218838;
 }
 
-
 .search-file-icon-powerpoint {
     border: 1px solid #ead8c9;
-
     background: #fff8f2;
-
     color: #d66a20;
 }
 
-
 .search-file-icon-zip {
     border: 1px solid #e4d9c4;
-
     background: #fbf8f1;
-
     color: #9a7b35;
 }
 
-
 .search-file-icon-default {
     border: 1px solid #e2e2e2;
-
     background: #f7f7f7;
-
     color: #777;
 }
-
 
 .search-file-icon-default svg {
     width: 27px;
@@ -839,17 +839,14 @@
 
 .search-no-result {
     display: flex;
-
     align-items: center;
 
     min-height: 64px;
 
     padding: 0 8px;
-
     box-sizing: border-box;
 
     font-size: 13px;
-
     color: #999;
 }
 
@@ -860,9 +857,7 @@
 
 .search-empty-page {
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
 
@@ -871,32 +866,25 @@
     text-align: center;
 }
 
-
 .search-empty-icon {
     margin-bottom: 18px;
-
     font-size: 38px;
-
     opacity: 0.6;
 }
-
 
 .search-empty-page h2 {
     margin: 0 0 8px;
 
     font-size: 17px;
-
     font-weight: 600;
 
     color: #333;
 }
 
-
 .search-empty-page p {
     margin: 0;
 
     font-size: 13px;
-
     color: #999;
 }
 
@@ -907,9 +895,7 @@
 
 .search-filter-empty {
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
 
@@ -918,32 +904,26 @@
     text-align: center;
 }
 
-
 .search-filter-empty-icon {
     margin-bottom: 18px;
 
     font-size: 32px;
-
     color: #999;
 }
-
 
 .search-filter-empty h2 {
     margin: 0 0 8px;
 
     font-size: 17px;
-
     font-weight: 600;
 
     color: #333;
 }
 
-
 .search-filter-empty p {
     margin: 0;
 
     font-size: 13px;
-
     color: #999;
 }
 
@@ -954,28 +934,23 @@
 
 .search-status {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     min-height: 300px;
 
     font-size: 14px;
-
     color: #888;
 }
 
-
 .search-error {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     min-height: 300px;
 
     font-size: 14px;
-
     color: #d9534f;
 }
 
@@ -990,47 +965,20 @@
 
 
 /* ==========================================
-   프로젝트 클릭 가능 여부
-========================================== */
-
-.search-project-result-item.project-clickable {
-    cursor: pointer;
-}
-
-
-.search-project-result-item.project-clickable:hover {
-    background: #fafafa;
-}
-
-
-.search-project-result-item.project-not-member {
-    cursor: default;
-}
-
-
-.search-project-result-item.project-not-member:hover {
-    background: transparent;
-}
-
-
-/* ==========================================
    사용자 프로젝트 이력 팝업
 ========================================== */
 
 .user-project-modal-overlay {
     position: fixed;
-
     inset: 0;
 
     z-index: 9999;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     padding: 24px;
-
     box-sizing: border-box;
 
     background: rgba(0, 0, 0, 0.45);
@@ -1048,19 +996,21 @@
 
 .user-project-modal {
     display: flex;
-
     flex-direction: column;
 
     width: min(720px, 100%);
 
-    max-height: min(720px, calc(100vh - 48px));
+    max-height:
+        min(
+            720px,
+            calc(100vh - 48px)
+        );
 
     overflow: hidden;
 
     box-sizing: border-box;
 
     border: 1px solid #e5e5e5;
-
     border-radius: 12px;
 
     background: #fff;
@@ -1081,7 +1031,6 @@
 
 .user-project-modal-header {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -1092,19 +1041,20 @@
     border-bottom: 1px solid #eeeeee;
 }
 
+.user-project-modal-user-area {
+    flex: 1;
+    min-width: 0;
+}
 
 .user-project-modal-user {
     display: flex;
-
     align-items: center;
 
     min-width: 0;
 }
 
-
 .user-project-modal-avatar {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1118,19 +1068,20 @@
     border-radius: 50%;
 
     background: #eeeeee;
-
     color: #555;
 
     font-size: 16px;
     font-weight: 700;
 }
 
+.user-project-modal-user-text {
+    min-width: 0;
+}
 
 .user-project-modal-title {
     margin: 0 0 4px;
 
     font-size: 18px;
-
     line-height: 24px;
 
     font-weight: 700;
@@ -1138,21 +1089,93 @@
     color: #222;
 }
 
-
 .user-project-modal-email {
     overflow: hidden;
 
     max-width: 420px;
 
     font-size: 12px;
-
     line-height: 18px;
 
     color: #888;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
+}
+
+
+/* ==========================================
+   사용자 상세 정보
+========================================== */
+
+.user-project-modal-user-info {
+    display: flex;
+    align-items: stretch;
+
+    width: 100%;
+
+    margin-top: 16px;
+    padding-top: 16px;
+
+    border-top: 1px solid #eeeeee;
+
+    box-sizing: border-box;
+}
+
+.user-project-modal-info-item {
+    display: flex;
+    flex: 1;
+
+    min-width: 0;
+
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0 18px;
+
+    border-right: 1px solid #eeeeee;
+
+    box-sizing: border-box;
+}
+
+.user-project-modal-info-item:first-child {
+    padding-left: 0;
+}
+
+.user-project-modal-info-item:last-child {
+    padding-right: 0;
+    border-right: none;
+}
+
+.user-project-modal-info-label {
+    display: block;
+
+    font-size: 10px;
+    line-height: 14px;
+
+    font-weight: 500;
+
+    color: #999999;
+}
+
+.user-project-modal-info-value {
+    display: block;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 12px;
+    line-height: 18px;
+
+    font-weight: 600;
+
+    color: #333333;
 }
 
 
@@ -1162,7 +1185,6 @@
 
 .user-project-modal-close {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1172,19 +1194,15 @@
     flex-shrink: 0;
 
     margin-left: 20px;
-
     padding: 0;
 
     border: none;
-
     border-radius: 6px;
 
     background: transparent;
-
     color: #777;
 
     font-size: 26px;
-
     line-height: 1;
 
     cursor: pointer;
@@ -1194,10 +1212,8 @@
         color 0.15s ease;
 }
 
-
 .user-project-modal-close:hover {
     background: #f3f3f3;
-
     color: #222;
 }
 
@@ -1218,47 +1234,17 @@
 
 
 /* ==========================================
-   프로젝트 이력 요약
-========================================== */
-
-.user-project-history-summary {
-    display: flex;
-
-    align-items: center;
-
-    gap: 5px;
-
-    margin-bottom: 14px;
-
-    font-size: 13px;
-
-    color: #777;
-}
-
-
-.user-project-history-summary strong {
-    color: #222;
-
-    font-weight: 700;
-}
-
-
-/* ==========================================
    프로젝트 이력 리스트
 ========================================== */
 
 .user-project-history-list {
     display: flex;
-
     flex-direction: column;
-
     gap: 10px;
 }
 
-
 .user-project-history-item {
     display: flex;
-
     align-items: center;
 
     min-width: 0;
@@ -1268,7 +1254,6 @@
     box-sizing: border-box;
 
     border: 1px solid #eeeeee;
-
     border-radius: 8px;
 
     background: #fff;
@@ -1278,10 +1263,8 @@
         border-color 0.15s ease;
 }
 
-
 .user-project-history-item:hover {
     border-color: #dddddd;
-
     background: #fafafa;
 }
 
@@ -1292,7 +1275,6 @@
 
 .user-project-history-number {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1303,7 +1285,6 @@
     color: #aaa;
 
     font-size: 11px;
-
     font-weight: 600;
 }
 
@@ -1314,7 +1295,6 @@
 
 .user-project-history-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1328,11 +1308,9 @@
     border-radius: 7px;
 
     background: #f1f1f1;
-
     color: #555;
 
     font-size: 13px;
-
     font-weight: 700;
 }
 
@@ -1349,16 +1327,9 @@
     margin-left: 13px;
 }
 
-
-/* ==========================================
-   프로젝트명 + 상태
-========================================== */
-
 .user-project-history-title-row {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
     min-width: 0;
@@ -1368,14 +1339,8 @@
     margin-bottom: 5px;
 }
 
-
-/* ==========================================
-   프로젝트명
-========================================== */
-
 .user-project-history-title {
     min-width: 0;
-
     flex: 1;
 
     overflow: hidden;
@@ -1383,7 +1348,6 @@
     margin: 0;
 
     font-size: 14px;
-
     line-height: 20px;
 
     font-weight: 600;
@@ -1391,18 +1355,16 @@
     color: #222;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
 
 /* ==========================================
-   프로젝트 상태 공통
+   프로젝트 상태
 ========================================== */
 
 .user-project-history-status {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1411,7 +1373,6 @@
     flex-shrink: 0;
 
     min-width: 58px;
-
     height: 24px;
 
     padding: 0 9px;
@@ -1421,18 +1382,11 @@
     border-radius: 999px;
 
     font-size: 10px;
-
     line-height: 1;
-
     font-weight: 600;
 
     white-space: nowrap;
 }
-
-
-/* ==========================================
-   상태 점
-========================================== */
 
 .user-project-history-status-dot {
     width: 6px;
@@ -1445,25 +1399,13 @@
     background: currentColor;
 }
 
-
-/* ==========================================
-   진행 중
-========================================== */
-
 .user-project-history-status.active {
     background: #eef8f1;
-
     color: #238636;
 }
 
-
-/* ==========================================
-   종료
-========================================== */
-
 .user-project-history-status.ended {
     background: #f1f1f1;
-
     color: #777;
 }
 
@@ -1474,7 +1416,6 @@
 
 .user-project-history-info {
     display: flex;
-
     align-items: center;
 
     gap: 7px;
@@ -1482,12 +1423,10 @@
     overflow: hidden;
 
     font-size: 11px;
-
     line-height: 17px;
 
     color: #888;
 }
-
 
 .user-project-history-info > span:not(
     .user-project-history-role
@@ -1495,10 +1434,8 @@
     overflow: hidden;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
-
 
 .user-project-history-role {
     flex-shrink: 0;
@@ -1508,10 +1445,8 @@
     font-weight: 600;
 }
 
-
 .user-project-history-divider {
     flex-shrink: 0;
-
     color: #ccc;
 }
 
@@ -1522,9 +1457,7 @@
 
 .user-project-history-date {
     display: flex;
-
     flex-direction: column;
-
     align-items: flex-end;
 
     flex-shrink: 0;
@@ -1532,21 +1465,17 @@
     margin-left: 20px;
 }
 
-
 .user-project-history-date span {
     margin-bottom: 3px;
 
     font-size: 10px;
-
     line-height: 15px;
 
     color: #aaa;
 }
 
-
 .user-project-history-date strong {
     font-size: 11px;
-
     line-height: 17px;
 
     color: #666;
@@ -1558,12 +1487,81 @@
 
 
 /* ==========================================
+   그룹
+========================================== */
+
+.user-project-history-groups {
+    width: 100%;
+}
+
+.user-project-history-group {
+    width: 100%;
+}
+
+.user-project-history-group.ended-group {
+    margin-top: 22px;
+}
+
+.user-project-history-group-header {
+    margin-bottom: 12px;
+}
+
+.user-project-history-group-title {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    font-size: 13px;
+    color: #555;
+}
+
+.user-project-history-group-title strong {
+    color: #222;
+}
+
+.user-project-history-group-status-dot {
+    width: 7px;
+    height: 7px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #999;
+}
+
+.user-project-history-group-status-dot.active {
+    background: #238636;
+}
+
+.user-project-history-group-status-dot.ended {
+    background: #999;
+}
+
+.user-project-history-group-empty {
+    padding: 22px 0;
+
+    text-align: center;
+
+    font-size: 12px;
+    color: #aaa;
+}
+
+.user-project-history-groups hr {
+    margin: 22px 0;
+
+    border: none;
+    border-top: 1px solid #eeeeee;
+}
+
+
+/* ==========================================
    팝업 로딩
 ========================================== */
 
 .user-project-modal-status {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -1578,7 +1576,6 @@
     font-size: 13px;
 }
 
-
 .user-project-loading-spinner {
     width: 28px;
     height: 28px;
@@ -1586,7 +1583,6 @@
     box-sizing: border-box;
 
     border: 3px solid #eeeeee;
-
     border-top-color: #555;
 
     border-radius: 50%;
@@ -1605,7 +1601,6 @@
 
 .user-project-modal-error {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -1616,10 +1611,8 @@
     text-align: center;
 }
 
-
 .user-project-modal-error-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1631,20 +1624,16 @@
     border-radius: 50%;
 
     background: #fff1f1;
-
     color: #d9534f;
 
     font-size: 16px;
-
     font-weight: 700;
 }
-
 
 .user-project-modal-error p {
     margin: 0;
 
     font-size: 13px;
-
     color: #d9534f;
 }
 
@@ -1655,7 +1644,6 @@
 
 .user-project-modal-empty {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -1666,10 +1654,8 @@
     text-align: center;
 }
 
-
 .user-project-modal-empty-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1681,31 +1667,25 @@
     border-radius: 8px;
 
     background: #f3f3f3;
-
     color: #888;
 
     font-size: 14px;
-
     font-weight: 700;
 }
-
 
 .user-project-modal-empty h3 {
     margin: 0 0 7px;
 
     font-size: 14px;
-
     font-weight: 600;
 
     color: #444;
 }
 
-
 .user-project-modal-empty p {
     margin: 0;
 
     font-size: 12px;
-
     color: #999;
 }
 
@@ -1716,7 +1696,6 @@
 
 .user-project-modal-footer {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -1729,31 +1708,24 @@
     background: #fafafa;
 
     font-size: 12px;
-
     color: #888;
 }
 
-
 .user-project-modal-footer strong {
     color: #222;
-
     font-weight: 700;
 }
 
-
 .user-project-modal-footer button {
     min-width: 58px;
-
     height: 32px;
 
     padding: 0 13px;
 
     border: 1px solid #222;
-
     border-radius: 6px;
 
     background: #222;
-
     color: #fff;
 
     font-family:
@@ -1763,7 +1735,6 @@
         sans-serif;
 
     font-size: 12px;
-
     font-weight: 600;
 
     cursor: pointer;
@@ -1773,80 +1744,14 @@
         transform 0.1s ease;
 }
 
-
 .user-project-modal-footer button:hover {
     background: #444;
 }
-
 
 .user-project-modal-footer button:active {
     transform: translateY(1px);
 }
 
-
-/* ==========================================
-   사용자 상세 정보
-========================================== */
-
-.user-project-modal-user-area {
-    flex: 1;
-    min-width: 0;
-}
-
-.user-project-modal-user-text {
-    min-width: 0;
-}
-
-.user-project-modal-user-info {
-    display: flex;
-    align-items: stretch;
-    width: 100%;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #eeeeee;
-    box-sizing: border-box;
-}
-
-.user-project-modal-info-item {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    padding: 0 18px;
-    border-right: 1px solid #eeeeee;
-    box-sizing: border-box;
-}
-
-.user-project-modal-info-item:first-child {
-    padding-left: 0;
-}
-
-.user-project-modal-info-item:last-child {
-    padding-right: 0;
-    border-right: none;
-}
-
-.user-project-modal-info-label {
-    display: block;
-    font-size: 10px;
-    line-height: 14px;
-    font-weight: 500;
-    color: #999999;
-}
-
-.user-project-modal-info-value {
-    display: block;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    line-height: 18px;
-    font-weight: 600;
-    color: #333333;
-}
 
 /* ==========================================
    애니메이션
@@ -1905,18 +1810,14 @@
         padding: 24px 24px 40px;
     }
 
-
     .search-filter {
         width: 160px;
-
         padding-right: 18px;
     }
-
 
     .search-result {
         padding-left: 22px;
     }
-
 
     .user-project-modal {
         width: min(680px, 100%);
@@ -1931,39 +1832,31 @@
         padding: 20px 16px 35px;
     }
 
-
     .search-content {
         display: block;
     }
 
-
     .search-filter {
         width: 100%;
-
         padding: 18px 0;
 
         border-bottom: 1px solid #e5e5e5;
     }
 
-
     .search-filter-title {
         margin-bottom: 12px;
     }
 
-
     .search-filter-list {
         flex-direction: row;
-
         flex-wrap: wrap;
 
         gap: 10px 16px;
     }
 
-
     .search-filter-item {
         width: auto;
     }
-
 
     .search-result {
         width: 100%;
@@ -1973,16 +1866,13 @@
         border-left: none;
     }
 
-
     .search-page-keyword {
         padding-top: 20px;
     }
 
-
     .search-project-action {
         margin-left: 10px;
     }
-
 
     .project-role,
     .project-join-button {
@@ -1994,7 +1884,6 @@
         font-size: 11px;
     }
 
-
     .search-file-thumbnail,
     .search-file-icon {
         width: 46px;
@@ -2003,35 +1892,13 @@
         flex-basis: 46px;
     }
 
-
-    .search-item-main {
-        margin-left: 11px;
+    .search-record-icon,
+    .search-note-icon {
+        width: 46px;
+        height: 46px;
     }
 
-
-    .search-item-title {
-        font-size: 13px;
-    }
-
-
-    .search-item-sub {
-        font-size: 11px;
-    }
-
-
-    .project-member-count {
-        font-size: 10px;
-    }
-
-
-    /* 사용자 이력 안내 */
-
-    .search-user-arrow span:first-child {
-        display: none;
-    }
-
-
-    .search-user-arrow {
+    .search-result-arrow {
         margin-left: 10px;
     }
 
@@ -2044,56 +1911,33 @@
         padding: 16px;
     }
 
-
     .user-project-modal {
         max-height: calc(100vh - 32px);
-
         border-radius: 10px;
     }
-
 
     .user-project-modal-header {
         padding: 18px;
     }
 
-
     .user-project-modal-body {
         padding: 18px;
     }
-
 
     .user-project-modal-footer {
         padding: 13px 18px;
     }
 
-
     .user-project-history-item {
         padding: 13px 10px;
     }
-
 
     .user-project-history-date {
         margin-left: 10px;
     }
 
-
-    /* ==========================================
-       프로젝트명 + 상태
-    ========================================== */
-
     .user-project-history-title-row {
         gap: 8px;
-    }
-
-
-    .user-project-history-status {
-        min-width: 54px;
-
-        height: 23px;
-
-        padding: 0 7px;
-
-        font-size: 9px;
     }
 
 }
@@ -2105,53 +1949,39 @@
         display: none;
     }
 
-
     .user-project-history-icon {
         margin-left: 0;
     }
-
 
     .user-project-history-main {
         margin-left: 10px;
     }
 
-
     .user-project-history-date {
         margin-left: 8px;
     }
-
 
     .user-project-history-date span {
         display: none;
     }
 
-
     .user-project-history-date strong {
         font-size: 10px;
     }
 
-
-    /* ==========================================
-       프로젝트명 + 상태
-    ========================================== */
-
     .user-project-history-title-row {
         align-items: flex-start;
-
         flex-direction: column;
 
         gap: 6px;
     }
 
-
     .user-project-history-title {
         width: 100%;
     }
 
-
     .user-project-history-status {
         align-self: flex-start;
-
         min-width: 52px;
     }
 
@@ -2164,40 +1994,55 @@
         padding: 18px 12px 30px;
     }
 
-
     .search-page-title {
         font-size: 24px;
     }
 
-
     .search-result-item {
         min-height: 68px;
-
         padding: 10px 4px;
     }
 
-
     .search-user-avatar,
     .search-project-icon,
-    .search-task-icon {
+    .search-task-icon,
+    .search-record-icon,
+    .search-note-icon {
         width: 38px;
         height: 38px;
     }
-
 
     .search-file-thumbnail,
     .search-file-icon {
         width: 42px;
         height: 42px;
-
         flex-basis: 42px;
     }
 
+    .search-item-main {
+        margin-left: 11px;
+    }
+
+    .search-item-title {
+        font-size: 13px;
+    }
+
+    .search-item-sub {
+        font-size: 11px;
+    }
+
+    .search-item-content {
+        font-size: 11px;
+        line-height: 16px;
+    }
+
+    .project-member-count {
+        font-size: 9px;
+    }
 
     .search-project-action {
         margin-left: 6px;
     }
-
 
     .project-role,
     .project-join-button {
@@ -2209,23 +2054,21 @@
         font-size: 10px;
     }
 
-
-    .project-member-count {
-        font-size: 9px;
-
-        gap: 4px;
-    }
-
-
-    /* 사용자 */
-
     .search-user-arrow {
         margin-left: 5px;
     }
 
+    .search-user-arrow span:first-child {
+        display: none;
+    }
 
     .search-user-arrow-icon {
         font-size: 14px;
+    }
+
+    .search-result-arrow {
+        font-size: 14px;
+        margin-left: 6px;
     }
 
 
@@ -2235,10 +2078,8 @@
 
     .user-project-modal-overlay {
         align-items: flex-end;
-
         padding: 0;
     }
-
 
     .user-project-modal {
         width: 100%;
@@ -2252,11 +2093,9 @@
         border-radius: 12px 12px 0 0;
     }
 
-
     .user-project-modal-header {
         padding: 16px;
     }
-
 
     .user-project-modal-avatar {
         width: 42px;
@@ -2265,47 +2104,38 @@
         margin-right: 10px;
     }
 
-
     .user-project-modal-title {
         font-size: 16px;
     }
-
 
     .user-project-modal-email {
         max-width: 230px;
     }
 
-
     .user-project-modal-body {
         padding: 16px;
     }
 
-
     .user-project-history-item {
         padding: 12px 9px;
     }
-
 
     .user-project-history-icon {
         width: 36px;
         height: 36px;
     }
 
-
     .user-project-history-title {
         font-size: 13px;
     }
-
 
     .user-project-history-info {
         font-size: 10px;
     }
 
-
     .user-project-history-date strong {
         font-size: 9px;
     }
-
 
     .user-project-modal-footer {
         padding: 12px 16px;
@@ -2320,10 +2150,8 @@
         gap: 5px;
     }
 
-
     .user-project-history-status {
         min-width: 50px;
-
         height: 22px;
 
         padding: 0 7px;
@@ -2331,19 +2159,23 @@
         font-size: 9px;
     }
 
-
     .user-project-history-status-dot {
         width: 5px;
         height: 5px;
     }
 
-}
 
-@media (max-width: 480px) {
+    /* ==========================================
+       사용자 상세 정보
+    ========================================== */
+
     .user-project-modal-user-info {
         display: grid;
+
         grid-template-columns: 1fr 1fr;
+
         gap: 14px 0;
+
         margin-top: 14px;
         padding-top: 14px;
     }
@@ -2360,16 +2192,20 @@
     .user-project-modal-info-item:nth-child(even) {
         padding-right: 0;
         padding-left: 10px;
+
         border-left: 1px solid #eeeeee;
     }
 
     .user-project-modal-info-item:nth-child(3) {
         padding-left: 0;
+
         grid-column: 1 / -1;
+
         border-left: none;
     }
 
     .user-project-modal-info-value {
         font-size: 11px;
     }
+
 }
