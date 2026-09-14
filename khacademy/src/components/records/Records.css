@@ -22,6 +22,18 @@
     font-size: 0.9rem;
 }
 
+/* Record 본문 + Summary */
+.records-main-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 270px;
+    align-items: start;
+    gap: 1rem;
+}
+
+.records-main-content {
+    min-width: 0;
+}
+
 /* 조회 도구 */
 .records-toolbar {
     display: flex;
@@ -248,38 +260,94 @@
 }
 
 .record-card {
-    padding: 1rem 1.1rem;
+    padding: 1rem 1.2rem;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background-color: #ffffff;
     cursor: pointer;
     transition: 
         border-color 0.15s ease,
-        box-shadow 0.15s ease;
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
 }
 
 .record-card:hover {
     border-color: #cbd5e1;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
 }
 
+/* 상단 */
 .record-card-top {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    justify-content: space-between;
+    gap: 1rem;
     margin-bottom: 0.65rem;
 }
 
+.record-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.record-card-date {
+    flex-shrink: 0;
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+
 .record-card-title {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #1f2937;
 }
 
+.record-card-content {
+    margin-top: 0.55rem;
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+/* ISSUE 해결 내용 */
+.record-card-resolution {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 7px;
+    background-color: #f0fdf4;
+    font-size: 0.82rem;
+}
+
+.record-card-resolution-label {
+    flex-shrink: 0;
+    color: #15803d;
+    font-weight: 700;
+}
+
+.record-card-resolution-content {
+    min-width: 0;
+    color: #4b5563;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 작성 / 수정 정보 */
 .record-card-info {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.45rem 0.8rem;
     margin-top: 0.75rem;
     color: #6b7280;
     font-size: 0.82rem;
@@ -289,6 +357,74 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+}
+
+.record-card-info > span + span::before {
+    content: "·";
+    margin-right: 0.35rem;
+    color: #cbd5e1;
+}
+
+/* 관련 원본 */
+.record-card-related {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-top: 0.85rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.record-card-related-label {
+    flex-shrink: 0;
+    padding-top: 0.25rem;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.record-card-related-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.record-card-related-item {
+    display: flex;
+    align-items: center;
+    max-width: 190px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    overflow: hidden;
+}
+
+.record-card-related-type {
+    flex-shrink: 0;
+    padding: 0.25rem 0.4rem;
+    border-right: 1px solid #e5e7eb;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.record-card-related-title {
+    min-width: 0;
+    padding: 0.25rem 0.45rem;
+    color: #475569;
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.record-card-related-more {
+    padding: 0.25rem 0.4rem;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* 빈화면 */
@@ -313,21 +449,60 @@
 }
 
 .record-detail-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 0.55rem 1.5rem;
+
+    padding: 0.9rem 0 1rem;
+    margin-bottom: 1.2rem;
+
     border-bottom: 1px solid #e5e7eb;
-    color: #6b7280;
+
+    color: #475569;
+    font-size: 0.83rem;
+}
+
+.record-detail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+
+    min-width: 0;
+}
+
+.record-detail-meta-label {
+    flex-shrink: 0;
+
+    min-width: 42px;
+
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.record-detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.record-detail-section-title {
+    margin-bottom: 0.65rem;
+
+    color: #334155;
     font-size: 0.85rem;
+    font-weight: 700;
 }
 
 .record-detail-content {
-    min-height: 120px;
-    white-space: pre-wrap;
-    line-height: 1.7;
+    min-height: 80px;
+
     color: #374151;
+
+    font-size: 0.92rem;
+    line-height: 1.75;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .record-detail-footer {
@@ -343,16 +518,45 @@
 
 .record-issue-resolution {
     margin-top: 1.5rem;
-    padding: 1rem;
-    border: 1px solid#d1fae5;
+    padding: 0.9rem 1rem;
+
+    border: 1px solid #d1fae5;
     border-radius: 8px;
+
     background-color: #f0fdf4;
 }
 
+.record-resolution-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    margin-bottom: 0.55rem;
+}
+
 .record-resolution-title {
-    margin-top: 0.5rem;
-    font-weight: 600;
+    margin: 0;
+
     color: #166534;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.record-resolution-date {
+    color: #86a890;
+    font-size: 0.72rem;
+}
+
+.record-resolution-content {
+    color: #374151;
+
+    font-size: 0.88rem;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 /* 원본 데이터 */
@@ -363,9 +567,20 @@
 }
 
 .record-related-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
     margin-bottom: 0.75rem;
-    font-weight: 600;
+
+    font-weight: 700;
     color: #374151;
+}
+
+.record-related-count {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 .record-related-list {
@@ -378,16 +593,25 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
+
     padding: 0.65rem 0.75rem;
+
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background-color: #f9fafb;
+    border-radius: 7px;
+
+    background-color: #f8fafc;
+}
+
+.record-related-item:hover {
+    border-color: #cbd5e1;
 }
 
 .record-related-item-title {
     flex: 1;
+    min-width: 0;
     color: #374151;
     font-size: 0.9rem;
+    overflow-wrap: anywhere;
 }
 
 .record-related-status {
@@ -496,6 +720,191 @@
     color: #dc3545;
 }
 
+/* 목록 더보기 */
+.records-load-more {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 0 0.5rem;
+}
+
+.records-load-more .btn {
+    min-width: 150px;
+    font-size: 0.85rem;
+}
+
+/* Summary 패널 */
+.records-summary-panel {
+    position: sticky;
+    top: 1rem;
+    padding: 1.1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+/* 헤더 */
+.records-summary-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.records-summary-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.records-summary-title {
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.records-summary-description {
+    margin-top: 0.2rem;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    line-height: 1.45;
+}
+
+/* 전체 기록 */
+.records-summary-total {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.records-summary-total > span {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.records-summary-total > strong {
+    color: #2563eb;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.records-summary-total small {
+    margin-left: 0.25rem;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* 공통 section */
+.records-summary-section {
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.records-summary-section-title {
+    margin-bottom: 0.7rem;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* 유형별 */
+.records-summary-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.records-summary-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+/* ISSUE */
+.records-summary-issue-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.records-summary-issue {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.2rem 0.4rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+}
+
+.records-summary-issue strong {
+    grid-column: 2;
+    font-size: 1rem;
+}
+
+.records-summary-issue.open {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.records-summary-issue.resolved {
+    background-color: #f0fdf4;
+    color: #15803d;
+}
+
+/* 최근 기록 */
+.records-summary-latest {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.65rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    text-align: left;
+    cursor: pointer;
+}
+
+.records-summary-latest:hover {
+    border-color: #bfdbfe;
+    background-color: #eff6ff;
+}
+
+.records-summary-latest-title {
+    width: 100%;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.records-summary-latest-date {
+    margin-top: 0.3rem;
+    color: #94a3b8;
+    font-size: 0.7rem;
+}
+
+/* 하단 설명 */
+.records-summary-guide {
+    padding-top: 1rem;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    line-height: 1.55;
+}
 
 
 @media (max-width: 768px) {
@@ -509,7 +918,7 @@
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1650px) {
 
     .records-toolbar {
         align-items: stretch;
@@ -534,5 +943,16 @@
     .records-sort {
         padding-left: 0;
         border-left: 0;
+    }
+}
+
+@media (max-width: 1200px) {
+
+    .records-main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .records-summary-panel {
+        display: none;
     }
 }
