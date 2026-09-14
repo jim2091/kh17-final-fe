@@ -22,6 +22,224 @@
     font-size: 0.9rem;
 }
 
+/* 조회 도구 */
+.records-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.records-type-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.records-type-filter-button {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #6b7280;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.records-type-filter-button:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.records-type-filter-button.active {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.records-type-count {
+    font-size: 0.75rem;
+    color: #94a4b8;
+}
+
+.records-type-filter-button.active .records-type-count {
+    color: #2563eb;
+}
+
+.records-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.records-search-input {
+    position: relative;
+    width: 260px;
+}
+
+.records-search-input > svg {
+    position: absolute;
+    left: 0.7rem;
+    top: 50%;
+
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.records-search-input .form-control {
+    padding-left: 2rem;
+    font-size: 0.85rem;
+}
+
+/* 조회 도구 우측 */
+
+.records-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+
+/* 상세 필터 */
+
+.records-filter-wrapper {
+    position: relative;
+}
+
+.records-filter-button {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.records-filter-button.active {
+    border-color: #2563eb;
+    color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.records-filter-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 18px;
+    height: 18px;
+
+    padding: 0 0.3rem;
+
+    border-radius: 9px;
+
+    background-color: #2563eb;
+    color: #ffffff;
+
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.records-filter-panel {
+    position: absolute;
+
+    top: calc(100% + 0.5rem);
+    right: 0;
+
+    width: 340px;
+
+    padding: 1rem;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    background-color: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.12);
+
+    z-index: 30;
+}
+
+.records-filter-panel-title {
+    margin-bottom: 1rem;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    color: #1f2937;
+}
+
+.records-filter-group {
+    margin-bottom: 0.9rem;
+}
+
+.records-filter-group .form-label,
+.records-filter-date .form-label {
+    margin-bottom: 0.35rem;
+
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.records-filter-group .form-select,
+.records-filter-date .form-control {
+    font-size: 0.85rem;
+}
+
+.records-filter-date {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+
+    margin-bottom: 1rem;
+}
+
+.records-filter-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+
+    padding-top: 0.8rem;
+
+    border-top: 1px solid #f1f5f9;
+}
+
+
+/* 정렬 */
+
+.records-sort {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    padding-left: 0.55rem;
+
+    border-left: 1px solid #e5e7eb;
+
+    color: #64748b;
+}
+
+.records-sort .form-select {
+    width: 135px;
+
+    border-color: #dee2e6;
+
+    font-size: 0.85rem;
+}
+
 /* 목록 */
 .record-list {
     display: flex;
@@ -288,5 +506,33 @@
     .record-detail-meta {
         flex-direction: column;
         gap: 0.35rem;
+    }
+}
+
+@media (max-width: 900px) {
+
+    .records-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .records-toolbar-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .records-search {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .records-search-input {
+        flex: 1;
+        width: auto;
+    }
+
+    .records-sort {
+        padding-left: 0;
+        border-left: 0;
     }
 }

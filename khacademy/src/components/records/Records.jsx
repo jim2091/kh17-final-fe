@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { Button, Modal, Form, Badge, FormGroup, FormLabel } from "react-bootstrap";
-import { Plus, Calendar, User } from "lucide-react";
+import { Plus, Calendar, User, Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Records.css";
@@ -17,6 +17,50 @@ export default function Records() {
     //목록
     const [recordList, setRecordList] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    //목록 조회 조건
+    //추후 상세 필터, 정렬, 내보내기에서도 그대로 사용할 예정
+    const [searchCondition, setSearchCondition] = useState({
+        type: "ALL",
+        keyword: "",
+        issueStatus: "ALL",
+        relatedType: "ALL",
+        writerNo: null,
+        startDate: null,
+        endDate: null,
+        sort: "LATEST"
+    });
+
+    //검색창 입력값
+    //입력할 때마다 조회하지 않고 검색 실행시 searchCondition에 반영
+    const [searchKeyword, setSearchKeyword] = useState("");
+
+    //프로젝트 record 요약
+    const [recordSummary, setRecordSummary] = useState({
+        totalCount: 0,
+        decisionCount: 0,
+        issueCount: 0,
+        deliverableCount: 0,
+        etcCount: 0,
+        openIssueCount: 0,
+        resolvedIssueCount: 0,
+        latestRecordNo: null,
+        latestRecordTitle: null,
+        latestRecordAt: null
+    });
+
+    const [filterOpen, setFilterOpen] = useState(false);
+
+    const [filterCondition, setFilterCondition] = useState({
+       issueStatus: "ALL",
+       relatedType: "ALL",
+        writerNo: "",
+        startDate: "",
+        endDate: ""
+    });
+
+    //작성자 필터용 프로젝트 멤버 목록
+    const [memberList, setMemberList] = useState([]);
 
     //등록 모달
     const [addModalOpen, setAddModalOpen] = useState(false);
@@ -57,28 +101,31 @@ export default function Records() {
     const [editRecordNo, setEditRecordNo] = useState(null);
 
     //수정/삭제 권한
-    const isRecordWritter = 
+    const isRecordWriter = 
         project?.projectMemberNo === selectedRecord?.projectRecordWriterNo;
 
     const isManagerOrOwner = 
         project?.projectMemberRole === "owner"
         || project?.projectMemberRole === "manager";
 
-    const canManageRecord = isRecordWritter || isManagerOrOwner;
+    const canManageRecord = isRecordWriter || isManagerOrOwner;
 
     //Record 수정/삭제/ISSUE 상태 변경 가능 여부
     const canChangeRecord = canManageRecord && !isClosed;
 
     //이슈 해결 모달
     const [resolveModalOpen, setResolveModalOpen] = useState(false);
-    const [issueResolution, setIssueResoltion] = useState("");
+    const [issueResolution, setIssueResolution] = useState("");
 
     //목록 조회
     const loadRecordList = useCallback(async () => {
         try {
             setLoading(true);
 
-            const {data} = await apiClient.get(`/record/project/${projectNo}`);
+            const {data} = await apiClient.post(
+                `/record/project/${projectNo}/list`,
+                searchCondition
+            );
 
             setRecordList(data || []);
         }
@@ -89,10 +136,48 @@ export default function Records() {
         finally {
             setLoading(false);
         }
+    }, [searchCondition]);
+
+    //프로젝트 record 요약 조회
+    const loadRecordSummary = useCallback(async () => {
+        try {
+            const {data} = await apiClient.get(
+                `/record/project/${projectNo}/summary`
+            );
+
+            setRecordSummary(data);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("record 요약 정보를 불러오지 못했습니다");
+        }
     }, []);
 
+    //작성자 필터용 프로젝트 멤버 목록 조회
+    const loadMemberList = useCallback(async () => {
+        try {
+            const {data} = await apiClient.get(
+                `/project/${projectNo}/member`
+            );
+
+            setMemberList(data || []);
+        }
+        catch(e) {
+            console.error(e);
+            toast.error("프로젝트 멤버를 불러오지 못했습니다");
+        }
+    }, []);
+
+    //record 목록 + 요약 새로고침
+    const refreshRecordData = useCallback(async () => {
+        await Promise.all([
+            loadRecordList(),
+            loadRecordSummary()
+        ]);
+    }, [loadRecordList, loadRecordSummary]);
+
     //Record 등록용 원본 데이터 목록 조회
-    const loadRelatedSource = useCallback(async () => {
+    const loadRelatedSource = useCallback(async (   ) => {
 
         try {
             setRelatedLoading(true);
@@ -131,9 +216,21 @@ export default function Records() {
         }
     }, []);
 
+    //조회 조건이 변경되면 목록 재조회
     useEffect(() => {
         loadRecordList();
-    }, []);
+    }, [loadRecordList]);
+
+    //프로젝트가 바뀌면 요약 조회
+    useEffect(() => {
+        loadRecordSummary();
+    }, [loadRecordSummary]);
+
+    //작성자 필터용
+    useEffect(() => {
+        loadMemberList();
+    }, [loadMemberList]);
+
 
     //등록 모달 열기
     const openAddModal = useCallback(() => {
@@ -201,7 +298,7 @@ export default function Records() {
 
             setAddModalOpen(false);
 
-            await loadRecordList();
+            await refreshRecordData();
         }
         catch(e) {
             console.error(e);
@@ -301,7 +398,7 @@ export default function Records() {
 
             setEditModalOpen(false);
 
-            await loadRecordList();
+            await refreshRecordData();
             await openDetail(editRecordNo);
 
             setEditRecordNo(null);
@@ -337,7 +434,7 @@ export default function Records() {
             setDetailModalOpen(false);
             setSelectedRecord(null);
 
-            await loadRecordList();
+            await refreshRecordData();
         }
         catch(e) {
             console.error(e);
@@ -347,7 +444,7 @@ export default function Records() {
 
     // 이슈 해결 모달 열기
     const openResolveModal = useCallback(() => {
-        setIssueResoltion("");
+        setIssueResolution("");
         setResolveModalOpen(true);
     }, []);
 
@@ -373,10 +470,10 @@ export default function Records() {
 
             //해결 모달 닫기
             setResolveModalOpen(false);
-            setIssueResoltion("");
+            setIssueResolution("");
 
             //목록 최신화
-            await loadRecordList();
+            await refreshRecordData();
 
             //상세 최신화(열려 있었지만 최신으로 다시 열려고)
             await openDetail(selectedRecord.projectRecordNo);
@@ -409,7 +506,7 @@ export default function Records() {
 
             toast.success("이슈가 다시 열렸습니다");
 
-            await loadRecordList();
+            await refreshRecordData();
             await openDetail(selectedRecord.projectRecordNo);
         }
         catch(e) {
@@ -417,6 +514,78 @@ export default function Records() {
             toast.error("이슈 다시 열기에 실패했습니다")
         }
     }, [selectedRecord]);
+
+    //record 타입 필터 변경
+    const changeTypeFilter = useCallback((type) => {
+
+        setSearchCondition(prev => ({
+            ...prev,
+            type: type,
+
+            //ISSUE가 아닌 타입을 직접 선택했다면
+            //ISSUE 상태 필터는 해제
+            issueStatus: 
+                type === "ISSUE"
+                    ? prev.issueStatus
+                    : "ALL"
+        }));
+
+        if(type !== "ISSUE") {
+            setFilterCondition(prev => ({
+                ...prev,
+                issueStatus: "ALL"
+            }));
+        }
+    }, []);
+
+    //정렬 변경
+    const changeSort = useCallback((e) => {
+        const sort = e.target.value;
+
+        setSearchCondition(prev => ({
+            ...prev,
+            sort: sort
+        }));
+
+    }, []);
+
+    //record 검색
+    const searchRecord = useCallback((e) => {
+        e.preventDefault();
+
+        setSearchCondition(prev => ({
+            ...prev,
+            keyword: searchKeyword.trim()
+        }));
+    }, [searchKeyword]);
+
+    const typeFilterList = [
+        {
+            value: "ALL",
+            name: "전체",
+            count: recordSummary.totalCount
+        },
+        {
+            value: "DECISION",
+            name: "의사결정",
+            count: recordSummary.decisionCount
+        },
+        {
+            value: "ISSUE",
+            name: "이슈",
+            count: recordSummary.issueCount
+        },
+        {
+            value: "DELIVERABLE",
+            name: "산출물",
+            count: recordSummary.deliverableCount
+        },
+        {
+            value: "ETC",
+            name: "기타",
+            count: recordSummary.etcCount
+        }
+    ];
 
     //타입 한글 변환
     const getTypeName = (type) => {
@@ -557,6 +726,80 @@ export default function Records() {
         );
     }, []);
 
+    //상세 필터 적용
+    const applyFilter = useCallback(() => {
+
+        //기간 검증
+        if(
+            filterCondition.startDate
+            && filterCondition.endDate
+            && filterCondition.startDate > filterCondition.endDate
+        ) {
+            toast.warning("시작일은 종료일보다 늦을 수 없습니다");
+            return;
+        }
+
+        setSearchCondition(prev => ({
+            ...prev,
+
+            //OPEN / RESOLVED를 선택하면 결과는 ISSUE밖에 없으므로
+            //타입도 ISSUE로 맞춰준다
+            type : 
+                filterCondition.issueStatus !== "ALL"
+                    ? "ISSUE"
+                    : prev.type,
+            
+            issueStatus : filterCondition.issueStatus,
+            relatedType: filterCondition.relatedType,
+
+            writerNo:
+                filterCondition.writerNo === ""
+                    ? null
+                    : Number(filterCondition.writerNo),
+
+            startDate: filterCondition.startDate || null,
+            endDate: filterCondition.endDate || null
+        }));
+
+        setFilterOpen(false);
+    }, [filterCondition])
+
+    //상세 필터 초기화
+    const resetFilter = useCallback(() => {
+        setFilterCondition({
+            issueStatus: "ALL",
+            relatedType: "ALL",
+            writerNo: "",
+            startDate: "",
+            endDate: ""
+        });
+
+        setSearchCondition(prev => ({
+            ...prev,
+            type: "ALL",
+            issueStatus: "ALL",
+            relatedType: "ALL",
+            writerNo:  null,
+            startDate: null,
+            endDate: null
+        }));
+
+        setFilterOpen(false);
+    }, []);
+
+    //적용된 상세 필터 개수
+    const appliedFilterCount = 
+        (searchCondition.issueStatus !== "ALL" ? 1 : 0)
+        + (searchCondition.relatedType !=="ALL" ? 1 : 0)
+        + (searchCondition.writerNo !== null ? 1 : 0)
+        + (
+            searchCondition.startDate != null
+            || searchCondition.endDate !== null
+                ? 1
+                : 0
+        );
+
+
     return(<>
         <div className="records-page">
             {/* 상단 */}
@@ -577,6 +820,258 @@ export default function Records() {
                         새 기록 작성
                     </Button>
                 )}
+            </div>
+
+            {/* 조회 도구 */}
+            <div className="records-toolbar">
+
+                {/* 타입 필터 */}
+                <div className="records-type-filter">
+                    {typeFilterList.map(item => (
+                        <button
+                            type="button"
+                            key={item.value}
+                            className={
+                                searchCondition.type === item.value
+                                    ? "records-type-filter-button active"
+                                    : "records-type-filter-button"
+                            }
+                            onClick={() => changeTypeFilter(item.value)}
+                        >
+                            <span>
+                                {item.name}
+                            </span>
+
+                            <span className="records-type-count">
+                                {item.count}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
+                <div className="records-toolbar-actions">
+
+                    {/* 검색 */}
+                    <form
+                        className="records-search"
+                        onSubmit={searchRecord}
+                    >
+                        <div className="records-search-input">
+                            <Search size={16} />
+
+                            <Form.Control
+                                type="text"
+                                value={searchKeyword}
+                                onChange={e => setSearchKeyword(e.target.value)}
+                                placeholder="기록 검색"
+                            />
+                        </div>
+
+                        <Button
+                            type="submit"
+                            variant="outline-secondary"
+                        >
+                            검색
+                        </Button>
+                    </form>
+
+                    {/* 상세 필터 */}
+                    <div className="records-filter-wrapper">
+                        <Button
+                            type="button"
+                            variant="outline-secondary"
+                            className={
+                                appliedFilterCount > 0
+                                    ? "records-filter-button active"
+                                    : "records-filter-button"
+                            }
+                            onClick={() => setFilterOpen(prev => !prev)}
+                        >
+                            <SlidersHorizontal size={16} />
+                            필터
+
+                            {appliedFilterCount > 0 && (
+                                <span className="records-filter-count">
+                                    {appliedFilterCount}
+                                </span>
+                            )}
+                        </Button>
+
+                        {filterOpen && (
+                            <div className="records-filter-panel">
+                                <div className="records-filter-panel-title">
+                                    상세 필터
+                                </div>
+
+                                <Form.Group className="records-filter-group">
+                                    <Form.Label>
+                                        이슈 상태
+                                    </Form.Label>
+
+                                    <Form.Select
+                                        value={filterCondition.issueStatus}
+                                        onChange={e =>
+                                            setFilterCondition(prev => ({
+                                                ...prev,
+                                                issueStatus: e.target.value
+                                            }))
+                                        }
+                                    >
+                                        <option value="">
+                                            전체
+                                        </option>
+                                        <option value="OPEN">
+                                            진행중
+                                        </option>
+                                        <option value="RESOLVED">
+                                            해결
+                                        </option>
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Form.Group className="records-filter-group">
+                                    <Form.Label>
+                                        관련 원본
+                                    </Form.Label>
+
+                                    <Form.Select
+                                        value={filterCondition.relatedType}
+                                        onChange={e =>
+                                            setFilterCondition(prev => ({
+                                                ...prev,
+                                                relatedType: e.target.value
+                                            }))
+                                        }
+                                    >
+                                        <option value="ALL">
+                                            전체
+                                        </option>
+                                        <option value="TASK">
+                                            업무
+                                        </option>
+                                        <option value="MESSAGE">
+                                            채팅
+                                        </option>
+                                        <option value="NOTE">
+                                            노트
+                                        </option>
+                                        <option value="ATTACH">
+                                            파일
+                                        </option>
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Form.Group className="records-filter-group">
+                                    <Form.Label>
+                                        작성자
+                                    </Form.Label>
+
+                                    <Form.Select
+                                        value={filterCondition.writerNo}
+                                        onChange={e =>
+                                            setFilterCondition(prev => ({
+                                                ...prev,
+                                                writerNo: e.target.value
+                                            }))
+                                        }
+                                    >
+                                        <option value="ALL">
+                                            전체
+                                        </option>
+                                        
+                                        {memberList.map(member => (
+                                            <option
+                                                key={member.projectMemberNo}
+                                                value={member.projectMemberNo}
+                                            >
+                                                {member.empName}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                                        
+                                <div className="records-filter-date">
+                                    <Form.Group>
+                                        <Form.Label>
+                                            시작일
+                                        </Form.Label>
+
+                                        <Form.Control
+                                            type="date"
+                                            value={filterCondition.startDate}
+                                            onChange={e =>
+                                                setFilterCondition(prev => ({
+                                                    ...prev,
+                                                    startDate: e.target.value
+                                                }))
+                                            }
+                                        />
+                                    </Form.Group>
+                                    
+                                    <Form.Group>
+                                        <Form.Label>
+                                            종료일
+                                        </Form.Label>
+
+                                        <Form.Control
+                                            type="date"
+                                            value={filterCondition.endDate}
+                                            onChange={e =>
+                                                setFilterCondition(prev => ({
+                                                    ...prev,
+                                                    endDate: e.target.value
+                                                }))
+                                            }
+                                        />
+                                    </Form.Group>
+
+                                </div>
+
+                                <div className="records-filter-footer">
+                                    <Button
+                                        type="button"
+                                        variant="light"
+                                        onClick={resetFilter}
+                                    >
+                                        초기화
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        onClick={applyFilter}
+                                    >
+                                        적용
+                                    </Button>
+                                </div>
+
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 정렬 */}
+                    <div className="records-sort">
+                        <ArrowUpDown size={16} />
+
+                        <Form.Select
+                            value={searchCondition.sort}
+                            onChange={changeSort}
+                        >
+                            <option value="LATEST">
+                                최신 작성순
+                            </option>
+
+                            <option value="OLDEST">
+                                오래된 작성순
+                            </option>
+
+                            <option value="UPDATED">
+                                최근 수정순
+                            </option>
+                        </Form.Select>
+                    </div>
+                </div>
+
             </div>
 
             {/* 목록 */}
@@ -1225,7 +1720,7 @@ export default function Records() {
                             as="textarea"
                             rows={5}
                             value={issueResolution}
-                            onChange={e => setIssueResoltion(e.target.value)}
+                            onChange={e => setIssueResolution(e.target.value)}
                             placeholder="이슈를 어떻게 해결했는지 입력하세요"
                         />
                     </FormGroup>
