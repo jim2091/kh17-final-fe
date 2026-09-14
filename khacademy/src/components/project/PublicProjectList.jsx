@@ -152,7 +152,7 @@ export default function PublicProjectList() {
     }
     
     return (
-        <div className="project-page public-project-page">
+        <div className="project-page project-list-page public-project-page">
 
             {/* 제목 */}
             <div className="project-page-header mt-4 mb-4">
