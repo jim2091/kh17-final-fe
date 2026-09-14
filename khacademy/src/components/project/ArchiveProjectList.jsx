@@ -57,7 +57,7 @@ export default function ArcheiveProjectList() {
         );
     }
     return (
-        <div className="project-page archive-project-page">
+        <div className="project-page project-list-page archive-project-page">
 
             {/* 제목 */}
             <div className="project-page-header mt-4 mb-4">

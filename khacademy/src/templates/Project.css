@@ -485,8 +485,24 @@
      .project-close-standalone {
         padding: 16px;
     }
+    .project-list-page {
+        padding: 0 16px 24px;
+    }
 
 
+
+}
+
+/* =====================================================
+    Project List Page 공통 여백
+===================================================== */
+
+.project-list-page {
+    width: 100%;
+
+    padding: 0 28px 32px;
+
+    box-sizing: border-box;
 }
 
 /* =====================================================
