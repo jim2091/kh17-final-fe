@@ -4,11 +4,10 @@ import { useCallback, useState, useEffect, useMemo } from "react";
 import { apiClient } from "@utils/reaxios";
 // import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
-import { FaPenToSquare } from "react-icons/fa6";
 import NoImage from "@assets/noimages.png";
 
 export default function Mypage() {
-    // const { attachNo } = useAtomValue(loginUserState) || {};
+    // const { empNo } = useAtomValue(loginUserState) || {};
     const [emp, setEmp] = useState("");
     useEffect(() => {
         loadData();
@@ -35,6 +34,11 @@ export default function Mypage() {
     // if (emp === null) {
     //     return (<h1>로딩중인 화면</h1>);
     // }
+
+    const kakaoLogin = useCallback(()=>{
+        const baseURL = import.meta.env.VITE_SERVER_URL;
+        window.location.href = `${baseURL}/oauth/kakao/login`;
+    }, []);
 
 
     return (<>
@@ -96,6 +100,7 @@ export default function Mypage() {
                             <span>{unionAddress}</span>
                         </Col>
                     </Row>
+                <Button onClick={kakaoLogin}>카카오 연결</Button>
                 </Col>
                 <Col sm={9}>
 
