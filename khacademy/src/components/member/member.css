@@ -323,9 +323,21 @@
     color: #3C1E1E;
     
 }
+.kakao-image{
+    width: 25px;
+    height: 25px;
+}
 .space{
     min-height: 70px;
 }
 .login-page{
     background-color: #f7f8fa;
+}
+.toggle .form-check-input {
+    width: 40px;
+    height: 20px;
+}
+.toggle .form-check-input:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
 }
