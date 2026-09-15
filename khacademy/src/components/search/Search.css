@@ -368,7 +368,14 @@
     background: #f3f3f3;
 }
 
+
+/* ==========================================
+   사용자 프로필 원형
+========================================== */
+
 .search-user-avatar {
+    position: relative;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -376,12 +383,80 @@
     width: 42px;
     height: 42px;
 
-    flex-shrink: 0;
+    min-width: 42px;
+    min-height: 42px;
+
+    max-width: 42px;
+    max-height: 42px;
+
+    flex: 0 0 42px;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
 
     border-radius: 50%;
 
     background: #eeeeee;
 
+    color: #555;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* ==========================================
+   사용자 프로필 실제 이미지
+   ★ 이미지가 원 밖으로 절대 나오지 않도록 고정
+========================================== */
+
+.search-user-avatar img.search-user-profile-image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    min-width: 100%;
+    min-height: 100%;
+
+    max-width: 100%;
+    max-height: 100%;
+
+    flex: none;
+
+    margin: 0;
+    padding: 0;
+
+    box-sizing: border-box;
+
+    object-fit: cover;
+
+    border: none;
+    border-radius: 50%;
+
+    overflow: hidden;
+}
+
+
+/* ==========================================
+   사용자 프로필 이미지 없을 때
+========================================== */
+
+.search-user-avatar-fallback {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    background: #eeeeee;
     color: #555;
 
     font-size: 14px;
@@ -1053,7 +1128,14 @@
     min-width: 0;
 }
 
+
+/* ==========================================
+   팝업 사용자 프로필 원형
+========================================== */
+
 .user-project-modal-avatar {
+    position: relative;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1061,7 +1143,17 @@
     width: 48px;
     height: 48px;
 
-    flex-shrink: 0;
+    min-width: 48px;
+    min-height: 48px;
+
+    max-width: 48px;
+    max-height: 48px;
+
+    flex: 0 0 48px;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
 
     margin-right: 13px;
 
@@ -1073,6 +1165,59 @@
     font-size: 16px;
     font-weight: 700;
 }
+
+
+/* ==========================================
+   팝업 사용자 실제 이미지
+========================================== */
+
+.user-project-modal-avatar img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    min-width: 100%;
+    min-height: 100%;
+
+    max-width: 100%;
+    max-height: 100%;
+
+    flex: none;
+
+    margin: 0;
+    padding: 0;
+
+    box-sizing: border-box;
+
+    object-fit: cover;
+
+    border: none;
+    border-radius: 50%;
+
+    overflow: hidden;
+}
+
+
+/* ==========================================
+   팝업 사용자 이미지 fallback
+========================================== */
+
+.user-project-modal-avatar .search-user-avatar-fallback {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+}
+
+
+/* ==========================================
+   팝업 사용자 텍스트
+========================================== */
 
 .user-project-modal-user-text {
     min-width: 0;
@@ -2003,7 +2148,45 @@
         padding: 10px 4px;
     }
 
-    .search-user-avatar,
+
+    /* ==========================================
+       모바일 사용자 프로필
+       ★ 원래처럼 작은 원형 유지
+    ========================================== */
+
+    .search-user-avatar {
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+        min-height: 38px;
+
+        max-width: 38px;
+        max-height: 38px;
+
+        flex: 0 0 38px;
+
+        overflow: hidden;
+
+        border-radius: 50%;
+    }
+
+    .search-user-avatar img.search-user-profile-image {
+        width: 100%;
+        height: 100%;
+
+        min-width: 100%;
+        min-height: 100%;
+
+        max-width: 100%;
+        max-height: 100%;
+
+        border-radius: 50%;
+
+        object-fit: cover;
+    }
+
+
     .search-project-icon,
     .search-task-icon,
     .search-record-icon,
@@ -2101,7 +2284,34 @@
         width: 42px;
         height: 42px;
 
+        min-width: 42px;
+        min-height: 42px;
+
+        max-width: 42px;
+        max-height: 42px;
+
+        flex: 0 0 42px;
+
         margin-right: 10px;
+
+        overflow: hidden;
+
+        border-radius: 50%;
+    }
+
+    .user-project-modal-avatar img {
+        width: 100%;
+        height: 100%;
+
+        min-width: 100%;
+        min-height: 100%;
+
+        max-width: 100%;
+        max-height: 100%;
+
+        border-radius: 50%;
+
+        object-fit: cover;
     }
 
     .user-project-modal-title {

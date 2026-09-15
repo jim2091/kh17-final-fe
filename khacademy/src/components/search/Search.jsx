@@ -60,6 +60,21 @@ export default function Search() {
 
     /*
      * ==================================================
+     * 사용자 프로필 이미지 URL
+     * ==================================================
+     */
+    const getProfileImageUrl = attachNo => {
+        if (!attachNo) {
+            return "";
+        }
+
+        return `${
+            import.meta.env.VITE_SERVER_URL
+        }/api/attach/${attachNo}`;
+    };
+
+    /*
+     * ==================================================
      * URL 필터 변경 감지
      * ==================================================
      */
@@ -93,6 +108,7 @@ export default function Search() {
                 deptName: data.deptName ?? "",
                 positionName: data.positionName ?? "",
                 empContact: data.empContact ?? "",
+                attachNo: data.attachNo ?? user.attachNo ?? null,
             });
 
             setProjectHistory(
@@ -100,6 +116,20 @@ export default function Search() {
             );
         } catch (error) {
             console.error("프로젝트 참여 이력 조회 실패:", error);
+
+            /*
+             * 프로젝트 이력 API에서 프로필 정보가
+             * 없더라도 검색 결과의 사용자 정보를 사용
+             */
+            setSelectedUserInfo({
+                empNo: user.empNo,
+                empName: user.empName ?? "",
+                empEmail: user.empEmail ?? "",
+                deptName: "",
+                positionName: "",
+                empContact: "",
+                attachNo: user.attachNo ?? null,
+            });
 
             setProjectHistoryError(
                 "프로젝트 참여 이력을 불러오지 못했습니다."
@@ -427,9 +457,6 @@ export default function Search() {
     /*
      * ==================================================
      * 기록 클릭
-     *
-     * 현재 App.jsx에 기록 상세 라우트가 없으므로
-     * 해당 프로젝트의 기록 목록으로 이동
      * ==================================================
      */
     const handleRecordClick = projectNo => {
@@ -444,8 +471,6 @@ export default function Search() {
     /*
      * ==================================================
      * 노트 클릭
-     *
-     * noteNo가 있으므로 해당 노트 상세 페이지로 이동
      * ==================================================
      */
     const handleNoteClick = (projectNo, noteNo) => {
@@ -465,9 +490,6 @@ export default function Search() {
     /*
      * ==================================================
      * 파일 클릭
-     *
-     * 현재 App.jsx에 파일 상세 라우트가 없으므로
-     * 해당 프로젝트의 파일함으로 이동
      * ==================================================
      */
     const handleFileClick = projectNo => {
@@ -542,7 +564,9 @@ export default function Search() {
      */
     const getFileUrl = attachNo =>
         attachNo
-            ? `http://localhost:8080/api/attach/${attachNo}`
+            ? `${
+                  import.meta.env.VITE_SERVER_URL
+              }/api/attach/${attachNo}`
             : "";
 
     /*
@@ -569,7 +593,10 @@ export default function Search() {
                         }}
                     />
 
-                    <div className="search-file-thumbnail-fallback">
+                    <div
+                        className="search-file-thumbnail-fallback"
+                        style={{ display: "none" }}
+                    >
                         <span>이미지 없음</span>
                     </div>
                 </div>
@@ -686,7 +713,6 @@ export default function Search() {
                             </div>
                         )}
 
-                    {/* 검색어 없음 */}
                     {!keyword && (
                         <div className="search-empty-page">
                             <div className="search-empty-icon">🔍</div>
@@ -699,7 +725,6 @@ export default function Search() {
                         </div>
                     )}
 
-                    {/* 검색 대상 없음 */}
                     {keyword && !filters.length && (
                         <div className="search-filter-empty">
                             <div className="search-filter-empty-icon">
@@ -714,7 +739,6 @@ export default function Search() {
                         </div>
                     )}
 
-                    {/* 검색 중 */}
                     {keyword &&
                         filters.length > 0 &&
                         loading && (
@@ -723,7 +747,6 @@ export default function Search() {
                             </div>
                         )}
 
-                    {/* 검색 오류 */}
                     {keyword &&
                         filters.length > 0 &&
                         !loading &&
@@ -733,7 +756,6 @@ export default function Search() {
                             </div>
                         )}
 
-                    {/* 검색 결과 */}
                     {keyword &&
                         filters.length > 0 &&
                         !loading &&
@@ -770,9 +792,47 @@ export default function Search() {
                                                     }
                                                 }}
                                             >
+                                                {/* ==================================================
+                                                    사용자 프로필 이미지
+                                                ================================================== */}
                                                 <div className="search-user-avatar">
-                                                    {user.empName?.charAt(0) ||
-                                                        "?"}
+                                                    {user.attachNo ? (
+                                                        <img
+                                                            src={getProfileImageUrl(
+                                                                user.attachNo
+                                                            )}
+                                                            alt={
+                                                                user.empName ||
+                                                                "프로필"
+                                                            }
+                                                            className="search-user-profile-image"
+                                                            onError={e => {
+                                                                e.currentTarget.style.display =
+                                                                    "none";
+
+                                                                if (
+                                                                    e.currentTarget
+                                                                        .nextElementSibling
+                                                                ) {
+                                                                    e.currentTarget.nextElementSibling.style.display =
+                                                                        "flex";
+                                                                }
+                                                            }}
+                                                        />
+                                                    ) : null}
+
+                                                    <div
+                                                        className="search-user-avatar-fallback"
+                                                        style={{
+                                                            display: user.attachNo
+                                                                ? "none"
+                                                                : "flex",
+                                                        }}
+                                                    >
+                                                        {user.empName?.charAt(
+                                                            0
+                                                        ) || "?"}
+                                                    </div>
                                                 </div>
 
                                                 <div className="search-item-main">
@@ -1240,10 +1300,47 @@ export default function Search() {
                         <div className="user-project-modal-header">
                             <div className="user-project-modal-user-area">
                                 <div className="user-project-modal-user">
+                                    {/* ==================================================
+                                        모달 프로필 이미지
+                                    ================================================== */}
                                     <div className="user-project-modal-avatar">
-                                        {selectedUserInfo?.empName?.charAt(
-                                            0
-                                        ) || "?"}
+                                        {selectedUserInfo?.attachNo ? (
+                                            <img
+                                                src={getProfileImageUrl(
+                                                    selectedUserInfo.attachNo
+                                                )}
+                                                alt={
+                                                    selectedUserInfo.empName ||
+                                                    "프로필"
+                                                }
+                                                className="user-project-modal-profile-image"
+                                                onError={e => {
+                                                    e.currentTarget.style.display =
+                                                        "none";
+
+                                                    if (
+                                                        e.currentTarget
+                                                            .nextElementSibling
+                                                    ) {
+                                                        e.currentTarget.nextElementSibling.style.display =
+                                                            "flex";
+                                                    }
+                                                }}
+                                            />
+                                        ) : null}
+
+                                        <div
+                                            className="user-project-modal-avatar-fallback"
+                                            style={{
+                                                display: selectedUserInfo?.attachNo
+                                                    ? "none"
+                                                    : "flex",
+                                            }}
+                                        >
+                                            {selectedUserInfo?.empName?.charAt(
+                                                0
+                                            ) || "?"}
+                                        </div>
                                     </div>
 
                                     <div className="user-project-modal-user-text">
