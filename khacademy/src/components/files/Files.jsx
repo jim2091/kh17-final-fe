@@ -1,14 +1,18 @@
-
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import {
+    useNavigate,
+    useOutletContext,
+    useParams,
+} from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
 import "./Files.css";
 import RecordLinkModal from "../records/RecordLinkModal";
 
+
 /*
- * ==================================================
+ * ==========================================
  * 파일 출처
- * ==================================================
+ * ==========================================
  */
 
 const SOURCE_LABEL = {
@@ -22,9 +26,9 @@ const SOURCE_LABEL = {
 
 
 /*
- * ==================================================
+ * ==========================================
  * 검색 종류
- * ==================================================
+ * ==========================================
  */
 
 const SEARCH_TYPE_LABEL = {
@@ -33,6 +37,7 @@ const SEARCH_TYPE_LABEL = {
     uploader: "업로더",
     type: "파일 형태",
 };
+
 
 const SEARCH_TYPE_OPTIONS = [
     {
@@ -55,9 +60,81 @@ const SEARCH_TYPE_OPTIONS = [
 
 
 /*
- * ==================================================
- * 정렬 종류
- * ==================================================
+ * ==========================================
+ * 출처 검색 옵션
+ * ==========================================
+ */
+
+const SOURCE_SEARCH_OPTIONS = [
+    {
+        value: "TASK",
+        label: "업무",
+    },
+    {
+        value: "TASK_COMMENT",
+        label: "업무 댓글",
+    },
+    {
+        value: "NOTE",
+        label: "노트",
+    },
+    {
+        value: "NOTE_COMMENT",
+        label: "노트 댓글",
+    },
+    {
+        value: "FILE",
+        label: "파일함",
+    },
+];
+
+
+/*
+ * ==========================================
+ * 파일 형태 검색 옵션
+ * ==========================================
+ */
+
+const FILE_TYPE_SEARCH_OPTIONS = [
+    {
+        value: ".jpg",
+        label: ".jpg",
+    },
+    {
+        value: ".txt",
+        label: ".txt",
+    },
+    {
+        value: ".hwp",
+        label: ".hwp",
+    },
+    {
+        value: ".hwpx",
+        label: ".hwpx",
+    },
+    {
+        value: ".gif",
+        label: ".gif",
+    },
+    {
+        value: ".docx",
+        label: ".docx",
+    },
+    {
+        value: ".pdf",
+        label: ".pdf",
+    },
+    {
+        value: ".webp",
+        label: ".webp",
+    },
+];
+
+
+/*
+ * ==========================================
+ * 정렬
+ * ==========================================
  */
 
 const SORT_OPTIONS = [
@@ -93,113 +170,78 @@ export default function Files({
     sourceNo = null,
 }) {
 
-    // ==================================================
-    // 프로젝트 번호
-    // ==================================================
-
     const { projectNo } = useParams();
-
-
-    // ==================================================
-    // 페이지 이동
-    // ==================================================
 
     const navigate = useNavigate();
 
-
-    // ==================================================
-    // 파일 목록
-    // ==================================================
-
     const [files, setFiles] = useState([]);
-
-
-    // ==================================================
-    // 현재 로그인 사용자
-    // ==================================================
 
     const [loginUser, setLoginUser] = useState("");
 
-
-    // ==================================================
-    // 로그인 사용자 프로젝트 역할
-    // ==================================================
-
     const [loginRole, setLoginRole] = useState("");
-
-
-    // ==================================================
-    // 프로젝트 상태
-    // ==================================================
 
     const [projectStatus, setProjectStatus] = useState("");
 
 
-    // ==================================================
-    // 검색 종류
-    // ==================================================
+    /*
+     * 검색 상태
+     */
 
     const [searchType, setSearchType] = useState("name");
 
-
-    // ==================================================
-    // 검색어
-    // ==================================================
-
     const [keyword, setKeyword] = useState("");
 
+    const [sourceKeyword, setSourceKeyword] = useState("");
 
-    // ==================================================
-    // 정렬
-    // ==================================================
+    const [fileTypeKeyword, setFileTypeKeyword] = useState("");
+
+
+    /*
+     * 정렬 / 로딩
+     */
 
     const [sortType, setSortType] = useState("date-desc");
-
-
-    // ==================================================
-    // 상태
-    // ==================================================
 
     const [loading, setLoading] = useState(false);
 
     const [uploading, setUploading] = useState(false);
 
 
-    // ==================================================
-    // 이미지 미리보기
-    // ==================================================
+    /*
+     * 이미지 미리보기
+     */
 
     const [previewFile, setPreviewFile] = useState(null);
 
     const [previewError, setPreviewError] = useState(false);
 
 
-    // ==================================================
-    // 파일 input
-    // ==================================================
-
     const fileInputRef = useRef(null);
 
-    // Record 연결
+
+    /*
+     * Record
+     */
+
     const [recordModalOpen, setRecordModalOpen] = useState(false);
+
     const [recordTargetFile, setRecordTargetFile] = useState(null);
 
-    const {project} = useOutletContext();
 
-    const isClosed = project?.projectStatus === "closed";
+    const { project } = useOutletContext();
 
-
-    // ==================================================
-    // 프로젝트 종료 여부
-    // ==================================================
+    const isClosed =
+        project?.projectStatus === "closed";
 
     const isProjectClosed =
         String(projectStatus || "").toLowerCase() === "closed";
 
 
-    // ==================================================
-    // 출처 표시
-    // ==================================================
+    /*
+     * ==========================================
+     * 출처 이름
+     * ==========================================
+     */
 
     const getSourceLabel = (fileSource) => {
 
@@ -211,9 +253,11 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 출처 번호 존재 여부
-    // ==================================================
+    /*
+     * ==========================================
+     * 출처 번호 존재 여부
+     * ==========================================
+     */
 
     const hasSourceNo = (file) => {
 
@@ -226,16 +270,15 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 출처 클릭 가능 여부
-    // ==================================================
+    /*
+     * ==========================================
+     * 출처 클릭 가능 여부
+     * ==========================================
+     */
 
     const isSourceClickable = (file) => {
 
-        if (
-            !file ||
-            !file.attachSource
-        ) {
+        if (!file || !file.attachSource) {
             return false;
         }
 
@@ -248,45 +291,31 @@ export default function Files({
             "NOTE_COMMENT",
             "TASK",
             "TASK_COMMENT",
-        ].includes(
-            file.attachSource
-        );
+        ].includes(file.attachSource);
     };
 
 
-    // ==================================================
-    // 출처 이동
-    // ==================================================
+    /*
+     * ==========================================
+     * 출처 원본 이동
+     * ==========================================
+     */
 
-    const handleSourceClick = async (
-        e,
-        file
-    ) => {
+    const handleSourceClick = async (e, file) => {
 
         e.stopPropagation();
 
-        if (
-            !isSourceClickable(file)
-        ) {
+        if (!isSourceClickable(file)) {
             return;
         }
 
-        const sourceType =
-            file.attachSource;
+        const sourceType = file.attachSource;
 
-        const sourceNo =
-            file.attachSourceNo;
-
+        const sourceNo = file.attachSourceNo;
 
         try {
 
-            // ==================================================
-            // 노트
-            // ==================================================
-
-            if (
-                sourceType === "NOTE"
-            ) {
+            if (sourceType === "NOTE") {
 
                 navigate(
                     `/projects/${projectNo}/note/${sourceNo}`
@@ -296,13 +325,7 @@ export default function Files({
             }
 
 
-            // ==================================================
-            // 업무
-            // ==================================================
-
-            if (
-                sourceType === "TASK"
-            ) {
+            if (sourceType === "TASK") {
 
                 navigate(
                     `/projects/${projectNo}/task?taskNo=${sourceNo}`
@@ -312,22 +335,14 @@ export default function Files({
             }
 
 
-            // ==================================================
-            // 노트 댓글
-            // ==================================================
-
-            if (
-                sourceType === "NOTE_COMMENT"
-            ) {
+            if (sourceType === "NOTE_COMMENT") {
 
                 const response =
                     await apiClient.get(
                         `/note/comment/${sourceNo}`
                     );
 
-                const comment =
-                    response.data;
-
+                const comment = response.data;
 
                 if (
                     !comment ||
@@ -342,7 +357,6 @@ export default function Files({
                     return;
                 }
 
-
                 navigate(
                     `/projects/${projectNo}/note/${comment.noteNo}`
                 );
@@ -351,22 +365,14 @@ export default function Files({
             }
 
 
-            // ==================================================
-            // 업무 댓글
-            // ==================================================
-
-            if (
-                sourceType === "TASK_COMMENT"
-            ) {
+            if (sourceType === "TASK_COMMENT") {
 
                 const response =
                     await apiClient.get(
                         `/task/comment/${sourceNo}`
                     );
 
-                const comment =
-                    response.data;
-
+                const comment = response.data;
 
                 if (
                     !comment ||
@@ -381,7 +387,6 @@ export default function Files({
                     return;
                 }
 
-
                 navigate(
                     `/projects/${projectNo}/task?taskNo=${comment.taskNo}`
                 );
@@ -389,8 +394,7 @@ export default function Files({
                 return;
             }
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "출처 원본 이동 실패:",
@@ -410,9 +414,11 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 파일 목록 조회
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 목록 조회
+     * ==========================================
+     */
 
     const fetchFiles = async (
         searchKeyword = keyword,
@@ -442,17 +448,13 @@ export default function Files({
 
 
         const normalizedSearchType =
-            validSearchTypes.includes(
-                currentSearchType
-            )
+            validSearchTypes.includes(currentSearchType)
                 ? currentSearchType
                 : "name";
 
 
         const trimmedKeyword =
-            String(
-                searchKeyword ?? ""
-            ).trim();
+            String(searchKeyword ?? "").trim();
 
 
         try {
@@ -464,38 +466,27 @@ export default function Files({
                 `/attach/list/${projectNo}`;
 
 
-            /*
-             * 검색어가 있을 때만
-             * 검색 파라미터를 추가합니다.
-             */
-
             if (trimmedKeyword) {
 
                 const params =
                     new URLSearchParams();
-
 
                 params.append(
                     "keyword",
                     trimmedKeyword
                 );
 
-
                 params.append(
                     "searchType",
                     normalizedSearchType
                 );
 
-
-                url +=
-                    `?${params.toString()}`;
+                url += `?${params.toString()}`;
             }
 
 
             const response =
-                await apiClient.get(
-                    url
-                );
+                await apiClient.get(url);
 
 
             console.log(
@@ -503,40 +494,19 @@ export default function Files({
                 projectNo
             );
 
-
             console.log(
                 "검색 종류:",
                 normalizedSearchType
             );
-
 
             console.log(
                 "검색어:",
                 trimmedKeyword
             );
 
-
             console.log(
                 "파일 목록:",
                 response.data
-            );
-
-
-            console.log(
-                "프로젝트 상태:",
-                response.data?.projectStatus
-            );
-
-
-            console.log(
-                "로그인 사용자:",
-                response.data?.loginUser
-            );
-
-
-            console.log(
-                "로그인 사용자 역할:",
-                response.data?.loginRole
             );
 
 
@@ -550,30 +520,25 @@ export default function Files({
 
 
             setLoginUser(
-                response.data?.loginUser ||
-                ""
+                response.data?.loginUser || ""
             );
 
 
             setLoginRole(
-                response.data?.loginRole ||
-                ""
+                response.data?.loginRole || ""
             );
 
 
             setProjectStatus(
-                response.data?.projectStatus ||
-                ""
+                response.data?.projectStatus || ""
             );
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "파일 목록 조회 실패:",
                 error
             );
-
 
             console.error(
                 "서버 응답:",
@@ -595,22 +560,26 @@ export default function Files({
                 "파일 목록을 불러오는 중 오류가 발생했습니다."
             );
 
-        }
-        finally {
+        } finally {
 
             setLoading(false);
         }
     };
 
 
-    // ==================================================
-    // 프로젝트 번호 변경 시
-    // 전체 파일 목록 조회
-    // ==================================================
+    /*
+     * ==========================================
+     * 프로젝트 변경
+     * ==========================================
+     */
 
     useEffect(() => {
 
         setKeyword("");
+
+        setSourceKeyword("");
+
+        setFileTypeKeyword("");
 
         setSearchType("name");
 
@@ -618,36 +587,101 @@ export default function Files({
 
         setProjectStatus("");
 
-
-        fetchFiles(
-            "",
-            "name"
-        );
+        fetchFiles("", "name");
 
     }, [projectNo]);
 
 
-    // ==================================================
-    // 검색 종류 변경
-    // ==================================================
+    /*
+     * ==========================================
+     * 검색 종류 변경
+     * ==========================================
+     */
 
     const handleSearchTypeChange = (e) => {
 
         const newType =
             e.target.value;
 
+        setSearchType(newType);
 
-        setSearchType(
-            newType
+        setKeyword("");
+
+        setSourceKeyword("");
+
+        setFileTypeKeyword("");
+    };
+
+
+    /*
+     * ==========================================
+     * 출처 선택 즉시 검색
+     * ==========================================
+     */
+
+    const handleSourceChange = (e) => {
+
+        const value =
+            e.target.value;
+
+        setSourceKeyword(value);
+
+        fetchFiles(
+            value,
+            "source"
         );
     };
 
 
-    // ==================================================
-    // 검색
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 형태 선택 즉시 검색
+     * ==========================================
+     */
+
+    const handleFileTypeChange = (e) => {
+
+        const value =
+            e.target.value;
+
+        setFileTypeKeyword(value);
+
+        fetchFiles(
+            value,
+            "type"
+        );
+    };
+
+
+    /*
+     * ==========================================
+     * 검색
+     * ==========================================
+     */
 
     const handleSearch = () => {
+
+        if (searchType === "source") {
+
+            fetchFiles(
+                sourceKeyword,
+                searchType
+            );
+
+            return;
+        }
+
+
+        if (searchType === "type") {
+
+            fetchFiles(
+                fileTypeKeyword,
+                searchType
+            );
+
+            return;
+        }
+
 
         fetchFiles(
             keyword,
@@ -656,14 +690,19 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 검색 초기화
-    // ==================================================
+    /*
+     * ==========================================
+     * 검색 초기화
+     * ==========================================
+     */
 
     const handleSearchReset = () => {
 
         setKeyword("");
 
+        setSourceKeyword("");
+
+        setFileTypeKeyword("");
 
         fetchFiles(
             "",
@@ -672,24 +711,34 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 엔터 검색
-    // ==================================================
+    /*
+     * ==========================================
+     * Enter 검색
+     * ==========================================
+     */
 
     const handleSearchKeyDown = (e) => {
 
         if (
-            e.key === "Enter"
+            searchType === "source" ||
+            searchType === "type"
         ) {
+            return;
+        }
+
+
+        if (e.key === "Enter") {
 
             handleSearch();
         }
     };
 
 
-    // ==================================================
-    // 정렬 변경
-    // ==================================================
+    /*
+     * ==========================================
+     * 정렬
+     * ==========================================
+     */
 
     const handleSortChange = (e) => {
 
@@ -699,19 +748,17 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 정렬된 파일 목록
-    // ==================================================
+    /*
+     * ==========================================
+     * 정렬된 파일
+     * ==========================================
+     */
 
-    const sortedFiles = [...files].sort(
-        (a, b) => {
+    const sortedFiles =
+        [...files].sort((a, b) => {
 
             let result = 0;
 
-
-            // ==================================================
-            // 파일명
-            // ==================================================
 
             if (
                 sortType === "name-asc" ||
@@ -744,18 +791,10 @@ export default function Files({
                 if (
                     sortType === "name-desc"
                 ) {
-
-                    result =
-                        -result;
+                    result = -result;
                 }
-            }
 
-
-            // ==================================================
-            // 날짜
-            // ==================================================
-
-            else if (
+            } else if (
                 sortType === "date-asc" ||
                 sortType === "date-desc"
             ) {
@@ -785,25 +824,16 @@ export default function Files({
 
 
                 result =
-                    safeDateA -
-                    safeDateB;
+                    safeDateA - safeDateB;
 
 
                 if (
                     sortType === "date-desc"
                 ) {
-
-                    result =
-                        -result;
+                    result = -result;
                 }
-            }
 
-
-            // ==================================================
-            // 파일 크기
-            // ==================================================
-
-            else if (
+            } else if (
                 sortType === "size-asc" ||
                 sortType === "size-desc"
             ) {
@@ -821,28 +851,26 @@ export default function Files({
 
 
                 result =
-                    sizeA -
-                    sizeB;
+                    sizeA - sizeB;
 
 
                 if (
                     sortType === "size-desc"
                 ) {
-
-                    result =
-                        -result;
+                    result = -result;
                 }
             }
 
 
             return result;
-        }
-    );
+        });
 
 
-    // ==================================================
-    // 업로드 버튼
-    // ==================================================
+    /*
+     * ==========================================
+     * 업로드 버튼
+     * ==========================================
+     */
 
     const handleUploadClick = () => {
 
@@ -861,10 +889,6 @@ export default function Files({
         }
 
 
-        // ==================================================
-        // 종료된 프로젝트 업로드 차단
-        // ==================================================
-
         if (isProjectClosed) {
 
             alert(
@@ -879,9 +903,11 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 파일 업로드
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 업로드
+     * ==========================================
+     */
 
     const handleFileChange = async (e) => {
 
@@ -893,10 +919,6 @@ export default function Files({
             return;
         }
 
-
-        // ==================================================
-        // 프로젝트 번호 확인
-        // ==================================================
 
         if (!projectNo) {
 
@@ -910,10 +932,6 @@ export default function Files({
         }
 
 
-        // ==================================================
-        // 종료된 프로젝트 확인
-        // ==================================================
-
         if (isProjectClosed) {
 
             alert(
@@ -925,10 +943,6 @@ export default function Files({
             return;
         }
 
-
-        // ==================================================
-        // FormData
-        // ==================================================
 
         const formData =
             new FormData();
@@ -946,19 +960,11 @@ export default function Files({
         );
 
 
-        // ==================================================
-        // 출처
-        // ==================================================
-
         formData.append(
             "source",
             source || "FILE"
         );
 
-
-        // ==================================================
-        // 출처 번호
-        // ==================================================
 
         if (
             sourceNo !== null &&
@@ -978,54 +984,35 @@ export default function Files({
             setUploading(true);
 
 
-            console.log(
-                "업로드 프로젝트 번호:",
-                projectNo
+            await apiClient.post(
+                "/attach/upload",
+                formData
             );
 
 
-            console.log(
-                "업로드 파일:",
-                file.name
-            );
+            /*
+             * 현재 검색 조건 유지
+             */
+
+            let currentKeyword = keyword;
 
 
-            console.log(
-                "업로드 출처:",
-                source || "FILE"
-            );
+            if (searchType === "source") {
+
+                currentKeyword =
+                    sourceKeyword;
+            }
 
 
-            console.log(
-                "업로드 출처 번호:",
-                sourceNo
-            );
+            if (searchType === "type") {
 
+                currentKeyword =
+                    fileTypeKeyword;
+            }
 
-            // ==================================================
-            // 업로드 요청
-            // ==================================================
-
-            const response =
-                await apiClient.post(
-                    "/attach/upload",
-                    formData
-                );
-
-
-            console.log(
-                "업로드된 파일 번호:",
-                response.data
-            );
-
-
-            // ==================================================
-            // 업로드 후
-            // 현재 검색 조건 유지
-            // ==================================================
 
             await fetchFiles(
-                keyword,
+                currentKeyword,
                 searchType
             );
 
@@ -1034,14 +1021,12 @@ export default function Files({
                 "파일이 업로드되었습니다."
             );
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "파일 업로드 실패:",
                 error
             );
-
 
             console.error(
                 "서버 응답:",
@@ -1054,8 +1039,7 @@ export default function Files({
                 "파일 업로드 중 오류가 발생했습니다."
             );
 
-        }
-        finally {
+        } finally {
 
             setUploading(false);
 
@@ -1064,9 +1048,11 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 파일 확장자
-    // ==================================================
+    /*
+     * ==========================================
+     * 확장자
+     * ==========================================
+     */
 
     const getExtension = (
         fileName = ""
@@ -1087,23 +1073,19 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 파일 종류
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 타입
+     * ==========================================
+     */
 
     const getFileType = (
         fileName = ""
     ) => {
 
         const extension =
-            getExtension(
-                fileName
-            );
+            getExtension(fileName);
 
-
-        // ==================================================
-        // 이미지
-        // ==================================================
 
         if (
             [
@@ -1116,26 +1098,14 @@ export default function Files({
                 "bmp",
             ].includes(extension)
         ) {
-
             return "image";
         }
 
 
-        // ==================================================
-        // PDF
-        // ==================================================
-
-        if (
-            extension === "pdf"
-        ) {
-
+        if (extension === "pdf") {
             return "pdf";
         }
 
-
-        // ==================================================
-        // Word
-        // ==================================================
 
         if (
             [
@@ -1143,14 +1113,9 @@ export default function Files({
                 "docx",
             ].includes(extension)
         ) {
-
             return "word";
         }
 
-
-        // ==================================================
-        // Excel
-        // ==================================================
 
         if (
             [
@@ -1158,14 +1123,9 @@ export default function Files({
                 "xlsx",
             ].includes(extension)
         ) {
-
             return "excel";
         }
 
-
-        // ==================================================
-        // PowerPoint
-        // ==================================================
 
         if (
             [
@@ -1173,14 +1133,9 @@ export default function Files({
                 "pptx",
             ].includes(extension)
         ) {
-
             return "powerpoint";
         }
 
-
-        // ==================================================
-        // ZIP
-        // ==================================================
 
         if (
             [
@@ -1189,54 +1144,43 @@ export default function Files({
                 "7z",
             ].includes(extension)
         ) {
-
             return "zip";
         }
 
-
-        // ==================================================
-        // 일반 파일
-        // ==================================================
 
         return "file";
     };
 
 
-    // ==================================================
-    // 파일 URL
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 URL
+     * ==========================================
+     */
 
-    const getFileUrl = (
-        attachNo
-    ) => {
+    const getFileUrl = (attachNo) => {
 
         if (!attachNo) {
             return "";
         }
 
-
         return `http://localhost:8080/api/attach/${attachNo}`;
     };
 
 
-    // ==================================================
-    // 이미지 미리보기 열기
-    // ==================================================
+    /*
+     * ==========================================
+     * 이미지 미리보기
+     * ==========================================
+     */
 
-    const handlePreview = (
-        file
-    ) => {
+    const handlePreview = (file) => {
 
         const type =
-            getFileType(
-                file.attachName
-            );
+            getFileType(file.attachName);
 
 
-        if (
-            type !== "image"
-        ) {
-
+        if (type !== "image") {
             return;
         }
 
@@ -1247,10 +1191,6 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 이미지 미리보기 닫기
-    // ==================================================
-
     const closePreview = () => {
 
         setPreviewFile(null);
@@ -1259,9 +1199,11 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // ESC로 미리보기 닫기
-    // ==================================================
+    /*
+     * ==========================================
+     * ESC
+     * ==========================================
+     */
 
     useEffect(() => {
 
@@ -1271,7 +1213,6 @@ export default function Files({
                 e.key === "Escape" &&
                 previewFile
             ) {
-
                 closePreview();
             }
         };
@@ -1294,33 +1235,30 @@ export default function Files({
     }, [previewFile]);
 
 
-    // ==================================================
-    // 다운로드
-    // ==================================================
+    /*
+     * ==========================================
+     * 다운로드
+     * ==========================================
+     */
 
-    const handleDownload = (
-        attachNo
-    ) => {
+    const handleDownload = (attachNo) => {
 
         if (!attachNo) {
             return;
         }
 
-
         window.location.href =
-            getFileUrl(
-                attachNo
-            );
+            getFileUrl(attachNo);
     };
 
 
-    // ==================================================
-    // 삭제
-    // ==================================================
+    /*
+     * ==========================================
+     * 삭제
+     * ==========================================
+     */
 
-    const handleDelete = async (
-        attachNo
-    ) => {
+    const handleDelete = async (attachNo) => {
 
         const result =
             window.confirm(
@@ -1344,15 +1282,14 @@ export default function Files({
                 previewFile?.attachNo ===
                 attachNo
             ) {
-
                 closePreview();
             }
 
 
             setFiles(
-                (prev) =>
+                prev =>
                     prev.filter(
-                        (file) =>
+                        file =>
                             file.attachNo !==
                             attachNo
                     )
@@ -1363,14 +1300,12 @@ export default function Files({
                 "파일이 삭제되었습니다."
             );
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "파일 삭제 실패:",
                 error
             );
-
 
             console.error(
                 "서버 응답:",
@@ -1385,30 +1320,34 @@ export default function Files({
         }
     };
 
-    // ==================================================
-    // Record로 남기기
-    // ==================================================
+
+    /*
+     * ==========================================
+     * Record
+     * ==========================================
+     */
+
     const handleRecord = (file) => {
+
         setRecordTargetFile(file);
+
         setRecordModalOpen(true);
     };
 
+
     const closeRecordModal = () => {
+
         setRecordModalOpen(false);
+
         setRecordTargetFile(null);
-    }
+    };
 
 
-    // ==================================================
-    // 삭제 권한
-    // ==================================================
-    //
-    // owner   : 모든 파일 삭제 가능
-    // manager : 모든 파일 삭제 가능
-    // member  : 본인이 업로드한 파일만 삭제 가능
-    //
-    // 백엔드에서도 동일한 권한 검사를 수행해야 합니다.
-    //
+    /*
+     * ==========================================
+     * 삭제 가능 여부
+     * ==========================================
+     */
 
     const canDeleteFile = (file) => {
 
@@ -1430,37 +1369,17 @@ export default function Files({
             );
 
 
-        // ==================================================
-        // 프로젝트 owner
-        // ==================================================
-
-        if (
-            role === "owner"
-        ) {
-
+        if (role === "owner") {
             return true;
         }
 
 
-        // ==================================================
-        // 프로젝트 manager
-        // ==================================================
-
-        if (
-            role === "manager"
-        ) {
-
+        if (role === "manager") {
             return true;
         }
 
 
-        // ==================================================
-        // 프로젝트 member
-        // ==================================================
-
-        if (
-            role === "member"
-        ) {
+        if (role === "member") {
 
             return (
                 currentUser !== "" &&
@@ -1469,35 +1388,27 @@ export default function Files({
         }
 
 
-        // ==================================================
-        // 그 외
-        // ==================================================
-
         return false;
     };
 
 
-    // ==================================================
-    // 파일 크기
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 크기
+     * ==========================================
+     */
 
-    const formatFileSize = (
-        size
-    ) => {
+    const formatFileSize = (size) => {
 
         if (
             size === null ||
             size === undefined
         ) {
-
             return "-";
         }
 
 
-        if (
-            size < 1024
-        ) {
-
+        if (size < 1024) {
             return `${size} B`;
         }
 
@@ -1532,13 +1443,13 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 날짜
-    // ==================================================
+    /*
+     * ==========================================
+     * 날짜
+     * ==========================================
+     */
 
-    const formatDate = (
-        date
-    ) => {
+    const formatDate = (date) => {
 
         if (!date) {
             return "-";
@@ -1554,7 +1465,6 @@ export default function Files({
                 d.getTime()
             )
         ) {
-
             return "-";
         }
 
@@ -1566,62 +1476,43 @@ export default function Files({
         const month =
             String(
                 d.getMonth() + 1
-            ).padStart(
-                2,
-                "0"
-            );
+            ).padStart(2, "0");
 
 
         const day =
             String(
                 d.getDate()
-            ).padStart(
-                2,
-                "0"
-            );
+            ).padStart(2, "0");
 
 
         return `${year}.${month}.${day}`;
     };
 
 
-    // ==================================================
-    // 파일 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 파일 아이콘
+     * ==========================================
+     */
 
-    const FileIcon = ({
-        file,
-    }) => {
+    const FileIcon = ({ file }) => {
 
         const type =
-            getFileType(
-                file.attachName
-            );
+            getFileType(file.attachName);
 
 
-        // ==================================================
-        // 이미지
-        // ==================================================
-
-        if (
-            type === "image"
-        ) {
+        if (type === "image") {
 
             return (
-
                 <div className="files-image-thumbnail">
 
                     <img
-                        src={getFileUrl(
-                            file.attachNo
-                        )}
+                        src={getFileUrl(file.attachNo)}
                         alt={file.attachName}
-
                         onError={(e) => {
 
                             e.currentTarget.style.display =
                                 "none";
-
 
                             if (
                                 e.currentTarget
@@ -1630,19 +1521,14 @@ export default function Files({
 
                                 e.currentTarget
                                     .nextElementSibling
-                                    .style
-                                    .display = "flex";
+                                    .style.display =
+                                    "flex";
                             }
                         }}
                     />
 
-
                     <div className="files-image-fallback">
-
-                        <span>
-                            이미지 없음
-                        </span>
-
+                        <span>이미지 없음</span>
                     </div>
 
                 </div>
@@ -1650,117 +1536,57 @@ export default function Files({
         }
 
 
-        // ==================================================
-        // PDF
-        // ==================================================
-
-        if (
-            type === "pdf"
-        ) {
+        if (type === "pdf") {
 
             return (
-
                 <div className="files-icon files-icon-pdf">
-
-                    <span>
-                        PDF
-                    </span>
-
+                    <span>PDF</span>
                 </div>
             );
         }
 
 
-        // ==================================================
-        // Word
-        // ==================================================
-
-        if (
-            type === "word"
-        ) {
+        if (type === "word") {
 
             return (
-
                 <div className="files-icon files-icon-word">
-
-                    <span>
-                        W
-                    </span>
-
+                    <span>W</span>
                 </div>
             );
         }
 
 
-        // ==================================================
-        // Excel
-        // ==================================================
-
-        if (
-            type === "excel"
-        ) {
+        if (type === "excel") {
 
             return (
-
                 <div className="files-icon files-icon-excel">
-
-                    <span>
-                        X
-                    </span>
-
+                    <span>X</span>
                 </div>
             );
         }
 
 
-        // ==================================================
-        // PowerPoint
-        // ==================================================
-
-        if (
-            type === "powerpoint"
-        ) {
+        if (type === "powerpoint") {
 
             return (
-
                 <div className="files-icon files-icon-powerpoint">
-
-                    <span>
-                        P
-                    </span>
-
+                    <span>P</span>
                 </div>
             );
         }
 
 
-        // ==================================================
-        // ZIP
-        // ==================================================
-
-        if (
-            type === "zip"
-        ) {
+        if (type === "zip") {
 
             return (
-
                 <div className="files-icon files-icon-zip">
-
-                    <span>
-                        ZIP
-                    </span>
-
+                    <span>ZIP</span>
                 </div>
             );
         }
 
-
-        // ==================================================
-        // 일반 파일
-        // ==================================================
 
         return (
-
             <div className="files-icon files-icon-default">
 
                 <svg
@@ -1769,15 +1595,8 @@ export default function Files({
                     stroke="currentColor"
                     strokeWidth="1.5"
                 >
-
-                    <path
-                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                    />
-
-                    <path
-                        d="M14 2v6h6"
-                    />
-
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
                 </svg>
 
             </div>
@@ -1785,44 +1604,42 @@ export default function Files({
     };
 
 
-    // ==================================================
-    // 검색 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 검색 아이콘
+     * ==========================================
+     */
 
     const SearchIcon = () => {
 
         return (
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
             >
-
                 <circle
                     cx="11"
                     cy="11"
                     r="7"
                 />
 
-                <path
-                    d="m16 16 5 5"
-                />
-
+                <path d="m16 16 5 5" />
             </svg>
         );
     };
 
 
-    // ==================================================
-    // 업로드 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 업로드 아이콘
+     * ==========================================
+     */
 
     const UploadIcon = () => {
 
         return (
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1831,32 +1648,23 @@ export default function Files({
                 strokeLinecap="round"
                 strokeLinejoin="round"
             >
-
-                <path
-                    d="M12 16V4"
-                />
-
-                <path
-                    d="m7 9 5-5 5 5"
-                />
-
-                <path
-                    d="M5 20h14"
-                />
-
+                <path d="M12 16V4" />
+                <path d="m7 9 5-5 5 5" />
+                <path d="M5 20h14" />
             </svg>
         );
     };
 
 
-    // ==================================================
-    // 다운로드 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 다운로드 아이콘
+     * ==========================================
+     */
 
     const DownloadIcon = () => {
 
         return (
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1865,32 +1673,23 @@ export default function Files({
                 strokeLinecap="round"
                 strokeLinejoin="round"
             >
-
-                <path
-                    d="M12 3v12"
-                />
-
-                <path
-                    d="m7 10 5 5 5-5"
-                />
-
-                <path
-                    d="M5 21h14"
-                />
-
+                <path d="M12 3v12" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M5 21h14" />
             </svg>
         );
     };
 
 
-    // ==================================================
-    // 삭제 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 삭제 아이콘
+     * ==========================================
+     */
 
     const DeleteIcon = () => {
 
         return (
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1899,40 +1698,29 @@ export default function Files({
                 strokeLinecap="round"
                 strokeLinejoin="round"
             >
+                <polyline points="3 6 5 6 21 6" />
 
-                <polyline
-                    points="3 6 5 6 21 6"
-                />
+                <path d="M19 6l-1 14H6L5 6" />
 
-                <path
-                    d="M19 6l-1 14H6L5 6"
-                />
+                <path d="M10 11v5" />
 
-                <path
-                    d="M10 11v5"
-                />
+                <path d="M14 11v5" />
 
-                <path
-                    d="M14 11v5"
-                />
-
-                <path
-                    d="M9 6V4h6v2"
-                />
-
+                <path d="M9 6V4h6v2" />
             </svg>
         );
     };
 
 
-    // ==================================================
-    // 미리보기 닫기 아이콘
-    // ==================================================
+    /*
+     * ==========================================
+     * 닫기 아이콘
+     * ==========================================
+     */
 
     const CloseIcon = () => {
 
         return (
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1941,47 +1729,110 @@ export default function Files({
                 strokeLinejoin="round"
                 strokeWidth="2"
             >
-
-                <path
-                    d="M6 6l12 12"
-                />
-
-                <path
-                    d="M18 6L6 18"
-                />
-
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
             </svg>
         );
     };
 
 
-    // ==================================================
-    // 검색 영역
-    // ==================================================
+    /*
+     * ==========================================
+     * 검색 입력 영역
+     * ==========================================
+     */
 
     const renderSearchInput = () => {
 
-        return (
+        /*
+         * 출처
+         */
 
+        if (searchType === "source") {
+
+            return (
+                <select
+                    className="files-source-search-select"
+                    aria-label="출처 선택"
+                    value={sourceKeyword}
+                    onChange={handleSourceChange}
+                >
+
+                    <option value="">
+                        출처 선택
+                    </option>
+
+                    {SOURCE_SEARCH_OPTIONS.map(
+                        (option) => (
+
+                            <option
+                                key={option.value}
+                                value={option.value}
+                            >
+                                {option.label}
+                            </option>
+                        )
+                    )}
+
+                </select>
+            );
+        }
+
+
+        /*
+         * 파일 형태
+         */
+
+        if (searchType === "type") {
+
+            return (
+                <select
+                    className="files-type-search-select"
+                    aria-label="파일 형태 선택"
+                    value={fileTypeKeyword}
+                    onChange={handleFileTypeChange}
+                >
+
+                    <option value="">
+                        파일 형태 선택
+                    </option>
+
+                    {FILE_TYPE_SEARCH_OPTIONS.map(
+                        (option) => (
+
+                            <option
+                                key={option.value}
+                                value={option.value}
+                            >
+                                {option.label}
+                            </option>
+                        )
+                    )}
+
+                </select>
+            );
+        }
+
+
+        /*
+         * 파일명 / 업로더
+         */
+
+        return (
             <input
                 type="text"
-
                 aria-label={
                     `${SEARCH_TYPE_LABEL[searchType]} 검색어`
                 }
-
                 placeholder={
                     `${SEARCH_TYPE_LABEL[searchType]} 검색`
                 }
-
                 value={keyword}
-
                 onChange={(e) =>
                     setKeyword(
                         e.target.value
                     )
                 }
-
                 onKeyDown={
                     handleSearchKeyDown
                 }
@@ -1989,11 +1840,15 @@ export default function Files({
         );
     };
 
-    // ==================================================
-    // Record 아이콘
-    // ==================================================
+
+    /*
+     * ==========================================
+     * Record 아이콘
+     * ==========================================
+     */
 
     const RecordIcon = () => {
+
         return (
             <svg
                 viewBox="0 0 24 24"
@@ -2011,33 +1866,25 @@ export default function Files({
         );
     };
 
-    // ==================================================
-    // 화면
-    // ==================================================
+
+    /*
+     * ==========================================
+     * 화면
+     * ==========================================
+     */
 
     return (
-
         <div className="files-page">
 
             <div className="files-container">
 
-
-                {/* ==================================================
-                    검색 + 정렬 + 업로드
-                ================================================== */}
-
                 <div className="files-toolbar">
-
-
-                    {/* 검색 영역 */}
 
                     <div className="files-search-area">
 
                         <select
                             className="files-search-type"
-
                             value={searchType}
-
                             onChange={
                                 handleSearchTypeChange
                             }
@@ -2058,27 +1905,42 @@ export default function Files({
                         </select>
 
 
-                        <div className="files-search">
+                        <div
+                            className={
+                                `files-search ${
+                                    searchType === "source"
+                                        ? "files-search-source"
+                                        : ""
+                                } ${
+                                    searchType === "type"
+                                        ? "files-search-type-mode"
+                                        : ""
+                                }`
+                            }
+                        >
 
                             {renderSearchInput()}
 
+                            {searchType !== "source" &&
+                                searchType !== "type" && (
 
-                            <button
-                                type="button"
-                                onClick={
-                                    handleSearch
-                                }
-                                aria-label="검색"
-                            >
-
-                                <SearchIcon />
-
-                            </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSearch}
+                                        aria-label="검색"
+                                    >
+                                        <SearchIcon />
+                                    </button>
+                                )}
 
                         </div>
 
 
-                        {keyword && (
+                        {(
+                            keyword ||
+                            sourceKeyword ||
+                            fileTypeKeyword
+                        ) && (
 
                             <button
                                 type="button"
@@ -2089,13 +1951,10 @@ export default function Files({
                             >
                                 초기화
                             </button>
-
                         )}
 
                     </div>
 
-
-                    {/* 정렬 */}
 
                     <div className="files-sort-area">
 
@@ -2125,39 +1984,28 @@ export default function Files({
                     </div>
 
 
-                    {/* ==================================================
-                        업로드
-                        종료 프로젝트에서는 버튼 자체를
-                        렌더링하지 않습니다.
-                    ================================================== */}
-
                     {!isProjectClosed && (
 
                         <button
                             type="button"
                             className="files-upload-button"
-
                             onClick={
                                 handleUploadClick
                             }
-
-                            disabled={
-                                uploading
-                            }
+                            disabled={uploading}
                         >
 
                             <UploadIcon />
 
                             <span>
-
-                                {uploading
-                                    ? "업로드 중..."
-                                    : "파일 업로드"}
-
+                                {
+                                    uploading
+                                        ? "업로드 중..."
+                                        : "파일 업로드"
+                                }
                             </span>
 
                         </button>
-
                     )}
 
 
@@ -2173,14 +2021,7 @@ export default function Files({
                 </div>
 
 
-                {/* ==================================================
-                    파일 목록
-                ================================================== */}
-
                 <div className="files-list">
-
-
-                    {/* 헤더 */}
 
                     <div className="files-list-header">
 
@@ -2219,20 +2060,13 @@ export default function Files({
                     </div>
 
 
-                    {/* 로딩 */}
-
                     {loading && (
 
                         <div className="files-empty">
-
                             파일을 불러오는 중입니다.
-
                         </div>
-
                     )}
 
-
-                    {/* 파일 없음 */}
 
                     {!loading &&
                         files.length === 0 && (
@@ -2247,33 +2081,25 @@ export default function Files({
                                         stroke="currentColor"
                                         strokeWidth="1.5"
                                     >
-
-                                        <path
-                                            d="M4 7h5l2 2h9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"
-                                        />
-
-                                        <path
-                                            d="M4 7V5a2 2 0 0 1 2-2h4l2 2"
-                                        />
-
+                                        <path d="M4 7h5l2 2h9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" />
+                                        <path d="M4 7V5a2 2 0 0 1 2-2h4l2 2" />
                                     </svg>
 
                                 </div>
 
-
                                 <p>
-
-                                    {keyword
-                                        ? "검색 결과가 없습니다."
-                                        : "등록된 파일이 없습니다."}
-
+                                    {
+                                        keyword ||
+                                        sourceKeyword ||
+                                        fileTypeKeyword
+                                            ? "검색 결과가 없습니다."
+                                            : "등록된 파일이 없습니다."
+                                    }
                                 </p>
 
                             </div>
                         )}
 
-
-                    {/* 파일 목록 */}
 
                     {!loading &&
                         sortedFiles.map((file) => {
@@ -2282,7 +2108,6 @@ export default function Files({
                                 getFileType(
                                     file.attachName
                                 );
-
 
                             const sourceClickable =
                                 isSourceClickable(
@@ -2300,20 +2125,15 @@ export default function Files({
                                                 : ""
                                         }`
                                     }
-
                                     key={
                                         file.attachNo
                                     }
-
                                     onClick={() =>
                                         handlePreview(
                                             file
                                         )
                                     }
                                 >
-
-
-                                    {/* 파일명 */}
 
                                     <div className="files-col-file files-file-name">
 
@@ -2322,17 +2142,13 @@ export default function Files({
                                         />
 
                                         <span className="files-name-text">
-
                                             {
                                                 file.attachName
                                             }
-
                                         </span>
 
                                     </div>
 
-
-                                    {/* 출처 */}
 
                                     <div
                                         className={
@@ -2342,64 +2158,49 @@ export default function Files({
                                                     : ""
                                             }`
                                         }
-
                                         onClick={(e) =>
                                             handleSourceClick(
                                                 e,
                                                 file
                                             )
                                         }
-
                                         title={
                                             sourceClickable
                                                 ? "원본으로 이동"
                                                 : ""
                                         }
                                     >
-
                                         {
                                             getSourceLabel(
                                                 file.attachSource
                                             )
                                         }
-
                                     </div>
 
 
-                                    {/* 업로더 */}
-
                                     <div className="files-col-uploader">
-
                                         {
                                             file.empName ||
                                             file.attachUploader ||
                                             "-"
                                         }
-
                                     </div>
 
 
-                                    {/* 날짜 */}
-
                                     <div className="files-col-date">
-
                                         {
                                             formatDate(
                                                 file.attachCtime
                                             )
                                         }
-
                                     </div>
 
-
-                                    {/* 다운로드 */}
 
                                     <div className="files-col-download">
 
                                         <button
                                             type="button"
                                             className="files-download-button"
-
                                             onClick={(e) => {
 
                                                 e.stopPropagation();
@@ -2408,78 +2209,67 @@ export default function Files({
                                                     file.attachNo
                                                 );
                                             }}
-
                                             title="다운로드"
                                         >
-
                                             <DownloadIcon />
-
                                         </button>
 
                                     </div>
 
 
-                                    {/* 크기 */}
-
                                     <div className="files-col-size">
-
                                         {
                                             formatFileSize(
                                                 file.attachSize
                                             )
                                         }
-
                                     </div>
 
-                                    {/* Record */}
+
                                     <div className="files-col-record">
+
                                         {!isClosed && (
+
                                             <button
                                                 type="button"
                                                 className="files-record-button"
                                                 onClick={(e) => {
+
                                                     e.stopPropagation();
-                                                    handleRecord(file);
+
+                                                    handleRecord(
+                                                        file
+                                                    );
                                                 }}
                                                 title="Record로 남기기"
                                             >
-                                                <RecordIcon/>
+                                                <RecordIcon />
                                             </button>
                                         )}
+
                                     </div>
 
-                                    {/* ==================================================
-                                        삭제
-                                    ================================================== */}
 
                                     <div className="files-col-delete">
 
-                                        {
-                                            canDeleteFile(file) && (
+                                        {canDeleteFile(file) && (
 
-                                                <button
-                                                    type="button"
-                                                    className="files-delete-button"
+                                            <button
+                                                type="button"
+                                                className="files-delete-button"
+                                                onClick={(e) => {
 
-                                                    onClick={(e) => {
+                                                    e.stopPropagation();
 
-                                                        e.stopPropagation();
-
-                                                        handleDelete(
-                                                            file.attachNo
-                                                        );
-
-                                                    }}
-
-                                                    title="삭제"
-                                                >
-
-                                                    <DeleteIcon />
-
-                                                </button>
-
-                                            )
-                                        }
+                                                    handleDelete(
+                                                        file.attachNo
+                                                    );
+                                                }}
+                                                title="삭제"
+                                            >
+                                                <DeleteIcon />
+                                            </button>
+                                        )}
 
                                     </div>
 
@@ -2492,31 +2282,22 @@ export default function Files({
             </div>
 
 
-            {/* ==================================================
-                이미지 미리보기
-            ================================================== */}
-
             {previewFile && (
 
                 <div
                     className="files-preview-overlay"
-
                     onMouseDown={(e) => {
 
                         if (
                             e.target ===
                             e.currentTarget
                         ) {
-
                             closePreview();
                         }
                     }}
                 >
 
                     <div className="files-preview-modal">
-
-
-                        {/* 미리보기 헤더 */}
 
                         <div className="files-preview-header">
 
@@ -2530,7 +2311,6 @@ export default function Files({
                                         stroke="currentColor"
                                         strokeWidth="1.8"
                                     >
-
                                         <rect
                                             x="3"
                                             y="3"
@@ -2545,21 +2325,16 @@ export default function Files({
                                             r="1.5"
                                         />
 
-                                        <path
-                                            d="M3 17l5-5 4 4 2.5-2.5L21 20"
-                                        />
-
+                                        <path d="M3 17l5-5 4 4 2.5-2.5L21 20" />
                                     </svg>
 
                                 </div>
 
 
                                 <span>
-
                                     {
                                         previewFile.attachName
                                     }
-
                                 </span>
 
                             </div>
@@ -2567,40 +2342,27 @@ export default function Files({
 
                             <div className="files-preview-actions">
 
-
-                                {/* 다운로드 */}
-
                                 <button
                                     type="button"
-
                                     onClick={() =>
                                         handleDownload(
                                             previewFile.attachNo
                                         )
                                     }
-
                                     title="다운로드"
                                 >
-
                                     <DownloadIcon />
-
                                 </button>
 
 
-                                {/* 닫기 */}
-
                                 <button
                                     type="button"
-
                                     onClick={
                                         closePreview
                                     }
-
                                     title="닫기"
                                 >
-
                                     <CloseIcon />
-
                                 </button>
 
                             </div>
@@ -2608,31 +2370,25 @@ export default function Files({
                         </div>
 
 
-                        {/* 이미지 영역 */}
-
                         <div className="files-preview-body">
-
 
                             {!previewError ? (
 
                                 <img
-                                    src={getFileUrl(
-                                        previewFile.attachNo
-                                    )}
-
+                                    src={
+                                        getFileUrl(
+                                            previewFile.attachNo
+                                        )
+                                    }
                                     alt={
                                         previewFile.attachName
                                     }
-
                                     className="files-preview-image"
-
-                                    onError={() => {
-
+                                    onError={() =>
                                         setPreviewError(
                                             true
-                                        );
-
-                                    }}
+                                        )
+                                    }
                                 />
 
                             ) : (
@@ -2647,7 +2403,6 @@ export default function Files({
                                             stroke="currentColor"
                                             strokeWidth="1.5"
                                         >
-
                                             <rect
                                                 x="3"
                                                 y="3"
@@ -2656,30 +2411,22 @@ export default function Files({
                                                 rx="2"
                                             />
 
-                                            <path
-                                                d="M8 15l2.5-3 2 2 2-2.5L17 15"
-                                            />
+                                            <path d="M8 15l2.5-3 2 2 2-2.5L17 15" />
 
-                                            <path
-                                                d="M8 8h.01"
-                                            />
-
+                                            <path d="M8 8h.01" />
                                         </svg>
 
                                     </div>
 
-
                                     <strong>
                                         이미지를 불러올 수 없습니다.
                                     </strong>
-
 
                                     <span>
                                         이미지 없음
                                     </span>
 
                                 </div>
-
                             )}
 
                         </div>
@@ -2689,19 +2436,23 @@ export default function Files({
                 </div>
             )}
 
-            {/* record 모달 */}
+
             {recordTargetFile && (
+
                 <RecordLinkModal
                     show={recordModalOpen}
                     onHide={closeRecordModal}
                     projectNo={projectNo}
                     relatedType="ATTACH"
-                    relatedNo={recordTargetFile.attachNo}
-                    relatedTitle={recordTargetFile.attachName}
+                    relatedNo={
+                        recordTargetFile.attachNo
+                    }
+                    relatedTitle={
+                        recordTargetFile.attachName
+                    }
                 />
             )}
 
         </div>
     );
 }
-
