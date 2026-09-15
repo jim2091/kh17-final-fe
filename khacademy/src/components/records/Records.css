@@ -590,6 +590,8 @@
 }
 
 .record-related-item {
+    width: 100%;
+
     display: flex;
     align-items: center;
     gap: 0.6rem;
@@ -600,10 +602,29 @@
     border-radius: 7px;
 
     background-color: #f8fafc;
+
+    color: inherit;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 }
 
 .record-related-item:hover {
-    border-color: #cbd5e1;
+    border-color: #bfdbfe;
+    background-color: #eff6ff;
+}
+
+.record-related-move {
+    flex-shrink: 0;
+
+    color: #2563eb;
+
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 .record-related-item-title {

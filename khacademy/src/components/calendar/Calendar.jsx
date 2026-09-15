@@ -494,6 +494,10 @@ export default function Calendar() {
     }, [taskDetail]);
 
     const handleEventClick = useCallback((info) => {
+
+        //+more 팝오버 안에서 이벤트를 클릭한 경우 팝오버먼저 닫기
+        closeMorePopover();
+
         const type = info.event.extendedProps.type;
 
         if(type === "schedule") {
@@ -933,6 +937,12 @@ export default function Calendar() {
     //이때 휠 useEffect가 실행되면서 이 버튼에 이벤트가 붙음.
     //근데 이후 목록 조회가 시작되며 loading이 true가 되고 이때 Fullcalendar가 사라짐
     //그러니 loading도 의존배열에 넣어서 loading이 바뀌면 다시 effect 실행되도록 조치
+
+    //FullCalendar의 +more 팝오버 닫기
+    const closeMorePopover = useCallback(() => {
+        const closeButton = document.querySelector(".fc-more-popover .fc-popover-close");
+        closeButton?.click();
+    }, []);
 
     return (<>
         <div className="calendar-page">

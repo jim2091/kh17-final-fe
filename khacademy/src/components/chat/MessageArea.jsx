@@ -16,7 +16,12 @@ export default function MessageArea(
         onEdit,
         onDelete,
         onRecord,
-        isClosed
+        isClosed,
+
+        targetMessageNo,
+        onTargetHandled,
+
+        scrollBottomTrigger
     }
 ) {
     //● state
@@ -39,7 +44,6 @@ export default function MessageArea(
                 = messageAreaRef.current.scrollHeight;
         }
     }, []);
-
 
     //● messages가 변경될 때 스크롤 처리
     //[주의] 위로 스크롤해서 과거 메시지를 추가해도, 내가 보고 있던 메시지가 그대로 그 자리에 있어야 함
@@ -116,6 +120,68 @@ export default function MessageArea(
         };
     }, []);
 
+    //검색 결과 하이라이트
+    const [highlightMessageNo, setHighlightMessageNo] = useState(null);
+
+    //검색 등으로 특정 메세지 위치로 이동
+    useEffect(() => {
+
+        if(!targetMessageNo) return;
+
+        const animationFrame = requestAnimationFrame(() => {
+
+            const target = document.getElementById(
+                `chat-message-${targetMessageNo}`
+            );
+
+            if(!target) return;
+
+            //target 위치를 보고 있으므로
+            //현재 맨 아래 상태가 아님
+            bottomFlag.current = false;
+
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            setHighlightMessageNo(
+                targetMessageNo
+            );
+
+            if(onTargetHandled) {
+                onTargetHandled();
+            }
+        });
+
+
+        const timer = setTimeout(() => {
+            setHighlightMessageNo(null);
+        }, 2000);
+
+
+        return () => {
+            cancelAnimationFrame(animationFrame);
+            clearTimeout(timer);
+        };
+
+    }, [
+        targetMessageNo,
+        messages,
+        onTargetHandled
+    ]);
+
+    //외부에서 최신 메세지 위치 이동 요청
+    useEffect(() => {
+        if(scrollBottomTrigger === 0) return;
+        if(!messageAreaRef.current) return;
+
+        keepScrollBottom();
+
+        //현재 위치도 맨 아래 상태로 갱신
+        bottomFlag.current = true;
+    }, [scrollBottomTrigger, keepScrollBottom]);
+
 
     //● view
     return (
@@ -155,7 +221,15 @@ export default function MessageArea(
 
                         {/* 메시지 하나 */}
                         <div
-                            className={`message-outer ${isMine ? "my" : ""}`}
+                            id={`chat-message-${message.no}`}
+                            className={
+                                `message-outer
+                                ${isMine ? "my" : ""}
+                                ${highlightMessageNo === message.no
+                                    ? "message-target-highlight"
+                                    :""
+                                }`
+                            }
                         >
                             <div className="message-inner">
 
