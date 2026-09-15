@@ -1,7 +1,11 @@
-import { FiMenu } from "react-icons/fi";
+import { FiArrowDown, FiMenu, FiSearch, FiX } from "react-icons/fi";
 
 export default function ChatHeader(
-    { selectedChannel, sidebarOpen, setSidebarOpen }
+    { 
+        selectedChannel, setSidebarOpen, 
+        searchOpen, setSearchOpen,
+        contextMode, onReturnLatest
+    }
 ) {
 
     return(<>
@@ -23,6 +27,28 @@ export default function ChatHeader(
                 <div className="chat-header-description">
                     프로젝트 채널 대화
                 </div>
+            </div>
+
+            <div className="chat-header-actions">
+                {contextMode && (
+                    <button
+                        type="button"
+                        className="chat-header-action-button latest"
+                        onClick={onReturnLatest}
+                    >
+                        <FiArrowDown />
+                        <span>최신 메세지</span>
+                    </button>
+                )}
+
+                <button
+                    type="button"
+                    className={`chat-header-action-button ${searchOpen ? "active" : ""}`}
+                    onClick={() => setSearchOpen(prev => !prev)}
+                    disabled={!selectedChannel}
+                >
+                    {searchOpen ? <FiX /> : <FiSearch />}
+                </button>
             </div>
         </header>
     </>)
