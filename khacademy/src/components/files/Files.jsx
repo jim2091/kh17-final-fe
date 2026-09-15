@@ -5,6 +5,8 @@ import {
     useParams,
 } from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import "./Files.css";
 import RecordLinkModal from "../records/RecordLinkModal";
 
@@ -350,7 +352,7 @@ export default function Files({
                     comment.noteNo === undefined
                 ) {
 
-                    alert(
+                    toast.warning(
                         "댓글의 원본 노트를 찾을 수 없습니다."
                     );
 
@@ -380,7 +382,7 @@ export default function Files({
                     comment.taskNo === undefined
                 ) {
 
-                    alert(
+                    toast.warning(
                         "댓글의 원본 업무를 찾을 수 없습니다."
                     );
 
@@ -406,7 +408,7 @@ export default function Files({
                 error.response?.data
             );
 
-            alert(
+            toast.error(
                 error.response?.data?.message ||
                 "원본으로 이동하는 중 오류가 발생했습니다."
             );
@@ -555,7 +557,7 @@ export default function Files({
             setProjectStatus("");
 
 
-            alert(
+            toast.error(
                 error.response?.data?.message ||
                 "파일 목록을 불러오는 중 오류가 발생했습니다."
             );
@@ -881,7 +883,7 @@ export default function Files({
 
         if (!projectNo) {
 
-            alert(
+            toast.warning(
                 "프로젝트 정보가 없습니다."
             );
 
@@ -891,7 +893,7 @@ export default function Files({
 
         if (isProjectClosed) {
 
-            alert(
+            toast.warning(
                 "종료된 프로젝트에는 파일을 업로드할 수 없습니다."
             );
 
@@ -922,7 +924,7 @@ export default function Files({
 
         if (!projectNo) {
 
-            alert(
+            toast.warning(
                 "프로젝트 정보가 없습니다."
             );
 
@@ -934,7 +936,7 @@ export default function Files({
 
         if (isProjectClosed) {
 
-            alert(
+            toast.warning(
                 "종료된 프로젝트에는 파일을 업로드할 수 없습니다."
             );
 
@@ -994,7 +996,8 @@ export default function Files({
              * 현재 검색 조건 유지
              */
 
-            let currentKeyword = keyword;
+            let currentKeyword =
+                keyword;
 
 
             if (searchType === "source") {
@@ -1017,7 +1020,7 @@ export default function Files({
             );
 
 
-            alert(
+            toast.success(
                 "파일이 업로드되었습니다."
             );
 
@@ -1034,7 +1037,7 @@ export default function Files({
             );
 
 
-            alert(
+            toast.error(
                 error.response?.data?.message ||
                 "파일 업로드 중 오류가 발생했습니다."
             );
@@ -1258,15 +1261,35 @@ export default function Files({
      * ==========================================
      */
 
-    const handleDelete = async (attachNo) => {
+    const handleDelete = async (
+        attachNo,
+        fileName
+    ) => {
 
         const result =
-            window.confirm(
-                "이 파일을 삭제하시겠습니까?"
-            );
+            await Swal.fire({
+                title: "파일을 삭제하시겠습니까?",
+                html: `
+                    <strong>"${fileName}"</strong> 파일이 삭제됩니다.
+                    <br>
+                    <span style="
+                        font-size: 13px;
+                        color: #64748b;
+                    ">
+                        삭제한 파일은 복구할 수 없습니다.
+                    </span>
+                `,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e11d48",
+                cancelButtonColor: "#94a3b8",
+                confirmButtonText: "삭제",
+                cancelButtonText: "취소",
+                reverseButtons: true,
+            });
 
 
-        if (!result) {
+        if (!result.isConfirmed) {
             return;
         }
 
@@ -1296,7 +1319,7 @@ export default function Files({
             );
 
 
-            alert(
+            toast.success(
                 "파일이 삭제되었습니다."
             );
 
@@ -1313,7 +1336,7 @@ export default function Files({
             );
 
 
-            alert(
+            toast.error(
                 error.response?.data?.message ||
                 "파일 삭제 중 오류가 발생했습니다."
             );
@@ -2262,7 +2285,8 @@ export default function Files({
                                                     e.stopPropagation();
 
                                                     handleDelete(
-                                                        file.attachNo
+                                                        file.attachNo,
+                                                        file.attachName
                                                     );
                                                 }}
                                                 title="삭제"
