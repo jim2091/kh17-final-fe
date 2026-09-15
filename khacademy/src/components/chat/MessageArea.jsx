@@ -21,7 +21,10 @@ export default function MessageArea(
         targetMessageNo,
         onTargetHandled,
 
-        scrollBottomTrigger
+        scrollBottomTrigger,
+
+        autoFollowLatest = true,
+        onBottomChange
     }
 ) {
     //● state
@@ -71,7 +74,10 @@ export default function MessageArea(
         }
 
         //- 일반 메세지 변경 (원래 맨 아래를 보고 있었다면 아래 유지)
-        if(bottomFlag.current === true) {
+        if(
+            bottomFlag.current === true
+            && autoFollowLatest == true
+        ) {
             keepScrollBottom();
         }
     }, [messages, keepScrollBottom]);
@@ -89,6 +95,10 @@ export default function MessageArea(
         
         bottomFlag.current = diff <= 5;
         //console.log("스크롤 맨 아래 여부 :", bottomFlag.current);
+
+        if(onBottomChange) {
+            onBottomChange(bottomFlag.current);
+        }
         
         if(scrollTop > 5) return;//맨 위가 아니라면 아무것도 하지 않음
 

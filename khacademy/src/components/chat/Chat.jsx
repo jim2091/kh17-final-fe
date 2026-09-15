@@ -14,6 +14,7 @@ import MessageInput from "./MessageInput";
 import "./Chat.css";
 
 import RecordLinkModal from "../records/RecordLinkModal";
+import { FiArrowDown } from "react-icons/fi";
 
 export default function Chat() {
     //● state
@@ -64,9 +65,20 @@ export default function Chat() {
     //안해주면 기본 general에서 다른 채널로 이동될 때 selectedChannel useEffect가
     //새로 조회하면서 context를 덮어쓸 수 있음
     const recordContextRef = useRef(null);
-    
+
     const [searchParams, setSearchParams] = useSearchParams();
     const recordMessageNo = searchParams.get("messageNo");
+
+    //현재 채널에서 아래쪽에 새로 도착한 메세지
+    const [pendingMessageCount, setPendingMessageCount] = useState(0);
+    const [latestPendingMessage, setLatestPendingMessage] = useState(null);
+
+    //현재 메세지 영역이 맨 아래인지
+    const messageBottomRef = useRef(true);
+
+    //WebSocket 내부에서 최신 search/context 상태 확인용
+    const searchOpenRef = useRef(false);
+    const contextModeRef = useRef(false);
 
 
     //● 채널 목록 불러오기
@@ -159,6 +171,10 @@ export default function Chat() {
         setContextMode(false);
         setTargetMessageNo(null);
 
+        setPendingMessageCount(0);
+        setLatestPendingMessage(null);
+        messageBottomRef.current = true;
+
         //loadMessages는 비동기 함수라 서버 읽음처리와 따로 실행하면
         //채널에 들어갔을때 읽음처리가 먼저 수행되고 로드가 되서
         //시점이 안맞아 반영이 안되는 문제가 생길 수 있음
@@ -170,12 +186,12 @@ export default function Chat() {
             const pendingContext = recordContextRef.current;
 
             //record 원본 이동 때문에 변경된 채널이라면
-            if(
+            if (
                 pendingContext
                 && pendingContext.channelNo === selectedChannel.chatChannelNo
             ) {
                 applyMessageContext(pendingContext);
-                
+
                 //한 번 사용했으므로 제거
                 recordContextRef.current = null;
             }
@@ -375,13 +391,46 @@ export default function Chat() {
                             currentChannel &&
                             currentChannel.chatChannelNo === channelNo
                         ) {
-                            //messages에 추가하고
-                            setMessages(prev => [...prev, json]);
-                            //다른 사람이 보낸 message면 읽음처리도 해주고
-                            if (json.empNo !== loginUser.empNo) {
+                            // //messages에 추가하고
+                            // setMessages(prev => [...prev, json]);
+                            // //다른 사람이 보낸 message면 읽음처리도 해주고
+                            // if (json.empNo !== loginUser.empNo) {
+                            //     client.publish({
+                            //         destination: `/app/${channelNo}/read`
+                            //     });
+                            // }
+
+                            const isMine = json.empNo === loginUser.empNo;
+
+                            //검색 결과의 과거 context를 보는 중이 아니라면
+                            //실제 메세지 목록에 새 메세지 추가
+                            if(contextModeRef.current === false) {
+                                setMessages(prev => [
+                                    ...prev,
+                                    json
+                                ]);
+                            }
+
+                            //다른 사람이 보낸 메세지
+                            if(isMine === false) {
+                                //현재 채널에 들어와 있으므로 서버 기준 읽음 처리
                                 client.publish({
                                     destination: `/app/${channelNo}/read`
                                 });
+
+                                //화면상 최신 위치를 바로 보고 있지 않다면
+                                //새 메세지 안내 표시
+                                if(
+                                    messageBottomRef.current === false
+                                    || searchOpenRef.current === true
+                                    || contextModeRef.current === true
+                                ) {
+                                    setLatestPendingMessage(json);
+
+                                    setPendingMessageCount(
+                                        prev => prev + 1
+                                    );
+                                }
                             }
                         }
                         //현재 보고 있는 채널의 메세지가 아니면
@@ -580,26 +629,26 @@ export default function Chat() {
 
     //Record에서 넘어온 채팅 원본 처리
     useEffect(() => {
-        if(!recordMessageNo) return;
-        if(channels.length === 0) return;
+        if (!recordMessageNo) return;
+        if (channels.length === 0) return;
 
         const openRecordMessage = async () => {
             try {
                 const messageNo = Number(recordMessageNo);
-                if(Number.isNaN(messageNo)) return;
+                if (Number.isNaN(messageNo)) return;
 
                 //해당 메세지의 주변 대화 조회
-                const {data} = await apiClient.get(`/message/${messageNo}/context`);
+                const { data } = await apiClient.get(`/message/${messageNo}/context`);
 
                 //메세지가 속한 채널 찾기
                 const targetChannel = channels.find(
                     channel => channel.chatChannelNo === data.channelNo
                 );
 
-                if(!targetChannel) return;
+                if (!targetChannel) return;
 
                 //현재 채널과 같은 경우
-                if(selectedChannel && selectedChannel.chatChannelNo === data.channelNo) {
+                if (selectedChannel && selectedChannel.chatChannelNo === data.channelNo) {
                     applyMessageContext(data);
                 }
                 //다른 채널인 경우
@@ -614,9 +663,9 @@ export default function Chat() {
 
                 nextParams.delete("messageNo");
 
-                setSearchParams(nextParams, {replace: true});
+                setSearchParams(nextParams, { replace: true });
             }
-            catch(e) {
+            catch (e) {
                 console.error("Record 채팅 원본 이동 실패 : ", e);
             }
         };
@@ -635,6 +684,46 @@ export default function Chat() {
     const handleTargetMessage = useCallback(() => {
         setTargetMessageNo(null);
     }, []);
+
+    //최신 메세지 처리 관련 이펙트
+    useEffect(() => {
+        searchOpenRef.current = searchOpen;
+    }, [searchOpen]);
+
+    useEffect(() => {
+        contextModeRef.current = contextMode;
+    }, [contextMode]);
+
+    const handleMessageBottomChange = useCallback((isBottom) => {
+        messageBottomRef.current = isBottom;
+
+        //context 화면의 맨 아래는 실제 최신 메세지가 아니므로 제외
+        if(
+            isBottom === true
+            && contextModeRef.current === false
+        ) {
+            setPendingMessageCount(0);
+            setLatestPendingMessage(null);
+        }
+    }, []);
+
+    const moveToPendingMessage = useCallback(async () => {
+        //검색 결과 등 과거 context를 보고 있으면
+        //최신 목록 자체를 다시 불러와야 함
+        if(contextMode === true) {
+            await returnLatestMessages();
+        }
+
+        //일반 목록에서 위쪽을 보고 있는 경우
+        else {
+            setScrollBottomTrigger(prev => prev + 1);
+        }
+
+        messageBottomRef.current = true;
+
+        setPendingMessageCount(0);
+        setLatestPendingMessage(null);
+    }, [contextMode, returnLatestMessages]);
 
 
     //● view
@@ -659,34 +748,124 @@ export default function Chat() {
                 />
             )}
 
-            <div className="chat-main">
-                <ChatHeader
-                    selectedChannel={selectedChannel}
-                    setSidebarOpen={setSidebarOpen}
+            <div className="chat-workspace">
+                {/* 실제 채팅 영역 */}
+                <div className="chat-main">
+                    <ChatHeader
+                        selectedChannel={selectedChannel}
+                        setSidebarOpen={setSidebarOpen}
 
-                    searchOpen={searchOpen}
-                    setSearchOpen={setSearchOpen}
+                        searchOpen={searchOpen}
+                        setSearchOpen={setSearchOpen}
 
-                    contextMode={contextMode}
-                    onReturnLatest={returnLatestMessages}
-                />
+                        contextMode={contextMode}
+                        onReturnLatest={returnLatestMessages}
+                    />
 
+                    <MessageArea
+                        messages={messages}
+                        onLoadMore={contextMode ? null : loadMoreMessages}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onRecord={handleRecord}
+                        isClosed={isClosed}
+
+                        targetMessageNo={targetMessageNo}
+                        onTargetHandled={handleTargetMessage}
+
+                        scrollBottomTrigger={scrollBottomTrigger}
+
+                        autoFollowLatest={
+                            searchOpen === false
+                            && contextMode === false
+                        }
+                        onBottomChange={handleMessageBottomChange}
+                    />
+
+                    {latestPendingMessage && (
+                        <button
+                            type="button"
+                            className="chat-new-message-preview"
+                            onClick={moveToPendingMessage}
+                        >
+                            <span className="chat-new-message-sender">
+                                {latestPendingMessage.senderName}
+                            </span>
+
+                            <span className="chat-new-message-content">
+                                {latestPendingMessage.content}
+                            </span>
+
+                            {pendingMessageCount > 1 && (
+                                <span className="chat-new-message-count">
+                                    +{pendingMessageCount - 1}
+                                </span>
+                            )}
+
+                            <FiArrowDown />
+                            
+                        </button>
+                    )}
+
+                    {isClosed === false ? (
+                        <MessageInput
+                            input={input}
+                            setInput={setInput}
+                            onSend={sendMessage}
+                        />
+
+                    ) : (
+                        <div>
+                            종료된 프로젝트에서는 메세지를 작성할 수 없습니다.
+                        </div>
+                    )}
+
+                </div>
+
+                {/* 우측 검색 패널 */}
                 {searchOpen && (
                     <div className="chat-search-panel">
+
+                        <div className="chat-search-panel-header">
+
+                            <span className="chat-search-panel-title">
+                                메시지 검색
+                            </span>
+
+                            <button
+                                type="button"
+                                className="chat-search-close"
+                                onClick={() =>
+                                    setSearchOpen(false)
+                                }
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
+
                         <form
                             className="chat-search-form"
                             onSubmit={(e) => {
                                 e.preventDefault();
 
-                                searchMessage(1, false);
+                                searchMessage(
+                                    1,
+                                    false
+                                );
                             }}
                         >
                             <input
                                 type="text"
                                 className="chat-search-input"
                                 value={searchKeyword}
-                                onChange={(e) => setSearchKeyword(e.target.value)}
-                                placeholder="현재 채널의 메세지 검색"
+                                onChange={(e) =>
+                                    setSearchKeyword(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="현재 채널에서 검색"
                                 autoFocus
                             />
 
@@ -694,39 +873,53 @@ export default function Chat() {
                                 type="submit"
                                 className="chat-search-submit"
                                 disabled={
-                                    searchLoading || searchKeyword.trim() === ""
+                                    searchLoading
+                                    || searchKeyword.trim() === ""
                                 }
                             >
                                 검색
                             </button>
-
                         </form>
+
+
                         {searchTotalCount > 0 && (
                             <div className="chat-search-count">
                                 검색 결과 {searchTotalCount}건
                             </div>
                         )}
 
+
                         <div className="chat-search-result-list">
-                            {searchLoading && searchMessages.length === 0 ? (
+
+                            {searchLoading
+                                && searchMessages.length === 0 ? (
+
                                 <div className="chat-search-empty">
                                     검색 중...
                                 </div>
+
                             ) : searchMessages.length === 0 ? (
+
                                 <div className="chat-search-empty">
-                                    검색 결과가 없습니다
+                                    검색 결과가 없습니다.
                                 </div>
+
                             ) : (
+
                                 searchMessages.map(message => (
+
                                     <button
                                         type="button"
                                         className="chat-search-result"
                                         key={message.no}
                                         onClick={() =>
-                                            openMessageContext(message.no)
+                                            openMessageContext(
+                                                message.no
+                                            )
                                         }
                                     >
                                         <div className="chat-search-result-top">
+
                                             <span className="chat-search-sender">
                                                 {message.senderName}
                                             </span>
@@ -736,15 +929,21 @@ export default function Chat() {
                                                     .replace("T", " ")
                                                     .slice(0, 16)}
                                             </span>
+
                                         </div>
 
                                         <div className="chat-search-content">
                                             {message.content}
                                         </div>
+
                                     </button>
+
                                 ))
+
                             )}
+
                         </div>
+
 
                         {!searchLast && (
                             <button
@@ -759,33 +958,7 @@ export default function Chat() {
                                 }
                             </button>
                         )}
-                    </div>
-                )}
 
-                <MessageArea
-                    messages={messages}
-                    onLoadMore={contextMode ? null : loadMoreMessages}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onRecord={handleRecord}
-                    isClosed={isClosed}
-
-                    targetMessageNo={targetMessageNo}
-                    onTargetHandled={handleTargetMessage}
-
-                    scrollBottomTrigger={scrollBottomTrigger}
-                />
-
-                {isClosed === false ? (
-                    <MessageInput
-                        input={input}
-                        setInput={setInput}
-                        onSend={sendMessage}
-                    />
-
-                ) : (
-                    <div>
-                        종료된 프로젝트에서는 메세지를 작성할 수 없습니다.
                     </div>
                 )}
 
