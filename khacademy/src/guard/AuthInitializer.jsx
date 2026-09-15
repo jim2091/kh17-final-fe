@@ -1,5 +1,5 @@
-import { useAtomValue } from "jotai";
-import { isLoginState } from "../utils/storage";
+import { useAtomValue} from "jotai";
+import { isLoginState} from "../utils/storage";
 import { useEffect, useState } from "react";
 import { apiClient } from "../utils/reaxios";
 
@@ -8,6 +8,7 @@ export default function AuthInitializer({children}) {
 
     //초기 인증 확인이 끝났는지 여부
     const [authReady, setAuthReady] = useState(false);
+
 
     useEffect(()=>{
 

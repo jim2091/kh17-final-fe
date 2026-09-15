@@ -1,16 +1,16 @@
 import axios from "axios";
 import { useAtom, useSetAtom } from "jotai";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { FaRightToBracket } from "react-icons/fa6";
 import Swal from "sweetalert2";
-import { loginUserState } from "@utils/storage";
 import { useNavigate } from "react-router-dom";
 import { loginActionState } from "@utils/storage";
-import { authClient, apiClient } from "@utils/reaxios";
+import { authClient} from "@utils/reaxios";
 
 import Card from 'react-bootstrap/Card';
 import './member.css';
+import { RiKakaoTalkFill } from "react-icons/ri";
 
 
 export default function Login() {
@@ -31,6 +31,8 @@ export default function Login() {
     const loginAction = useSetAtom(loginActionState);
 
     const navigate = useNavigate();
+
+    
 
     //입력
     const changeStringValue = useCallback(e => {
@@ -54,6 +56,8 @@ export default function Login() {
 
             loginAction(data);
 
+            console.log("로그인 데이터 : ", data);
+
             // connectToServer();
 
             navigate("/");
@@ -75,80 +79,97 @@ export default function Login() {
     }, [emp, loginAction]);
 
 
+    //카카오 로그인
+    const kakaoLogin = useCallback(async()=>{
+        const baseURL = import.meta.env.VITE_SERVER_URL;
+        
+            window.location.href = `${baseURL}/oauth/kakao/login`;
+        
+    }, []);
 
 
     return (<>
 
 
 
-<div className="spacing">
+        <div className="spacing">
 
 
-        <Card className="bg-light w-80">
-            
-            <Card.Body>
-                <Row>
-                <Col className="d-none d-md-inline">
-                    <span className="large-font ps-4">시작하기</span>
-                </Col>
+            <Card className="login-page w-80">
+
+                <Card.Body>
+                    <Row className="mx-5">
+                        <Col className="d-none d-md-inline mt-4">
+                            <div>
+
+                                <span className="large-font ps-4">시작하기</span>
+                            </div>
+                            <div className="space"></div>
+                            <div>
+                                <Button className="kakao-login-button" onClick={kakaoLogin}>
+                                    <RiKakaoTalkFill className="kakao-icon" />
+                                    <span>카카오 로그인</span>
+                                </Button>
+                            </div>
+                        </Col>
+                        <Col>
+
+                            <Form autoComplete="off" onSubmit={sendLogin}>
+                                <Row className="mt-4">
+
+                                    {/* <Form.Label column sm={3}>이메일</Form.Label> */}
+                                    <Col>
+                                        <Form.Control type="text" size="lg" name="empEmail" value={emp.empEmail}
+                                            onChange={changeStringValue} placeholder="이메일 입력"
+                                            autoFocus />
+                                    </Col>
+                                </Row>
+                                <Row className="mt-4">
+                                    {/* <Form.Label column sm={3}>비밀번호</Form.Label> */}
+                                    <Col>
+                                        <Form.Control type={showPassword ? "text" : "password"}
+                                            size="lg" name="empPassword"
+                                            value={emp.empPassword}
+                                            onChange={changeStringValue} placeholder="비밀번호 입력" />
+                                        <Form.Check type="checkbox" label="비밀번호 표시"
+                                            className="mt-2" checked={showPassword}
+                                            onClick={(e) => setShowPassword(e.target.checked)}
+                                            readOnly></Form.Check>
+                                    </Col>
+                                </Row>
+
+
+                                <Row className="mt-5">
+                                    <Col className="text-end">
+                                        <Button variant="primary" size="lg"
+                                            type="submit"
+                                        // onClick={sendLogin}
+                                        >
+                                            <FaRightToBracket />
+                                            <span className="ms-2 d-none d-md-inline">로그인</span>
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </Form>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+            <Row className="mt-3">
                 <Col>
-                
-               <Form autoComplete="off" onSubmit={sendLogin}>
-                    <Row className="mt-4">
-                        
-                        {/* <Form.Label column sm={3}>이메일</Form.Label> */}
-                        <Col>
-                            <Form.Control type="text" size="lg" name="empEmail" value={emp.empEmail}
-                                onChange={changeStringValue} placeholder="이메일 입력"
-                                autoFocus />
-                        </Col>
-                    </Row>
-                    <Row className="mt-4">
-                        {/* <Form.Label column sm={3}>비밀번호</Form.Label> */}
-                        <Col>
-                            <Form.Control type={showPassword? "text" : "password"} 
-                                size="lg" name="empPassword"
-                                value={emp.empPassword}
-                                onChange={changeStringValue} placeholder="비밀번호 입력" />
-                            <Form.Check type="checkbox" label="비밀번호 표시" 
-                            className="mt-2" checked={showPassword} 
-                            onClick={(e)=>setShowPassword(e.target.checked)}
-                            readOnly></Form.Check>
-                        </Col>
-                    </Row>
+                    <Form.Select style={{ width: "100px" }}>
+                        <option>한국어</option>
+                    </Form.Select>
+                </Col>
 
-
-                    <Row className="mt-5">
-                        <Col className="text-end">
-                            <Button variant="primary" size="lg" 
-                            type="submit"
-                            // onClick={sendLogin}
-                            >
-                                <FaRightToBracket />
-                                <span className="ms-2 d-none d-md-inline">로그인</span>
-                            </Button>
-                        </Col>
-                    </Row>
-                    </Form>
-                    </Col>
-                 </Row>
-            </Card.Body>
-        </Card>
-        <Row className="mt-3">
-            <Col>
-                <Form.Select style={{ width: "100px" }}>
-                    <option>한국어</option>
-                </Form.Select>
-            </Col>
-
-            <Col className="text-end">
-                <span>도움말</span>
-                <span className="mx-3">개인정보처리방침</span>
-                <span>약관</span>
-            </Col>
-        </Row>
+                <Col className="text-end">
+                    <span>도움말</span>
+                    <span className="mx-3">개인정보처리방침</span>
+                    <span>약관</span>
+                </Col>
+            </Row>
         </div>
-        
+
 
     </>)
 }

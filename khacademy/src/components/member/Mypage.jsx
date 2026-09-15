@@ -5,6 +5,7 @@ import { apiClient } from "@utils/reaxios";
 // import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
 import NoImage from "@assets/noimages.png";
+import { toast } from "react-toastify";
 
 export default function Mypage() {
     // const { empNo } = useAtomValue(loginUserState) || {};
@@ -35,9 +36,28 @@ export default function Mypage() {
     //     return (<h1>로딩중인 화면</h1>);
     // }
 
-    const kakaoLogin = useCallback(()=>{
+    const kakaoConnect = useCallback(async() => {
+        const result = await Swal.fire({
+            title: "카카오에 연결하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "연결",
+            cancelButtonText: "취소"
+        });
+
+        if (result.isConfirmed === false) return;
         const baseURL = import.meta.env.VITE_SERVER_URL;
-        window.location.href = `${baseURL}/oauth/kakao/login`;
+
+        try{
+            window.location.href = `${baseURL}/oauth/kakao/connect`;
+            toast.success("연결되었습니다");
+        }
+        catch(e){
+            console.log("에러 : ", e);
+            toast.error("연결에 실패하였습니다.")
+        }
+
+
     }, []);
 
 
@@ -100,7 +120,7 @@ export default function Mypage() {
                             <span>{unionAddress}</span>
                         </Col>
                     </Row>
-                <Button onClick={kakaoLogin}>카카오 연결</Button>
+                    <Button onClick={kakaoConnect}>카카오 연결</Button>
                 </Col>
                 <Col sm={9}>
 
