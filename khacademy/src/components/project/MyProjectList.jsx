@@ -59,7 +59,7 @@ export default function MyProjectList() {
         )
     }
     return (
-        <div className="project-page">
+        <div className="project-page project-list-page">
 
             {/* 페이지 제목 */}
             <div className="project-page-header mt-4 mb-4">

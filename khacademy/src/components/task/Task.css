@@ -1027,7 +1027,7 @@
 }
 
 /* =========================================
-   수정 모드 뷰 (Edit Mode)
+    수정 모드 뷰 (Edit Mode)
    ========================================= */
 .drawer-edit-form {
   display: flex;
@@ -1171,6 +1171,38 @@
 
 .btn-file-upload-label:hover {
   background-color: #e2e8f0;
+}
+
+/* =========================================
+    하단 버튼 영역 및 버튼 스타일 (추가·수정된 부분)
+   ========================================= */
+.drawer-footer,
+.edit-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px; /* 💡 취소 버튼과 수정 완료 버튼 사이의 간격을 8px로 부여 */
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background-color: #ffffff;
+}
+
+.btn-cancel {
+  padding: 9px 18px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .btn-save-edit {

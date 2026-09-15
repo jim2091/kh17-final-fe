@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { apiClient } from "@utils/reaxios";
 import "./TaskComments.css";
 
-export default function TaskComments({ taskNo, projectNo, loginUser,isClosed }) {
+export default function TaskComments({ taskNo, projectNo, loginUser, isClosed }) {
   const [comments, setComments] = useState([]);
   const [commentFilesMap, setCommentFilesMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -363,6 +363,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser,isClosed }) 
         </div>
       </form>
       )}
+      
       {/* 댓글 목록 */}
       <div className="comment-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {loading ? (
@@ -537,6 +538,16 @@ export default function TaskComments({ taskNo, projectNo, loginUser,isClosed }) 
                     {comment.taskCommentContent && comment.taskCommentContent !== "(파일 첨부)" && (
                       <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
                         {comment.taskCommentContent}
+                      </div>
+                    )}
+
+                    {/* 💡 파일이 삭제되어 빈 껍데기만 남은 경우 안내 문구 처리 */}
+                    {comment.taskCommentContent === "(파일 첨부)" && files.length === 0 && (
+                      <div 
+                        className="comment-deleted-file-hint" 
+                        style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic", marginTop: "2px" }}
+                      >
+                        (첨부파일이 삭제되었습니다)
                       </div>
                     )}
 

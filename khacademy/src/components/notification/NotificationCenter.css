@@ -1,0 +1,177 @@
+/* 컨테이너 및 벨 아이콘 */
+.noti-center-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.noti-bell-trigger {
+  position: relative;
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.noti-bell-trigger:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.noti-badge-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  line-height: 1.2;
+}
+
+/* 드롭다운 패널 박스 */
+.noti-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-height: 460px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 패널 헤더 */
+.noti-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.noti-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.noti-count-num {
+  color: #2563eb;
+  margin-left: 2px;
+}
+
+.noti-read-all-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.noti-read-all-btn:hover {
+  color: #2563eb;
+}
+
+/* 알림 목록 영역 */
+.noti-list-container {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.noti-empty-text {
+  text-align: center;
+  padding: 40px 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* 개별 알림 아이템 카드 */
+.noti-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f8fafc;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.noti-item:hover {
+  background-color: #f8fafc;
+}
+
+.noti-item.unread {
+  background-color: #f0f7ff;
+}
+
+.noti-item.read {
+  background-color: #ffffff;
+}
+
+/* 아이콘 박스 */
+.noti-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #e0e7ff;
+  color: #4338ca;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 텍스트 내용 박스 */
+.noti-content-box {
+  flex: 1;
+}
+
+.noti-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+.noti-text.unread {
+  font-weight: 700;
+}
+
+.noti-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* 외부 링크 아이콘 */
+.noti-external-icon {
+  color: #cbd5e1;
+  margin-top: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.noti-item:hover .noti-external-icon {
+  color: #64748b;
+}

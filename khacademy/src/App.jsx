@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
+import { loginActionState } from "@utils/storage";
+import { useSetAtom } from "jotai";
 import './App.css'
 import { Navigate, Route, Routes } from "react-router-dom"
 import MainLayout from "./templates/MainLayout";
@@ -22,6 +24,9 @@ import Records from './components/records/Records';
 
 import Search from "./components/search/Search";
 
+// 1. 알림 센터 컴포넌트 import 추가
+import NotificationCenter from './components/notification/NotificationCenter';
+
 import Invite from './components/member/admin/Invite';
 import Mypage from "./components/member/Mypage";
 import Edit from "./components/member/Edit";
@@ -35,32 +40,21 @@ import Members from './components/member/Members';
 import Private from "./guard/Private";
 import Admin from "./guard/Admin";
 
-import { useEffect } from 'react';
-import { connectWebSocket, disconnectWebSocket } from './utils/websocket';
 import NotFound from "./error/NotFound";
 import EmpInactive from "./error/EmpInactive";
-
+import Home from "./home/Home";
 
 function App() {
 
-  // 여기서 하던걸 이제 WebSocketProvider로 이전
-  //공용 소켓 연결 테스트 코드.
-  // useEffect(() => {
-  //   connectWebSocket();
-  //   return () => {
-  //     disconnectWebSocket();
-  //   }
-  // }, []);
 
   return (
     <Routes>
-
 
       {/* 로그인 후 공통 화면 */}
       <Route element={<MainLayout />}>
 
         {/* 임시 메인 화면 */}
-        <Route path="/" element={<div>메인화면입니다</div>} />
+        <Route path="/" element={<div><Home/></div>} />
         {/* 통합 검색 */}
         <Route path="/search" element={<Search />} />
         {/* 내 프로젝트 목록 */}
@@ -99,28 +93,26 @@ function App() {
         {/* 사용자 목록 */}
         <Route path="/members" element={<Members />} />
 
-
+        {/* 2. 알림 전용 페이지 라우트 등록 (/notifications 및 /notification 둘 다 지원) */}
+        <Route path="/notifications" element={<Private><NotificationCenter /></Private>} />
+        <Route path="/notification" element={<Navigate to="/notifications" replace />} />
 
         {/* 프로젝트 내부 */}
         <Route path="/projects/:projectNo" element={<ProjectLayout />}>
           <Route index element={<Navigate to="task" replace />} />
 
           <Route path="task" element={<Task />} />
+          <Route path="kanban" element={<Task />} />
           <Route path="taskInsert" element={<TaskInsert />} />
 
           <Route path="chat" element={<Chat />} />
           <Route path="calendar" element={<Calendar />} />
 
-          {/* ----------------- [노트 라우트 설정] ----------------- */}
+          {/* 노트 라우트 설정 */}
           <Route path="notes" element={<Notes />} />
-
           <Route path="note/insert" element={<NoteInsert />} />
-
           <Route path="note/:noteNo" element={<NoteDetail />} />
-
           <Route path="note/:noteNo/edit" element={<NoteEdit />} />
-          {/* ----------------------------------------------------- */}
-
 
           <Route path="files" element={<Files />} />
           <Route path="records" element={<Records />} />
@@ -133,4 +125,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

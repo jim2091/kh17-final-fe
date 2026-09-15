@@ -5,6 +5,7 @@
 .files-page {
     width: 100%;
     min-height: 100vh;
+
     box-sizing: border-box;
 
     padding: 11px 7px 30px;
@@ -16,16 +17,14 @@
         sans-serif;
 
     color: #202124;
+
     background: #fff;
 }
 
 
-/* ==========================================
-   파일함
-========================================== */
-
 .files-container {
     width: 100%;
+
     box-sizing: border-box;
 
     background: #fff;
@@ -33,7 +32,7 @@
 
 
 /* ==========================================
-   검색 + 정렬 + 업로드
+   Toolbar
 ========================================== */
 
 .files-toolbar {
@@ -57,11 +56,15 @@
     display: flex;
     align-items: center;
 
-    gap: 6px;
+    /*
+     * 검색 종류 / 검색창 / 초기화 버튼을
+     * 최대한 가까이 붙임
+     */
+    gap: 4px;
 
     min-width: 0;
 
-    flex: 1;
+    flex: 1 1 auto;
 }
 
 
@@ -83,12 +86,29 @@
     outline: none;
 
     background: #fff;
+
     color: #3c4043;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
 
     font-size: 12px;
 
     cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 }
+
+
+.files-search-type:hover {
+    background: #f8f9fa;
+}
+
 
 .files-search-type:focus {
     border-color: #9aa0a6;
@@ -96,7 +116,7 @@
 
 
 /* ==========================================
-   검색
+   검색창
 ========================================== */
 
 .files-search {
@@ -105,12 +125,14 @@
     width: 300px;
     height: 34px;
 
-    flex: 0 0 auto;
+    flex: 0 0 300px;
+
+    box-sizing: border-box;
 }
 
 
 /* ==========================================
-   검색 input
+   일반 input
 ========================================== */
 
 .files-search input {
@@ -128,8 +150,19 @@
 
     background: #fff;
 
-    font-size: 13px;
     color: #202124;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
 }
 
 
@@ -144,7 +177,100 @@
 
 
 /* ==========================================
+   출처 / 파일 형태 select
+   ★ 돋보기 공간을 확보하지 않음
+========================================== */
+
+.files-source-search-select,
+.files-type-search-select {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+
+    outline: none;
+
+    background: #fff;
+
+    color: #3c4043;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    appearance: auto;
+
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+
+.files-source-search-select:hover,
+.files-type-search-select:hover {
+    background: #f8f9fa;
+}
+
+
+.files-source-search-select:focus,
+.files-type-search-select:focus {
+    border-color: #9aa0a6;
+}
+
+
+.files-source-search-select option,
+.files-type-search-select option {
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+
+    color: #202124;
+}
+
+
+/* ==========================================
+   출처 / 파일 형태 검색창
+   ★ 돋보기 버튼을 사용하지 않으므로
+     select가 검색창 전체를 차지함
+========================================== */
+
+.files-search-source,
+.files-search-type-mode {
+    display: block;
+
+    gap: 0;
+}
+
+
+.files-search-source
+    .files-source-search-select,
+.files-search-type-mode
+    .files-type-search-select {
+
+    width: 100%;
+
+    flex: none;
+}
+
+
+/* ==========================================
    검색 버튼
+   파일명 / 업로더에서만 표시
 ========================================== */
 
 .files-search button {
@@ -167,6 +293,8 @@
     justify-content: center;
 
     cursor: pointer;
+
+    z-index: 2;
 }
 
 
@@ -174,6 +302,11 @@
     background: #f1f3f4;
 
     border-radius: 50%;
+}
+
+
+.files-search button:active {
+    background: #e8eaed;
 }
 
 
@@ -185,12 +318,25 @@
 }
 
 
+/*
+ * 출처 / 파일 형태에는 검색 버튼이 없으므로
+ * 버튼 관련 레이아웃을 완전히 제거
+ */
+
+.files-search-source button,
+.files-search-type-mode button {
+    display: none;
+}
+
+
 /* ==========================================
    검색 초기화
 ========================================== */
 
 .files-search-reset {
     height: 34px;
+
+    margin: 0;
 
     padding: 0 10px;
 
@@ -201,21 +347,40 @@
 
     color: #5f6368;
 
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
     font-size: 11px;
 
     cursor: pointer;
 
     flex: 0 0 auto;
+
+    white-space: nowrap;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 }
 
 
 .files-search-reset:hover {
     background: #f8f9fa;
+
+    border-color: #c8cacc;
+}
+
+
+.files-search-reset:active {
+    background: #f1f3f4;
 }
 
 
 /* ==========================================
-   정렬 영역
+   정렬
 ========================================== */
 
 .files-sort-area {
@@ -228,10 +393,6 @@
 }
 
 
-/* ==========================================
-   정렬 글자
-========================================== */
-
 .files-sort-label {
     color: #5f6368;
 
@@ -240,10 +401,6 @@
     white-space: nowrap;
 }
 
-
-/* ==========================================
-   정렬 select
-========================================== */
 
 .files-sort-select {
     width: 105px;
@@ -259,11 +416,23 @@
     outline: none;
 
     background: #fff;
+
     color: #3c4043;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
 
     font-size: 12px;
 
     cursor: pointer;
+}
+
+
+.files-sort-select:hover {
+    background: #f8f9fa;
 }
 
 
@@ -273,7 +442,7 @@
 
 
 /* ==========================================
-   업로드 버튼
+   업로드
 ========================================== */
 
 .files-upload-button {
@@ -297,6 +466,12 @@
 
     color: #3c4043;
 
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
     font-size: 12px;
     font-weight: 500;
 
@@ -319,6 +494,11 @@
 }
 
 
+.files-upload-button:active {
+    background: #f1f3f4;
+}
+
+
 .files-upload-button:disabled {
     opacity: 0.5;
 
@@ -335,10 +515,6 @@
     stroke: #5f6368;
 }
 
-
-/* ==========================================
-   실제 input
-========================================== */
 
 .files-hidden-input {
     display: none;
@@ -364,10 +540,6 @@
 }
 
 
-/* ==========================================
-   목록 헤더
-========================================== */
-
 .files-list-header {
     display: grid;
 
@@ -386,16 +558,12 @@
     border-top: 1px solid #dadce0;
     border-bottom: 1px solid #dadce0;
 
+    color: #5f6368;
+
     font-size: 11px;
     font-weight: 500;
-
-    color: #5f6368;
 }
 
-
-/* ==========================================
-   파일 목록 행
-========================================== */
 
 .files-list-row {
     display: grid;
@@ -421,9 +589,10 @@
 }
 
 
-/* ==========================================
-   이미지 파일 클릭
-========================================== */
+.files-list-row:not(.files-image-row):hover {
+    background: #f8f9fa;
+}
+
 
 .files-image-row {
     cursor: pointer;
@@ -439,19 +608,6 @@
     background: #f0efff;
 }
 
-
-/* ==========================================
-   일반 파일 hover
-========================================== */
-
-.files-list-row:not(.files-image-row):hover {
-    background: #f8f9fa;
-}
-
-
-/* ==========================================
-   공통 컬럼
-========================================== */
 
 .files-list-header > div,
 .files-list-row > div {
@@ -527,16 +683,8 @@
     font-size: 11px;
 
     cursor: default;
-
-    transition:
-        color 0.15s ease,
-        background-color 0.15s ease;
 }
 
-
-/* ==========================================
-   출처 - 원본 이동 가능
-========================================== */
 
 .files-col-source.files-source-clickable {
     color: #5b4df8;
@@ -617,6 +765,19 @@
 
 
 /* ==========================================
+   Record
+========================================== */
+
+.files-col-record {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ==========================================
    삭제
 ========================================== */
 
@@ -628,17 +789,9 @@
     justify-content: center;
 }
 
-/* record */
-.files-col-record {
-    min-width: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 /* ==========================================
-   파일 아이콘 공통
+   파일 아이콘
 ========================================== */
 
 .files-icon {
@@ -664,10 +817,6 @@
     height: 22px;
 }
 
-
-/* ==========================================
-   이미지 썸네일
-========================================== */
 
 .files-image-thumbnail {
     position: relative;
@@ -702,10 +851,6 @@
 }
 
 
-/* ==========================================
-   이미지 로딩 실패
-========================================== */
-
 .files-image-fallback {
     position: absolute;
 
@@ -728,7 +873,7 @@
 
 
 /* ==========================================
-   PDF
+   파일 종류 아이콘
 ========================================== */
 
 .files-icon-pdf {
@@ -742,10 +887,6 @@
 }
 
 
-/* ==========================================
-   Word
-========================================== */
-
 .files-icon-word {
     background: #4285f4;
     color: #fff;
@@ -756,10 +897,6 @@
     font-size: 16px;
 }
 
-
-/* ==========================================
-   Excel
-========================================== */
 
 .files-icon-excel {
     background: #34a853;
@@ -772,10 +909,6 @@
 }
 
 
-/* ==========================================
-   PowerPoint
-========================================== */
-
 .files-icon-powerpoint {
     background: #f4511e;
     color: #fff;
@@ -787,10 +920,6 @@
 }
 
 
-/* ==========================================
-   ZIP
-========================================== */
-
 .files-icon-zip {
     background: #fbbc04;
     color: #fff;
@@ -801,10 +930,6 @@
     font-size: 8px;
 }
 
-
-/* ==========================================
-   일반 파일
-========================================== */
 
 .files-icon-default {
     border: 1px solid #dadce0;
@@ -871,9 +996,6 @@
     justify-content: center;
 
     cursor: pointer;
-
-    transition:
-        background-color 0.15s ease;
 }
 
 
@@ -891,7 +1013,43 @@
 
 
 /* ==========================================
-   데이터 없음
+   Record 버튼
+========================================== */
+
+.files-record-button {
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+
+.files-record-button:hover {
+    background: #f1f3f4;
+}
+
+
+.files-record-button svg {
+    width: 17px;
+    height: 17px;
+
+    stroke: #5f6368;
+}
+
+
+/* ==========================================
+   검색 결과 없음
 ========================================== */
 
 .files-empty {
@@ -921,7 +1079,7 @@
 
 
 /* ==========================================
-   이미지 미리보기 OVERLAY
+   미리보기
 ========================================== */
 
 .files-preview-overlay {
@@ -950,10 +1108,6 @@
 }
 
 
-/* ==========================================
-   미리보기 모달
-========================================== */
-
 .files-preview-modal {
     width: min(900px, 92vw);
     height: min(720px, 90vh);
@@ -978,10 +1132,6 @@
 }
 
 
-/* ==========================================
-   미리보기 헤더
-========================================== */
-
 .files-preview-header {
     flex: 0 0 56px;
 
@@ -1000,10 +1150,6 @@
     background: #fff;
 }
 
-
-/* ==========================================
-   미리보기 파일명
-========================================== */
 
 .files-preview-title {
     min-width: 0;
@@ -1031,10 +1177,6 @@
 }
 
 
-/* ==========================================
-   이미지 아이콘
-========================================== */
-
 .files-preview-image-icon {
     width: 28px;
     height: 28px;
@@ -1058,10 +1200,6 @@
     height: 16px;
 }
 
-
-/* ==========================================
-   미리보기 우측 버튼
-========================================== */
 
 .files-preview-actions {
     flex: 0 0 auto;
@@ -1105,10 +1243,6 @@
 }
 
 
-/* ==========================================
-   이미지 영역
-========================================== */
-
 .files-preview-body {
     position: relative;
 
@@ -1130,10 +1264,6 @@
 }
 
 
-/* ==========================================
-   실제 큰 이미지
-========================================== */
-
 .files-preview-image {
     display: block;
 
@@ -1152,10 +1282,6 @@
         rgba(0, 0, 0, 0.08);
 }
 
-
-/* ==========================================
-   미리보기 이미지 오류
-========================================== */
 
 .files-preview-error {
     display: flex;
@@ -1252,11 +1378,15 @@
 
     .files-search {
         width: 240px;
+
+        flex-basis: 240px;
     }
+
 
     .files-search-type {
         width: 80px;
     }
+
 
     .files-sort-select {
         width: 95px;
@@ -1290,9 +1420,11 @@
         padding-bottom: 8px;
     }
 
+
     .files-search-area {
         flex: 1 1 100%;
     }
+
 
     .files-sort-area {
         margin-left: auto;
@@ -1313,16 +1445,69 @@
         width: 100%;
 
         flex-wrap: wrap;
+
+        gap: 4px;
     }
 
 
     .files-search {
-        width: calc(100% - 100px);
+        width: calc(100% - 94px);
+
+        flex-basis: calc(100% - 94px);
     }
 
 
     .files-search-type {
         width: 90px;
+    }
+
+
+    /*
+     * 출처 / 파일 형태
+     * 모바일에서도 검색창 전체 사용
+     */
+
+    .files-source-search-select,
+    .files-type-search-select {
+
+        width: 100%;
+
+        padding-left: 10px;
+        padding-right: 30px;
+
+        font-size: 12px;
+    }
+
+
+    .files-search-source,
+    .files-search-type-mode {
+
+        display: block;
+
+        width: calc(100% - 94px);
+    }
+
+
+    .files-search-source
+        .files-source-search-select,
+    .files-search-type-mode
+        .files-type-search-select {
+
+        width: 100%;
+
+        flex: none;
+    }
+
+
+    /*
+     * 출처 / 파일 형태에서는
+     * 돋보기 버튼 없음
+     */
+
+    .files-search-source button,
+    .files-search-type-mode button {
+
+        display: none;
     }
 
 
@@ -1344,7 +1529,6 @@
 
 
     .files-list {
-
         overflow-x: auto;
 
         --file-col:
@@ -1363,8 +1547,6 @@
         min-width: 740px;
     }
 
-
-    /* 모바일 미리보기 */
 
     .files-preview-overlay {
         padding: 10px;
@@ -1387,36 +1569,4 @@
     .files-preview-title span {
         max-width: 200px;
     }
-
-}
-
-
-/* record 아이콘 */
-.files-record-button {
-    width: 30px;
-    height: 30px;
-
-    padding: 0;
-
-    border: none;
-    border-radius: 50%;
-
-    background: transparent;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    cursor: pointer;
-}
-
-.files-record-button:hover {
-    background: #f1f3f4;
-}
-
-.files-record-button svg {
-    width: 17px;
-    height: 17px;
-
-    stroke: #5f6368;
 }
