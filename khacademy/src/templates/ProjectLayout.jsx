@@ -33,9 +33,10 @@ export default function ProjectLayout() {
         }
     }, [projectNo]);
 
+    //알림 이동시 프로젝트 번호가 필요해서 수정 -승훈
     useEffect(()=>{
         loadProject();
-    }, []);
+    }, [projectNo]);
 
     if(loading === true) {
         return (
