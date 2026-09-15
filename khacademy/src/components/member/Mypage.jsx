@@ -65,7 +65,6 @@ export default function Mypage() {
 
         try {
             window.location.href = `${baseURL}/oauth/kakao/connect`;
-            setKakaoToggle(true);
             toast.success("연결되었습니다");
         }
         catch (e) {
@@ -173,8 +172,6 @@ export default function Mypage() {
                             checked={kakaoToggle}
                             onChange={(e)=>{
                                 const checked = e.target.checked;
-
-                                setKakaoToggle(checked);
 
                                 if(checked){
                                     kakaoConnect();
