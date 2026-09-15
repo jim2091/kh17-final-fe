@@ -2,7 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
 import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { apiClient } from "../../utils/reaxios";
@@ -25,8 +25,10 @@ import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 export default function Calendar() {
     const { projectNo } = useParams();
     const { project, loadProject } = useOutletContext();
-
     const navigate = useNavigate();
+
+    //알림 다이렉트 연결을 위해 추가 -승훈
+    const [searchParams, setSearchParams] = useSearchParams();
 
     //권한 + 프로젝트 상태에 따른 제어
     const isClosed = project?.projectStatus === "closed"
@@ -426,6 +428,20 @@ export default function Calendar() {
             toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
         };
     }, []);
+
+    // 알림 다이렉트 연결을 위해 추가 -승훈
+    useEffect(() => {
+        const targetScheduleNo = searchParams.get("scheduleNo");
+
+        if (targetScheduleNo) {
+            // 알림 등을 통해 캘린더로 넘어왔다면 즉시 상세 모달 띄우기
+            openScheduleDetail(Number(targetScheduleNo));
+
+            // 새로고침 시 모달이 계속 다시 뜨는 현상을 막기 위해 주소창에서 파라미터만 제거
+            searchParams.delete("scheduleNo");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams, openScheduleDetail]);
 
     //업무 상세 조회
     const openTaskDetail = useCallback(async (taskNo) => {
