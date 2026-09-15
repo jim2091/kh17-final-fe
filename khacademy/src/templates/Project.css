@@ -2288,3 +2288,35 @@
 
         opacity: 1;
     }
+
+    .project-invite-modal-content {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.project-invite-icon {
+    font-size: 38px;
+    margin-bottom: 18px;
+}
+
+.project-invite-description {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+
+.notification-invite-badge {
+    display: inline-block;
+
+    margin-top: 8px;
+    padding: 4px 9px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    color: #2563eb;
+    background: #eff6ff;
+
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+}

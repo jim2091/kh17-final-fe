@@ -40,6 +40,9 @@ export default function NotificationCenter() {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef(null);
+    const [inviteModalOpen,setInviteModalOpen] = useState(false);
+    const [selectedInviteNotification, setSelectedInviteNotification]
+            = useState(null);
 
     // 2. 알림 목록 조회
     const loadNotifications = useCallback(async () => {
@@ -152,6 +155,20 @@ export default function NotificationCenter() {
 
     // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
     const handleItemClick = async (item) => {
+        //프로젝트 초대 알림
+        if(
+            item.notificationType
+                ?.toLowerCase()
+            === "PROJECT_INVITE"
+        ){
+            setInviteModalOpen(true);
+            
+            //알림 드롭다운은 닫기
+            setIsOpen(false);
+
+            return;
+        }
+
         const isUnread = item.notificationRead === "N" || item.isRead === "N";
 
         if (isUnread) {
@@ -332,5 +349,6 @@ export default function NotificationCenter() {
                 </div>
             )}
         </div>
+    
     );
 }
