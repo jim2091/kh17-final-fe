@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-// 👉 Calendar 아이콘 추가 임포트
 import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
@@ -125,7 +124,7 @@ export default function NotificationCenter() {
     };
   }, [myEmpNo, loadNotifications]);
 
-  // 외부 클릭 시 드롭다운 닫기
+  // + 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -139,6 +138,8 @@ export default function NotificationCenter() {
   // 4. 단건 읽음 처리 및 이동 (일정, 업무, 일반 분기)
   const handleItemClick = async (item) => {
     const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+    console.log("알림 원본 데이터 :", item);
     
     if (isUnread) {
       try {
@@ -164,24 +165,32 @@ export default function NotificationCenter() {
       const isTaskNotification = item.notificationType?.includes("TASK") || item.notificationUrl.includes("/task");
       const isScheduleNotification = item.notificationType?.includes("SCHEDULE") || item.notificationUrl.includes("/calendar") || item.notificationUrl.includes("/schedule");
 
-      // 💡 [추가됨] 일정(SCHEDULE) 알림 클릭 시 달력 페이지 + scheduleNo 파라미터 전송 로직
+
+
+      // + 일정(SCHEDULE) 알림 클릭 시 달력 페이지 + scheduleNo 파라미터 전송 로직
       if (isScheduleNotification) {
         let targetScheduleNo = item.notificationTarget;
         if (!targetScheduleNo) {
-          const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/schedule\/(\d+)/);
+          const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/\/(\d+)/);
           if (match && match[1]) targetScheduleNo = match[1];
+       console.log("최종 이동할 URL:" , targetUrl);
+
         }
 
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
+       console.log("최종 이동할 URL:" , targetUrl);
+
         }
 
         if (targetProjectNo && targetScheduleNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar?scheduleNo=${targetScheduleNo}`;
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
+       console.log("최종 이동할 URL:" , targetUrl);
+
         }
       } 
       // 업무(TASK) 알림 클릭 시 로직
@@ -191,18 +200,19 @@ export default function NotificationCenter() {
           const match = item.notificationUrl.match(/[?&]taskNo=(\d+)/) || item.notificationUrl.match(/\/task\/(\d+)/);
           if (match && match[1]) targetTaskNo = match[1];
         }
-
+         console.log("최종 이동할 URL:" , targetUrl);
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
         }
-
+         console.log("최종 이동할 URL:" , targetUrl);
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
       }
 
+      console.log("최종 이동할 URL:" , targetUrl);
       navigate(targetUrl);
     }
   };
@@ -275,7 +285,6 @@ export default function NotificationCenter() {
                     onClick={() => handleItemClick(item)}
                     className={`noti-item ${isUnread ? "unread" : "read"}`}
                   >
-                    {/* 💡 [추가됨] 일정(SCHEDULE) 타입일 때 달력 아이콘 렌더링 */}
                     <div className="noti-icon-box">
                       {item.notificationType?.includes("TASK") ? (
                         <CheckSquare size={16} />

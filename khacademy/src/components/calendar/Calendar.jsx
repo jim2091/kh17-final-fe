@@ -23,6 +23,7 @@ import "./Calendar.css";//얘는 css중에 제일 마지막에 불러오도록
 // 기존 코드 싹 고치기 귀찮아서 해당 부분은 css로 처리함
 
 export default function Calendar() {
+
     const { projectNo } = useParams();
     const { project, loadProject } = useOutletContext();
     const navigate = useNavigate();
@@ -42,13 +43,10 @@ export default function Calendar() {
     const [taskList, setTaskList] = useState([]);
 
     const [loading, setLoading] = useState(false);
-    //초기 목록 로딩
-    useEffect(() => {
-        loadScheduleList();
-        loadTaskList();
-    }, []);
 
+    //일정 목록 조회 (projectNo 의존성 추가)
     const loadScheduleList = useCallback(async (showLoading = true) => {
+        if (!projectNo) return;
         try {
             //최초 로딩시에만 로딩화면 띄우도록 개선
             if (showLoading === true) {
@@ -56,7 +54,7 @@ export default function Calendar() {
             }
 
             const { data } = await apiClient.get(`/schedule/project/${projectNo}`);
-            setScheduleList(data.scheduleList);
+            setScheduleList(data.scheduleList || []);
         }
         catch (e) {
             console.error(e);
@@ -67,24 +65,49 @@ export default function Calendar() {
                 setLoading(false);
             }
         }
-    }, []);
+    }, [projectNo]);
 
+    //업무 목록 조회 (projectNo 의존성 추가)
     const loadTaskList = useCallback(async () => {
+        if (!projectNo) return;
         try {
             const { data } = await apiClient.get(`/task/list/${projectNo}`);
 
-            setTaskList(data);
+            setTaskList(Array.isArray(data) ? data : (data?.data || []));
         }
         catch (e) {
             console.error(e);
             toast.error("업무 목록을 불러오지 못했습니다.");
         }
-    }, [])
+    }, [projectNo])
+
+    //초기 목록 로딩 및 프로젝트 변경 감지
+    //loadProject()는 ProjectLayout에서 projectNo 변경을 감지해 자체적으로 호출하므로
+    //여기서 중복 호출하지 않음 (중복 호출 시 로딩 사이클이 겹치며 모달 오픈 타이밍이 꼬임)
+    useEffect(() => {
+        if (projectNo) {
+            loadScheduleList(true);
+            loadTaskList();
+        }
+    }, [projectNo, loadScheduleList, loadTaskList]);
+
+    //데이터 로딩 완료 후 알림(scheduleNo) 감지 및 상세 모달 자동 오픈 처리
+    useEffect(() => {
+        if (loading) return;
+
+        const targetScheduleNo = searchParams.get("scheduleNo");
+        if (targetScheduleNo) {
+            openScheduleDetail(Number(targetScheduleNo));
+
+            searchParams.delete("scheduleNo");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [loading, searchParams, setSearchParams]);
 
     //웹소켓으로 변동사항 받아서 실시간 화면 갱신
     useEffect(() => {
 
-        if(!projectNo) return;
+        if (!projectNo) return;
 
         let scheduleSubscription = null;
         let taskSubscription = null
@@ -129,7 +152,7 @@ export default function Calendar() {
             scheduleSubscription?.unsubscribe();
             taskSubscription?.unsubscribe();
         }
-    }, []);
+    }, [projectNo, loadScheduleList, loadTaskList]);
 
     //FullCallendar용 데이터로 변환
     const scheduleEvents = scheduleList.map(schedule => {
@@ -372,7 +395,7 @@ export default function Calendar() {
             console.error(e);
             toast.error("일정 등록에 실패했습니다. \n잠시 후에 다시 시도해주세요")
         }
-    }, [scheduleInput]);
+    }, [scheduleInput, projectNo, closeInputModal, loadScheduleList]);
 
     const handleDateClick = useCallback((info) => {
 
@@ -429,20 +452,6 @@ export default function Calendar() {
         };
     }, []);
 
-    // 알림 다이렉트 연결을 위해 추가 -승훈
-    useEffect(() => {
-        const targetScheduleNo = searchParams.get("scheduleNo");
-
-        if (targetScheduleNo) {
-            // 알림 등을 통해 캘린더로 넘어왔다면 즉시 상세 모달 띄우기
-            openScheduleDetail(Number(targetScheduleNo));
-
-            // 새로고침 시 모달이 계속 다시 뜨는 현상을 막기 위해 주소창에서 파라미터만 제거
-            searchParams.delete("scheduleNo");
-            setSearchParams(searchParams, { replace: true });
-        }
-    }, [searchParams, setSearchParams, openScheduleDetail]);
-
     //업무 상세 조회
     const openTaskDetail = useCallback(async (taskNo) => {
         try {
@@ -485,13 +494,13 @@ export default function Calendar() {
     }, []);
 
     const moveToTask = useCallback(() => {
-        if(taskDetail === null) return;
+        if (taskDetail === null) return;
 
         const taskNo = taskDetail.taskNo;
-        
+
         closeTaskDetailModal();
         navigate(`/projects/${projectNo}/task?taskNo=${taskNo}`);
-    }, [taskDetail]);
+    }, [taskDetail, closeTaskDetailModal, navigate, projectNo]);
 
     const handleEventClick = useCallback((info) => {
 
@@ -500,11 +509,11 @@ export default function Calendar() {
 
         const type = info.event.extendedProps.type;
 
-        if(type === "schedule") {
+        if (type === "schedule") {
             const scheduleNo = info.event.extendedProps.scheduleNo;
             openScheduleDetail(scheduleNo);
         }
-        else if(type === "task") {
+        else if (type === "task") {
             const taskNo = info.event.extendedProps.taskNo;
             openTaskDetail(taskNo);
         }
@@ -620,7 +629,7 @@ export default function Calendar() {
             console.error(e);
             toast.error("수정에 실패했습니다. \n잠시 후에 다시 시도해주세요");
         }
-    }, [scheduleDetail, scheduleEdit]);
+    }, [scheduleDetail, scheduleEdit, loadScheduleList]);
 
     //등록/수정 공통 체크 함수
     const checkScheduleField = useCallback((input, name) => {
@@ -666,7 +675,7 @@ export default function Calendar() {
             console.error(e);
             toast.error("일정 삭제에 실패했습니다 \n잠시 후에 다시 시도해주세요");
         }
-    }, [scheduleDetail]);
+    }, [scheduleDetail, closeDetailModal, loadScheduleList]);
 
     //시간 형식 변경
     const formatScheduleDate = (value) => {
@@ -676,13 +685,13 @@ export default function Calendar() {
     };
 
     const formatTaskDate = useCallback((date) => {
-        if(!date) return "-";
+        if (!date) return "-";
 
         return dayjs(date).format("YYYY-MM-DD");
     }, []);
 
     const getTaskStatusLabel = useCallback((status) => {
-        switch(status) {
+        switch (status) {
             case "TODO":
                 return "할 일";
             case "IN_PROGRESS":
@@ -1505,9 +1514,9 @@ export default function Calendar() {
             restoreFocus={false}
         >
             <Modal.Header closeButton>
-                    <Modal.Title>
-                        업무 상세
-                    </Modal.Title>
+                <Modal.Title>
+                    업무 상세
+                </Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
@@ -1567,7 +1576,7 @@ export default function Calendar() {
                                     {taskDetail.taskContent || "등록된 내용이 없습니다"}
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
                 )}
