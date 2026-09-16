@@ -1,8 +1,9 @@
+
 .spacing{
-    padding: 100px 200px;
+    padding: 60px 40px;
 }
 .left-right-padding{
-    padding: 0 200px;
+    padding: 0 40px;
 }
 
 .large-font{
@@ -17,14 +18,21 @@
 
 .tabs {
     display: flex;
-    padding: 0 0px;
-    border-bottom: 1px solid #e5e7eb;
-    background-color: white;
     align-items: center;
     flex-wrap: nowrap;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
+
+    scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+    display: none;
 }
 .tab {
-
+    flex: 0 0 auto;
     padding: 10px 17px;
 
     color: #6b7280;
@@ -83,10 +91,7 @@
 .swal2-container {
     z-index: 9999 !important;
 }
-.user-popover {
-    width: 400px;
-    max-width: 400px;
-}
+
 .my-pagination .page-link {
     color: #c7dbec !important;
     background-color: white !important;
@@ -175,9 +180,40 @@
     width: 100%;
 
 }
+.member-table .check-column {
+    width: 50px;
+}
+.member-table .name-column {
+    width: 200px;
+}
+
+.member-table .level-column {
+    width: 90px;
+}
+.member-table .email-column {
+    width: 300px;
+}
+.member-table .dept-column {
+    width: 100px;
+}
+.member-table .postion-column {
+    width: 100px;
+}
+.member-table .birth-column {
+    width: 110px;
+}
+
+.member-table .contact-column {
+    width: 130px;
+}
+
+.member-table .address-column {
+    width: 350px;
+}
 
 .member-table th,
 .member-table td {
+    padding: 8px 12px;
     vertical-align: middle;
     white-space: nowrap;
     overflow: hidden;
@@ -185,10 +221,25 @@
     height: 50px;
 }
 
+.member-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.member-table th.sortable:hover {
+    color: #2563eb;
+}
+
+.member-table th {
+    font-weight: 600;
+    color: #374151;
+}
+
 .member-table tbody tr.member-table-item:hover > td {
     background-color: #e9f2ff !important;
     cursor: pointer;
 }
+
 
 .popover{
     margin-top: 0 !important;
@@ -197,9 +248,11 @@
 .state-popover {
     border-radius: 4px;
     margin: 0 !important;
-    width: 600px;
-    height: 370px;
-    max-width: 600px;
+    width: min(600px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+
+    height: auto;
+    min-height: 300px;
 }
 
 .state-popover .popover-arrow {
@@ -340,4 +393,139 @@
 .toggle .form-check-input:checked {
     background-color: #2563eb;
     border-color: #2563eb;
+}
+.check-column {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    text-align: center;
+}
+/* =========================
+   사용자 목록 반응형
+========================= */
+
+.member-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* 이름 + 프로필 */
+.member-info {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.list-img {
+    flex-shrink: 0;
+}
+
+.member-name {
+    margin-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-meta {
+    display: none;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+
+
+/* 팝오버 */
+.user-popover {
+    width: min(400px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+}
+
+
+
+/* 선 */
+.div-line {
+    width: min(500px, 100%);
+}
+
+.profile-line {
+    width: min(280px, 100%);
+}
+
+/* 태블릿 */
+@media (max-width: 992px) {
+
+    .member-table .birth-column,
+    .member-table .level-column,
+    .member-table .state-column,
+    .member-table .address-column {
+        display: none;
+    }
+
+    .member-meta {
+        display: block;
+    }
+.member-table {
+    table-layout: fixed ;
+    width: 100%;
+
+}
+.member-table .check-column {
+    width: 30px;
+}
+.member-table .name-column {
+    width: 150px;
+}
+.member-table .email-column {
+    width: 150px;
+}
+
+.member-table .contact-column {
+    width: 100px;
+}
+.member-table .dept-column {
+    width: 80px;
+}
+.member-table .position-column {
+    width: 80px;
+}
+
+
+
+}
+
+/* 모바일 */
+@media (max-width: 768px) {
+
+    .spacing {
+        padding: 30px 16px;
+    }
+
+    .left-right-padding {
+        padding: 0 16px;
+    }
+
+    .large-font {
+        font-size: 32px;
+    }
+
+    .member-table {
+        font-size: 13px;
+    }
+
+    .member-table .contact-column {
+        display: none;
+    }
+
+    .list-img {
+        width: 42px;
+        height: 42px;
+        margin-left: 0 !important;
+    }
+
+    .member-table th,
+    .member-table td {
+        height: 55px;
+    }
+
 }
