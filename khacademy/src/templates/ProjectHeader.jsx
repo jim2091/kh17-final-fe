@@ -6,6 +6,7 @@ import { Badge, Button, Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import ProjectMemberModal from "../components/project/ProjectMemberModal";
 import ProjectExpectedResultModal from "../components/project/ProjectExpectedResultModal";
+import dayjs from "dayjs";
 
 export default function ProjectHeader({project, loadProject}) {
     //프로젝트 번호
@@ -146,6 +147,26 @@ export default function ProjectHeader({project, loadProject}) {
 
                 <div className="project-description">
                     {project.projectPurpose}
+                </div>
+
+                <div className="project-header-meta">
+                    <span className="project-deadline-label">
+                        프로젝트 기간
+                    </span>
+                    
+                    <span className="project-deadline-date">
+                        {project.projectStart
+                            ? dayjs(project.projectStart).format("YYYY.MM.DD")
+                            : "미정"
+                        }
+
+                        {"~"}
+
+                        {project.projectDeadline
+                            ? dayjs(project.projectDeadline).format("YYYY.MM.DD")
+                            : "미정"
+                        }
+                    </span>
                 </div>
 
             </div>
