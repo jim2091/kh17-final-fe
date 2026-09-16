@@ -80,8 +80,15 @@ export default function Files({ source = "FILE", sourceNo = null }) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    const [previewFile, setPreviewFile] = useState(null);
-    const [previewError, setPreviewError] = useState(false);
+    /*
+     * 파일 상세 팝업
+     *
+     * 이미지든 일반 파일이든
+     * 작은 화면에서는 이 팝업을 통해
+     * 파일 정보를 확인할 수 있도록 사용
+     */
+    const [detailFile, setDetailFile] = useState(null);
+    const [detailImageError, setDetailImageError] = useState(false);
 
     const [recordModalOpen, setRecordModalOpen] = useState(false);
     const [recordTargetFile, setRecordTargetFile] = useState(null);
@@ -92,10 +99,8 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      * 프로젝트 상태
      * ==========================================
-     *
-     * project 객체와 API 응답 중 하나라도
-     * closed이면 종료 프로젝트로 처리
      */
+
     const isProjectClosed =
         String(project?.projectStatus || projectStatus || "").toLowerCase() ===
             "closed" ||
@@ -126,7 +131,9 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      */
 
     const handleSourceClick = async (e, file) => {
-        e.stopPropagation();
+        if (e) {
+            e.stopPropagation();
+        }
 
         if (!isSourceClickable(file)) return;
 
@@ -395,7 +402,7 @@ export default function Files({ source = "FILE", sourceNo = null }) {
         if (uploading) return;
 
         if (!projectNo) {
-            toast.warning("프로젝트 정보가 없습니다()");
+            toast.warning("프로젝트 정보가 없습니다.");
             return;
         }
 
@@ -521,34 +528,33 @@ export default function Files({ source = "FILE", sourceNo = null }) {
 
     /*
      * ==========================================
-     * 이미지 미리보기
+     * 파일 상세 팝업
      * ==========================================
      */
 
-    const handlePreview = file => {
-        if (getFileType(file.attachName) !== "image") return;
-
-        setPreviewError(false);
-        setPreviewFile(file);
+    const openFileDetail = file => {
+        setDetailImageError(false);
+        setDetailFile(file);
     };
 
-    const closePreview = () => {
-        setPreviewFile(null);
-        setPreviewError(false);
+    const closeFileDetail = () => {
+        setDetailFile(null);
+        setDetailImageError(false);
     };
 
     useEffect(() => {
         const handleKeyDown = e => {
-            if (e.key === "Escape" && previewFile) {
-                closePreview();
+            if (e.key === "Escape" && detailFile) {
+                closeFileDetail();
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
 
-        return () =>
+        return () => {
             document.removeEventListener("keydown", handleKeyDown);
-    }, [previewFile]);
+        };
+    }, [detailFile]);
 
     /*
      * ==========================================
@@ -566,8 +572,6 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      * 삭제 가능 여부
      * ==========================================
-     *
-     * 종료 프로젝트에서는 무조건 false
      */
 
     const canDeleteFile = file => {
@@ -597,10 +601,6 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      */
 
     const handleDelete = async (attachNo, fileName) => {
-        /*
-         * 화면에서 숨겨져 있어도 직접 함수가 실행되는 상황까지
-         * 방어
-         */
         if (isProjectClosed) {
             toast.warning("종료된 프로젝트의 파일은 삭제할 수 없습니다.");
             return;
@@ -623,8 +623,8 @@ export default function Files({ source = "FILE", sourceNo = null }) {
         try {
             await apiClient.delete(`/attach/${attachNo}`);
 
-            if (previewFile?.attachNo === attachNo) {
-                closePreview();
+            if (detailFile?.attachNo === attachNo) {
+                closeFileDetail();
             }
 
             setFiles(prev =>
@@ -933,6 +933,210 @@ export default function Files({ source = "FILE", sourceNo = null }) {
 
     /*
      * ==========================================
+     * 파일 상세 팝업
+     * ==========================================
+     */
+
+    const renderFileDetailModal = () => {
+        if (!detailFile) return null;
+
+        const detailType = getFileType(detailFile.attachName);
+        const sourceClickable = isSourceClickable(detailFile);
+
+        return (
+            <div
+                className="files-detail-overlay"
+                onMouseDown={e => {
+                    if (e.target === e.currentTarget) {
+                        closeFileDetail();
+                    }
+                }}
+            >
+                <div className="files-detail-modal">
+                    <div className="files-detail-header">
+                        <div className="files-detail-header-title">
+                            <span>파일 정보</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="files-detail-close"
+                            onClick={closeFileDetail}
+                            title="닫기"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+
+                    <div className="files-detail-body">
+                        <div className="files-detail-preview">
+                            {detailType === "image" ? (
+                                !detailImageError ? (
+                                    <img
+                                        src={getFileUrl(
+                                            detailFile.attachNo
+                                        )}
+                                        alt={detailFile.attachName}
+                                        className="files-detail-image"
+                                        onError={() =>
+                                            setDetailImageError(true)
+                                        }
+                                    />
+                                ) : (
+                                    <div className="files-detail-image-error">
+                                        <FileIcon file={detailFile} />
+
+                                        <span>
+                                            이미지를 불러올 수 없습니다.
+                                        </span>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="files-detail-file-icon">
+                                    <FileIcon file={detailFile} />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="files-detail-info">
+                            <div className="files-detail-name">
+                                <span className="files-detail-label">
+                                    파일명
+                                </span>
+
+                                <strong title={detailFile.attachName}>
+                                    {detailFile.attachName || "-"}
+                                </strong>
+                            </div>
+
+                            <div className="files-detail-info-row">
+                                <span>출처</span>
+
+                                {sourceClickable ? (
+                                    <button
+                                        type="button"
+                                        className="files-detail-source-link"
+                                        onClick={e =>
+                                            handleSourceClick(
+                                                e,
+                                                detailFile
+                                            )
+                                        }
+                                    >
+                                        {getSourceLabel(
+                                            detailFile.attachSource
+                                        )}
+                                    </button>
+                                ) : (
+                                    <span>
+                                        {getSourceLabel(
+                                            detailFile.attachSource
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="files-detail-info-row">
+                                <span>업로더</span>
+
+                                <span>
+                                    {detailFile.empName ||
+                                        detailFile.attachUploader ||
+                                        "-"}
+                                </span>
+                            </div>
+
+                            <div className="files-detail-info-row">
+                                <span>파일 형태</span>
+
+                                <span>
+                                    {getExtension(
+                                        detailFile.attachName
+                                    )
+                                        ? `.${getExtension(
+                                              detailFile.attachName
+                                          )}`
+                                        : "-"}
+                                </span>
+                            </div>
+
+                            <div className="files-detail-info-row">
+                                <span>크기</span>
+
+                                <span>
+                                    {formatFileSize(
+                                        detailFile.attachSize
+                                    )}
+                                </span>
+                            </div>
+
+                            <div className="files-detail-info-row">
+                                <span>올린 날짜</span>
+
+                                <span>
+                                    {formatDate(
+                                        detailFile.attachCtime
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="files-detail-footer">
+                        <button
+                            type="button"
+                            className="files-detail-download-button"
+                            onClick={() =>
+                                handleDownload(
+                                    detailFile.attachNo
+                                )
+                            }
+                        >
+                            <DownloadIcon />
+
+                            <span>다운로드</span>
+                        </button>
+
+                        {!isProjectClosed && (
+                            <button
+                                type="button"
+                                className="files-detail-record-button"
+                                onClick={() => {
+                                    closeFileDetail();
+                                    handleRecord(detailFile);
+                                }}
+                            >
+                                <RecordIcon />
+
+                                <span>Record</span>
+                            </button>
+                        )}
+
+                        {!isProjectClosed &&
+                            canDeleteFile(detailFile) && (
+                                <button
+                                    type="button"
+                                    className="files-detail-delete-button"
+                                    onClick={() =>
+                                        handleDelete(
+                                            detailFile.attachNo,
+                                            detailFile.attachName
+                                        )
+                                    }
+                                >
+                                    <DeleteIcon />
+
+                                    <span>삭제</span>
+                                </button>
+                            )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    /*
+     * ==========================================
      * 화면
      * ==========================================
      */
@@ -1119,7 +1323,7 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                                     }`}
                                     key={file.attachNo}
                                     onClick={() =>
-                                        handlePreview(file)
+                                        openFileDetail(file)
                                     }
                                 >
                                     <div className="files-col-file files-file-name">
@@ -1233,122 +1437,7 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                 </div>
             </div>
 
-            {previewFile && (
-                <div
-                    className="files-preview-overlay"
-                    onMouseDown={e => {
-                        if (e.target === e.currentTarget) {
-                            closePreview();
-                        }
-                    }}
-                >
-                    <div className="files-preview-modal">
-                        <div className="files-preview-header">
-                            <div className="files-preview-title">
-                                <div className="files-preview-image-icon">
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                    >
-                                        <rect
-                                            x="3"
-                                            y="3"
-                                            width="18"
-                                            height="18"
-                                            rx="2"
-                                        />
-
-                                        <circle
-                                            cx="8.5"
-                                            cy="8.5"
-                                            r="1.5"
-                                        />
-
-                                        <path d="M3 17l5-5 4 4 2.5-2.5L21 20" />
-                                    </svg>
-                                </div>
-
-                                <span>
-                                    {previewFile.attachName}
-                                </span>
-                            </div>
-
-                            <div className="files-preview-actions">
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        handleDownload(
-                                            previewFile.attachNo
-                                        )
-                                    }
-                                    title="다운로드"
-                                >
-                                    <DownloadIcon />
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={closePreview}
-                                    title="닫기"
-                                >
-                                    <CloseIcon />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="files-preview-body">
-                            {!previewError ? (
-                                <img
-                                    src={getFileUrl(
-                                        previewFile.attachNo
-                                    )}
-                                    alt={
-                                        previewFile.attachName
-                                    }
-                                    className="files-preview-image"
-                                    onError={() =>
-                                        setPreviewError(true)
-                                    }
-                                />
-                            ) : (
-                                <div className="files-preview-error">
-                                    <div className="files-preview-error-icon">
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                        >
-                                            <rect
-                                                x="3"
-                                                y="3"
-                                                width="18"
-                                                height="18"
-                                                rx="2"
-                                            />
-
-                                            <path d="M8 15l2.5-3 2 2 2-2.5L17 15" />
-
-                                            <path d="M8 8h.01" />
-                                        </svg>
-                                    </div>
-
-                                    <strong>
-                                        이미지를 불러올 수
-                                        없습니다.
-                                    </strong>
-
-                                    <span>
-                                        이미지 없음
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {renderFileDetailModal()}
 
             {recordTargetFile && (
                 <RecordLinkModal
