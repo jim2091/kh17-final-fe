@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { apiClient } from "../../utils/reaxios";
 import "./NotificationsPage.css";
+import ProjectInviteModal from "../project/ProjectInviteModal";
 
 // 
 function resolveNotificationTargetUrl(item) {
@@ -76,6 +77,8 @@ export default function NotificationsPage() {
     const [notificationList, setNotificationList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [filterType, setFilterType] = useState("all"); // 'all' | 'unread'
+    const [inviteModalOpen,setInviteModalOpen] = useState(false);
+    const [selectedInviteNotification, setSelectedInviteNotification]=useState(null);
 
     // 페이징 관련 상태
     const [currentPage, setCurrentPage] = useState(1);
@@ -118,6 +121,17 @@ export default function NotificationsPage() {
 
     // 개별 알림 클릭 핸들러
     const handleNotificationClick = async (item) => {
+        //프로젝트 초대 알림
+        if(
+            item.notificationType?.toLowerCase()
+            === "project_invite"
+        ){
+            setSelectedInviteNotification(item);
+            setInviteModalOpen(true);
+
+            return;
+        }
+
         try {
             const notificationNo = item.notificationNo || item.no;
             if (isNotificationUnread(item)) {
@@ -269,6 +283,17 @@ export default function NotificationsPage() {
                     </div>
                 </>
             )}
+            <ProjectInviteModal
+                show={inviteModalOpen}
+                notification={selectedInviteNotification}
+                onHide={() => {
+                    setInviteModalOpen(false);
+                    setSelectedInviteNotification(null);
+                }}
+                onSuccess={() =>
+                    loadNotifications(currentPage)
+                }
+            />
         </div>
     );
 }

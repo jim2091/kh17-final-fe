@@ -2478,3 +2478,21 @@
 .project-invite-remove {
     color: #ef4444;
 }
+
+.project-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.project-deadline-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.project-deadline-date {
+    color: #374151;
+    font-weight: 600;
+}
