@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
+import Swal from "sweetalert2";
 import "./Search.css";
 
 const FILTER_OPTIONS = [
@@ -55,7 +56,8 @@ export default function Search() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedUserInfo, setSelectedUserInfo] = useState(null);
     const [projectHistory, setProjectHistory] = useState([]);
-    const [projectHistoryLoading, setProjectHistoryLoading] = useState(false);
+    const [projectHistoryLoading, setProjectHistoryLoading] =
+        useState(false);
     const [projectHistoryError, setProjectHistoryError] = useState("");
 
     /*
@@ -68,9 +70,7 @@ export default function Search() {
             return "";
         }
 
-        return `${
-            import.meta.env.VITE_SERVER_URL
-        }/api/attach/${attachNo}`;
+        return `${import.meta.env.VITE_SERVER_URL}/api/attach/${attachNo}`;
     };
 
     /*
@@ -117,10 +117,6 @@ export default function Search() {
         } catch (error) {
             console.error("프로젝트 참여 이력 조회 실패:", error);
 
-            /*
-             * 프로젝트 이력 API에서 프로필 정보가
-             * 없더라도 검색 결과의 사용자 정보를 사용
-             */
             setSelectedUserInfo({
                 empNo: user.empNo,
                 empName: user.empName ?? "",
@@ -175,7 +171,7 @@ export default function Search() {
 
     /*
      * ==================================================
-     * 사용자 모달 열렸을 때 배경 스크롤 방지
+     * 사용자 모달 배경 스크롤 방지
      * ==================================================
      */
     useEffect(() => {
@@ -370,6 +366,21 @@ export default function Search() {
 
     /*
      * ==================================================
+     * 프로젝트 참여 여부
+     *
+     * owner/member만 실제 참여자로 인정
+     * ==================================================
+     */
+    const isProjectMember = project => {
+        const role = String(project?.projectRole ?? "")
+            .trim()
+            .toLowerCase();
+
+        return role === "owner" || role === "member";
+    };
+
+    /*
+     * ==================================================
      * 프로젝트 클릭
      * ==================================================
      */
@@ -379,7 +390,17 @@ export default function Search() {
             return;
         }
 
-        if (!["owner", "member"].includes(projectRole)) {
+        const normalizedRole = String(projectRole ?? "")
+            .trim()
+            .toLowerCase();
+
+        /*
+         * owner/member만 프로젝트 진입 가능
+         */
+        if (
+            normalizedRole !== "owner" &&
+            normalizedRole !== "member"
+        ) {
             return;
         }
 
@@ -401,19 +422,45 @@ export default function Search() {
             return;
         }
 
-        const confirmed = window.confirm(
-            "정말 이 프로젝트에 참여하시겠습니까?"
-        );
+        /*
+         * ==================================================
+         * 참여 확인
+         * ==================================================
+         */
+        const confirmed = await Swal.fire({
+            title: "프로젝트에 참여하시겠습니까?",
+            // text: "프로젝트에 참여하면 프로젝트에 접근할 수 있습니다.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "참여",
+            cancelButtonText: "취소",
+            reverseButtons: true,
+        });
 
-        if (!confirmed) {
+        /*
+         * 취소
+         */
+        if (!confirmed.isConfirmed) {
             return;
         }
 
         try {
             setJoiningProjectNo(projectNo);
 
+            /*
+             * ==================================================
+             * 프로젝트 참여 API
+             * ==================================================
+             */
             await apiClient.post(`/project/${projectNo}/join`);
 
+            /*
+             * ==================================================
+             * 참여 성공
+             *
+             * 검색 결과에서도 바로 member로 변경
+             * ==================================================
+             */
             setResult(prev => ({
                 ...prev,
                 projects:
@@ -428,13 +475,76 @@ export default function Search() {
                             : project
                     ) || [],
             }));
+
+            /*
+             * ==================================================
+             * 성공 Toast
+             * ==================================================
+             */
+            Swal.fire({
+                toast: true,
+                position: "bottom-end",
+                icon: "success",
+                title: "프로젝트에 참여했습니다.",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
         } catch (e) {
             console.error("프로젝트 참여 실패:", e);
 
-            alert(
-                e?.response?.data?.message ||
-                    "프로젝트 참여에 실패했습니다."
-            );
+            /*
+             * ==================================================
+             * 백엔드 에러 메시지 가져오기
+             *
+             * 예상 응답:
+             *
+             * {
+             *     "message": "이미 참여했거나 탈퇴한 프로젝트에는 다시 참여할 수 없습니다."
+             * }
+             *
+             * 또는
+             *
+             * {
+             *     "error": "이미 참여했거나 탈퇴한 프로젝트에는 다시 참여할 수 없습니다."
+             * }
+             * ==================================================
+             */
+            let errorMessage = "";
+
+            if (typeof e?.response?.data === "string") {
+                errorMessage = e.response.data;
+            } else {
+                errorMessage =
+                    e?.response?.data?.message ||
+                    e?.response?.data?.error ||
+                    e?.response?.data?.msg ||
+                    "";
+            }
+
+            /*
+             * ==================================================
+             * 백엔드 메시지가 없는 경우 기본 메시지
+             * ==================================================
+             */
+            if (!errorMessage) {
+                errorMessage = "프로젝트 참여에 실패했습니다.";
+            }
+
+            /*
+             * ==================================================
+             * 실패 Toast
+             * ==================================================
+             */
+            Swal.fire({
+                toast: true,
+                position: "bottom-end",
+                icon: "error",
+                title: errorMessage,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
         } finally {
             setJoiningProjectNo(null);
         }
@@ -564,9 +674,7 @@ export default function Search() {
      */
     const getFileUrl = attachNo =>
         attachNo
-            ? `${
-                  import.meta.env.VITE_SERVER_URL
-              }/api/attach/${attachNo}`
+            ? `${import.meta.env.VITE_SERVER_URL}/api/attach/${attachNo}`
             : "";
 
     /*
@@ -671,6 +779,7 @@ export default function Search() {
                                     handleFilterChange("all")
                                 }
                             />
+
                             <span>전체</span>
                         </label>
 
@@ -792,9 +901,6 @@ export default function Search() {
                                                     }
                                                 }}
                                             >
-                                                {/* ==================================================
-                                                    사용자 프로필 이미지
-                                                ================================================== */}
                                                 <div className="search-user-avatar">
                                                     {user.attachNo ? (
                                                         <img
@@ -872,12 +978,8 @@ export default function Search() {
                                         }
                                     >
                                         {result.projects?.map(project => {
-                                            const clickable = [
-                                                "owner",
-                                                "member",
-                                            ].includes(
-                                                project.projectRole
-                                            );
+                                            const clickable =
+                                                isProjectMember(project);
 
                                             return (
                                                 <div
@@ -887,22 +989,34 @@ export default function Search() {
                                                             : "project-not-member"
                                                     }`}
                                                     key={project.projectNo}
-                                                    onClick={() =>
-                                                        handleProjectClick(
-                                                            project.projectNo,
-                                                            project.projectRole
-                                                        )
+                                                    onClick={() => {
+                                                        if (clickable) {
+                                                            handleProjectClick(
+                                                                project.projectNo,
+                                                                project.projectRole
+                                                            );
+                                                        }
+                                                    }}
+                                                    role={
+                                                        clickable
+                                                            ? "button"
+                                                            : undefined
                                                     }
-                                                    role="button"
                                                     tabIndex={
                                                         clickable ? 0 : -1
                                                     }
                                                     onKeyDown={e => {
                                                         if (
-                                                            e.key ===
-                                                                "Enter" &&
-                                                            clickable
+                                                            clickable &&
+                                                            (
+                                                                e.key ===
+                                                                    "Enter" ||
+                                                                e.key ===
+                                                                    " "
+                                                            )
                                                         ) {
+                                                            e.preventDefault();
+
                                                             handleProjectClick(
                                                                 project.projectNo,
                                                                 project.projectRole
@@ -1294,15 +1408,9 @@ export default function Search() {
                         aria-modal="true"
                         aria-labelledby="user-project-modal-title"
                     >
-                        {/* ==================================================
-                            모달 헤더
-                        ================================================== */}
                         <div className="user-project-modal-header">
                             <div className="user-project-modal-user-area">
                                 <div className="user-project-modal-user">
-                                    {/* ==================================================
-                                        모달 프로필 이미지
-                                    ================================================== */}
                                     <div className="user-project-modal-avatar">
                                         {selectedUserInfo?.attachNo ? (
                                             <img
@@ -1359,7 +1467,6 @@ export default function Search() {
                                     </div>
                                 </div>
 
-                                {/* 사용자 정보 */}
                                 <div className="user-project-modal-user-info">
                                     <div className="user-project-modal-info-item">
                                         <span className="user-project-modal-info-label">
@@ -1406,9 +1513,6 @@ export default function Search() {
                             </button>
                         </div>
 
-                        {/* ==================================================
-                            모달 본문
-                        ================================================== */}
                         <div className="user-project-modal-body">
                             {projectHistoryLoading && (
                                 <div className="user-project-modal-status">
@@ -1497,9 +1601,6 @@ export default function Search() {
                                 )}
                         </div>
 
-                        {/* ==================================================
-                            모달 푸터
-                        ================================================== */}
                         <div className="user-project-modal-footer">
                             <span>
                                 진행 중{" "}
@@ -1658,6 +1759,7 @@ function SearchSection({ title, count, children }) {
         <section className="search-section">
             <div className="search-section-header">
                 <h2>{title}</h2>
+
                 <span>{count}</span>
             </div>
 
