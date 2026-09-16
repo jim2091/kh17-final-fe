@@ -11,14 +11,14 @@ export default function ProjectInviteSendModal({
     //검색 결과
     const [empList,setEmpList] = useState([]);
     //선택한 사원
-    const [selectedEmp,setSelectedEmp] = useState(null);
+    const [selectedEmpList,setSelectedEmpList] = useState([]);
     //검색중
     const [searchLoading,setSearchLoading] = useState(false);
     //초대중
     const [inviteLoading,setInviteLoading] = useState(false);
 
     //검색어 변경
-    const changekeyword = useCallback((e)=>{
+    const changeKeyword = useCallback((e)=>{
         setKeyword(e.target.value);
     },[])
 
@@ -35,10 +35,8 @@ export default function ProjectInviteSendModal({
         try{
             setSearchLoading(true);
 
-            setSelectedEmp(null);
-
             const response = await apiClient.get(
-                "emp/search",
+                "search/emp",
                 {params : {keyword : searchKeyword}}
             );
 
@@ -79,45 +77,67 @@ export default function ProjectInviteSendModal({
 
     //사원 선택
     const selectEmp = useCallback((emp)=>{
-        setSelectedEmp(emp);
+        setSelectedEmpList((prev)=>{
+            
+            const alreadySelected = prev.some(
+                (item) => item.empNo === emp.empNo
+            );
+
+            if(alreadySelected){
+                return prev.filter(
+                    (item)=> item.empNo !== emp.empNo
+                );
+            }
+
+            return [...prev,emp];
+        });
     },[]);
 
     //프로젝트 초대
     const sendInvite = useCallback(async()=>{
-        if(!selectedEmp){
+        if(selectedEmpList.length === 0){
             toast.warning("초대할 사원을 선택해주세요");
-            
             return;
         }
 
         try{
             setInviteLoading(true);
 
-            await apiClient.post(
-                `/project/${projectNo}/invite/${selectEmp.empNo}`
-            );
+            let successCount = 0;
+            let failCount = 0;
 
-            toast.success(`${selectedEmp.empName}님에게 초대를 보냈습니다.`);
+            for(const emp of selectedEmpList){
+                try{
+                    await apiClient.post(
+                        `/project/${projectNo}/invite/${emp.empNo}`
+                    );
 
-            //초기화
+                    successCount ++;
+                }
+                catch(e){
+                    failCount ++;
+                }
+            }
+
+            if(successCount > 0){
+                toast.success(`${successCount}명에게 초대를 보냈습니다.`);
+            }
+
+            if(failCount > 0){
+                toast.warning(`${failCount}명은 초대하지 못했습니다.`);
+            }
+
             setKeyword("");
             setEmpList([]);
-            setSelectedEmp(null);
+            setSelectedEmpList([]);
 
             onHide();
-        }
-
-        catch(e){
-            toast.error(
-                e.response?.data?.message
-                ?? "프로젝트 초대에 실패했습니다."
-            );
         }
         finally{
             setInviteLoading(false);
         }
         
-    },[projectNo,selectedEmp,onHide]);
+    },[projectNo,selectedEmpList,onHide]);
 
     //모달 닫기
     const closeModal = useCallback(()=>{
@@ -129,7 +149,8 @@ export default function ProjectInviteSendModal({
 
         setKeyword("");
         setEmpList([]);
-        setSelectedEmp(null);
+        setSelectedEmpList([]);
+
 
         onHide();
     },[searchLoading,inviteLoading,onHide]);
@@ -176,7 +197,7 @@ export default function ProjectInviteSendModal({
                 </Form>
 
                 {/* 검색 결과 */}
-                <div className="project-invite-reuslt">
+                <div className="project-invite-result">
                     {
                         empList.length === 0
                         ?
@@ -189,8 +210,9 @@ export default function ProjectInviteSendModal({
                         (
                             empList.map((emp)=>{
 
-                                const selected = selectedEmp?.empNo
-                                    === emp.empNo;
+                                const selected = selectedEmpList.some(
+                                    (item)=>item.empNo === emp.empNo
+                                );
 
                                 return (
                                     <div key={emp.empNo}
@@ -199,7 +221,7 @@ export default function ProjectInviteSendModal({
                                             ${selected ? "selected" : ""}`
                                         }
                                         onClick={()=>
-                                            selectedEmp(emp)
+                                            selectEmp(emp)
                                         }
                                     >
                                         <div className="project-invite-emp-info">
@@ -225,11 +247,7 @@ export default function ProjectInviteSendModal({
                                                 selectEmp(emp);
                                             }}
                                     >
-                                        {
-                                            selected
-                                            ? "선택됨"
-                                            : "선택"
-                                        }
+                                        {selected ? "선택됨": "선택"}
                                     </Button>
 
                                     </div>
@@ -240,16 +258,20 @@ export default function ProjectInviteSendModal({
                 </div>
 
                 {/* 선택된 사원 */}
-                {
-                    selectedEmp &&
-                    (
-                        <div className="project-invite-selected">
-                            <span>초대대상</span>
-                            <strong>{selectEmp.empName}</strong>
-                            <span>{selectEmp.empEmail}</span>
-                        </div>
-                    )
-                }
+                {selectedEmpList.length > 0 &&(
+                    <div className="project-invite-selected">
+                        <span>
+                            초대 대상 {selectedEmpList.length}명
+                        </span>
+
+                        {selectedEmpList.map((emp)=>(
+                            <div key={emp.empNo}>
+                                <strong>{emp.empName}</strong>
+                                <span>{emp.empEmail}</span>    
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Modal.Body>
 
             <Modal.Footer className="project-modal-footer">
@@ -261,7 +283,9 @@ export default function ProjectInviteSendModal({
 
                 <Button className="project-primary-button"
                         onClick={sendInvite}
-                        disabled={!selectedEmp || inviteLoading}
+                        disabled={
+                            selectedEmpList.length === 0 || inviteLoading
+                        }
                 >
                     {
                         inviteLoading ? 

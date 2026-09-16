@@ -2320,3 +2320,107 @@
     border: 1px solid #bfdbfe;
     border-radius: 999px;
 }
+
+.project-invite-search {
+    display: flex;
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.project-invite-search .form-control {
+    flex: 1;
+}
+
+
+.project-invite-result {
+    max-height: 320px;
+    overflow-y: auto;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+
+.project-invite-employee {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 14px 10px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    cursor: pointer;
+
+    transition: background-color 0.15s;
+}
+
+.project-invite-employee:hover {
+    background: #f8fafc;
+}
+
+.project-invite-employee.selected {
+    background: #eff6ff;
+}
+
+
+.project-invite-employee-info {
+    min-width: 0;
+}
+
+.project-invite-employee-name {
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #111827;
+}
+
+.project-invite-employee-email {
+    margin-top: 3px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+.project-invite-select-button {
+    color: #2563eb !important;
+    background: white !important;
+
+    border: 1px solid #bfdbfe !important;
+}
+
+
+.project-invite-empty {
+    padding: 35px 10px;
+
+    text-align: center;
+
+    font-size: 14px;
+
+    color: #9ca3af;
+}
+
+
+.project-invite-selected {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 18px;
+    padding: 12px 14px;
+
+    background: #eff6ff;
+
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+.project-invite-selected strong {
+    color: #2563eb;
+}
