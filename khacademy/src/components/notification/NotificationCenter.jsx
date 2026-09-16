@@ -173,24 +173,16 @@ export default function NotificationCenter() {
         if (!targetScheduleNo) {
           const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/\/(\d+)/);
           if (match && match[1]) targetScheduleNo = match[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-
         if (targetProjectNo && targetScheduleNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar?scheduleNo=${targetScheduleNo}`;
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
       } 
       // 업무(TASK) 알림 클릭 시 로직
@@ -200,13 +192,11 @@ export default function NotificationCenter() {
           const match = item.notificationUrl.match(/[?&]taskNo=(\d+)/) || item.notificationUrl.match(/\/task\/(\d+)/);
           if (match && match[1]) targetTaskNo = match[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
