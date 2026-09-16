@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { Button, Modal, Form, Badge, FormGroup, FormLabel } from "react-bootstrap";
 import { Plus, Calendar, User, Search, SlidersHorizontal, ArrowUpDown, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ export default function Records() {
 
     const { projectNo } = useParams();
     const { project } = useOutletContext();
+    const navigate = useNavigate();
 
     const isClosed = project?.projectStatus === "closed";
 
@@ -701,6 +702,32 @@ export default function Records() {
                 return type;
         }
     }
+
+    //Record 관련 원본으로 이동
+    const moveToRelatedSource = useCallback((related) => {
+        if(!related) return;
+
+        switch(related.relatedType) {
+            case "TASK":
+                navigate(`/projects/${projectNo}/task?taskNo=${related.relatedNo}`);
+                break;
+
+            case "NOTE":
+                navigate(`/projects/${projectNo}/note/${related.relatedNo}`)
+                break;
+
+            case "ATTACH":
+                navigate(`/projects/${projectNo}/files`);
+                break;
+
+            case "MESSAGE":
+                navigate(`/projects/${projectNo}/chat?messageNo=${related.relatedNo}`);
+                break;
+
+            default:
+                return;
+        }
+    }, []);
 
     // 원본 데이터 목록을 공통 형태로 변환
     const getRelatedOptionList = () => {
@@ -1780,9 +1807,11 @@ export default function Records() {
 
                                         <div className="record-related-list">
                                             {selectedRecord.relatedList.map((related) => (
-                                                <div
+                                                <button
+                                                    type="button"
                                                     className="record-related-item"
                                                     key={`${related.relatedType}-${related.relatedNo}`}
+                                                    onClick={() => moveToRelatedSource(related)}
                                                 >
                                                     <Badge bg="light" text="dark">
                                                         {getRelatedTypeName(related.relatedType)}
@@ -1797,7 +1826,7 @@ export default function Records() {
                                                             {related.relatedStatus}
                                                         </span>
                                                     )}
-                                                </div>
+                                                </button>
                                             ))}
                                         </div>
                                     </div>

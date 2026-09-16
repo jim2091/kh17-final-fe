@@ -1,22 +1,38 @@
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, Row, ToggleButton } from "react-bootstrap";
 // import { loginUserState } from "@utils/storage";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { apiClient } from "@utils/reaxios";
 // import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
 import NoImage from "@assets/noimages.png";
+import { toast } from "react-toastify";
+import kakaoicon from "@assets/kakaoicon.png";
+import Swal from "sweetalert2";
 
 export default function Mypage() {
     // const { empNo } = useAtomValue(loginUserState) || {};
     const [emp, setEmp] = useState("");
+
+    const [kakaoToggle, setKakaoToggle] = useState(false);
     useEffect(() => {
         loadData();
+        loadKakaoConnected();
     }, []);
     const loadData = useCallback(async () => {
         const { data } = await apiClient.get("/member/me");
 
+
         setEmp(data);
 
+    }, []);
+    const loadKakaoConnected = useCallback(async()=>{
+        try{
+            const {data} = await apiClient.get("member/kakao");
+        setKakaoToggle(data);
+        }
+        catch(e){
+            console.log(error);
+        }
     }, []);
     // console.log("내정보 : ", emp);
 
@@ -35,9 +51,51 @@ export default function Mypage() {
     //     return (<h1>로딩중인 화면</h1>);
     // }
 
-    const kakaoLogin = useCallback(()=>{
+    const kakaoConnect = useCallback(async () => {
+        const result = await Swal.fire({
+            title: "카카오에 연결하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "연결",
+            cancelButtonText: "취소"
+        });
+
+        if (result.isConfirmed === false) return;
         const baseURL = import.meta.env.VITE_SERVER_URL;
-        window.location.href = `${baseURL}/oauth/kakao/login`;
+
+        try {
+            window.location.href = `${baseURL}/oauth/kakao/connect`;
+            toast.success("연결되었습니다");
+        }
+        catch (e) {
+            console.log("에러 : ", e);
+            toast.error("연결에 실패하였습니다.")
+        }
+
+
+    }, []);
+    const kakaoDisconnect = useCallback(async () => {
+        const result = await Swal.fire({
+            title: "카카오 연결을 해제하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "해제",
+            cancelButtonText: "취소"
+        });
+
+        if (result.isConfirmed === false) return;
+
+        try {
+            await apiClient.delete("/member/kakao");
+            setKakaoToggle(false);
+            toast.success("연결해제되었습니다");
+        }
+        catch (e) {
+            console.log("에러 : ", e);
+            toast.error("작업을 실패하였습니다.")
+        }
+
+
     }, []);
 
 
@@ -100,7 +158,32 @@ export default function Mypage() {
                             <span>{unionAddress}</span>
                         </Col>
                     </Row>
-                <Button onClick={kakaoLogin}>카카오 연결</Button>
+                    <Row className="mt-3">
+                        <div>
+
+                            <span className="fw-bold">간편로그인 연결 관리</span>
+                        </div>
+                        <div className="d-flex justify-content-between mt-2">
+                            <div className="d-flex align-items-center">
+                                <img src={kakaoicon} className="kakao-image"></img>
+                                <span className="ms-2">카카오톡 연결</span>
+                            </div>
+                            <Form.Check type="switch" className="toggle" 
+                            checked={kakaoToggle}
+                            onChange={(e)=>{
+                                const checked = e.target.checked;
+
+                                if(checked){
+                                    kakaoConnect();
+                                }
+                                else{
+                                    kakaoDisconnect();
+                                }
+                            }}
+                            ></Form.Check>
+                        </div>
+                    </Row>
+
                 </Col>
                 <Col sm={9}>
 

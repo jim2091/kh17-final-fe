@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
+import { loginActionState } from "@utils/storage";
+import { useSetAtom } from "jotai";
 import './App.css'
 import { Navigate, Route, Routes } from "react-router-dom"
 import MainLayout from "./templates/MainLayout";
@@ -40,8 +42,10 @@ import Admin from "./guard/Admin";
 
 import NotFound from "./error/NotFound";
 import EmpInactive from "./error/EmpInactive";
+import Home from "./home/Home";
 
 function App() {
+
 
   return (
     <Routes>
@@ -50,7 +54,7 @@ function App() {
       <Route element={<MainLayout />}>
 
         {/* 임시 메인 화면 */}
-        <Route path="/" element={<div>메인화면입니다</div>} />
+        <Route path="/" element={<div><Home/></div>} />
         {/* 통합 검색 */}
         <Route path="/search" element={<Search />} />
         {/* 내 프로젝트 목록 */}

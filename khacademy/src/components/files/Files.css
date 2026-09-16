@@ -19,6 +19,8 @@
     color: #202124;
 
     background: #fff;
+
+    overflow-x: hidden;
 }
 
 
@@ -28,6 +30,8 @@
     box-sizing: border-box;
 
     background: #fff;
+
+    min-width: 0;
 }
 
 
@@ -45,6 +49,8 @@
     align-items: center;
 
     gap: 12px;
+
+    min-width: 0;
 }
 
 
@@ -56,10 +62,6 @@
     display: flex;
     align-items: center;
 
-    /*
-     * 검색 종류 / 검색창 / 초기화 버튼을
-     * 최대한 가까이 붙임
-     */
     gap: 4px;
 
     min-width: 0;
@@ -102,6 +104,8 @@
     transition:
         border-color 0.15s ease,
         background-color 0.15s ease;
+
+    flex: 0 0 auto;
 }
 
 
@@ -128,6 +132,8 @@
     flex: 0 0 300px;
 
     box-sizing: border-box;
+
+    min-width: 0;
 }
 
 
@@ -178,7 +184,6 @@
 
 /* ==========================================
    출처 / 파일 형태 select
-   ★ 돋보기 공간을 확보하지 않음
 ========================================== */
 
 .files-source-search-select,
@@ -243,12 +248,6 @@
 }
 
 
-/* ==========================================
-   출처 / 파일 형태 검색창
-   ★ 돋보기 버튼을 사용하지 않으므로
-     select가 검색창 전체를 차지함
-========================================== */
-
 .files-search-source,
 .files-search-type-mode {
     display: block;
@@ -257,11 +256,8 @@
 }
 
 
-.files-search-source
-    .files-source-search-select,
-.files-search-type-mode
-    .files-type-search-select {
-
+.files-search-source .files-source-search-select,
+.files-search-type-mode .files-type-search-select {
     width: 100%;
 
     flex: none;
@@ -270,7 +266,6 @@
 
 /* ==========================================
    검색 버튼
-   파일명 / 업로더에서만 표시
 ========================================== */
 
 .files-search button {
@@ -317,11 +312,6 @@
     stroke: #5f6368;
 }
 
-
-/*
- * 출처 / 파일 형태에는 검색 버튼이 없으므로
- * 버튼 관련 레이아웃을 완전히 제거
- */
 
 .files-search-source button,
 .files-search-type-mode button {
@@ -390,15 +380,6 @@
     gap: 7px;
 
     flex: 0 0 auto;
-}
-
-
-.files-sort-label {
-    color: #5f6368;
-
-    font-size: 12px;
-
-    white-space: nowrap;
 }
 
 
@@ -525,8 +506,24 @@
    파일 목록
 ========================================== */
 
+/*
+ * 기본
+ *
+ * 파일명
+ * 출처
+ * 업로더
+ * 날짜
+ * 다운로드
+ * 크기
+ * Record
+ * 삭제
+ *
+ * 총 8개 컬럼
+ */
 .files-list {
     width: 100%;
+
+    min-width: 0;
 
     --file-col:
         minmax(0, 1fr)
@@ -1341,7 +1338,6 @@
 ========================================== */
 
 @keyframes files-preview-fade-in {
-
     from {
         opacity: 0;
     }
@@ -1353,7 +1349,6 @@
 
 
 @keyframes files-preview-modal-in {
-
     from {
         opacity: 0;
 
@@ -1371,11 +1366,11 @@
 
 
 /* ==========================================
-   반응형
+   1100px 이하
+   검색 영역부터 조금 축소
 ========================================== */
 
 @media (max-width: 1100px) {
-
     .files-search {
         width: 240px;
 
@@ -1394,24 +1389,88 @@
 }
 
 
+/* ==========================================
+   1000px 이하
+   Record를 먼저 숨김
+========================================== */
+
 @media (max-width: 1000px) {
-
     .files-list {
-
         --file-col:
             minmax(0, 1fr)
-            100px
-            120px
-            100px
-            80px
-            100px
-            65px;
+            105px
+            110px
+            90px
+            60px
+            82px
+            60px;
+    }
+
+
+    /*
+     * Record 컬럼 숨김
+     */
+    .files-list-header .files-col-record,
+    .files-list-row .files-col-record {
+        display: none;
+    }
+
+
+    /*
+     * 8개 → 7개
+     *
+     * 파일명 / 출처 / 업로더 / 날짜 /
+     * 다운로드 / 크기 / 삭제
+     */
+    .files-list {
+        --file-col:
+            minmax(0, 1fr)
+            105px
+            110px
+            90px
+            60px
+            82px
+            60px;
     }
 }
 
 
-@media (max-width: 800px) {
+/* ==========================================
+   900px 이하
+   크기 숨김
+========================================== */
 
+@media (max-width: 900px) {
+    .files-list-header .files-col-size,
+    .files-list-row .files-col-size {
+        display: none;
+    }
+
+
+    /*
+     * 6개
+     *
+     * 파일명 / 출처 / 업로더 / 날짜 /
+     * 다운로드 / 삭제
+     */
+    .files-list {
+        --file-col:
+            minmax(0, 1fr)
+            105px
+            105px
+            90px
+            60px
+            60px;
+    }
+}
+
+
+/* ==========================================
+   800px 이하
+   Toolbar 줄바꿈
+========================================== */
+
+@media (max-width: 800px) {
     .files-toolbar {
         flex-wrap: wrap;
 
@@ -1432,8 +1491,41 @@
 }
 
 
-@media (max-width: 700px) {
+/* ==========================================
+   750px 이하
+   날짜 숨김
+========================================== */
 
+@media (max-width: 750px) {
+    .files-list-header .files-col-date,
+    .files-list-row .files-col-date {
+        display: none;
+    }
+
+
+    /*
+     * 5개
+     *
+     * 파일명 / 출처 / 업로더 /
+     * 다운로드 / 삭제
+     */
+    .files-list {
+        --file-col:
+            minmax(0, 1fr)
+            105px
+            100px
+            60px
+            60px;
+    }
+}
+
+
+/* ==========================================
+   700px 이하
+   검색창 모바일 형태
+========================================== */
+
+@media (max-width: 700px) {
     .files-toolbar {
         gap: 10px;
 
@@ -1462,14 +1554,8 @@
     }
 
 
-    /*
-     * 출처 / 파일 형태
-     * 모바일에서도 검색창 전체 사용
-     */
-
     .files-source-search-select,
     .files-type-search-select {
-
         width: 100%;
 
         padding-left: 10px;
@@ -1481,7 +1567,6 @@
 
     .files-search-source,
     .files-search-type-mode {
-
         display: block;
 
         width: calc(100% - 94px);
@@ -1492,21 +1577,14 @@
         .files-source-search-select,
     .files-search-type-mode
         .files-type-search-select {
-
         width: 100%;
 
         flex: none;
     }
 
 
-    /*
-     * 출처 / 파일 형태에서는
-     * 돋보기 버튼 없음
-     */
-
     .files-search-source button,
     .files-search-type-mode button {
-
         display: none;
     }
 
@@ -1528,23 +1606,89 @@
     }
 
 
+    /*
+     * 가로 스크롤 절대 사용하지 않음
+     */
     .files-list {
-        overflow-x: auto;
+        width: 100%;
+
+        overflow-x: hidden;
 
         --file-col:
-            minmax(250px, 1fr)
+            minmax(0, 1fr)
             90px
-            110px
-            95px
-            60px
-            75px
-            60px;
+            85px
+            58px
+            58px;
     }
 
 
     .files-list-header,
     .files-list-row {
-        min-width: 740px;
+        min-width: 0;
+    }
+
+
+    .files-list-header {
+        padding-left: 10px;
+        padding-right: 6px;
+    }
+
+
+    .files-list-row {
+        padding-left: 10px;
+        padding-right: 6px;
+    }
+
+
+    .files-file-name {
+        gap: 7px;
+    }
+
+
+    .files-icon,
+    .files-image-thumbnail {
+        width: 30px;
+        height: 30px;
+    }
+
+
+    .files-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+
+    .files-name-text {
+        font-size: 11px;
+    }
+
+
+    .files-col-source {
+        padding: 0 5px;
+
+        font-size: 10px;
+    }
+
+
+    .files-col-uploader {
+        padding: 0 5px;
+
+        font-size: 10px;
+    }
+
+
+    .files-download-button,
+    .files-delete-button {
+        width: 28px;
+        height: 28px;
+    }
+
+
+    .files-download-button svg,
+    .files-delete-button svg {
+        width: 16px;
+        height: 16px;
     }
 
 
@@ -1568,5 +1712,82 @@
 
     .files-preview-title span {
         max-width: 200px;
+    }
+}
+
+
+/* ==========================================
+   600px 이하
+   업로더 숨김
+========================================== */
+
+@media (max-width: 600px) {
+    .files-list-header .files-col-uploader,
+    .files-list-row .files-col-uploader {
+        display: none;
+    }
+
+
+    /*
+     * 4개
+     *
+     * 파일명 / 출처 / 다운로드 / 삭제
+     */
+    .files-list {
+        --file-col:
+            minmax(0, 1fr)
+            95px
+            58px
+            58px;
+    }
+}
+
+
+/* ==========================================
+   480px 이하
+   출처까지 숨김
+========================================== */
+
+@media (max-width: 480px) {
+    .files-list-header .files-col-source,
+    .files-list-row .files-col-source {
+        display: none;
+    }
+
+
+    /*
+     * 최종적으로
+     *
+     * 파일명 / 다운로드 / 삭제
+     *
+     * 만 남김
+     */
+    .files-list {
+        --file-col:
+            minmax(0, 1fr)
+            58px
+            58px;
+    }
+
+
+    .files-toolbar {
+        gap: 7px;
+    }
+
+
+    .files-sort-select {
+        width: 95px;
+    }
+
+
+    .files-upload-button {
+        min-width: auto;
+
+        padding: 0 10px;
+    }
+
+
+    .files-upload-button span {
+        font-size: 11px;
     }
 }

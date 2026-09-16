@@ -1,29 +1,65 @@
-import { FiMenu } from "react-icons/fi";
+import { FiArrowDown, FiMenu, FiSearch, FiX } from "react-icons/fi";
 
 export default function ChatHeader(
-    { selectedChannel, sidebarOpen, setSidebarOpen }
+    {
+        selectedChannel, setSidebarOpen,
+        searchOpen, setSearchOpen,
+        contextMode, onReturnLatest
+    }
 ) {
 
-    return(<>
-        <header className="chat-header">
-            <button
-                className="sidebar-toggle"
-                onClick={() => setSidebarOpen(prev => !prev)}
-            >
-                <FiMenu />
-            </button>
-            
-            <div className="chat-header-text">
-                <div className="chat-header-title">
-                    {selectedChannel
-                        ? `${selectedChannel.chatChannelName}`
-                        : "채널을 선택하세요"}
+    return (<>
+        <div className="chat-header">
+            <div className="chat-header-inner">
+
+                <button
+                    type="button"
+                    className="sidebar-toggle"
+                    onClick={() =>
+                        setSidebarOpen(prev => !prev)
+                    }
+                >
+                    <FiMenu />
+                </button>
+
+                <div className="chat-current-channel ms-3">
+                    <span className="chat-header-title">
+                        {selectedChannel
+                            ? selectedChannel.chatChannelName
+                            : "채널을 선택하세요"
+                        }
+                    </span>
                 </div>
 
-                <div className="chat-header-description">
-                    프로젝트 채널 대화
+
+                <div className="chat-header-actions">
+
+                    {contextMode && (
+                        <button
+                            type="button"
+                            className="chat-header-action-button latest"
+                            onClick={onReturnLatest}
+                        >
+                            <FiArrowDown />
+                            <span>최신 메시지</span>
+                        </button>
+                    )}
+
+                    <button
+                        type="button"
+                        className={`chat-header-action-button ${searchOpen ? "active" : ""
+                            }`}
+                        onClick={() =>
+                            setSearchOpen(prev => !prev)
+                        }
+                        disabled={!selectedChannel}
+                    >
+                        <FiSearch />
+                    </button>
+
                 </div>
+
             </div>
-        </header>
+        </div>
     </>)
 }
