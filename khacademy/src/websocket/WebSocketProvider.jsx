@@ -1,7 +1,8 @@
 import { useAtomValue } from "jotai";
 import { useContext, useEffect, useState, createContext } from "react";
 import { isLoginState } from "@utils/storage";
-import { connectWebSocket, getWebSocketClient, onWebSocketConnect, disconnectWebSocket
+import { connectWebSocket, getWebSocketClient, disconnectWebSocket,
+    onWebSocketDisconnect, onWebSocketReconnect
 } from "@utils/websocket";
 
 const WebSocketContext = createContext(null);
@@ -37,16 +38,31 @@ export default function ({ children }) {
 
         let subscription = null;
 
-        onWebSocketConnect(() => {
+        //Presence 구독
+        const subscribePresence = () => {
             const client = getWebSocketClient();
 
-            if(client == null) return;
+            if (client === null || client.connected === false) return;
+
+            //혹시 기존 구독이 남아있다면 제거
+            try {
+                subscription?.unsubscribe();
+            }
+            catch(e){
+                //이미 끊어진 연결의 구독이면 무시
+            }
 
             subscription = client.subscribe(
                 "/public/presence",
                 (message) => {
 
                     const json = JSON.parse(message.body);
+
+                    //일단 테스트용
+                    console.log(
+                        "Presence 수신 : ",
+                        json
+                    );
 
                     setPresenceMap(prev => ({
                         ...prev,
@@ -55,16 +71,44 @@ export default function ({ children }) {
                 }
             );
 
-            //WebSocket 연결 + Presence 구독 준비 완료
+            console.log("Presence 구독 완료");
+
             setPresenceReady(true);
+        };
 
-        });
+        //최초 연결 및 재연결마다 Presence를 다시 구독
+        const unregisterReconnect = onWebSocketReconnect(subscribePresence);
 
+        //WebSocket 연결이 끊어지면
+        const unregisterDisconnect = 
+            onWebSocketDisconnect(() => {
+                console.log("Presence 연결 대기 상태");
+
+                //기존 subscription은 끊어진 연결의 것이므로 버림
+                subscription = null;
+
+                //이전에 WebSocket으로 받은 값도 초기화
+                setPresenceMap({});
+                setPresenceReady(false);
+            });
+
+        //컴포넌트 정리
         return () => {
-            subscription?.unsubscribe();
+            unregisterReconnect();
+            unregisterDisconnect();
+
+            try {
+                subscription?.unsubscribe();
+            }
+            catch(e) {
+                //이미 연결이 종료된 경우 무시
+            }
+
+            subscription = null;
             setPresenceMap({});
             setPresenceReady(false);
-        }
+
+        };
     }, [isLogin]);
 
 

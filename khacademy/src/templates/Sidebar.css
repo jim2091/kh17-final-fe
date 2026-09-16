@@ -59,7 +59,52 @@
     display: flex;
     flex-direction: column;
 
-    gap: 7px;
+    gap: 28px;
+}
+
+/* =====================================================
+    Sidebar Group
+===================================================== */
+
+.sidebar-group {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.sidebar-group-title {
+    padding: 0 13px;
+
+    color: #9ca3af;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.04em;
+}
+
+.sidebar-group-menu {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+/* 아직 연결되지 않은 메뉴 */
+
+.sidebar-link-disabled {
+    color: #9ca3af;
+
+    cursor: default;
+
+    opacity: 0.65;
+}
+
+.sidebar-link-disabled:hover {
+    background-color: transparent;
+    color: #9ca3af;
 }
 
 .sidebar-link {
@@ -118,9 +163,6 @@
         font-size: 15px;
     }
 
-    .sidebar-menu {
-        gap: 8px;
-    }
 
     .sidebar-link {
         padding: 12px 14px;

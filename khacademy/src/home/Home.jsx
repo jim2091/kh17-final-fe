@@ -56,10 +56,37 @@ export default function Home(){
         loadProjectList();
     }, []);
 
-    //홈에서는 최대 4개만 표시
+    //홈에서 보여줄 프로젝트. 최근 방문 프로젝트 순
     const homeProjectList = useMemo(() => {
-        return projectList.slice(0, 4);
-    }, [projectList]);
+
+        //로그인 사용자 정보가 아직 없으면
+        //기존 순서대로 최대 4개 표시
+        if(!loginUser?.empNo) {
+            return projectList.slice(0, 4);
+        }//안해주면 에러남. 어차피 비로그인 유저면 projectList도 비어있어서 0개뜸
+        
+        const storageKey = `recentProjects_${loginUser.empNo}`;
+
+        //최근 방문 프로젝트 정보
+        const recentProjects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+        //최근 방문 순서에 맞춰 실제 서버 프로젝트 데이터 찾기
+        const recentProjectList = recentProjects.map(recent => 
+            projectList.find(project => project.projectNo === recent.projectNo)
+        ).filter(project => project)//삭제/종료 등으로 현재 목록에 없는 프로젝트 제거
+
+        //아직 방문 기록이 없는 프로젝트
+        const otherProjectList = projectList.filter(project =>
+            !recentProjects.some(recent => recent.projectNo === project.projectNo)
+        );
+
+        //최근 방문 프로젝트 먼저, 나머지는 기존 서버 조회 순서 유지
+        return [
+            ...recentProjectList,
+            ...otherProjectList
+        ].slice(0, 4);
+        
+    }, [projectList, loginUser?.empNo]);
 
     //프로젝트 이동
     const moveToProject = useCallback((projectNo) => {
