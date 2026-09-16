@@ -43,6 +43,8 @@ import Admin from "./guard/Admin";
 import NotFound from "./error/NotFound";
 import EmpInactive from "./error/EmpInactive";
 import Home from "./home/Home";
+import DepartmentList from "./components/organization/department/DepartmentList";
+import DepartmentDetail from "./components/organization/department/DepartmentDetail";
 
 function App() {
 
@@ -67,6 +69,10 @@ function App() {
         <Route path="/projects/public" element={<PublicProjectList />} />
         {/* 아카이브 목록 */}
         <Route path="/projects/archive" element={<ArcheiveProjectList />} />
+        {/* 부서 목록 */}
+        <Route path="/organization/departments" element={<DepartmentList />} />
+        {/* 부서 상세 */}
+        <Route path="/organization/departments/:deptNo" element={<DepartmentDetail />} />
         {/* 종료 화면 */}
         <Route path="/projects/:projectNo/close" element={<ProjectClose />} />
         {/* 알림 페이지 이동 */}

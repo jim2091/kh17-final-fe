@@ -7,6 +7,8 @@ import { apiClient } from "../utils/reaxios";
 import { Spinner } from "react-bootstrap";
 import ProjectPresenceSidebar from "../components/project/ProjectPresenceSidebar";
 import { User, Users } from "lucide-react";
+import { useAtomValue } from "jotai";
+import { loginUserState } from "../utils/storage";
 
 export default function ProjectLayout() {
 
@@ -16,6 +18,9 @@ export default function ProjectLayout() {
     const [loading, setLoading] = useState(true);
 
     const [presenceOpen, setPresenceOpen] = useState(false);
+
+    //로그인 사용자
+    const loginUser = useAtomValue(loginUserState);
 
     //프로젝트 상세 조회
     const loadProject = useCallback(async ()=>{
@@ -38,6 +43,45 @@ export default function ProjectLayout() {
         loadProject();
     }, [projectNo, loadProject]);
 
+    //최근 방문 프로젝트 저장(홈화면에 쓰임)
+    useEffect(() => {
+        if(!projectNo) return;
+        if(!loginUser?.empNo) return;
+
+        //사용자별로 최근 프로젝트 목록 분리
+        const storageKey = `recentProjects_${loginUser.empNo}`;
+
+        //기존 최근 프로젝트 목록 조회
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+        const currentProjectNo = Number(projectNo);
+
+        //현재 프로젝트가 이미 있으면 기존 위치에서 제거
+        const filtered = saved.filter(
+            item => item.projectNo !== currentProjectNo
+        );
+
+        //현재 프로젝트를 가장 앞으로 추가
+        const next = [
+            {
+                projectNo: currentProjectNo,
+                visitedAt: Date.now()
+            },
+            ...filtered
+        ].slice(0, 10);
+
+        //저장
+        localStorage.setItem(storageKey, JSON.stringify(next));
+
+    }, [projectNo, loginUser?.empNo]);
+
+    if(loading === true) {
+        return (
+            <div className="project-content-loading">
+                <Spinner animation="border" size="sm"/>
+            </div>
+        );
+    }
     //최초 진입(프로젝트 정보를 한 번도 못 받아온 상태)에서만 전체 화면 스피너 처리
     //project가 이미 한 번 세팅된 이후(=프로젝트 전환 시 loading이 다시 true가 되는 경우)에는
     //Outlet(하위 페이지, 예: Calendar)을 언마운트시키지 않도록 분리함.
