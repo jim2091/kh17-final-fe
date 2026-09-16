@@ -2334,33 +2334,26 @@
 
 
 .project-invite-result {
-    max-height: 320px;
+    max-height: 300px;
     overflow-y: auto;
-
-    border-top: 1px solid #e5e7eb;
+    margin-top : 12px;
 }
 
 
-.project-invite-employee {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 14px 10px;
-
+.project-invite-emp {
+    padding: 12px 14px;
     border-bottom: 1px solid #e5e7eb;
-
     cursor: pointer;
-
-    transition: background-color 0.15s;
+    transition: all 0.15s ease;
 }
 
-.project-invite-employee:hover {
-    background: #f8fafc;
+.project-invite-emp:hover {
+    background-color: #f8fafc;
 }
 
-.project-invite-employee.selected {
-    background: #eff6ff;
+.project-invite-emp.selected {
+    background-color: #eff6ff;
+    border-left: 3px solid #2563eb;
 }
 
 
@@ -2368,18 +2361,20 @@
     min-width: 0;
 }
 
-.project-invite-employee-name {
+.project-invite-emp-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
     font-size: 14px;
     font-weight: 600;
-
     color: #111827;
 }
 
-.project-invite-employee-email {
+
+.project-invite-emp-email {
     margin-top: 3px;
-
     font-size: 13px;
-
     color: #6b7280;
 }
 
@@ -2389,6 +2384,11 @@
     background: white !important;
 
     border: 1px solid #bfdbfe !important;
+}
+
+.project-invite-check {
+    color: #2563eb;
+    font-weight: 700;
 }
 
 
@@ -2404,23 +2404,77 @@
 
 
 .project-invite-selected {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: block;
 
     margin-top: 18px;
-    padding: 12px 14px;
+    padding: 14px;
 
-    background: #eff6ff;
-
+    background-color: #eff6ff;
     border: 1px solid #bfdbfe;
     border-radius: 8px;
-
-    font-size: 13px;
-
-    color: #6b7280;
 }
 
 .project-invite-selected strong {
     color: #2563eb;
+}
+
+.project-invite-selected-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 10px;
+
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.project-invite-selected-title strong {
+    color: #2563eb;
+}
+
+.project-invite-selected-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.project-invite-selected-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px 10px;
+
+    background-color: white;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+.project-invite-selected-item:hover {
+    background-color: #f8fafc;
+}
+
+.project-invite-selected-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2563eb;
+}
+
+
+.project-invite-selected-email {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+.project-invite-remove {
+    font-size: 18px;
+    color: #9ca3af;
+}
+
+.project-invite-selected-item:hover
+.project-invite-remove {
+    color: #ef4444;
 }
