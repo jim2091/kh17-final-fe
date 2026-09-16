@@ -227,28 +227,18 @@ export default function ProjectInviteSendModal({
                                         <div className="project-invite-emp-info">
                                             <div className="project-invite-emp-name">
                                                 {emp.empName}
+                                                
+                                                {selected &&(
+                                                    <span className="project-invite-check">
+                                                        ✓
+                                                    </span>
+                                                )}
                                             </div>
 
-                                        <div className="project-invite-emp-email">
-                                            {emp.empEmail}
+                                            <div className="project-invite-emp-email">
+                                                {emp.empEmail}
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <Button type="button"
-                                            size="sm"
-                                            className={
-                                                selected
-                                                ? "project-primary-button"
-                                                : "project-invite-select-button"
-                                            }
-                                            onClick={(e)=>{
-                                                e.stopPropagation();
-
-                                                selectEmp(emp);
-                                            }}
-                                    >
-                                        {selected ? "선택됨": "선택"}
-                                    </Button>
 
                                     </div>
                                 )
@@ -260,16 +250,36 @@ export default function ProjectInviteSendModal({
                 {/* 선택된 사원 */}
                 {selectedEmpList.length > 0 &&(
                     <div className="project-invite-selected">
-                        <span>
-                            초대 대상 {selectedEmpList.length}명
-                        </span>
+                        <div className="project-invite-selected-title">
+                            초대 대상 
+                            <strong>{selectedEmpList.length}명</strong>
+                        </div>
 
-                        {selectedEmpList.map((emp)=>(
-                            <div key={emp.empNo}>
-                                <strong>{emp.empName}</strong>
-                                <span>{emp.empEmail}</span>    
-                            </div>
-                        ))}
+                        <div className="project-invite-selected-list">
+
+                            {selectedEmpList.map((emp)=>(
+                                <div key={emp.empNo}
+                                    className="project-invite-selected-item"
+                                    onClick={()=>selectEmp(emp)}
+                                >
+                                    <div>
+                                        <div className="project-invite-selected-name">
+                                            {emp.empName}
+                                        </div>
+                                        <div className="project-invite-selected-email">
+                                            {emp.empEmail}
+                                        </div>
+
+                                    </div>
+
+                                    <span className="project-invite-remove">
+                                        x
+                                    </span>
+                                </div>
+                            ))}
+
+                        </div>
+
                     </div>
                 )}
             </Modal.Body>
