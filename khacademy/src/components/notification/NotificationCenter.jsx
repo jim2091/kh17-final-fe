@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar } from "lucide-react";
+import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar, ListOrdered } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import "./NotificationCenter.css";
+import ProjectInviteModal from "../project/ProjectInviteModal";
 
 // 1. 안전한 사번(empNo) 추출 함수
 function getLoginEmpNo() {
@@ -34,10 +35,13 @@ export default function NotificationCenter() {
   const navigate = useNavigate();
   const myEmpNo = getLoginEmpNo();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const dropdownRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const dropdownRef = useRef(null);
+
+    const [inviteModalOpen,setInviteModalOpen] = useState(false);
+    const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
 
   // 2. 알림 목록 조회
   const loadNotifications = useCallback(async () => {
@@ -135,27 +139,41 @@ export default function NotificationCenter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 4. 단건 읽음 처리 및 이동 (일정, 업무, 일반 분기)
-  const handleItemClick = async (item) => {
-    const isUnread = item.notificationRead === "N" || item.isRead === "N";
+    // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
+    const handleItemClick = async (item) => {
 
-    console.log("알림 원본 데이터 :", item);
-    
-    if (isUnread) {
-      try {
-        await apiClient.patch(`/notification/${item.notificationNo}/read`);
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.notificationNo === item.notificationNo
-              ? { ...n, notificationRead: "Y", isRead: "Y" }
-              : n
-          )
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (e) {
-        console.error("❌ 단건 읽음 처리 실패:", e);
+      //프로젝트 초대 알림
+      if(
+        item.notificationType?.toLowerCase()
+        === "project_invite"
+      ){
+        setSelectedInviteNotification(item)
+
+        setInviteModalOpen(true);
+
+        //알림 드롭다운 닫기
+        setIsOpen(false);
+
+        return;
       }
-    }
+
+        const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+        if (isUnread) {
+            try {
+                await apiClient.patch(`/notification/${item.notificationNo}/read`);
+                setNotifications((prev) =>
+                    prev.map((n) =>
+                        n.notificationNo === item.notificationNo
+                            ? { ...n, notificationRead: "Y", isRead: "Y" }
+                            : n
+                    )
+                );
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+            } catch (e) {
+                console.error("❌ 단건 읽음 처리 실패:", e);
+            }
+        }
 
     setIsOpen(false);
 
@@ -165,54 +183,40 @@ export default function NotificationCenter() {
       const isTaskNotification = item.notificationType?.includes("TASK") || item.notificationUrl.includes("/task");
       const isScheduleNotification = item.notificationType?.includes("SCHEDULE") || item.notificationUrl.includes("/calendar") || item.notificationUrl.includes("/schedule");
 
-
-
-      // + 일정(SCHEDULE) 알림 클릭 시 달력 페이지 + scheduleNo 파라미터 전송 로직
       if (isScheduleNotification) {
         let targetScheduleNo = item.notificationTarget;
         if (!targetScheduleNo) {
           const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/\/(\d+)/);
           if (match && match[1]) targetScheduleNo = match[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
 
         if (targetProjectNo && targetScheduleNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar?scheduleNo=${targetScheduleNo}`;
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
       } 
-      // 업무(TASK) 알림 클릭 시 로직
       else if (isTaskNotification) {
         let targetTaskNo = item.notificationTarget;
         if (!targetTaskNo) {
           const match = item.notificationUrl.match(/[?&]taskNo=(\d+)/) || item.notificationUrl.match(/\/task\/(\d+)/);
           if (match && match[1]) targetTaskNo = match[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
       }
 
-      console.log("최종 이동할 URL:" , targetUrl);
       navigate(targetUrl);
     }
   };
@@ -258,15 +262,31 @@ export default function NotificationCenter() {
             <div className="noti-title">
               알림 <span className="noti-count-num">{unreadCount}</span>
             </div>
-            {unreadCount > 0 && (
+            <div className="noti-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* 💡 전체 알림 페이지로 이동하는 버튼 추가 */}
               <button
                 type="button"
                 className="noti-read-all-btn"
-                onClick={handleReadAll}
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/notifications");
+                }}
+                title="전체 알림 목록 보기"
+                style={{ background: "#f1f5f9", color: "#475569" }}
               >
-                <CheckCheck size={14} /> 모두 읽음
+                <ListOrdered size={14} /> 전체보기
               </button>
-            )}
+
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className="noti-read-all-btn"
+                  onClick={handleReadAll}
+                >
+                  <CheckCheck size={14} /> 모두 읽음
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 목록 */}
@@ -305,15 +325,24 @@ export default function NotificationCenter() {
                           : ""}
                       </div>
                     </div>
-
-                    <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
-                  </div>
-                );
-              })
+                          
+                          <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
+                          
+                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
             )}
-          </div>
+            <ProjectInviteModal show={inviteModalOpen}
+                                              notification={selectedInviteNotification}
+                                              onHide={()=>{
+                                                setInviteModalOpen(false);
+                                                setSelectedInviteNotification(null);
+                                              }}
+                                              onSuccess={loadNotifications}
+                          />
         </div>
-      )}
-    </div>
-  );
+    );
 }

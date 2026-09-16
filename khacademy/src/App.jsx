@@ -21,10 +21,10 @@ import NoteDetail from './components/notes/NoteDetail';
 import NoteEdit from './components/notes/NoteEdit';
 import Files from './components/files/Files';
 import Records from './components/records/Records';
+import NotificationsPage from './components/notification/NotificationsPage';
 
 import Search from "./components/search/Search";
 
-// 1. 알림 센터 컴포넌트 import 추가
 import NotificationCenter from './components/notification/NotificationCenter';
 
 import Invite from './components/member/admin/Invite';
@@ -75,6 +75,8 @@ function App() {
         <Route path="/organization/departments/:deptNo" element={<DepartmentDetail />} />
         {/* 종료 화면 */}
         <Route path="/projects/:projectNo/close" element={<ProjectClose />} />
+        {/* 알림 페이지 이동 */}
+        <Route path="/notifications" element={<NotificationsPage />}/>
 
         {/* 로그인 화면 */}
         <Route path="/login" element={<Login />} />

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { Badge, Button, Form, ListGroup, Modal, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import ProjectInviteSendModal from "./ProjectInviteSendModal";
 
 export default function ProjectMemberModal({
     show,onHide,projectNo,project,loadProject
@@ -13,6 +14,9 @@ export default function ProjectMemberModal({
 
     //현재 로그인 사용자의 프로젝트 권한
     const role = project?.projectMemberRole;
+
+    //초대모달
+    const [showInviteModal,setShowInviteModal] = useState(false);
 
     //네비
     const navigate = useNavigate();
@@ -193,7 +197,7 @@ export default function ProjectMemberModal({
 
     },[projectNo,loadMemberList]);
 
-    return(
+    return(<>
         <Modal
             show={show}
             onHide={onHide}
@@ -393,7 +397,7 @@ export default function ProjectMemberModal({
                     <Button
                         className="project-primary-button"
                         onClick={() => {
-                            toast.info("아직안됌");
+                            setShowInviteModal(true);
                         }}
                     >
                         멤버 초대
@@ -417,5 +421,15 @@ export default function ProjectMemberModal({
             </Modal.Footer>
 
         </Modal>
+
+        <ProjectInviteSendModal
+            show={showInviteModal}
+            onHide={()=>
+                setShowInviteModal(false)
+            }
+            projectNo={projectNo}
+        />
+
+        </>
     );
 }
