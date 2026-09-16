@@ -85,7 +85,7 @@ export default function Members() {
 
 
     return (<>
-        <div className="p-4">
+        <div className="main-background">
 
             <div className="tabs mt-2">
                 <span className={`mb-1 tab ${activeTab === "전체" ? "active" : ""}`}
