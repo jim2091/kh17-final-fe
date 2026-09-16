@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar } from "lucide-react";
+import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar, ListOrdered } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
@@ -183,54 +183,40 @@ export default function NotificationCenter() {
       const isTaskNotification = item.notificationType?.includes("TASK") || item.notificationUrl.includes("/task");
       const isScheduleNotification = item.notificationType?.includes("SCHEDULE") || item.notificationUrl.includes("/calendar") || item.notificationUrl.includes("/schedule");
 
-
-
-      // + 일정(SCHEDULE) 알림 클릭 시 달력 페이지 + scheduleNo 파라미터 전송 로직
       if (isScheduleNotification) {
         let targetScheduleNo = item.notificationTarget;
         if (!targetScheduleNo) {
           const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/\/(\d+)/);
           if (match && match[1]) targetScheduleNo = match[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
 
         if (targetProjectNo && targetScheduleNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar?scheduleNo=${targetScheduleNo}`;
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
       } 
-      // 업무(TASK) 알림 클릭 시 로직
       else if (isTaskNotification) {
         let targetTaskNo = item.notificationTarget;
         if (!targetTaskNo) {
           const match = item.notificationUrl.match(/[?&]taskNo=(\d+)/) || item.notificationUrl.match(/\/task\/(\d+)/);
           if (match && match[1]) targetTaskNo = match[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
       }
 
-      console.log("최종 이동할 URL:" , targetUrl);
       navigate(targetUrl);
     }
   };
@@ -276,15 +262,31 @@ export default function NotificationCenter() {
             <div className="noti-title">
               알림 <span className="noti-count-num">{unreadCount}</span>
             </div>
-            {unreadCount > 0 && (
+            <div className="noti-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* 💡 전체 알림 페이지로 이동하는 버튼 추가 */}
               <button
                 type="button"
                 className="noti-read-all-btn"
-                onClick={handleReadAll}
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/notifications");
+                }}
+                title="전체 알림 목록 보기"
+                style={{ background: "#f1f5f9", color: "#475569" }}
               >
-                <CheckCheck size={14} /> 모두 읽음
+                <ListOrdered size={14} /> 전체보기
               </button>
-            )}
+
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className="noti-read-all-btn"
+                  onClick={handleReadAll}
+                >
+                  <CheckCheck size={14} /> 모두 읽음
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 목록 */}
