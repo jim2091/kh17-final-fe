@@ -588,3 +588,68 @@
     }
 
 }
+.mypage-content {
+    width: 100%;
+}
+
+.mypage-profile {
+    min-width: 0;
+}
+
+.mypage-management {
+    min-width: 0;
+}
+
+.mypage-card {
+    padding: 28px;
+    background-color: #ffffff;
+    border: 1px solid #e8eaed !important;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+
+/* 태블릿 */
+@media (max-width: 991px) {
+
+    .mypage-profile {
+        margin-bottom: 40px;
+    }
+
+}
+
+
+/* 모바일 */
+@media (max-width: 767px) {
+
+    .mypage-content {
+        padding: 0;
+    }
+
+    .mypage-profile {
+        margin-bottom: 30px;
+    }
+
+    .mypage-card {
+        padding: 20px;
+    }
+
+    .profile-img {
+        width: 150px;
+    }
+
+}
+.profile-card {
+    width: 18rem;
+}
+
+.profile-img {
+    width: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 767px) {
+    .profile-card {
+        width: 150px;
+    }
+}
