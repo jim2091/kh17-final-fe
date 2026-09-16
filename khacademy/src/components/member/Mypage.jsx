@@ -25,12 +25,12 @@ export default function Mypage() {
         setEmp(data);
 
     }, []);
-    const loadKakaoConnected = useCallback(async()=>{
-        try{
-            const {data} = await apiClient.get("member/kakao");
-        setKakaoToggle(data);
+    const loadKakaoConnected = useCallback(async () => {
+        try {
+            const { data } = await apiClient.get("member/kakao");
+            setKakaoToggle(data);
         }
-        catch(e){
+        catch (e) {
             console.log(error);
         }
     }, []);
@@ -101,99 +101,165 @@ export default function Mypage() {
 
     return (<>
         <div className="p-4">
-            <Row>
-                <Col sm={3}>
+            <Row className="mypage-content">
+
+                {/* 왼쪽 : 프로필 */}
+                <Col lg={5} md={6} className="mypage-profile">
+
                     <Row>
-                        <Card className="border-0" style={{ width: '18rem' }}>
-                            <Card.Img variant="top" src={profileUrl === null ? NoImage : profileUrl}
+                        <Card className="border-0 profile-card">
+                            <Card.Img
+                                variant="top"
+                                src={profileUrl === null ? NoImage : profileUrl}
                                 className="profile-img"
-                            ></Card.Img>
+                            />
                         </Card>
                     </Row>
 
                     <Row>
                         <Col className="d-flex align-items-center justify-content-between">
-                            <span className="fs-3 text-nowrap">{emp.empName}</span>
-                            <Button as={Link} to="/edit"
-                                className="ms-5 mypage-edit text-nowrap" >
-                                <span>내 정보관리</span>
+                            <span className="fs-3 text-nowrap">
+                                {emp.empName}
+                            </span>
+
+                            <Button
+                                as={Link}
+                                to="/edit"
+                                className="mypage-edit text-nowrap"
+                            >
+                                내 정보관리
                             </Button>
                         </Col>
                     </Row>
+
                     <div className="profile-line mt-1"></div>
 
                     <Row className="mt-4 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">이메일</Col>
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            이메일
+                        </Col>
                         <Col sm={10} className="text-secondary">
-                            <span>{emp.empEmail}</span>
+                            {emp.empEmail}
                         </Col>
                     </Row>
-                    <Row className="mt-1 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">부서</Col>
-                        <Col sm={10} className="text-secondary">
-                            <span>{emp.deptName}</span>
-                        </Col>
-                    </Row>
-                    <Row className="mt-1 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">직급</Col>
-                        <Col sm={10} className="text-secondary">
-                            <span>{emp.positionName}</span>
-                        </Col>
-                    </Row>
-                    <Row className="mt-1 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">생일</Col>
-                        <Col sm={10} className="text-secondary">
-                            <span>{emp.empBirth}</span>
-                        </Col>
-                    </Row>
-                    <Row className="mt-1 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">연락처</Col>
-                        <Col sm={10} className="text-secondary">
-                            <span>{emp.empContact}</span>
-                        </Col>
-                    </Row>
-                    <Row className="mt-1 d-flex align-items-center">
-                        <Col sm={2} className="fw-bold text-nowrap">주소</Col>
-                        <Col sm={10} className="text-secondary">
-                            <span>{unionAddress}</span>
-                        </Col>
-                    </Row>
-                    <Row className="mt-3">
-                        <div>
 
-                            <span className="fw-bold">간편로그인 연결 관리</span>
-                        </div>
-                        <div className="d-flex justify-content-between mt-2">
+                    <Row className="mt-1 d-flex align-items-center">
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            부서
+                        </Col>
+                        <Col sm={10} className="text-secondary">
+                            {emp.deptName}
+                        </Col>
+                    </Row>
+
+                    <Row className="mt-1 d-flex align-items-center">
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            직급
+                        </Col>
+                        <Col sm={10} className="text-secondary">
+                            {emp.positionName}
+                        </Col>
+                    </Row>
+
+                    <Row className="mt-1 d-flex align-items-center">
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            생일
+                        </Col>
+                        <Col sm={10} className="text-secondary">
+                            {emp.empBirth}
+                        </Col>
+                    </Row>
+
+                    <Row className="mt-1 d-flex align-items-center">
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            연락처
+                        </Col>
+                        <Col sm={10} className="text-secondary">
+                            {emp.empContact}
+                        </Col>
+                    </Row>
+
+                    <Row className="mt-1 d-flex align-items-center">
+                        <Col sm={2} className="fw-bold text-nowrap">
+                            주소
+                        </Col>
+                        <Col sm={10} className="text-secondary">
+                            {unionAddress}
+                        </Col>
+                    </Row>
+
+                </Col>
+
+
+                {/* 오른쪽 */}
+                <Col lg={7} md={6} className="mypage-management">
+
+                    {/* 계정 정보 */}
+                    <Card className="mypage-card border-0">
+                        <h4>계정 정보</h4>
+                        <div className="profile-line"></div>
+
+                        <Row className="mt-4">
+                            <Col sm={3} className="fw-bold">
+                                사번
+                            </Col>
+                            <Col sm={9} className="text-secondary">
+                                {emp.empNo}
+                            </Col>
+                        </Row>
+
+                        <Row className="mt-3">
+                            <Col sm={3} className="fw-bold">
+                                계정 상태
+                            </Col>
+                            <Col sm={9} className="text-secondary">
+                                정상
+                            </Col>
+                        </Row>
+                    </Card>
+
+
+                    {/* 간편로그인 */}
+                    <Card className="mypage-card border-0 mt-4">
+
+                        <h4>간편로그인 연결 관리</h4>
+                        <div className="profile-line"></div>
+
+                        <div className="d-flex justify-content-between align-items-center mt-4">
+
                             <div className="d-flex align-items-center">
-                                <img src={kakaoicon} className="kakao-image"></img>
-                                <span className="ms-2">카카오톡 연결</span>
+                                <img
+                                    src={kakaoicon}
+                                    className="kakao-image"
+                                />
+                                <span className="ms-2">
+                                    카카오톡
+                                </span>
                             </div>
-                            <Form.Check type="switch" className="toggle" 
-                            checked={kakaoToggle}
-                            onChange={(e)=>{
-                                const checked = e.target.checked;
 
-                                if(checked){
-                                    kakaoConnect();
-                                }
-                                else{
-                                    kakaoDisconnect();
-                                }
-                            }}
-                            ></Form.Check>
+                            <Form.Check
+                                type="switch"
+                                className="toggle"
+                                checked={kakaoToggle}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+
+                                    if (checked) {
+                                        kakaoConnect();
+                                    } else {
+                                        kakaoDisconnect();
+                                    }
+                                }}
+                            />
+
                         </div>
-                    </Row>
+
+                    </Card>
 
                 </Col>
-                <Col sm={9}>
 
-                </Col>
             </Row>
 
-
-
-
         </div>
-
     </>)
 }
