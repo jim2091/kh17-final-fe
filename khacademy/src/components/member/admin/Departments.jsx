@@ -321,47 +321,6 @@ export default function Departments() {
                             ))}
                         </tbody>
                     </Table>
-                    <div className="member-table">
-                    </div>
-                    <Pagination size="lg" className="mt-5 justify-content-center my-pagination">
-                        <Pagination.Prev
-                            disabled={pageGroup === 1}
-                            onClick={() =>
-                                setPage(prev => ({
-                                    ...prev,
-                                    page: startPage - 1
-                                }))
-                            }
-                        />
-                        {Array.from(
-                            { length: endPage - startPage + 1 },
-                            (_, index) => startPage + index)
-                            .map(pageNumber => (
-
-                                <Pagination.Item
-                                    key={pageNumber}
-                                    active={page.page === pageNumber}
-                                    onClick={() =>
-                                        setPage(prev => ({
-                                            ...prev,
-                                            page: pageNumber
-                                        }))}
-                                >{pageNumber}</Pagination.Item>
-
-                            ))}
-
-
-                        <Pagination.Next
-                            disabled={endPage === totalPage}
-                            onClick={() =>
-                                setPage(prev => ({
-                                    ...prev,
-                                    page: endPage + 1
-                                }))
-                            }
-                        />
-                    </Pagination>
-
                 </div>
 
                 <div className="department-side">
@@ -417,6 +376,44 @@ export default function Departments() {
                         </Col>
                     </Row>
                 </div>
+                <Pagination size="lg" className="justify-content-center dept-pagination">
+                    <Pagination.Prev
+                        disabled={pageGroup === 1}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: startPage - 1
+                            }))
+                        }
+                    />
+                    {Array.from(
+                        { length: endPage - startPage + 1 },
+                        (_, index) => startPage + index)
+                        .map(pageNumber => (
+
+                            <Pagination.Item
+                                key={pageNumber}
+                                active={page.page === pageNumber}
+                                onClick={() =>
+                                    setPage(prev => ({
+                                        ...prev,
+                                        page: pageNumber
+                                    }))}
+                            >{pageNumber}</Pagination.Item>
+
+                        ))}
+
+
+                    <Pagination.Next
+                        disabled={endPage === totalPage}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: endPage + 1
+                            }))
+                        }
+                    />
+                </Pagination>
             </div>
         </div>
         <Offcanvas show={show}
