@@ -53,6 +53,23 @@ function resolveNotificationTargetUrl(item) {
         if (targetProjectNo && targetTaskNo) {
             targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
+        else if (isNoteNotification) {
+            let targetNoteNo = item.notificationTarget;
+            if (!targetNoteNo) {
+                const match = item.notificationUrl.match(/[?&]noteNo=(\d+)/) || item.notificationUrl.match(/\/note\/(\d+)/);
+                if (match && match[1]) targetNoteNo = match[1];
+            }
+            let targetProjectNo = item.projectNo;
+            if (!targetProjectNo) {
+                const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
+                if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
+            }
+
+            if (targetProjectNo && targetNoteNo) {
+                targetUrl = `/projects/${targetProjectNo}/note/${targetNoteNo}`;
+            }
+        }
+
     }
     return targetUrl;
 }
@@ -89,7 +106,7 @@ export default function NotificationsPage() {
             const { data } = await apiClient.get("/notification/", {
                 params: { page, size: pageSize, filter: filterType }
             });
-            
+
             let listData = [];
             let count = 0;
 
@@ -123,7 +140,7 @@ export default function NotificationsPage() {
             if (isNotificationUnread(item)) {
                 await apiClient.patch(`/notification/${notificationNo}/read`);
                 setNotificationList(prev =>
-                    prev.map(n => 
+                    prev.map(n =>
                         (n.notificationNo === notificationNo || n.no === notificationNo)
                             ? { ...n, notificationRead: "Y", isRead: "Y" }
                             : n
@@ -148,7 +165,7 @@ export default function NotificationsPage() {
         try {
             await apiClient.patch("/notification/read-all");
             toast.success("모든 알림이 읽음 처리되었습니다.");
-            loadNotifications(currentPage); 
+            loadNotifications(currentPage);
         } catch (e) {
             console.error("❌ 전체 읽음 처리 실패:", e);
             toast.error("일괄 읽음 처리에 실패했습니다.");
@@ -169,8 +186,8 @@ export default function NotificationsPage() {
             <div className="notifications-header">
                 <h2>전체 알림 센터</h2>
                 <div className="notifications-controls">
-                    <Form.Select 
-                        value={filterType} 
+                    <Form.Select
+                        value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
                         className="notifications-filter-select"
                     >
@@ -209,8 +226,8 @@ export default function NotificationsPage() {
                                     const time = item.notificationCtime || item.ctime || item.regDate;
 
                                     return (
-                                        <tr 
-                                            key={item.notificationNo || item.no} 
+                                        <tr
+                                            key={item.notificationNo || item.no}
                                             onClick={() => handleNotificationClick(item)}
                                             className={`notification-row ${unread ? "unread" : ""}`}
                                         >
@@ -237,10 +254,10 @@ export default function NotificationsPage() {
 
                     {/* 전통적인 페이지 번호 UI (Pagination Bar) */}
                     <div className="notifications-pagination-bar">
-                        <Button 
-                            variant="outline-secondary" 
+                        <Button
+                            variant="outline-secondary"
                             size="sm"
-                            disabled={currentPage === 1} 
+                            disabled={currentPage === 1}
                             onClick={() => loadNotifications(currentPage - 1)}
                         >
                             이전
@@ -258,10 +275,10 @@ export default function NotificationsPage() {
                             </Button>
                         ))}
 
-                        <Button 
-                            variant="outline-secondary" 
+                        <Button
+                            variant="outline-secondary"
                             size="sm"
-                            disabled={currentPage === totalPages} 
+                            disabled={currentPage === totalPages}
                             onClick={() => loadNotifications(currentPage + 1)}
                         >
                             다음
