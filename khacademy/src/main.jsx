@@ -38,6 +38,7 @@ import WebSocketProvider from "./websocket/WebSocketProvider.jsx";
 import AuthInitializer from "./guard/AuthInitializer.jsx";
 
 createRoot(document.getElementById('root')).render(
+  
   // <StrictMode>
   <BrowserRouter>
     {/* jotai 적용 범위 설정 */}

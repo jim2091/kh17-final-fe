@@ -390,7 +390,7 @@ export default function Task() {
     }
   }, [isDragging, fetchTaskFiles]);
 
-  // 💡 [핵심 보정] 알림 클릭 시 queryTaskNo 감지하여 즉시 드로어 열기
+  // 알림 클릭 시 queryTaskNo 감지하여 즉시 드로어 열기
   useEffect(() => {
     if (!queryTaskNo) return;
 
@@ -707,7 +707,7 @@ export default function Task() {
     }
   };
 
-  // 💡 [핵심 보정] 업무 본체 수정과 함께 분리된 협업자 교체 API를 동시 호출
+  // 업무 본체 수정과 함께 분리된 협업자 교체 API를 동시 호출
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -746,15 +746,12 @@ export default function Task() {
     try {
       setUpdating(true);
 
-      // 1. 업무 기본 정보 수정
       await apiClient.put("/task/", payload);
 
-      // 2. 💡 [핵심] 분리된 협업자 컨트롤러의 전체 교체(replace) API 호출
       await apiClient.put(`/task-collabo/${selectedTask.taskNo}`, editCollaborators);
 
       toast.success("업무 내용이 성공적으로 수정되었습니다.");
 
-      // 최신 상세 내역 및 목록 재조회
       const detailRes = await apiClient.get(`/task/${selectedTask.taskNo}`);
       if (detailRes.data) {
         setSelectedTask(detailRes.data);

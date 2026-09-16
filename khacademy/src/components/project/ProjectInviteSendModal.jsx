@@ -244,11 +244,35 @@ export default function ProjectInviteSendModal({
                     selectedEmp &&
                     (
                         <div className="project-invite-selected">
-                            
+                            <span>초대대상</span>
+                            <strong>{selectEmp.empName}</strong>
+                            <span>{selectEmp.empEmail}</span>
                         </div>
                     )
                 }
             </Modal.Body>
+
+            <Modal.Footer className="project-modal-footer">
+                <Button className="project-cancel-button"
+                        onClick={closeModal} disabled={inviteLoading}
+                >
+                    취소
+                </Button>
+
+                <Button className="project-primary-button"
+                        onClick={sendInvite}
+                        disabled={!selectedEmp || inviteLoading}
+                >
+                    {
+                        inviteLoading ? 
+                        <>
+                            <Spinner size="sm" className="me-2"/>
+                            초대중
+                        </>
+                        : "초대"
+                    }
+                </Button>
+            </Modal.Footer>
         </Modal>
     )
 }
