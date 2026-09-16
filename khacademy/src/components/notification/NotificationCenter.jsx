@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import "./NotificationCenter.css";
+import ProjectInviteModal from "../project/ProjectInviteModal";
 
 // 1. 안전한 사번(empNo) 추출 함수
 function getLoginEmpNo() {
@@ -34,10 +35,13 @@ export default function NotificationCenter() {
   const navigate = useNavigate();
   const myEmpNo = getLoginEmpNo();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const dropdownRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const dropdownRef = useRef(null);
+
+    const [inviteModalOpen,setInviteModalOpen] = useState(false);
+    const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
 
   // 2. 알림 목록 조회
   const loadNotifications = useCallback(async () => {
@@ -135,27 +139,41 @@ export default function NotificationCenter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 4. 단건 읽음 처리 및 이동 (일정, 업무, 일반 분기)
-  const handleItemClick = async (item) => {
-    const isUnread = item.notificationRead === "N" || item.isRead === "N";
+    // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
+    const handleItemClick = async (item) => {
 
-    console.log("알림 원본 데이터 :", item);
-    
-    if (isUnread) {
-      try {
-        await apiClient.patch(`/notification/${item.notificationNo}/read`);
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.notificationNo === item.notificationNo
-              ? { ...n, notificationRead: "Y", isRead: "Y" }
-              : n
-          )
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (e) {
-        console.error("❌ 단건 읽음 처리 실패:", e);
+      //프로젝트 초대 알림
+      if(
+        item.notificationType?.toLowerCase()
+        === "project_invite"
+      ){
+        setSelectedInviteNotification(item)
+
+        setInviteModalOpen(true);
+
+        //알림 드롭다운 닫기
+        setIsOpen(false);
+
+        return;
       }
-    }
+
+        const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+        if (isUnread) {
+            try {
+                await apiClient.patch(`/notification/${item.notificationNo}/read`);
+                setNotifications((prev) =>
+                    prev.map((n) =>
+                        n.notificationNo === item.notificationNo
+                            ? { ...n, notificationRead: "Y", isRead: "Y" }
+                            : n
+                    )
+                );
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+            } catch (e) {
+                console.error("❌ 단건 읽음 처리 실패:", e);
+            }
+        }
 
     setIsOpen(false);
 
@@ -305,15 +323,24 @@ export default function NotificationCenter() {
                           : ""}
                       </div>
                     </div>
-
-                    <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
-                  </div>
-                );
-              })
+                          
+                          <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
+                          
+                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
             )}
-          </div>
+            <ProjectInviteModal show={inviteModalOpen}
+                                              notification={selectedInviteNotification}
+                                              onHide={()=>{
+                                                setInviteModalOpen(false);
+                                                setSelectedInviteNotification(null);
+                                              }}
+                                              onSuccess={loadNotifications}
+                          />
         </div>
-      )}
-    </div>
-  );
+    );
 }
