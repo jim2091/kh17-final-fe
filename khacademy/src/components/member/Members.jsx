@@ -37,7 +37,7 @@ export default function Members() {
 
         setEmpList(data.list);
         setCount(data.count);
-        setChecked([]);
+        // setChecked([]);
     }, [page]);
     // console.log("empList : ", empList);
     useEffect(() => {

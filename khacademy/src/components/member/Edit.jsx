@@ -66,7 +66,7 @@ export default function Edit() {
     const empProfileRef = useRef();
 
     const profileUrl = emp.attachNo ?
-        `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}` : null;
+        `${import.meta.env.VITE_SERVER_URL}/api/attach/p/${emp.attachNo}` : null;
 
 
     //처음 내 정보 불러오기 

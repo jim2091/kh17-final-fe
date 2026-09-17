@@ -43,7 +43,7 @@ export default function Header({ toggleSidebar }) {
     const empEmail = atomUser.empEmail || storageUser.empEmail || "";
     const attachNo = atomUser.attachNo !== undefined ? atomUser.attachNo : (storageUser.attachNo || null);
 
-    const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/${attachNo}`;
+    const profileUrl = `${import.meta.env.VITE_SERVER_URL}/api/attach/p/${attachNo}`;
 
     // 읽기 전용 상태
     const isLogin = useAtomValue(isLoginState);

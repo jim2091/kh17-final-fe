@@ -37,7 +37,7 @@ export default function Mypage() {
     // console.log("내정보 : ", emp);
 
     const profileUrl = emp.attachNo ?
-        `${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}` : null;
+        `${import.meta.env.VITE_SERVER_URL}/api/attach/p/${emp.attachNo}` : null;
 
     const unionAddress = useMemo(() => {
         if (emp === null) return "";
