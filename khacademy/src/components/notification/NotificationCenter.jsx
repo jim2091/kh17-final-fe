@@ -19,10 +19,10 @@ function getLoginEmpNo() {
           if (parsed && (parsed.empNo || parsed.memberNo)) {
             return Number(parsed.empNo || parsed.memberNo);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return Number(
     localStorage.getItem("empNo") ||
@@ -35,13 +35,13 @@ export default function NotificationCenter() {
   const navigate = useNavigate();
   const myEmpNo = getLoginEmpNo();
 
-    const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const dropdownRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const dropdownRef = useRef(null);
 
-    const [inviteModalOpen,setInviteModalOpen] = useState(false);
-    const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
 
   // 2. 알림 목록 조회
   const loadNotifications = useCallback(async () => {
@@ -98,7 +98,7 @@ export default function NotificationCenter() {
         (message) => {
           try {
             const newNoti = JSON.parse(message.body);
-            
+
             setUnreadCount((prev) => prev + 1);
             setNotifications((prev) => [newNoti, ...prev]);
 
@@ -139,41 +139,41 @@ export default function NotificationCenter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-    // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
-    const handleItemClick = async (item) => {
+  // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
+  const handleItemClick = async (item) => {
 
-      //프로젝트 초대 알림
-      if(
-        item.notificationType?.toLowerCase()
-        === "project_invite"
-      ){
-        setSelectedInviteNotification(item)
+    //프로젝트 초대 알림
+    if (
+      item.notificationType?.toLowerCase()
+      === "project_invite"
+    ) {
+      setSelectedInviteNotification(item)
 
-        setInviteModalOpen(true);
+      setInviteModalOpen(true);
 
-        //알림 드롭다운 닫기
-        setIsOpen(false);
+      //알림 드롭다운 닫기
+      setIsOpen(false);
 
-        return;
+      return;
+    }
+
+    const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+    if (isUnread) {
+      try {
+        await apiClient.patch(`/notification/${item.notificationNo}/read`);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.notificationNo === item.notificationNo
+              ? { ...n, notificationRead: "Y", isRead: "Y" }
+              : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (e) {
+        console.error("❌ 단건 읽음 처리 실패:", e);
       }
-
-        const isUnread = item.notificationRead === "N" || item.isRead === "N";
-
-        if (isUnread) {
-            try {
-                await apiClient.patch(`/notification/${item.notificationNo}/read`);
-                setNotifications((prev) =>
-                    prev.map((n) =>
-                        n.notificationNo === item.notificationNo
-                            ? { ...n, notificationRead: "Y", isRead: "Y" }
-                            : n
-                    )
-                );
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-            } catch (e) {
-                console.error("❌ 단건 읽음 처리 실패:", e);
-            }
-        }
+    }
 
     setIsOpen(false);
 
@@ -200,7 +200,7 @@ export default function NotificationCenter() {
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
         }
-      } 
+      }
       else if (isTaskNotification) {
         let targetTaskNo = item.notificationTarget;
         if (!targetTaskNo) {
@@ -215,6 +215,25 @@ export default function NotificationCenter() {
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
+        
+        else if (isNoteNotification) {
+          let targetNoteNo = item.notificationTarget;
+          if (!targetNoteNo) {
+            const match = item.notificationUrl.match(/[?&]noteNo=(\d+)/) || item.notificationUrl.match(/\/note\/(\d+)/);
+            if (match && match[1]) targetNoteNo = match[1];
+          }
+          let targetProjectNo = item.projectNo;
+          if (!targetProjectNo) {
+            const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
+            if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
+          }
+
+          if (targetProjectNo && targetNoteNo) {
+            targetUrl = `/projects/${targetProjectNo}/note/${targetNoteNo}`;
+          }
+        }
+
+
       }
 
       navigate(targetUrl);
@@ -263,7 +282,7 @@ export default function NotificationCenter() {
               알림 <span className="noti-count-num">{unreadCount}</span>
             </div>
             <div className="noti-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              {/* 💡 전체 알림 페이지로 이동하는 버튼 추가 */}
+              {/* 전체 알림 페이지로 이동하는 버튼 추가 */}
               <button
                 type="button"
                 className="noti-read-all-btn"
@@ -325,24 +344,24 @@ export default function NotificationCenter() {
                           : ""}
                       </div>
                     </div>
-                          
-                          <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
-                          
-                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
+
+                    <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
+
+                  </div>
+                );
+              })
             )}
-            <ProjectInviteModal show={inviteModalOpen}
-                                              notification={selectedInviteNotification}
-                                              onHide={()=>{
-                                                setInviteModalOpen(false);
-                                                setSelectedInviteNotification(null);
-                                              }}
-                                              onSuccess={loadNotifications}
-                          />
+          </div>
         </div>
-    );
+      )}
+      <ProjectInviteModal show={inviteModalOpen}
+        notification={selectedInviteNotification}
+        onHide={() => {
+          setInviteModalOpen(false);
+          setSelectedInviteNotification(null);
+        }}
+        onSuccess={loadNotifications}
+      />
+    </div>
+  );
 }

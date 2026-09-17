@@ -26,6 +26,9 @@ export default function NoteDetail() {
 
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
+  
+  // 💡 [추가] 프로젝트 상태 확인용 상태 (closed 여부 파악)
+  const [projectStatus, setProjectStatus] = useState("ACTIVE");
 
   // 통합 문서 온라인 미리보기 대상 상태 { attachNo, fileName }
   const [previewDocx, setPreviewDocx] = useState(null);
@@ -51,23 +54,30 @@ export default function NoteDetail() {
     return { empNo: directEmpNo };
   }, []);
 
-  // 2. 노트 상세 정보 및 첨부파일 목록 조회
+  // 2. 노트 상세 정보, 첨부파일 목록, 프로젝트 정보 조회
   const loadNoteDetail = useCallback(async () => {
     if (!noteNo || isNaN(Number(noteNo))) return;
 
     try {
-      const [noteRes, fileRes] = await Promise.all([
+      const [noteRes, fileRes, projectRes] = await Promise.all([
         apiClient.get(`/note/${noteNo}`),
-        apiClient.get(`/note/file/${noteNo}`)
+        apiClient.get(`/note/file/${noteNo}`),
+        apiClient.get(`/project/${projectNo}`) // 💡 프로젝트 정보 함께 조회
       ]);
 
       setNote(noteRes.data);
       setFiles(fileRes.data || []);
+      
+      // 프로젝트 상태 값 세팅 (소문자/대문자 모두 대응하기 위해 대문자로 변환하거나 그대로 비교)
+      if (projectRes.data) {
+        const pStatus = projectRes.data.projectStatus || projectRes.data.status || "ACTIVE";
+        setProjectStatus(pStatus);
+      }
     } catch (e) {
-      console.error("노트 데이터 로드 실패:", e);
-      toast.error("노트 데이터를 불러오지 못했습니다.");
+      console.error("데이터 로드 실패:", e);
+      toast.error("데이터를 불러오지 못했습니다.");
     }
-  }, [noteNo]);
+  }, [noteNo, projectNo]);
 
   useEffect(() => {
     loadNoteDetail();
@@ -97,6 +107,9 @@ export default function NoteDetail() {
     return false;
   }, [note, loginUserInfo, projectNo]);
 
+  // 💡 [추가] 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
+  const isClosed = String(projectStatus).toLowerCase() === "closed";
+
   // 첨부파일 다운로드 핸들러
   const handleDownloadFile = async (attachNo, attachName) => {
     try {
@@ -122,6 +135,12 @@ export default function NoteDetail() {
 
   // 노트 삭제
   const handleDeleteNote = async () => {
+    // 만약 방어 코드를 한 번 더 걸고 싶다면 아래 조건 추가 가능
+    if (isClosed) {
+      toast.warn("종료된 프로젝트의 노트는 삭제할 수 없습니다.");
+      return;
+    }
+
     const result = await Swal.fire({
       title: "노트 삭제",
       text: "정말 노트를 삭제하시겠습니까? 관련 댓글과 첨부파일도 함께 삭제됩니다.",
@@ -165,8 +184,8 @@ export default function NoteDetail() {
           <ArrowLeft size={15} /> 목록으로
         </button>
 
-        {/* 작성자 본인일 때만 수정/삭제 버튼 노출 */}
-        {isOwner && (
+        {/* 💡 [수정] 작성자 본인이고(!isClosed), 프로젝트가 closed 상태가 아닐 때만 수정/삭제 버튼 노출 */}
+        {isOwner && !isClosed && (
           <div className="note-top-action-group">
             <button
               type="button"
