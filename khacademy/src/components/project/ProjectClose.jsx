@@ -16,6 +16,9 @@
         //예상 결과 목록
         const [resultList,setResultList] = useState([]);
 
+        //이슈 목록
+        const [issueList,setIssueList] = useState([]);
+
         //종료 정보
         const [close,setClose] = useState({
             closeSummary : "",
@@ -61,6 +64,25 @@
                     const resultResponse = await apiClient.get(`/project/${projectNo}/result`);
     
                     setResultList(resultResponse.data);
+
+                    //프로젝트 issue 조회
+                    const issueResponse = await apiClient.post(
+                        `/record/project/${projectNo}/list`,
+                        {
+                            type : "ISSUE",
+                            keyword : "",
+                            issueStatus : "ALL",
+                            relatedType : "ALL",
+                            writerNo : null,
+                            startDate : null,
+                            endDate : null,
+                            sort : "LATEST",
+                            page : 1,
+                            size : 100
+                        }
+                    );
+
+                    setIssueList(issueResponse.data.recordList || []);
                 }
 
 
@@ -95,6 +117,22 @@
                 );
         },[]);
 
+        //미해결 이슈
+        const openIssueCount = useMemo(()=>{
+
+            return issueList.filter(
+                issue => issue.projectRecordIssueStatus === "OPEN"
+            ).length;
+
+        },[issueList]);
+
+        //해결 이슈
+        const resolvedIssueCount = useMemo(()=>{
+
+            return issueList.filter(
+                issue => issue.projectRecordIssueStatus === "RESOLVED"
+            ).length;
+        },[issueList]);
         //종료 기능 여부
         const valid = useMemo(()=>{
 
@@ -122,15 +160,33 @@
             const hasPartial = resultList.some(result=>
                 result.projectResultStatus === "partial"
             );
+            //이슈상태확인
+            const hasOpenIssue = issueList.some(
+                issue => issue.projectRecordIssueStatus === "OPEN"
+            )
 
             let confirmResult;
 
-            if(hasUnachieved || hasPartial){
+            if(hasUnachieved || hasPartial || hasOpenIssue){
                 confirmResult = await Swal.fire({
                     icon : "warning",
                     title : "미달성된 기대결과가 있습니다",
-                    html : `기대결과가 부분달성 또는 미달성 상태입니다. <br/>
-                            그래도 프로젝트를 종료하시겠습니까?`,
+                    html : `
+                        ${
+                            hasUnachieved || hasPartial
+                            ? "기대결과가 부분달성 또는 미달성 상태입니다.<br/>"
+                            : ""
+                        }
+
+                        ${
+                            hasOpenIssue
+                            ? `미해결 이슈가 ${openIssueCount}개 있습니다.<br/>`
+                            : ""
+                        }
+
+                        </br>
+                        그래도 프로젝트를 종료하시겠습니까?
+                    `,
                     showCancelButton : true,
                     confirmButtonText : "종료",
                     cancelButtonText : "취소",
@@ -184,7 +240,11 @@
                 toast.error("프로젝트 종료에 실패했습니다.");
             }
 
-        },[close,resultList,projectNo,navigate]);
+        },[
+            close,resultList,
+            projectNo,navigate,
+            issueList,openIssueCount
+        ]);
 
         //로딩화면
         if(loading === true){
@@ -345,8 +405,84 @@
 
                 )}
 
-            </div>
+                {/* 프로젝트 이슈 */}
+                <div className="project-close-section-header mt-5">
 
+                    <div>
+                        <h5 className="project-close-section-title">
+                            프로젝트 이슈
+                        </h5>
+
+                        <div className="project-close-section-description">
+                            프로젝트에서 발생한 이슈의 최종 상태를 확인해주세요.
+                        </div>
+                    </div>
+
+                    <span className="project-close-result-count">
+                        {issueList.length}개
+                    </span>
+
+                </div>
+
+                {/* 이슈요약 */}
+                {issueList.length > 0 && (
+                    <div className="project-close-issue-summary">
+                        <span className="project-close-issue-open-count">
+                            미해결 {openIssueCount}개
+                        </span>
+
+                        <span className="project-close-issue-resolved-count">
+                            해결 {resolvedIssueCount}개
+                        </span>
+                    </div>
+                )}
+                {issueList.length === 0
+                ?
+                (
+                    <div className="project-close-result-empty">
+                        등록된 이슈가 없습니다.
+                    </div>
+                )
+                :
+                (
+                    <div className="project-close-result-list">
+
+                        {issueList.map((issue,index)=>(
+                            <div
+                                key={issue.projectRecordNo}
+                                className="project-close-result-row"
+                            >
+
+                                <div className="project-close-result-content">
+
+                                    <span className="project-close-result-order">
+                                        {index + 1}
+                                    </span>
+
+                                    <span>
+                                        {issue.projectRecordTitle}
+                                    </span>
+
+                                </div>
+
+
+                                <div className="project-close-result-actions">
+
+                                    {
+                                        issue.projectRecordIssueStatus === "RESOLVED"
+                                        ? "해결"
+                                        : "미해결"
+                                    }
+
+                                </div>
+
+                            </div>
+                        ))}
+
+                    </div>
+                )}
+
+            </div>
 
             {/* 종료 내용 작성 */}
             <div className="project-form-card project-close-form-card">

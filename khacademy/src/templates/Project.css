@@ -2496,3 +2496,44 @@
     color: #374151;
     font-weight: 600;
 }
+
+.project-close-issue-summary {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.project-close-issue-open-count,
+.project-close-issue-resolved-count {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.project-close-issue-open-count {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.project-close-issue-resolved-count {
+    background-color: #f0fdf4;
+    color: #15803d;
+}
+
+.project-close-issue-status {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.project-close-issue-status.open {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.project-close-issue-status.resolved {
+    background-color: #f0fdf4;
+    color: #15803d;
+}
