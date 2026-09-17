@@ -447,7 +447,7 @@ export default function NoteComments({ noteNo, projectNo }) {
                           {file.attachName}
                         </span>
 
-                        {/* 👈 [수정 포인트] f -> file 변수명 수정 및 단일 미리보기 버튼으로 통합 */}
+                        {/*  f -> file 변수명 수정 및 단일 미리보기 버튼으로 통합 */}
                         {canPreview(file.attachName) && (
                           <button
                             type="button"

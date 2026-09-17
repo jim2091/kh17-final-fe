@@ -1,19 +1,16 @@
-/* ==========================================================================
-   프로젝트 노트(Note) 통합 스타일시트 (Notes.jsx / NoteInsert.jsx / NoteEdit.jsx)
-   ========================================================================== */
-
-/* 1. 공통 페이지 래퍼 & 헤더 */
+/* 1. 공통 페이지 래퍼 & 헤더 액션 바 */
+/* 공통 페이지 래퍼 & 헤더 액션 바  */
 .notes-page,
 .notes-page-wrapper {
-  padding: 32px;
-  max-width: 1080px;
-  margin: 0 auto;
+  padding: 24px 32px;
+  width: 100%;       
+  max-width: none;   
+  margin: 0;         
   min-height: 100vh;
   box-sizing: border-box;
   color: #1e293b;
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
 }
-
 .notes-header,
 .notes-top-header {
   display: flex;
@@ -119,45 +116,45 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-/* 3단 필터 탭 (전체 / 사진 첨부 / 워드 문서) */
-.notes-filter-tabs {
-  display: inline-flex;
-  gap: 4px;
-  background-color: #f1f5f9;
-  padding: 4px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-}
-
-.btn-filter-tab {
+/* 이미지 모티브 아이콘 탭 필터 바 */
+.notes-icon-filter-group {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
+  gap: 12px;
   background: transparent;
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
+  padding: 4px 8px;
+}
+
+.btn-icon-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #9ca3af;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
 }
 
-.btn-filter-tab:hover {
-  color: #0f172a;
+.btn-icon-filter:hover {
+  color: #4b5563;
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
 }
 
-.btn-filter-tab.active {
-  background-color: #ffffff;
+.btn-icon-filter.active {
   color: #2563eb;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 /* 검색 입력 필드 */
@@ -170,7 +167,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 0 12px;
-  min-width: 260px;
+  min-width: 280px;
 }
 
 .notes-search-input-box input,
@@ -178,7 +175,7 @@
   border: none;
   outline: none;
   font-size: 13px;
-  padding: 8px 0;
+  padding: 9px 0;
   width: 100%;
   background: transparent;
   color: #334155;
@@ -186,8 +183,8 @@
 
 .notes-search-type,
 .notes-select-type {
-  width: 120px;
-  padding: 8px 10px;
+  width: 130px;
+  padding: 9px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 13px;
@@ -196,83 +193,7 @@
   outline: none;
 }
 
-.notes-search-button {
-  padding: 8px 14px;
-  font-size: 13px;
-}
-
-/* 4. 초기 노트 목록 형태 (리스트 뷰 복원) */
-.notes-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  overflow: hidden;
-}
-
-.notes-list-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  background-color: #fafafa;
-}
-
-.notes-list-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #1e293b;
-}
-
-.notes-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.notes-item {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.notes-item:last-child {
-  border-bottom: none;
-}
-
-.notes-item:hover {
-  background-color: #f8fafc;
-}
-
-.notes-item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.notes-item-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.notes-item-date {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.notes-item-preview {
-  font-size: 13px;
-  color: #64748b;
-  line-height: 1.5;
-}
-
-.notes-more {
-  padding: 14px;
-  text-align: center;
-  border-top: 1px solid #f1f5f9;
-}
-
-/* 5. 카드 그리드 레이아웃 (반응형 모던 뷰) */
+/* 4. 카드 그리드 레이아웃 (가로 4개 배치 최적화) */
 .notes-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -392,7 +313,7 @@
   grid-column: 1 / -1;
 }
 
-/* 6. 사진 원본 확대 모달 */
+/* 5. 사진 원본 확대 모달 */
 .notes-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -432,7 +353,7 @@
   padding: 0;
 }
 
-/* 7. 노트 등록/수정 폼 공통 박스 (NoteInsert / NoteEdit) */
+/* 6. 노트 등록/수정 폼 공통 박스 (NoteInsert / NoteEdit) */
 .note-form-container {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -525,43 +446,4 @@
   color: #ef4444;
   padding: 0;
   display: flex;
-}
-/* 이미지 모티브 아이콘 탭 필터 바 */
-.notes-icon-filter-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  background: transparent;
-  padding: 4px 8px;
-}
-
-.btn-icon-filter {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: #9ca3af; /* 비활성 시 이미지와 동일한 부드러운 그레이 */
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0;
-}
-
-.btn-icon-filter:hover {
-  color: #4b5563;
-  background-color: #f1f5f9;
-}
-
-/* 이미지의 4번째 활성 버튼과 동일한 선명한 그린 컬러 */
-.btn-icon-filter.active {
-  color: #10b981; /* 에메랄드 그린 */
-  background-color: transparent;
-}
-
-/* 호버 시 툴팁 느낌의 미세 애니메이션 */
-.btn-icon-filter:active {
-  transform: scale(0.92);
 }

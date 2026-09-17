@@ -26,6 +26,8 @@ export default function invite() {
     const [result, setResult] = useState({
         empName: null,
         empEmail: { clazz: null, code: null },
+        empDeptNo: null,
+        empPositionNo: null,
     });
 
     //부서목록 불러오기(부서명검색선택에서 쓰임)
@@ -131,17 +133,27 @@ export default function invite() {
             [name]: value
         }));
     }, []);
+    
     const changeNumericValue = useCallback((e) => {
-        const { name, value } = e.target;
-        const regex = /[^0-9]/g;
-        const replacement = value.replace(regex, "");//숫자가 아닌 요소를 제거
-        const result = parseInt(replacement || 0);//숫자로 변환
+    const { name, value } = e.target;
 
+    if (value === "") {
         setEmp({
-            ...emp,//나머지 유지
-            [name]: result
+            ...emp,
+            [name]: ""
         });
-    }, [emp]);
+        return;
+    }
+
+    const regex = /[^0-9]/g;
+    const replacement = value.replace(regex, "");
+    const result = parseInt(replacement);
+
+    setEmp({
+        ...emp,
+        [name]: result
+    });
+}, [emp]);
     const checkEmpEmail = useCallback(async e => {
         const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,}$/;
         const valid = regex.test(emp.empEmail);
@@ -173,11 +185,32 @@ export default function invite() {
         }));
     }, [emp]);
 
+    const checkEmpDeptNo = useCallback(()=>{
+        const valid = emp.empDeptNo !== null && emp.empDeptNo !== "";
+        setResult(prev =>({
+            ...prev,
+            empDeptNo : valid ? "is-valid" : "is-invalid"
+        }));
+    },[emp]);
+
+    const checkEmpPositionNo = useCallback(()=>{
+        const valid = emp.empPositionNo !== null && emp.empPositionNo !== "";
+        setResult(prev =>({
+            ...prev,
+            empPositionNo : valid ? "is-valid" : "is-invalid"
+        }));
+    },[emp]);
+
     const allValid = useMemo(() => {
+        if(!result) return false;
+
         if (result.empEmail.clazz !== "is-valid") return false;
-        if (result.empName === "is-invalid") return false;
+        if (result.empName !== "is-valid") return false;
+        if (result.empDeptNo !== "is-valid") return false;
+        if (result.empPositionNo !== "is-valid") return false;
         return true;
     }, [result]);
+    // console.log("result : ", result);
 
     const invite = useCallback(async () => {
         const result = await Swal.fire({
@@ -189,7 +222,7 @@ export default function invite() {
         });
         if (result.isConfirmed === false) return;
         await apiClient.post("/admin/add", emp);
-        navigate("/");
+        navigate("/users");
         toast.success("사용자 초대 완료!");
     }, [emp]);
     return (<>
@@ -235,8 +268,9 @@ export default function invite() {
             <Form.Label column sm={3}>부서</Form.Label>
             <Col sm={9}>
                 <Form.Select onClick={deptNameSearch} name="empDeptNo"
-                    className="w-50 d-inline-block"
+                    className={`${result.empDeptNo} w-50 d-inline-block`}
                     value={emp.empDeptNo}
+                    onBlur={checkEmpDeptNo}
                     onChange={changeNumericValue}>
                     <option value="">선택하세요</option>
                     {deptList.map(dept => (
@@ -252,8 +286,9 @@ export default function invite() {
             <Form.Label column sm={3}>직급</Form.Label>
             <Col sm={9}>
                 <Form.Select onClick={positionNameSearch} name="empPositionNo"
-                    className="w-50 d-inline-block"
+                    className={`${result.empPositionNo} w-50 d-inline-block`}
                     value={emp.empPositionNo}
+                    onBlur={checkEmpPositionNo}
                     onChange={changeNumericValue}>
                     <option value="">선택하세요</option>
                     {positionList.map(position => (

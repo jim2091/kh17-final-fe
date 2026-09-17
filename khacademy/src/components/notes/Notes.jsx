@@ -31,6 +31,9 @@ export default function Notes() {
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
 
+  // 💡 [추가] 프로젝트 상태 확인용 상태 (closed 여부 파악)
+  const [projectStatus, setProjectStatus] = useState("ACTIVE");
+
   // 필터 모드: 'ALL'(전체글) | 'DOC'(문서 파일 첨부글) | 'IMAGE'(사진 첨부글) | 'TEXT'(첨부파일 없는 일반글)
   const [fileFilter, setFileFilter] = useState("ALL");
 
@@ -43,17 +46,20 @@ export default function Notes() {
     return content;
   };
 
-  // 노트 목록 및 파일 정보 조회
+  // 노트 목록, 파일 정보 및 프로젝트 정보 조회
   const fetchNotes = useCallback(async () => {
     try {
       setLoading(true);
 
-      const res = await apiClient.post(`/note/project/${projectNo}/list`, {
-        lastNo: null,
-        size: 100,
-        type: "all",
-        keyword: ""
-      });
+      const [res, projectRes] = await Promise.all([
+        apiClient.post(`/note/project/${projectNo}/list`, {
+          lastNo: null,
+          size: 100,
+          type: "all",
+          keyword: ""
+        }),
+        apiClient.get(`/project/${projectNo}`) // 💡 프로젝트 정보 함께 조회
+      ]);
 
       const noteList = res.data?.noteList || (Array.isArray(res.data) ? res.data : []);
 
@@ -69,6 +75,12 @@ export default function Notes() {
       );
 
       setNotes(notesWithFiles);
+
+      // 프로젝트 상태 값 세팅
+      if (projectRes.data) {
+        const pStatus = projectRes.data.projectStatus || projectRes.data.status || "ACTIVE";
+        setProjectStatus(pStatus);
+      }
     } catch (err) {
       console.error("노트 목록 로딩 실패:", err);
       toast.error("노트 목록을 불러오지 못했습니다.");
@@ -80,6 +92,9 @@ export default function Notes() {
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
+
+  // 💡 [추가] 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
+  const isClosed = String(projectStatus).toLowerCase() === "closed";
 
   // 검색어 및 첨부파일 조건 필터링
   const filteredNotes = notes.filter((note) => {
@@ -119,13 +134,17 @@ export default function Notes() {
           <h2 className="notes-title">프로젝트 노트</h2>
           <p className="notes-subtitle">회의록, 아이디어 및 문서를 공유하고 관리하세요.</p>
         </div>
-        <button
-          type="button"
-          className="btn-notes-primary"
-          onClick={() => navigate(`/projects/${projectNo}/note/insert`)}
-        >
-          <Plus size={16} /> 새 노트 작성
-        </button>
+
+        {/* 💡 [수정] 프로젝트가 closed 상태가 아닐 때만 '새 노트 작성' 버튼 노출 */}
+        {!isClosed && (
+          <button
+            type="button"
+            className="btn-notes-primary"
+            onClick={() => navigate(`/projects/${projectNo}/note/insert`)}
+          >
+            <Plus size={16} /> 새 노트 작성
+          </button>
+        )}
       </div>
 
       {/* 필터 탭 & 검색창 */}
