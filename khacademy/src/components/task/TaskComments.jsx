@@ -17,27 +17,44 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
   const [editingCommentNo, setEditingCommentNo] = useState(null);
   const [editInputContent, setEditInputContent] = useState("");
 
-  // 로그인 사번 추출
-  const getLoginEmpNo = () => {
-    if (loginUser && loginUser.empNo) {
-      return Number(loginUser.empNo);
+  // 프로젝트 종료 여부 안전 체크 (대소문자 무관)
+  const isProjectClosed =
+    typeof isClosed === "boolean"
+      ? isClosed
+      : String(isClosed || "").trim().toLowerCase() === "closed";
+
+  // 💡 [개선] 로그인 사번 및 이름 안전 추출
+  const getLoginUserInfo = () => {
+    if (loginUser && (loginUser.empNo || loginUser.empName)) {
+      return {
+        empNo: Number(loginUser.empNo || loginUser.memberNo || 0),
+        empName: String(loginUser.empName || loginUser.name || "").trim()
+      };
     }
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         const val = localStorage.getItem(key);
-        if (val && val.includes("empNo")) {
-          const parsed = JSON.parse(val);
-          if (parsed && parsed.empNo) {
-            return Number(parsed.empNo);
-          }
+        if (val && (val.includes("empNo") || val.includes("empName"))) {
+          try {
+            const parsed = JSON.parse(val);
+            if (parsed && (parsed.empNo || parsed.empName)) {
+              return {
+                empNo: Number(parsed.empNo || parsed.memberNo || 0),
+                empName: String(parsed.empName || parsed.name || "").trim()
+              };
+            }
+          } catch (e) {}
         }
       }
     } catch (e) {}
-    return Number(localStorage.getItem("empNo") || 0);
+    return {
+      empNo: Number(localStorage.getItem("empNo") || sessionStorage.getItem("empNo") || 0),
+      empName: String(localStorage.getItem("empName") || sessionStorage.getItem("empName") || "").trim()
+    };
   };
 
-  const currentEmpNo = getLoginEmpNo();
+  const { empNo: currentEmpNo, empName: currentEmpName } = getLoginUserInfo();
 
   // 이미지 파일 판별
   const isImageFile = (file) => {
@@ -158,7 +175,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
   // 댓글 및 파일 등록
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if(isClosed){
+    if (isProjectClosed) {
       toast.warning("종료된 프로젝트에서는 댓글을 작성할 수 없습니다.");
       return;
     }
@@ -199,6 +216,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
   };
 
   const handleKeyDown = (e) => {
+    if (isProjectClosed) return;
     if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -208,8 +226,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
 
   // 수정 모드 진입
   const handleStartEdit = (comment) => {
-    if(isClosed){
-      toast.warning("종료된 프로젝트에서는 댓글을 수정할 수 없습니다.")
+    if (isProjectClosed) {
+      toast.warning("종료된 프로젝트에서는 댓글을 수정할 수 없습니다.");
       return;
     }
     setEditingCommentNo(comment.taskCommentNo);
@@ -224,7 +242,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
 
   // 수정 내용 서버 저장
   const handleSaveEdit = async (commentNo) => {
-    if(isClosed){
+    if (isProjectClosed) {
       toast.warning("종료된 프로젝트에서는 댓글을 수정할 수 없습니다.");
       return;
     }
@@ -254,7 +272,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
 
   // 댓글 삭제
   const handleDeleteComment = async (commentNo) => {
-    if(isClosed){
+    if (isProjectClosed) {
       toast.warning("종료된 프로젝트에서는 댓글을 삭제할 수 없습니다.");
       return;
     }
@@ -308,8 +326,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
         </span>
       </div>
 
-      {/* 댓글 작성 폼 */}
-      {isClosed === false &&(
+      {/* 댓글 작성 폼 (종료된 프로젝트일 경우 숨김 처리) */}
+      {!isProjectClosed && (
         <form className="comment-input-box" onSubmit={handleAddComment} style={{ marginBottom: "16px" }}>
           <textarea
             className="comment-textarea"
@@ -320,48 +338,48 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
             onKeyDown={handleKeyDown}
           />
 
-        {selectedFile && (
-          <div className="comment-selected-file-chip">
-            <FileText size={13} />
-            <span className="file-name">{selectedFile.name}</span>
+          {selectedFile && (
+            <div className="comment-selected-file-chip">
+              <FileText size={13} />
+              <span className="file-name">{selectedFile.name}</span>
+              <button
+                type="button"
+                className="btn-remove-chip"
+                onClick={() => {
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          <div className="comment-input-actions">
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setSelectedFile(e.target.files[0]);
+                }
+              }}
+            />
             <button
               type="button"
-              className="btn-remove-chip"
-              onClick={() => {
-                setSelectedFile(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
+              className="btn-attach-clip"
+              onClick={() => fileInputRef.current?.click()}
             >
-              ✕
+              <Paperclip size={15} />
+              <span>파일 첨부</span>
+            </button>
+
+            <button type="submit" className="btn-comment-submit" disabled={!inputContent.trim() && !selectedFile}>
+              <Send size={13} /> 등록
             </button>
           </div>
-        )}
-
-        <div className="comment-input-actions">
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setSelectedFile(e.target.files[0]);
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="btn-attach-clip"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Paperclip size={15} />
-            <span>파일 첨부</span>
-          </button>
-
-          <button type="submit" className="btn-comment-submit" disabled={!inputContent.trim() && !selectedFile}>
-            <Send size={13} /> 등록
-          </button>
-        </div>
-      </form>
+        </form>
       )}
       
       {/* 댓글 목록 */}
@@ -373,9 +391,17 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
         ) : (
           comments.map((comment) => {
             const commentEmpNo = Number(comment.empNo || comment.writerEmpNo || 0);
-            const isMyComment = currentEmpNo > 0 && commentEmpNo > 0 && currentEmpNo === commentEmpNo;
+            const commentMemberNo = Number(comment.projectMemberNo || comment.memberNo || 0);
+            const author = String(comment.empName || comment.memberName || "").trim();
+
+            // 💡 [개선] 사번, 프로젝트 멤버 번호, 이름 중 하나라도 일치하면 본인 댓글로 판별
+            const isEmpMatch = currentEmpNo > 0 && commentEmpNo > 0 && currentEmpNo === commentEmpNo;
+            const currentMemberNo = Number(localStorage.getItem(`project_${projectNo}_memberNo`) || 0);
+            const isMemberMatch = currentMemberNo > 0 && commentMemberNo > 0 && currentMemberNo === commentMemberNo;
+            const isNameMatch = Boolean(currentEmpName && author && currentEmpName === author);
+
+            const isMyComment = isEmpMatch || isMemberMatch || isNameMatch;
             const isEditing = editingCommentNo === comment.taskCommentNo;
-            const author = (comment.empName || comment.memberName || "사원").trim();
             const files = commentFilesMap[comment.taskCommentNo] || [];
 
             return (
@@ -408,10 +434,10 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                         justifyContent: "center",
                       }}
                     >
-                      {author.slice(0, 1)}
+                      {(author || "사").slice(0, 1)}
                     </div>
                     <span style={{ fontSize: "12.5px", fontWeight: "bold", color: "#1e293b" }}>
-                      {author}
+                      {author || "사원"}
                     </span>
                     {comment.empDeptNo && (
                       <span style={{ fontSize: "11px", color: "#64748b" }}>
@@ -428,7 +454,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                     )}
                   </div>
 
-                  {isMyComment && !isEditing && isClosed === false &&(
+                  {/* 💡 작성자 본인이고 프로젝트가 닫히지 않았을 때만 수정/삭제 노출 */}
+                  {isMyComment && !isEditing && !isProjectClosed && (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <button
                         type="button"
@@ -534,14 +561,12 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                   </div>
                 ) : (
                   <>
-                    {/* 일반 텍스트 본문 */}
                     {comment.taskCommentContent && comment.taskCommentContent !== "(파일 첨부)" && (
                       <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
                         {comment.taskCommentContent}
                       </div>
                     )}
 
-                    {/* 💡 파일이 삭제되어 빈 껍데기만 남은 경우 안내 문구 처리 */}
                     {comment.taskCommentContent === "(파일 첨부)" && files.length === 0 && (
                       <div 
                         className="comment-deleted-file-hint" 
@@ -551,10 +576,8 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                       </div>
                     )}
 
-                    {/* 댓글 첨부파일 영역 */}
                     {files.length > 0 && (
                       <div className="comment-files-wrapper" style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {/* 1. 이미지 파일 썸네일 그리드 */}
                         {files.some(isImageFile) && (
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "6px" }}>
                             {files.filter(isImageFile).map((file) => {
@@ -605,7 +628,6 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                           </div>
                         )}
 
-                        {/* 2. 일반 문서 파일 목록 (확장자 배지 + 다운로드 버튼) */}
                         {files.filter((f) => !isImageFile(f)).map((file) => (
                           <div
                             key={file.attachNo}
