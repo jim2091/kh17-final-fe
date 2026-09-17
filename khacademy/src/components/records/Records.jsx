@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { Button, Modal, Form, Badge, FormGroup, FormLabel } from "react-bootstrap";
-import { Plus, Calendar, User, Search, SlidersHorizontal, ArrowUpDown, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, User, Search, SlidersHorizontal, ArrowUpDown, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
 import "./Records.css";
@@ -58,6 +58,9 @@ export default function Records() {
 
     const [filterOpen, setFilterOpen] = useState(false);
 
+    //상세 필터 영역
+    const filterWrapperRef = useRef(null);
+
     const [filterCondition, setFilterCondition] = useState({
         issueStatus: "ALL",
         relatedType: "ALL",
@@ -65,6 +68,62 @@ export default function Records() {
         startDate: "",
         endDate: ""
     });
+
+    //상세 필터 바깥 클릭 / ESC 닫기
+    useEffect(() => {
+
+        if(!filterOpen) return;
+
+
+        //필터 영역 바깥 클릭
+        const handleOutsideClick = (e) => {
+
+            if(
+                filterWrapperRef.current
+                && !filterWrapperRef.current.contains(e.target)
+            ) {
+                setFilterOpen(false);
+            }
+
+        };
+
+
+        //ESC
+        const handleKeyDown = (e) => {
+
+            if(e.key === "Escape") {
+                setFilterOpen(false);
+            }
+
+        };
+
+
+        document.addEventListener(
+            "mousedown",
+            handleOutsideClick
+        );
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
+
+
+        return () => {
+
+            document.removeEventListener(
+                "mousedown",
+                handleOutsideClick
+            );
+
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
+
+        };
+
+    }, [filterOpen]);
 
     //작성자 필터용 프로젝트 멤버 목록
     const [memberList, setMemberList] = useState([]);
@@ -973,7 +1032,7 @@ export default function Records() {
                             </form>
 
                             {/* 상세 필터 */}
-                            <div className="records-filter-wrapper">
+                            <div className="records-filter-wrapper" ref={filterWrapperRef}>
                                 <Button
                                     type="button"
                                     variant="outline-secondary"

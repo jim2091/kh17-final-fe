@@ -107,23 +107,23 @@ export default function DepartmentList() {
 
 
     return (
-        <div className="department-page">
+        <div className="organization-department-page">
 
             {/* 상단 */}
-            <div className="department-page-header">
+            <div className="organization-department-page-header">
 
                 <div>
-                    <h2 className="department-page-title">
+                    <h2 className="organization-department-page-title">
                         부서
                     </h2>
 
-                    <div className="department-page-description">
+                    <div className="organization-department-page-description">
                         회사 내 부서와 구성원을 확인할 수 있습니다.
                     </div>
                 </div>
 
 
-                <div className="department-page-count">
+                <div className="organization-department-page-count">
                     총 {deptList.length}개 부서
                 </div>
 
@@ -131,9 +131,9 @@ export default function DepartmentList() {
 
 
             {/* 검색 */}
-            <div className="department-toolbar">
+            <div className="organization-department-toolbar">
 
-                <div className="department-search">
+                <div className="organization-department-search">
 
                     <FiSearch />
 
@@ -156,13 +156,13 @@ export default function DepartmentList() {
             {/* 목록 */}
             {loading ? (
 
-                <div className="department-empty">
+                <div className="organization-department-empty">
                     부서 정보를 불러오는 중입니다.
                 </div>
 
             ) : filteredDeptList.length === 0 ? (
 
-                <div className="department-empty">
+                <div className="organization-department-empty">
 
                     {keyword.trim().length > 0
                         ? "검색 조건에 맞는 부서가 없습니다."
@@ -173,25 +173,25 @@ export default function DepartmentList() {
 
             ) : (
 
-                <div className="department-grid">
+                <div className="organization-department-grid">
 
                     {filteredDeptList.map(dept => (
 
                         <div
                             key={dept.deptNo}
-                            className="department-card"
+                            className="organization-department-card"
                         >
 
-                            <div className="department-card-top">
+                            <div className="organization-department-card-top">
 
-                                <div className="department-symbol">
+                                <div className="organization-department-symbol">
                                     {dept.deptName
                                         ?.charAt(0)
                                         || "부"}
                                 </div>
 
 
-                                <div className="department-member-count">
+                                <div className="organization-department-member-count">
 
                                     <FiUsers />
 
@@ -204,14 +204,14 @@ export default function DepartmentList() {
                             </div>
 
 
-                            <div className="department-card-body">
+                            <div className="organization-department-card-body">
 
-                                <div className="department-name">
+                                <div className="organization-department-name">
                                     {dept.deptName}
                                 </div>
 
 
-                                <div className="department-info">
+                                <div className="organization-department-info">
 
                                     {dept.deptInfo
                                         || "등록된 부서 설명이 없습니다."
@@ -224,7 +224,7 @@ export default function DepartmentList() {
 
                             <button
                                 type="button"
-                                className="department-detail-button"
+                                className="organization-department-detail-button"
                                 onClick={() =>
                                     navigate(
                                         `/organization/departments/${dept.deptNo}`

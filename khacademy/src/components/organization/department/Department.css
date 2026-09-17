@@ -1,8 +1,8 @@
 /* =====================================================
-    Department
+    organization-department
 ===================================================== */
 
-.department-page {
+.organization-department-page {
     width: 100%;
     max-width: 1320px;
 
@@ -17,7 +17,7 @@
     Header
 ===================================================== */
 
-.department-page-header {
+.organization-department-page-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -27,7 +27,7 @@
     margin-bottom: 24px;
 }
 
-.department-page-title {
+.organization-department-page-title {
     margin: 0;
 
     color: #1f2937;
@@ -36,7 +36,7 @@
     font-weight: 700;
 }
 
-.department-page-description {
+.organization-department-page-description {
     margin-top: 6px;
 
     color: #94a3b8;
@@ -44,7 +44,7 @@
     font-size: 13px;
 }
 
-.department-page-count {
+.organization-department-page-count {
     flex-shrink: 0;
 
     color: #64748b;
@@ -57,11 +57,11 @@
     Toolbar
 ===================================================== */
 
-.department-toolbar {
+.organization-department-toolbar {
     margin-bottom: 18px;
 }
 
-.department-search {
+.organization-department-search {
     width: 360px;
     height: 42px;
 
@@ -80,11 +80,11 @@
     box-sizing: border-box;
 }
 
-.department-search:focus-within {
+.organization-department-search:focus-within {
     border-color: #94a3b8;
 }
 
-.department-search svg {
+.organization-department-search svg {
     flex-shrink: 0;
 
     color: #9ca3af;
@@ -92,7 +92,7 @@
     font-size: 15px;
 }
 
-.department-search input {
+.organization-department-search input {
     flex: 1;
     min-width: 0;
 
@@ -110,16 +110,16 @@
     font-size: 13px;
 }
 
-.department-search input::placeholder {
+.organization-department-search input::placeholder {
     color: #aab1bb;
 }
 
 
 /* =====================================================
-    Department Grid
+    organization-department Grid
 ===================================================== */
 
-.department-grid {
+.organization-department-grid {
     display: grid;
 
     grid-template-columns:
@@ -133,7 +133,7 @@
     Card
 ===================================================== */
 
-.department-card {
+.organization-department-card {
     min-width: 0;
 
     display: flex;
@@ -152,7 +152,7 @@
         transform 0.15s ease;
 }
 
-.department-card:hover {
+.organization-department-card:hover {
     border-color: #d7dde5;
 
     box-shadow:
@@ -166,7 +166,7 @@
     Card Top
 ===================================================== */
 
-.department-card-top {
+.organization-department-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -176,7 +176,7 @@
     margin-bottom: 16px;
 }
 
-.department-symbol {
+.organization-department-symbol {
     width: 42px;
     height: 42px;
 
@@ -195,7 +195,7 @@
     font-weight: 700;
 }
 
-.department-member-count {
+.organization-department-member-count {
     display: inline-flex;
     align-items: center;
 
@@ -212,7 +212,7 @@
     font-weight: 600;
 }
 
-.department-member-count svg {
+.organization-department-member-count svg {
     font-size: 12px;
 }
 
@@ -221,20 +221,20 @@
     Card Body
 ===================================================== */
 
-.department-card-body {
+.organization-department-card-body {
     flex: 1;
 
     min-height: 80px;
 }
 
-.department-name {
+.organization-department-name {
     color: #1f2937;
 
     font-size: 16px;
     font-weight: 700;
 }
 
-.department-info {
+.organization-department-info {
     margin-top: 8px;
 
     color: #64748b;
@@ -255,7 +255,7 @@
     Detail Button
 ===================================================== */
 
-.department-detail-button {
+.organization-department-detail-button {
     width: 100%;
 
     display: flex;
@@ -279,15 +279,15 @@
     cursor: pointer;
 }
 
-.department-detail-button svg {
+.organization-department-detail-button svg {
     transition: transform 0.15s ease;
 }
 
-.department-detail-button:hover {
+.organization-department-detail-button:hover {
     color: #2563eb;
 }
 
-.department-detail-button:hover svg {
+.organization-department-detail-button:hover svg {
     transform: translateX(2px);
 }
 
@@ -296,7 +296,7 @@
     Empty
 ===================================================== */
 
-.department-empty {
+.organization-department-empty {
     min-height: 260px;
 
     display: flex;
@@ -322,16 +322,16 @@
 
 @media (max-width: 900px) {
 
-    .department-page {
+    .organization-department-page {
         padding-left: 24px;
         padding-right: 24px;
     }
 
-    .department-search {
+    .organization-department-search {
         width: 100%;
     }
 
-    .department-grid {
+    .organization-department-grid {
         grid-template-columns: 1fr;
     }
 
@@ -340,25 +340,25 @@
 
 @media (max-width: 650px) {
 
-    .department-page {
+    .organization-department-page {
         padding:
             26px
             16px
             40px;
     }
 
-    .department-page-header {
+    .organization-department-page-header {
         align-items: flex-start;
         flex-direction: column;
 
         gap: 8px;
     }
 
-    .department-page-title {
+    .organization-department-page-title {
         font-size: 21px;
     }
 
-    .department-card {
+    .organization-department-card {
         padding:
             18px
             18px
@@ -368,10 +368,10 @@
 }
 
 /* =====================================================
-    Department Detail
+    organization-department Detail
 ===================================================== */
 
-.department-back-button {
+.organization-department-back-button {
     display: inline-flex;
     align-items: center;
 
@@ -391,11 +391,11 @@
     cursor: pointer;
 }
 
-.department-back-button:hover {
+.organization-department-back-button:hover {
     color: #2563eb;
 }
 
-.department-back-button svg {
+.organization-department-back-button svg {
     font-size: 15px;
 }
 
@@ -404,7 +404,7 @@
     Detail Header
 ===================================================== */
 
-.department-detail-header {
+.organization-department-detail-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -420,14 +420,14 @@
     background-color: #ffffff;
 }
 
-.department-detail-title-row {
+.organization-department-detail-title-row {
     display: flex;
     align-items: center;
 
     gap: 15px;
 }
 
-.department-detail-symbol {
+.organization-department-detail-symbol {
     width: 52px;
     height: 52px;
 
@@ -446,7 +446,7 @@
     font-weight: 700;
 }
 
-.department-detail-title {
+.organization-department-detail-title {
     margin: 0;
 
     color: #1f2937;
@@ -455,7 +455,7 @@
     font-weight: 700;
 }
 
-.department-detail-description {
+.organization-department-detail-description {
     margin-top: 6px;
 
     color: #64748b;
@@ -465,7 +465,7 @@
     line-height: 1.5;
 }
 
-.department-detail-count {
+.organization-department-detail-count {
     flex-shrink: 0;
 
     display: inline-flex;
@@ -489,11 +489,11 @@
     Member Section
 ===================================================== */
 
-.department-member-section {
+.organization-department-member-section {
     width: 100%;
 }
 
-.department-member-header {
+.organization-department-member-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -503,14 +503,14 @@
     margin-bottom: 14px;
 }
 
-.department-member-title {
+.organization-department-member-title {
     color: #1f2937;
 
     font-size: 17px;
     font-weight: 700;
 }
 
-.department-member-description {
+.organization-department-member-description {
     margin-top: 4px;
 
     color: #94a3b8;
@@ -518,7 +518,7 @@
     font-size: 12px;
 }
 
-.department-member-total {
+.organization-department-member-total {
     color: #64748b;
 
     font-size: 12px;
@@ -528,11 +528,11 @@
     Member Search
 ===================================================== */
 
-.department-member-toolbar {
+.organization-department-member-toolbar {
     margin-bottom: 14px;
 }
 
-.department-member-search {
+.organization-department-member-search {
     width: 340px;
     height: 40px;
 
@@ -551,11 +551,11 @@
     box-sizing: border-box;
 }
 
-.department-member-search:focus-within {
+.organization-department-member-search:focus-within {
     border-color: #94a3b8;
 }
 
-.department-member-search svg {
+.organization-department-member-search svg {
     flex-shrink: 0;
 
     color: #9ca3af;
@@ -563,7 +563,7 @@
     font-size: 14px;
 }
 
-.department-member-search input {
+.organization-department-member-search input {
     flex: 1;
     min-width: 0;
 
@@ -581,7 +581,7 @@
     font-size: 13px;
 }
 
-.department-member-search input::placeholder {
+.organization-department-member-search input::placeholder {
     color: #aab1bb;
 }
 
@@ -589,7 +589,7 @@
     Member Table
 ===================================================== */
 
-.department-member-list-wrapper {
+.organization-department-member-list-wrapper {
     width: 100%;
 
     overflow: hidden;
@@ -600,14 +600,14 @@
     background-color: #ffffff;
 }
 
-.department-member-table {
+.organization-department-member-table {
     width: 100%;
 
     border-collapse: collapse;
     table-layout: fixed;
 }
 
-.department-member-table th {
+.organization-department-member-table th {
     height: 48px;
 
     padding: 0 18px;
@@ -624,7 +624,7 @@
     vertical-align: middle;
 }
 
-.department-member-table td {
+.organization-department-member-table td {
     height: 68px;
 
     padding: 0 18px;
@@ -642,18 +642,18 @@
     text-overflow: ellipsis;
 }
 
-.department-member-table
+.organization-department-member-table
 tbody
 tr:last-child
 td {
     border-bottom: 0;
 }
 
-.department-member-row {
+.organization-department-member-row {
     cursor: pointer;
 }
 
-.department-member-row:hover td {
+.organization-department-member-row:hover td {
     background-color: #f8fafc;
 }
 
@@ -662,23 +662,23 @@ td {
     Member Columns
 ===================================================== */
 
-.department-col-member {
+.organization-department-col-member {
     width: 25%;
 }
 
-.department-col-position {
+.organization-department-col-position {
     width: 13%;
 }
 
-.department-col-email {
+.organization-department-col-email {
     width: 27%;
 }
 
-.department-col-contact {
+.organization-department-col-contact {
     width: 20%;
 }
 
-.department-col-status {
+.organization-department-col-status {
     width: 15%;
 }
 
@@ -687,7 +687,7 @@ td {
     Member Profile
 ===================================================== */
 
-.department-member-user {
+.organization-department-member-user {
     min-width: 0;
 
     display: flex;
@@ -696,7 +696,7 @@ td {
     gap: 11px;
 }
 
-.department-member-profile {
+.organization-department-member-profile {
     position: relative;
 
     width: 40px;
@@ -705,7 +705,7 @@ td {
     flex-shrink: 0;
 }
 
-.department-member-profile img {
+.organization-department-member-profile img {
     width: 40px;
     height: 40px;
 
@@ -715,7 +715,7 @@ td {
     object-fit: cover;
 }
 
-.department-presence-dot {
+.organization-department-presence-dot {
     position: absolute;
 
     right: -1px;
@@ -733,7 +733,7 @@ td {
     Member Name
 ===================================================== */
 
-.department-member-name-area {
+.organization-department-member-name-area {
     min-width: 0;
 
     display: flex;
@@ -742,7 +742,7 @@ td {
     gap: 7px;
 }
 
-.department-member-name {
+.organization-department-member-name {
     min-width: 0;
 
     color: #1f2937;
@@ -755,7 +755,7 @@ td {
     white-space: nowrap;
 }
 
-.department-admin-badge {
+.organization-department-admin-badge {
     flex-shrink: 0;
 
     padding: 2px 6px;
@@ -774,7 +774,7 @@ td {
     Presence
 ===================================================== */
 
-.department-member-status {
+.organization-department-member-status {
     display: inline-flex;
     align-items: center;
 
@@ -785,7 +785,7 @@ td {
     font-size: 12px;
 }
 
-.department-status-dot {
+.organization-department-status-dot {
     width: 7px;
     height: 7px;
 
@@ -797,29 +797,29 @@ td {
 
 /* ONLINE */
 
-.department-presence-dot.online,
-.department-status-dot.online {
+.organization-department-presence-dot.online,
+.organization-department-status-dot.online {
     background-color: #22c55e;
 }
 
 
 /* AWAY */
 
-.department-presence-dot.away,
-.department-status-dot.away {
+.organization-department-presence-dot.away,
+.organization-department-status-dot.away {
     background-color: #f59e0b;
 }
 
 
 /* OFFLINE */
 
-.department-presence-dot.offline,
-.department-status-dot.offline {
+.organization-department-presence-dot.offline,
+.organization-department-status-dot.offline {
     background-color: #cbd5e1;
 }
 
 
-.department-member-email {
+.organization-department-member-email {
     color: #64748b !important;
 }
 
@@ -828,7 +828,7 @@ td {
     Empty
 ===================================================== */
 
-.department-member-empty {
+.organization-department-member-empty {
     height: 190px !important;
 
     color: #94a3b8 !important;
@@ -844,14 +844,14 @@ td {
 
 @media (max-width: 650px) {
 
-    .department-detail-header {
+    .organization-department-detail-header {
         align-items: flex-start;
         flex-direction: column;
 
         padding: 20px;
     }
 
-    .department-detail-count {
+    .organization-department-detail-count {
         align-self: flex-start;
     }
 
@@ -859,23 +859,23 @@ td {
 
 @media (max-width: 1000px) {
 
-    .department-col-contact {
+    .organization-department-col-contact {
         display: none;
     }
 
-    .department-col-member {
+    .organization-department-col-member {
         width: 30%;
     }
 
-    .department-col-position {
+    .organization-department-col-position {
         width: 15%;
     }
 
-    .department-col-email {
+    .organization-department-col-email {
         width: 35%;
     }
 
-    .department-col-status {
+    .organization-department-col-status {
         width: 20%;
     }
 
@@ -883,29 +883,29 @@ td {
 
 @media (max-width: 700px) {
 
-    .department-col-email {
+    .organization-department-col-email {
         display: none;
     }
 
-    .department-col-member {
+    .organization-department-col-member {
         width: 50%;
     }
 
-    .department-col-position {
+    .organization-department-col-position {
         width: 22%;
     }
 
-    .department-col-status {
+    .organization-department-col-status {
         width: 28%;
     }
 
-    .department-member-table th,
-    .department-member-table td {
+    .organization-department-member-table th,
+    .organization-department-member-table td {
         padding-left: 12px;
         padding-right: 12px;
     }
 
-    .department-member-search {
+    .organization-department-member-search {
         width: 100%;
     }
 }
@@ -913,35 +913,35 @@ td {
 
 @media (max-width: 520px) {
 
-    .department-member-profile {
+    .organization-department-member-profile {
         width: 34px;
         height: 34px;
     }
 
-    .department-member-profile img {
+    .organization-department-member-profile img {
         width: 34px;
         height: 34px;
     }
 
-    .department-member-name {
+    .organization-department-member-name {
         font-size: 13px;
     }
 
-    .department-member-table th,
-    .department-member-table td {
+    .organization-department-member-table th,
+    .organization-department-member-table td {
         padding-left: 10px;
         padding-right: 10px;
     }
 
-    .department-member-table th {
+    .organization-department-member-table th {
         font-size: 11px;
     }
 
-    .department-member-table td {
+    .organization-department-member-table td {
         font-size: 12px;
     }
 
-    .department-admin-badge {
+    .organization-department-admin-badge {
         display: none;
     }
 
@@ -951,7 +951,7 @@ td {
     Member Profile Popup
 ===================================================== */
 
-.department-profile-modal .modal-content {
+.organization-department-profile-modal .modal-content {
     border: 0;
     border-radius: 14px;
 
@@ -959,25 +959,25 @@ td {
         0 12px 36px rgba(15, 23, 42, 0.16);
 }
 
-.department-profile-modal .modal-body {
+.organization-department-profile-modal .modal-body {
     padding: 0;
 }
 
-.department-profile-popup {
+.organization-department-profile-popup {
     padding: 24px;
 }
 
 
 /* 상단 */
 
-.department-profile-popup-header {
+.organization-department-profile-popup-header {
     display: flex;
     align-items: center;
 
     gap: 14px;
 }
 
-.department-profile-popup-image {
+.organization-department-profile-popup-image {
     position: relative;
 
     width: 58px;
@@ -986,7 +986,7 @@ td {
     flex-shrink: 0;
 }
 
-.department-profile-popup-image img {
+.organization-department-profile-popup-image img {
     width: 58px;
     height: 58px;
 
@@ -996,7 +996,7 @@ td {
     object-fit: cover;
 }
 
-.department-profile-popup-presence {
+.organization-department-profile-popup-presence {
     position: absolute;
 
     right: 0;
@@ -1009,33 +1009,33 @@ td {
     border-radius: 50%;
 }
 
-.department-profile-popup-presence.online {
+.organization-department-profile-popup-presence.online {
     background-color: #22c55e;
 }
 
-.department-profile-popup-presence.away {
+.organization-department-profile-popup-presence.away {
     background-color: #f59e0b;
 }
 
-.department-profile-popup-presence.offline {
+.organization-department-profile-popup-presence.offline {
     background-color: #cbd5e1;
 }
 
 
-.department-profile-popup-main {
+.organization-department-profile-popup-main {
     min-width: 0;
 
     flex: 1;
 }
 
-.department-profile-popup-name-row {
+.organization-department-profile-popup-name-row {
     display: flex;
     align-items: center;
 
     gap: 7px;
 }
 
-.department-profile-popup-name {
+.organization-department-profile-popup-name {
     min-width: 0;
 
     color: #1f2937;
@@ -1048,7 +1048,7 @@ td {
     white-space: nowrap;
 }
 
-.department-profile-popup-position {
+.organization-department-profile-popup-position {
     margin-top: 4px;
 
     color: #64748b;
@@ -1056,7 +1056,7 @@ td {
     font-size: 12px;
 }
 
-.department-profile-popup-status {
+.organization-department-profile-popup-status {
     display: flex;
     align-items: center;
 
@@ -1072,7 +1072,7 @@ td {
 
 /* 상세 정보 */
 
-.department-profile-popup-info {
+.organization-department-profile-popup-info {
     display: flex;
     flex-direction: column;
 
@@ -1084,11 +1084,11 @@ td {
     border-top: 1px solid #f1f5f9;
 }
 
-.department-profile-info-item {
+.organization-department-profile-info-item {
     min-width: 0;
 }
 
-.department-profile-info-label {
+.organization-department-profile-info-label {
     margin-bottom: 4px;
 
     color: #94a3b8;
@@ -1097,7 +1097,7 @@ td {
     font-weight: 600;
 }
 
-.department-profile-info-value {
+.organization-department-profile-info-value {
     color: #475569;
 
     font-size: 13px;
