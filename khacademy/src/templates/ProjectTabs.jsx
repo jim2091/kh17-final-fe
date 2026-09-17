@@ -2,7 +2,7 @@ import { NavLink, useParams } from "react-router-dom";
 
 import "./Project.css";
 
-export default function ProjectTabs() {
+export default function ProjectTabs({chatUnreadCount = 0}) {
 
     const { projectNo } = useParams();
 
@@ -21,10 +21,21 @@ export default function ProjectTabs() {
             <NavLink
                 to={`/projects/${projectNo}/chat`}
                 className={({ isActive }) =>
-                    isActive ? "project-tab active" : "project-tab"
+                    isActive 
+                        ? "project-tab project-chat-tab active" 
+                        : "project-tab project-chat-tab"
                 }
             >
                 채팅
+
+                {chatUnreadCount > 0 && (
+                    <span className="project-chat-unread-badge">
+                        {chatUnreadCount > 99
+                            ? "99+"
+                            : chatUnreadCount
+                        }
+                    </span>
+                )}
             </NavLink>
 
             <NavLink

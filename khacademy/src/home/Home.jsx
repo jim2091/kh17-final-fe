@@ -1,22 +1,23 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { loginActionState, loginUserState } from "../utils/storage";
+import { loginActionState, loginUserState, notificationRefreshState } from "../utils/storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../utils/reaxios";
 import "./Home.css";
 import { useNavigate } from "react-router-dom";
+import { Bell } from "lucide-react";
 
-export default function Home(){
+export default function Home() {
 
     //카카오 로그인용
     const loginAction = useSetAtom(loginActionState);
 
-    const loadData =useCallback(async()=>{
-        const {data} = await apiClient.get("/member/me");
+    const loadData = useCallback(async () => {
+        const { data } = await apiClient.get("/member/me");
         loginAction(data);
 
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         loadData();
     }, []);
 
@@ -30,6 +31,22 @@ export default function Home(){
     //프로젝트 목록
     const [projectList, setProjectList] = useState([]);
 
+    //최근 알림
+    const [notificationList, setNotificationList] =
+        useState([]);
+
+    //읽지 않은 알림 수
+    const [
+        notificationUnreadCount,
+        setNotificationUnreadCount
+    ] = useState(0);
+
+    const notificationRefresh =
+        useAtomValue(notificationRefreshState);
+
+    const requestNotificationRefresh =
+        useSetAtom(notificationRefreshState);
+
     //로딩
     const [loading, setLoading] = useState(true);
 
@@ -39,12 +56,12 @@ export default function Home(){
     const loadProjectList = useCallback(async () => {
         try {
             setLoading(true);
-            
-            const {data} = await apiClient.get("/project/my");
+
+            const { data } = await apiClient.get("/project/my");
 
             setProjectList(data || []);
         }
-        catch(e) {
+        catch (e) {
             console.error("홈 프로젝트 목록 조회 실패 : ", e);
         }
         finally {
@@ -56,10 +73,37 @@ export default function Home(){
         loadProjectList();
     }, []);
 
-    //홈에서는 최대 4개만 표시
+    //홈에서 보여줄 프로젝트. 최근 방문 프로젝트 순
     const homeProjectList = useMemo(() => {
-        return projectList.slice(0, 4);
-    }, [projectList]);
+
+        //로그인 사용자 정보가 아직 없으면
+        //기존 순서대로 최대 4개 표시
+        if (!loginUser?.empNo) {
+            return projectList.slice(0, 4);
+        }//안해주면 에러남. 어차피 비로그인 유저면 projectList도 비어있어서 0개뜸
+
+        const storageKey = `recentProjects_${loginUser.empNo}`;
+
+        //최근 방문 프로젝트 정보
+        const recentProjects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+        //최근 방문 순서에 맞춰 실제 서버 프로젝트 데이터 찾기
+        const recentProjectList = recentProjects.map(recent =>
+            projectList.find(project => project.projectNo === recent.projectNo)
+        ).filter(project => project)//삭제/종료 등으로 현재 목록에 없는 프로젝트 제거
+
+        //아직 방문 기록이 없는 프로젝트
+        const otherProjectList = projectList.filter(project =>
+            !recentProjects.some(recent => recent.projectNo === project.projectNo)
+        );
+
+        //최근 방문 프로젝트 먼저, 나머지는 기존 서버 조회 순서 유지
+        return [
+            ...recentProjectList,
+            ...otherProjectList
+        ].slice(0, 4);
+
+    }, [projectList, loginUser?.empNo]);
 
     //프로젝트 이동
     const moveToProject = useCallback((projectNo) => {
@@ -73,7 +117,108 @@ export default function Home(){
             : "비공개"
     };
 
-    return(<>
+    //최근 알림 조회
+    const loadNotifications = useCallback(async () => {
+        try {
+            const { data } = await apiClient.get("/notification/");
+
+            const list = Array.isArray(data?.list)
+                ? data.list
+                : [];
+
+            //홈에서는 최근 3개만
+            setNotificationList(list.slice(0, 3));
+
+            setNotificationUnreadCount(Number(data?.unReadCount) || 0);
+        }
+        catch (e) {
+            console.error("홈 알림 조회 실패 : ", e);
+        }
+
+    }, []);
+
+    useEffect(() => {
+        loadNotifications();
+    }, [loadNotifications, notificationRefresh]);
+
+    const formatNotificationTime = useCallback((value) => {
+
+        if (!value) return "";
+
+        //2026-09-17 10:30:12
+        const [date, time] = value.split(" ");
+
+        if (!date || !time) return value;
+
+        return `${date.substring(5)} ${time.substring(0, 5)}`;
+
+    }, []);
+
+    const moveNotification = useCallback(async (notification) => {
+
+        if (!notification) return;
+
+        const isUnread = notification.notificationRead === "N";
+
+        //읽음 처리
+        if (isUnread) {
+            try {
+                await apiClient.patch(
+                    `/notification/${notification.notificationNo}/read`
+                );
+
+                //공용 알림 갱신 요청
+                requestNotificationRefresh(
+                    prev => prev + 1
+                );
+            }
+            catch (e) {
+                console.error("홈 알림 읽음 처리 실패 : ", e);
+            }
+        }
+
+        if (!notification.notificationUrl) return;
+
+        let targetUrl = notification.notificationUrl;
+
+        //Task 알림
+        const isTask = notification.notificationType?.includes("TASK");
+
+        if (
+            isTask
+            && notification.projectNo
+            && notification.notificationTarget
+        ) {
+            targetUrl =
+                `/projects/${notification.projectNo}`
+                + `/task?taskNo=${notification.notificationTarget}`;
+        }
+
+        //Schedule 알림
+        const isSchedule =
+            notification.notificationType
+                ?.includes("SCHEDULE");
+
+
+        if (
+            isSchedule
+            && notification.projectNo
+        ) {
+
+            targetUrl = `/projects/${notification.projectNo}/calendar`;
+
+            if (notification.notificationTarget) {
+                targetUrl +=
+                    `?scheduleNo=${notification.notificationTarget}`;
+
+            }
+        }
+
+        navigate(targetUrl);
+
+    }, [navigate, requestNotificationRefresh]);
+
+    return (<>
         <div className="home-page">
             {/* 상단 */}
             <div className="home-welcome">
@@ -153,8 +298,7 @@ export default function Home(){
 
                                             <span
                                                 className={
-                                                    `home-project-role ${
-                                                        project.projectMemberRole
+                                                    `home-project-role ${project.projectMemberRole
                                                     }`
                                                 }
                                             >
@@ -180,7 +324,7 @@ export default function Home(){
                             ))}
                         </div>
 
-                        
+
 
                     )}
                 </div>
@@ -239,10 +383,91 @@ export default function Home(){
                         </div>
                     </div>
 
-                    {/* 이후 알림 등 기능 완성되면 카드 추가 */}
+                    <div className="home-side-card home-notification-card">
+
+                        <div className="home-notification-header">
+
+                            <div className="home-side-title">
+                                최근 알림
+                            </div>
+
+
+                            {notificationUnreadCount > 0 && (
+                                <span className="home-notification-count">
+
+                                    {notificationUnreadCount > 99
+                                        ? "99+"
+                                        : notificationUnreadCount
+                                    }
+
+                                </span>
+                            )}
+
+                        </div>
+
+
+                        {notificationList.length === 0 ? (
+                            <div className="home-notification-empty">
+                                <Bell size={17} />
+
+                                <span>
+                                    새로운 알림이 없습니다.
+                                </span>
+                            </div>
+                        ) : (
+
+                            <div className="home-notification-list">
+                                {notificationList.map(notification => {
+                                    const isUnread = notification.notificationRead === "N";
+
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={notification.notificationNo}
+                                            className={
+                                                `home-notification-item ${isUnread
+                                                    ? "unread"
+                                                    : ""
+                                                }`
+                                            }
+                                            onClick={() =>
+                                                moveNotification(notification)
+                                            }
+                                        >
+
+                                            <span
+                                                className={
+                                                    `home-notification-dot ${isUnread
+                                                        ? "unread"
+                                                        : ""
+                                                    }`
+                                                }
+                                            />
+
+                                            <div className="home-notification-content">
+                                                <div className="home-notification-text">
+                                                    {notification.notificationContent}
+                                                </div>
+
+                                                <div className="home-notification-time">
+                                                    {formatNotificationTime(
+                                                        notification.notificationCtime
+                                                    )}
+
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+
+                            </div>
+
+                        )}
+
+                    </div>
                 </div>
             </div>
         </div>
-        
+
     </>);
 }

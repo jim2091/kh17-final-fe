@@ -398,7 +398,6 @@ export default function Task() {
     if (targetNo > 0) {
       handleCardClick(targetNo);
 
-      // 드로어를 열고 주소창의 파라미터는 깔끔하게 제거
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("taskNo");
       setSearchParams(newParams, { replace: true });
@@ -707,7 +706,6 @@ export default function Task() {
     }
   };
 
-  // 업무 본체 수정과 함께 분리된 협업자 교체 API를 동시 호출
   const handleSaveEdit = async (e) => {
     e.preventDefault();
 
@@ -849,7 +847,6 @@ export default function Task() {
     }
   };
 
-  // 실시간 검색 키워드 및 숨김 여부를 반영한 컬럼별 카드 필터링
   const trimmedKeyword = searchKeyword.trim().toLowerCase();
 
   const getFilteredColumnTasks = (colId) => {
@@ -874,7 +871,6 @@ export default function Task() {
     });
   };
 
-  // DONE 컬럼: 최신 수정/완료 일시(taskUtime) 내림차순 정렬 후 4개 분할
   const allDoneTasks = getFilteredColumnTasks("DONE").sort((a, b) => {
     const timeA = new Date(a.taskUtime || a.taskCtime).getTime();
     const timeB = new Date(b.taskUtime || b.taskCtime).getTime();
@@ -896,6 +892,33 @@ export default function Task() {
 
         {/* 우측 상단 액션 그룹 */}
         <div className="kanban-top-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          
+          {/* 💡 [분리 추가] 독립된 새 업무 등록 버튼 (프로젝트가 닫히지 않은 경우에만 노출) */}
+          {!isClosed && (
+            <button
+              type="button"
+              className="btn-create-task-primary"
+              onClick={() => navigate(`/projects/${projectNo}/taskInsert`)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                backgroundColor: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+              }}
+            >
+              <Plus size={16} strokeWidth={2.5} />
+              새 업무 등록
+            </button>
+          )}
+
           {/* 실시간 업무 검색창 */}
           <div className="kanban-search-box">
             <Search size={14} className="kanban-search-icon" />
@@ -918,7 +941,7 @@ export default function Task() {
             )}
           </div>
 
-          {/* 업무 관리 드롭다운 메뉴 */}
+          {/* 업무 관리 드롭다운 메뉴 (등록 버튼 제외, 관리 기능만 유지) */}
           <div style={{ position: "relative" }} ref={menuRef}>
             <button
               type="button"
@@ -935,20 +958,6 @@ export default function Task() {
 
             {menuOpen && (
               <div className="kanban-dropdown-menu">
-                {!isClosed && (
-                  <button
-                    type="button"
-                    className="dropdown-item-btn item-primary"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      navigate(`/projects/${projectNo}/taskInsert`);
-                    }}
-                  >
-                    <Plus size={15} strokeWidth={2.5} />
-                    새 업무 등록
-                  </button>
-                )}
-
                 <button
                   type="button"
                   className="dropdown-item-btn item-default"
@@ -1619,7 +1628,10 @@ export default function Task() {
                   <div className="view-timestamps">
                     <span>등록일시: {selectedTask.taskCtime ? String(selectedTask.taskCtime).replace("T", " ").slice(0, 19) : "-"}</span>
                     {selectedTask.taskUtime && (
-                      <span>최종수정: {String(selectedTask.taskUtime).replace("T", " ").slice(0, 19)}</span>
+                      <span style={{ display: "block", marginTop: "4px" }}>
+                        최종수정: {String(selectedTask.taskUtime).replace("T", " ").slice(0, 19)}
+                        {selectedTask.modifierName && ` (${selectedTask.modifierName})`}
+                      </span>
                     )}
                   </div>
 

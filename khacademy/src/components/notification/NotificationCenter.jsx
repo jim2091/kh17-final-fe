@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar } from "lucide-react";
+import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar, ListOrdered } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
-import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import "./NotificationCenter.css";
+import ProjectInviteModal from "../project/ProjectInviteModal";
+import { useAtomValue,useSetAtom } from "jotai";
+import { notificationRefreshState } from "@utils/storage";
+import { getWebSocketClient, onWebSocketReconnect } from "@utils/websocket";
 
 // 1. 안전한 사번(empNo) 추출 함수
 function getLoginEmpNo() {
@@ -18,10 +21,10 @@ function getLoginEmpNo() {
           if (parsed && (parsed.empNo || parsed.memberNo)) {
             return Number(parsed.empNo || parsed.memberNo);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return Number(
     localStorage.getItem("empNo") ||
@@ -38,6 +41,12 @@ export default function NotificationCenter() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
+
+    const notificationRefresh = useAtomValue(notificationRefreshState);
+    const requestNotificationRefresh = useSetAtom(notificationRefreshState);
 
   // 2. 알림 목록 조회
   const loadNotifications = useCallback(async () => {
@@ -63,6 +72,8 @@ export default function NotificationCenter() {
       let count = 0;
       if (typeof data.unreadCount === "number") {
         count = data.unreadCount;
+      } else if (typeof data.unReadCount === "number") {
+        count = data.unReadCount;
       } else if (typeof data.count === "number") {
         count = data.count;
       } else {
@@ -77,9 +88,18 @@ export default function NotificationCenter() {
     }
   }, []);
 
+  //알림 최초 조회 + 다른 화면에서 알림 상태가 변경되면 재조회
+  useEffect(() => {
+
+      loadNotifications();
+
+  }, [
+      loadNotifications,
+      notificationRefresh
+  ]);
+
   // 3. 웹소켓 실시간 구독
   useEffect(() => {
-    loadNotifications();
 
     if (!myEmpNo || myEmpNo <= 0) return;
 
@@ -95,8 +115,14 @@ export default function NotificationCenter() {
           try {
             const newNoti = JSON.parse(message.body);
             
-            setUnreadCount((prev) => prev + 1);
-            setNotifications((prev) => [newNoti, ...prev]);
+            // Home이랑 공통으로 갱신되도록 최소 수정중
+            // setUnreadCount((prev) => prev + 1);
+            // setNotifications((prev) => [newNoti, ...prev]);
+
+            //Header / Home 모두 최신 알림 다시 조회
+            requestNotificationRefresh(
+                prev => prev + 1
+            );
 
             if (newNoti.notificationContent) {
               toast.info(newNoti.notificationContent);
@@ -113,7 +139,7 @@ export default function NotificationCenter() {
       doSubscribe(client);
     }
 
-    const unregister = onWebSocketConnect(() => {
+    const unregister = onWebSocketReconnect(() => {
       const currentClient = getWebSocketClient();
       doSubscribe(currentClient);
     });
@@ -122,7 +148,7 @@ export default function NotificationCenter() {
       subscription?.unsubscribe();
       if (typeof unregister === "function") unregister();
     };
-  }, [myEmpNo, loadNotifications]);
+  }, [myEmpNo, requestNotificationRefresh]);
 
   // + 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -135,12 +161,26 @@ export default function NotificationCenter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 4. 단건 읽음 처리 및 이동 (일정, 업무, 일반 분기)
+  // 4. 단건 읽음 처리 및 이동 (업무 및 노트 알림 분기 처리)
   const handleItemClick = async (item) => {
+
+    //프로젝트 초대 알림
+    if (
+      item.notificationType?.toLowerCase()
+      === "project_invite"
+    ) {
+      setSelectedInviteNotification(item)
+
+      setInviteModalOpen(true);
+
+      //알림 드롭다운 닫기
+      setIsOpen(false);
+
+      return;
+    }
+
     const isUnread = item.notificationRead === "N" || item.isRead === "N";
 
-    console.log("알림 원본 데이터 :", item);
-    
     if (isUnread) {
       try {
         await apiClient.patch(`/notification/${item.notificationNo}/read`);
@@ -155,6 +195,29 @@ export default function NotificationCenter() {
       } catch (e) {
         console.error("❌ 단건 읽음 처리 실패:", e);
       }
+        const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+        if (isUnread) {
+            try {
+                await apiClient.patch(`/notification/${item.notificationNo}/read`);
+                // setNotifications((prev) =>
+                //     prev.map((n) =>
+                //         n.notificationNo === item.notificationNo
+                //             ? { ...n, notificationRead: "Y", isRead: "Y" }
+                //             : n
+                //     )
+                // );
+                // setUnreadCount((prev) => Math.max(0, prev - 1));
+
+                //Header / Home 둘 다 다시 조회
+                requestNotificationRefresh(
+                    prev => prev + 1
+                );
+            } catch (e) {
+                console.error("❌ 단건 읽음 처리 실패:", e);
+            }
+        }
+
     }
 
     setIsOpen(false);
@@ -165,54 +228,57 @@ export default function NotificationCenter() {
       const isTaskNotification = item.notificationType?.includes("TASK") || item.notificationUrl.includes("/task");
       const isScheduleNotification = item.notificationType?.includes("SCHEDULE") || item.notificationUrl.includes("/calendar") || item.notificationUrl.includes("/schedule");
 
-
-
-      // + 일정(SCHEDULE) 알림 클릭 시 달력 페이지 + scheduleNo 파라미터 전송 로직
       if (isScheduleNotification) {
         let targetScheduleNo = item.notificationTarget;
         if (!targetScheduleNo) {
           const match = item.notificationUrl.match(/[?&]scheduleNo=(\d+)/) || item.notificationUrl.match(/\/\/(\d+)/);
           if (match && match[1]) targetScheduleNo = match[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
 
         if (targetProjectNo && targetScheduleNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar?scheduleNo=${targetScheduleNo}`;
         } else if (targetProjectNo) {
           targetUrl = `/projects/${targetProjectNo}/calendar`;
-       console.log("최종 이동할 URL:" , targetUrl);
-
         }
-      } 
-      // 업무(TASK) 알림 클릭 시 로직
+      }
       else if (isTaskNotification) {
         let targetTaskNo = item.notificationTarget;
         if (!targetTaskNo) {
           const match = item.notificationUrl.match(/[?&]taskNo=(\d+)/) || item.notificationUrl.match(/\/task\/(\d+)/);
           if (match && match[1]) targetTaskNo = match[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         let targetProjectNo = item.projectNo;
         if (!targetProjectNo) {
           const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
           if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
         }
-         console.log("최종 이동할 URL:" , targetUrl);
         if (targetProjectNo && targetTaskNo) {
           targetUrl = `/projects/${targetProjectNo}/task?taskNo=${targetTaskNo}`;
         }
+        
+        else if (isNoteNotification) {
+          let targetNoteNo = item.notificationTarget;
+          if (!targetNoteNo) {
+            const match = item.notificationUrl.match(/[?&]noteNo=(\d+)/) || item.notificationUrl.match(/\/note\/(\d+)/);
+            if (match && match[1]) targetNoteNo = match[1];
+          }
+          let targetProjectNo = item.projectNo;
+          if (!targetProjectNo) {
+            const pMatch = item.notificationUrl.match(/\/projects\/(\d+)/);
+            if (pMatch && pMatch[1]) targetProjectNo = pMatch[1];
+          }
+
+          if (targetProjectNo && targetNoteNo) {
+            targetUrl = `/projects/${targetProjectNo}/note/${targetNoteNo}`;
+          }
+        }
       }
 
-      console.log("최종 이동할 URL:" , targetUrl);
       navigate(targetUrl);
     }
   };
@@ -221,10 +287,13 @@ export default function NotificationCenter() {
   const handleReadAll = async () => {
     try {
       await apiClient.patch("/notification/read-all");
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, notificationRead: "Y", isRead: "Y" }))
+      // setNotifications((prev) =>
+      //   prev.map((n) => ({ ...n, notificationRead: "Y", isRead: "Y" }))
+      // );
+      // setUnreadCount(0);
+      requestNotificationRefresh(
+          prev => prev + 1
       );
-      setUnreadCount(0);
     } catch (e) {
       console.error("❌ 전체 읽음 처리 실패:", e);
     }
@@ -258,15 +327,31 @@ export default function NotificationCenter() {
             <div className="noti-title">
               알림 <span className="noti-count-num">{unreadCount}</span>
             </div>
-            {unreadCount > 0 && (
+            <div className="noti-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* 전체 알림 페이지로 이동하는 버튼 추가 */}
               <button
                 type="button"
                 className="noti-read-all-btn"
-                onClick={handleReadAll}
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/notifications");
+                }}
+                title="전체 알림 목록 보기"
+                style={{ background: "#f1f5f9", color: "#475569" }}
               >
-                <CheckCheck size={14} /> 모두 읽음
+                <ListOrdered size={14} /> 전체보기
               </button>
-            )}
+
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className="noti-read-all-btn"
+                  onClick={handleReadAll}
+                >
+                  <CheckCheck size={14} /> 모두 읽음
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 목록 */}
@@ -307,6 +392,7 @@ export default function NotificationCenter() {
                     </div>
 
                     <ExternalLink size={14} color="#cbd5e1" className="noti-external-icon" />
+
                   </div>
                 );
               })
@@ -314,6 +400,14 @@ export default function NotificationCenter() {
           </div>
         </div>
       )}
+      <ProjectInviteModal show={inviteModalOpen}
+        notification={selectedInviteNotification}
+        onHide={() => {
+          setInviteModalOpen(false);
+          setSelectedInviteNotification(null);
+        }}
+        onSuccess={loadNotifications}
+      />
     </div>
   );
 }

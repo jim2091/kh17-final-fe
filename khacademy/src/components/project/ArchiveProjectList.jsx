@@ -206,14 +206,25 @@ export default function ArcheiveProjectList() {
                                     {/* 내 역할 */}
                                     <div className="text-center">
 
-                                        <span
-                                            className={
-                                                `archive-project-role ${project.projectMemberRole}`
-                                            }
-                                        >
-                                            {project.projectMemberRole
-                                                ?.toUpperCase()}
-                                        </span>
+                                        {
+                                            project.projectMemberRole
+                                            ?
+                                            (
+                                                <span
+                                                    className={
+                                                        `archive-project-role ${project.projectMemberRole}`
+                                                    }
+                                                >
+                                                    {project.projectMemberRole.toUpperCase()}
+                                                </span>
+                                            )
+                                            :
+                                            (
+                                                <span className="archive-project-role none">
+                                                    비참여
+                                                </span>
+                                            )
+                                        }
 
                                     </div>
 

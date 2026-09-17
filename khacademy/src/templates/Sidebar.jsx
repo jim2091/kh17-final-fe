@@ -10,7 +10,7 @@ export default function Sidebar({
     //closeSidebar도 같이 써주게 그냥 따로 빼서 온클릭 걸어주기로
     const moveToProjectAdd = () => {
         navigate("/projects/add");
-        closeSidebar
+        closeSidebar();
     };
 
     return (<>
@@ -28,47 +28,83 @@ export default function Sidebar({
 
                 <div className="sidebar-menu">
 
-                    <NavLink
-                        to="/projects/my"
-                        end
-                        className={({ isActive }) =>
-                            isActive ? "sidebar-link active" : "sidebar-link"
-                        }
-                        onClick={closeSidebar}
-                    >
-                        내 프로젝트
-                    </NavLink>
+                    {/* 프로젝트 */}
+                    <div className="sidebar-group">
 
-                    <NavLink
-                        to="/projects/public"
-                        className={({ isActive }) =>
-                            isActive ? "sidebar-link active" : "sidebar-link"
-                        }
-                        onClick={closeSidebar}
-                    >
-                        공개 프로젝트
-                    </NavLink>
+                        <div className="sidebar-group-title">
+                            프로젝트
+                        </div>
 
-                    <NavLink
-                        to="/projects/archive"
-                        className={({ isActive }) =>
-                            isActive ? "sidebar-link active" : "sidebar-link"
-                        }
-                        onClick={closeSidebar}
-                    >
-                        아카이브
-                    </NavLink>
-                    <NavLink
-                        to="/members"
-                        className={({ isActive }) =>
-                            isActive ? "sidebar-link active" : "sidebar-link"
-                        }
-                        onClick={closeSidebar}
-                    >
-                        사용자 목록
-                    </NavLink>
+                        <div className="sidebar-group-menu">
 
+                            <NavLink
+                                to="/projects/my"
+                                end
+                                className={({ isActive }) =>
+                                    isActive ? "sidebar-link active" : "sidebar-link"
+                                }
+                                onClick={closeSidebar}
+                            >
+                                내 프로젝트
+                            </NavLink>
+
+                            <NavLink
+                                to="/projects/public"
+                                className={({ isActive }) =>
+                                    isActive ? "sidebar-link active" : "sidebar-link"
+                                }
+                                onClick={closeSidebar}
+                            >
+                                공개 프로젝트
+                            </NavLink>
+
+                            <NavLink
+                                to="/projects/archive"
+                                className={({ isActive }) =>
+                                    isActive ? "sidebar-link active" : "sidebar-link"
+                                }
+                                onClick={closeSidebar}
+                            >
+                                아카이브
+                            </NavLink>
+                        </div>
+                    </div>
+
+                    {/* 조직 */}
+                    <div className="sidebar-group">
+
+                        <div className="sidebar-group-title">
+                            조직
+                        </div>
+
+                        <div className="sidebar-group-menu">
+                            <NavLink
+                                to="/members"
+                                className={({ isActive }) =>
+                                    isActive
+                                        ? "sidebar-link active"
+                                        : "sidebar-link"
+                                }
+                                onClick={closeSidebar}
+                            >
+                                구성원
+                            </NavLink>
+
+                            <NavLink
+                                to="/organization/departments"
+                                className={({ isActive }) =>
+                                    isActive
+                                        ? "sidebar-link active"
+                                        : "sidebar-link"
+                                }
+                                onClick={closeSidebar}
+                            >
+                                부서
+                            </NavLink>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
 

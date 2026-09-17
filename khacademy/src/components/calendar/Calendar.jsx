@@ -91,12 +91,14 @@ export default function Calendar() {
         }
     }, [projectNo, loadScheduleList, loadTaskList]);
 
-    //데이터 로딩 완료 후 알림(scheduleNo) 감지 및 상세 모달 자동 오픈 처리
+    // 데이터 로딩 완료 후 알림(scheduleNo) 감지 및 상세 모달 자동 오픈 처리
     useEffect(() => {
+        console.log("🔍 effect 실행, loading:", loading, "scheduleNo:", searchParams.get("scheduleNo"));
         if (loading) return;
 
         const targetScheduleNo = searchParams.get("scheduleNo");
         if (targetScheduleNo) {
+            console.log("🔍 openScheduleDetail 호출:", targetScheduleNo);
             openScheduleDetail(Number(targetScheduleNo));
 
             searchParams.delete("scheduleNo");
@@ -447,11 +449,9 @@ export default function Calendar() {
             setEditMode(false);
         }
         catch (e) {
-            console.error(e);
             toast.error("일정 정보를 불러오지 못했습니다. \n잠시 후에 다시 시도해주세요")
         };
     }, []);
-
     //업무 상세 조회
     const openTaskDetail = useCallback(async (taskNo) => {
         try {

@@ -1,5 +1,5 @@
 import { Button, Col, Form, Row, Badge, Table, ListGroup } from "react-bootstrap";
-import { FaMagnifyingGlass} from "react-icons/fa6";
+import { FaMagnifyingGlass } from "react-icons/fa6";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@utils/reaxios";
 import "../member.css";
@@ -11,7 +11,7 @@ import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
-import { BiSolidDownArrow, BiSolidUpArrow  } from "react-icons/bi";
+import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 
 
 
@@ -165,7 +165,7 @@ export default function Users() {
     // console.log("count : ", count);
 
 
-   
+
 
     const searchInitial = useCallback(async (tab) => {
         setActiveTab(tab);
@@ -470,7 +470,7 @@ export default function Users() {
                                 <h4>회원 상태 변경하기</h4>
                                 <span>선택한 회원의 변경 사항을 선택해주세요. </span>
                                 <br />
-                                
+
                                 <ListGroup className="list-group mt-3 ">
                                     <ListGroup.Item
                                         className="d-flex align-items-center item"
@@ -501,7 +501,7 @@ export default function Users() {
                                 </ListGroup>
                                 <div className="mt-2">
 
-                                <span>초대중인 회원과 관리자인 회원의 상태는 변경할 수 없습니다. </span>
+                                    <span>초대중인 회원과 관리자인 회원의 상태는 변경할 수 없습니다. </span>
                                 </div>
                                 <div className="mt-4 text-center">
                                     <Button onClick={() => {
@@ -655,177 +655,184 @@ export default function Users() {
                     </span>
                 </OverlayTrigger>
             </div>
-
-            <Table className="member-table">
-                <thead>
-                    <tr>
-                        <th>
-                            <Form.Check
-                                className="big-checkbox"
-                                checked={
-                                    empList.length > 0 &&
-                                    checked.length === empList.length
-                                }
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setChecked(empList.map(emp => emp.empNo));
-                                    } else {
-                                        setChecked([]);
-                                    }
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                            ></Form.Check>
-                        </th>
-                        <th onClick={() => setPage(prev => ({
-                            ...prev,
-                            page: 1,
-                            sort: "empName",
-                            direction: prev.sort === "empName" && prev.direction === "asc" ? "desc" : "asc",
-                        }))}>
-                            <span>사번/이름</span>
-                            {page.sort === "empName" && page.direction === "asc" ? (
-                                <BiSolidDownArrow className="ms-2" />
-                            ) : (
-                                <BiSolidUpArrow className="ms-2" />
-                            )}
-
-                        </th>
-                        <th>레벨</th>
-                        <th>상태</th>
-                        <th onClick={() => setPage(prev => ({
-                            ...prev,
-                            page: 1,
-                            sort: "empEmail",
-                            direction: prev.sort === "empEmail" && prev.direction === "asc" ? "desc" : "asc",
-                        }))}>
-                            <span>이메일</span>
-                            {page.sort === "empEmail" && page.direction === "asc" ? (
-                                <BiSolidDownArrow className="ms-2" />
-                            ) : (
-                                <BiSolidUpArrow className="ms-2" />
-                            )}
-                        </th>
-                        <th onClick={() => setPage(prev => ({
-                            ...prev,
-                            page: 1,
-                            sort: "deptName",
-                            direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
-                        }))}>
-                            <span>부서</span>
-                            {page.sort === "deptName" && page.direction === "asc" ? (
-                                <BiSolidDownArrow className="ms-2" />
-                            ) : (
-                                <BiSolidUpArrow className="ms-2" />
-                            )}
-                        </th>
-                        <th onClick={() => setPage(prev => ({
-                            ...prev,
-                            page: 1,
-                            sort: "positionName",
-                            direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
-                        }))}>
-                            <span>직급</span>
-                            {page.sort === "positionName" && page.direction === "asc" ? (
-                                <BiSolidDownArrow className="ms-2" />
-                            ) : (
-                                <BiSolidUpArrow className="ms-2" />
-                            )}
-                        </th>
-                        <th>생일</th>
-                        <th>연락처</th>
-                        <th>주소</th>
-                        <th onClick={() => setPage(prev => ({
-                            ...prev,
-                            page: 1,
-                            sort: "empState",
-                            direction: prev.sort === "empState" && prev.direction === "asc" ? "desc" : "asc",
-                        }))}>
-                            <span>계정상태</span>
-                            {page.sort === "empState" && page.direction === "asc" ? (
-                                <BiSolidDownArrow className="ms-2" />
-                            ) : (
-                                <BiSolidUpArrow className="ms-2" />
-                            )}
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {empList.map((emp) => (
-                        <tr onClick={() => {
-                            setSelectedEmp(emp);
-                            setShow(true);
-                        }}
-                            key={emp.empNo}
-                            className="member-table-item">
-                            <td>
-                                <div  className="d-flex align-items-center">
-
-                                
+            <div className="member-table-wrapper">
+                <Table className="member-table">
+                    <thead>
+                        <tr>
+                            <th className="check-column">
+                                <div className="d-flex align-items-center justify-content-center">
                                 <Form.Check
                                     className="big-checkbox"
-                                    checked={checked.includes(emp.empNo)}
+                                    checked={
+                                        empList.length > 0 &&
+                                        checked.length === empList.length
+                                    }
                                     onChange={(e) => {
                                         if (e.target.checked) {
-                                            setChecked(prev => [
-                                                ...prev,
-                                                emp.empNo
-                                            ]);
+                                            setChecked(empList.map(emp => emp.empNo));
                                         } else {
-                                            setChecked(prev =>
-                                                prev.filter(empNo => empNo !== emp.empNo)
-                                            );
+                                            setChecked([]);
                                         }
                                     }}
                                     onClick={(e) => e.stopPropagation()}
                                 ></Form.Check>
+                                </div>
+                            </th>
+                            <th onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "empName",
+                                direction: prev.sort === "empName" && prev.direction === "asc" ? "desc" : "asc",
+                            }))} className="sortable name-column">
 
-                                {emp.attachNo ? (
-                                    <img
-                                        src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
-                                        className="list-img ms-3"
-                                    />
+                                <span>사번/이름</span>
+                                {page.sort === "empName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
                                 ) : (
-                                    <img
-                                        src={NoImage}
-                                        className="list-img ms-3"
-                                    />
-                                )}</div></td>
-                            <td>
-                                {emp.empName === null ? (
-                                    <span className="ms-2">{emp.empNo}/이름없음</span>
-                                ) : (<>
-                                    <span className="ms-2">{emp.empNo}/{emp.empName}</span>
-                                </>)}
-                            </td>
-                            <td>{emp.empLevel}</td>
-                            <td>offline</td>
-                            <td>{emp.empEmail}</td>
-                            <td>{emp.deptName}</td>
-                            <td>{emp.positionName}</td>
-                            <td>{emp.empBirth}</td>
-                            <td>{emp.empContact}</td>
-                            <td>{emp.empAddress1} {emp.empAddress2}</td>
-                            <td>
-                                {emp.empLevel === "admin" ? (
-                                    <span>활성</span>
-                                ) : (<>
-                                    {emp.empState === "invited" && (
-                                        <span>초대중</span>
-                                    )}
-                                    {emp.empState === "inactive" && (
-                                        <span>비활성</span>
-                                    )}
-                                    {emp.empState === "active" && (
-                                        <span>활성</span>
-                                    )}
-                                </>)}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
 
+                            </th>
+                            <th className="level-column">레벨</th>
+                            <th onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "empEmail",
+                                direction: prev.sort === "empEmail" && prev.direction === "asc" ? "desc" : "asc",
+                            }))} className="sortable email-column">
+                                <span>이메일</span>
+                                {page.sort === "empEmail" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            <th onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "deptName",
+                                direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
+                            }))} className="sortable dept-column">
+                                <span>부서</span>
+                                {page.sort === "deptName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            <th onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "positionName",
+                                direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
+                            }))} className="sortable position-column">
+                                <span>직급</span>
+                                {page.sort === "positionName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            <th className="birth-column">생일</th>
+                            <th className="contact-column">연락처</th>
+                            <th className="address-column">주소</th>
+                            <th onClick={() => setPage(prev => ({
+                                ...prev,
+                                page: 1,
+                                sort: "empState",
+                                direction: prev.sort === "empState" && prev.direction === "asc" ? "desc" : "asc",
+                            }))} className="sortable state-column">
+                                <span>계정상태</span>
+                                {page.sort === "empState" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {empList.map((emp) => (
+                            <tr onClick={() => {
+                                setSelectedEmp(emp);
+                                setShow(true);
+                            }}
+                                key={emp.empNo}
+                                className="member-table-item">
+                                <td className="check-column">
+                                    <div className="d-flex align-items-center justify-content-center">
+                                        <Form.Check
+                                            className="big-checkbox"
+                                            checked={checked.includes(emp.empNo)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setChecked(prev => [
+                                                        ...prev,
+                                                        emp.empNo
+                                                    ]);
+                                                } else {
+                                                    setChecked(prev =>
+                                                        prev.filter(empNo => empNo !== emp.empNo)
+                                                    );
+                                                }
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        ></Form.Check>
+
+                                    </div>
+                                </td>
+                                <td className="name-column">
+                                    <div className="member-info">
+                                        {emp.attachNo ? (
+                                            <img
+                                                src={`${import.meta.env.VITE_SERVER_URL}/api/attach/${emp.attachNo}`}
+                                                className="list-img"
+                                            />
+                                        ) : (
+                                            <img
+                                                src={NoImage}
+                                                className="list-img"
+                                            />
+                                        )}
+
+                                        <span className="member-name">
+                                            {emp.empNo}/{emp.empName === null ? "이름없음" : emp.empName}
+                                        </span>
+                                    </div>
+
+                                    <div className="member-meta">
+                                        {emp.deptName} · {emp.positionName}
+                                    </div>
+                                </td>
+
+                                <td className="level-column">{emp.empLevel}</td>
+                                <td className="email-column">{emp.empEmail}</td>
+                                <td className="dept-column">{emp.deptName}</td>
+                                <td className="position-column">{emp.positionName}</td>
+                                <td className="birth-column">{emp.empBirth}</td>
+                                <td className="contact-column">{emp.empContact}</td>
+                                <td className="address-column">{emp.empAddress1} {emp.empAddress2}</td>
+                                <td className="state-column">
+                                    {emp.empLevel === "admin" ? (
+                                        <span>활성</span>
+                                    ) : (<>
+                                        {emp.empState === "invited" && (
+                                            <span>초대중</span>
+                                        )}
+                                        {emp.empState === "inactive" && (
+                                            <span>비활성</span>
+                                        )}
+                                        {emp.empState === "active" && (
+                                            <span>활성</span>
+                                        )}
+                                    </>)}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            </div>
 
 
             <Offcanvas show={show}

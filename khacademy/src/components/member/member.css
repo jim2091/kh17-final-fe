@@ -1,8 +1,9 @@
+
 .spacing{
-    padding: 100px 200px;
+    padding: 60px 40px;
 }
 .left-right-padding{
-    padding: 0 200px;
+    padding: 0 40px;
 }
 
 .large-font{
@@ -17,14 +18,21 @@
 
 .tabs {
     display: flex;
-    padding: 0 0px;
-    border-bottom: 1px solid #e5e7eb;
-    background-color: white;
     align-items: center;
     flex-wrap: nowrap;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
+
+    scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+    display: none;
 }
 .tab {
-
+    flex: 0 0 auto;
     padding: 10px 17px;
 
     color: #6b7280;
@@ -83,10 +91,7 @@
 .swal2-container {
     z-index: 9999 !important;
 }
-.user-popover {
-    width: 400px;
-    max-width: 400px;
-}
+
 .my-pagination .page-link {
     color: #c7dbec !important;
     background-color: white !important;
@@ -175,9 +180,40 @@
     width: 100%;
 
 }
+.member-table .check-column {
+    width: 50px;
+}
+.member-table .name-column {
+    width: 200px;
+}
+
+.member-table .level-column {
+    width: 90px;
+}
+.member-table .email-column {
+    width: 300px;
+}
+.member-table .dept-column {
+    width: 100px;
+}
+.member-table .postion-column {
+    width: 100px;
+}
+.member-table .birth-column {
+    width: 110px;
+}
+
+.member-table .contact-column {
+    width: 130px;
+}
+
+.member-table .address-column {
+    width: 350px;
+}
 
 .member-table th,
 .member-table td {
+    padding: 8px 12px;
     vertical-align: middle;
     white-space: nowrap;
     overflow: hidden;
@@ -185,10 +221,25 @@
     height: 50px;
 }
 
+.member-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.member-table th.sortable:hover {
+    color: #2563eb;
+}
+
+.member-table th {
+    font-weight: 600;
+    color: #374151;
+}
+
 .member-table tbody tr.member-table-item:hover > td {
     background-color: #e9f2ff !important;
     cursor: pointer;
 }
+
 
 .popover{
     margin-top: 0 !important;
@@ -197,9 +248,11 @@
 .state-popover {
     border-radius: 4px;
     margin: 0 !important;
-    width: 600px;
-    height: 370px;
-    max-width: 600px;
+    width: min(600px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+
+    height: auto;
+    min-height: 300px;
 }
 
 .state-popover .popover-arrow {
@@ -240,30 +293,23 @@
     border: 2px solid #777;
     cursor: pointer;
 }
-
-.department-page {
+.department-main {
     width: 100%;
-    padding: 26px;
+    min-width: 0;
+    min-height: 900px;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    padding: 30px;
+    gap: 24px;
+    align-items: start;
 
     background-color: #f7f8fa;
 
     box-sizing: border-box;
     overflow-x: auto;
 }
-/*
-    왼쪽 : 목록
-    오른쪽 : 부서 추가 사이드
-*/
-.department-main {
-    width: 100%;
-    min-width: 0;
 
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-
-    gap: 24px;
-    align-items: start;
-}
 .department-side {
     min-width: 0;
     min-height: 800px;
@@ -279,14 +325,62 @@
 
     box-sizing: border-box;
 }
-.department-card{
-    font-family: inherit;
 
+.department-card {
+    font-family: inherit;
     font-size: 15px;
     color: #343a40;
-    
-    
+    min-height: 800px;
 }
+
+
+/* 부서 페이지 - 태블릿 */
+@media (max-width: 992px) {
+
+    .department-main {
+        grid-template-columns: 1fr;
+    }
+
+    .department-side {
+        display: none;
+    }
+}
+
+
+/* 부서 페이지 - 모바일 */
+@media (max-width: 768px) {
+
+    .department-main {
+        padding: 16px;
+    }
+
+    .department-card {
+        min-height: auto;
+    }
+}
+
+
+/* 부서 페이지네이션 */
+.dept-pagination .page-link {
+    margin-top: 10px;
+    color: #000000;
+    background-color: #f7f8fa !important;
+    border-color: #f7f8fa !important;
+}
+
+.dept-pagination .page-item.active .page-link {
+    color: #000000 !important;
+    background-color: #f7f8fa !important;
+    border-color: #f7f8fa !important;
+    font-weight: bold;
+}
+
+.dept-pagination .page-link:hover {
+    color: #f7f8fa !important;
+    background-color: #70a5d1 !important;
+}
+
+
 .kakao-login-button{
     width: 60%;
     height: 45px;
@@ -340,4 +434,222 @@
 .toggle .form-check-input:checked {
     background-color: #2563eb;
     border-color: #2563eb;
+}
+.check-column {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    text-align: center;
+}
+
+.main-background{
+    padding: 50px;
+    margin-right: 280px;
+
+    background-color: white;
+
+    box-sizing: border-box;
+    overflow-x: auto;
+}
+.list-background{
+    padding: 50px;
+
+    background-color: #f7f8fa;
+
+    box-sizing: border-box;
+    overflow-x: auto;
+}
+/* =========================
+   사용자 목록 반응형
+========================= */
+
+.member-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* 이름 + 프로필 */
+.member-info {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.list-img {
+    flex-shrink: 0;
+}
+
+.member-name {
+    margin-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-meta {
+    display: none;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+
+
+/* 팝오버 */
+.user-popover {
+    width: min(400px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+}
+
+
+
+/* 선 */
+.div-line {
+    width: min(500px, 100%);
+}
+
+.profile-line {
+    width: min(280px, 100%);
+}
+
+/* 태블릿 */
+@media (max-width: 992px) {
+
+    .member-table .birth-column,
+    .member-table .level-column,
+    .member-table .state-column,
+    .member-table .address-column {
+        display: none;
+    }
+
+    .member-meta {
+        display: block;
+    }
+.member-table {
+    table-layout: fixed ;
+    width: 100%;
+
+}
+.member-table .check-column {
+    width: 30px;
+}
+.member-table .name-column {
+    width: 150px;
+}
+.member-table .email-column {
+    width: 150px;
+}
+
+.member-table .contact-column {
+    width: 100px;
+}
+.member-table .dept-column {
+    width: 80px;
+}
+.member-table .position-column {
+    width: 80px;
+}
+
+
+
+}
+
+/* 모바일 */
+@media (max-width: 768px) {
+
+    .spacing {
+        padding: 30px 16px;
+    }
+
+    .left-right-padding {
+        padding: 0 16px;
+    }
+
+    .large-font {
+        font-size: 32px;
+    }
+
+    .member-table {
+        font-size: 13px;
+    }
+
+    .member-table .contact-column {
+        display: none;
+    }
+
+    .list-img {
+        width: 42px;
+        height: 42px;
+        margin-left: 0 !important;
+    }
+
+    .member-table th,
+    .member-table td {
+        height: 55px;
+    }
+
+}
+.mypage-content {
+    width: 100%;
+}
+
+.mypage-profile {
+    min-width: 0;
+}
+
+.mypage-management {
+    min-width: 0;
+}
+
+.mypage-card {
+    padding: 28px;
+    background-color: #ffffff;
+    border: 1px solid #e8eaed !important;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+
+/* 태블릿 */
+@media (max-width: 991px) {
+
+    .mypage-profile {
+        margin-bottom: 40px;
+    }
+
+}
+
+
+/* 모바일 */
+@media (max-width: 767px) {
+
+    .mypage-content {
+        padding: 0;
+    }
+
+    .mypage-profile {
+        margin-bottom: 30px;
+    }
+
+    .mypage-card {
+        padding: 20px;
+    }
+
+    .profile-img {
+        width: 150px;
+    }
+
+}
+.profile-card {
+    width: 18rem;
+}
+
+.profile-img {
+    width: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 767px) {
+    .profile-card {
+        width: 150px;
+    }
 }
