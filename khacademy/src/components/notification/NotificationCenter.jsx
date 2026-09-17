@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Bell, CheckCheck, CheckSquare, MessageSquare, ExternalLink, Calendar, ListOrdered } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "@utils/reaxios";
-import { getWebSocketClient, onWebSocketConnect } from "@utils/websocket";
 import "./NotificationCenter.css";
 import ProjectInviteModal from "../project/ProjectInviteModal";
+import { useAtomValue,useSetAtom } from "jotai";
+import { notificationRefreshState } from "@utils/storage";
+import { getWebSocketClient, onWebSocketReconnect } from "@utils/websocket";
 
 // 1. 안전한 사번(empNo) 추출 함수
 function getLoginEmpNo() {
@@ -43,6 +45,9 @@ export default function NotificationCenter() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedInviteNotification, setSelectedInviteNotification] = useState(null);
 
+    const notificationRefresh = useAtomValue(notificationRefreshState);
+    const requestNotificationRefresh = useSetAtom(notificationRefreshState);
+
   // 2. 알림 목록 조회
   const loadNotifications = useCallback(async () => {
     try {
@@ -67,6 +72,8 @@ export default function NotificationCenter() {
       let count = 0;
       if (typeof data.unreadCount === "number") {
         count = data.unreadCount;
+      } else if (typeof data.unReadCount === "number") {
+        count = data.unReadCount;
       } else if (typeof data.count === "number") {
         count = data.count;
       } else {
@@ -81,9 +88,18 @@ export default function NotificationCenter() {
     }
   }, []);
 
+  //알림 최초 조회 + 다른 화면에서 알림 상태가 변경되면 재조회
+  useEffect(() => {
+
+      loadNotifications();
+
+  }, [
+      loadNotifications,
+      notificationRefresh
+  ]);
+
   // 3. 웹소켓 실시간 구독
   useEffect(() => {
-    loadNotifications();
 
     if (!myEmpNo || myEmpNo <= 0) return;
 
@@ -98,9 +114,15 @@ export default function NotificationCenter() {
         (message) => {
           try {
             const newNoti = JSON.parse(message.body);
+            
+            // Home이랑 공통으로 갱신되도록 최소 수정중
+            // setUnreadCount((prev) => prev + 1);
+            // setNotifications((prev) => [newNoti, ...prev]);
 
-            setUnreadCount((prev) => prev + 1);
-            setNotifications((prev) => [newNoti, ...prev]);
+            //Header / Home 모두 최신 알림 다시 조회
+            requestNotificationRefresh(
+                prev => prev + 1
+            );
 
             if (newNoti.notificationContent) {
               toast.info(newNoti.notificationContent);
@@ -117,7 +139,7 @@ export default function NotificationCenter() {
       doSubscribe(client);
     }
 
-    const unregister = onWebSocketConnect(() => {
+    const unregister = onWebSocketReconnect(() => {
       const currentClient = getWebSocketClient();
       doSubscribe(currentClient);
     });
@@ -126,7 +148,7 @@ export default function NotificationCenter() {
       subscription?.unsubscribe();
       if (typeof unregister === "function") unregister();
     };
-  }, [myEmpNo, loadNotifications]);
+  }, [myEmpNo, requestNotificationRefresh]);
 
   // + 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -173,6 +195,29 @@ export default function NotificationCenter() {
       } catch (e) {
         console.error("❌ 단건 읽음 처리 실패:", e);
       }
+        const isUnread = item.notificationRead === "N" || item.isRead === "N";
+
+        if (isUnread) {
+            try {
+                await apiClient.patch(`/notification/${item.notificationNo}/read`);
+                // setNotifications((prev) =>
+                //     prev.map((n) =>
+                //         n.notificationNo === item.notificationNo
+                //             ? { ...n, notificationRead: "Y", isRead: "Y" }
+                //             : n
+                //     )
+                // );
+                // setUnreadCount((prev) => Math.max(0, prev - 1));
+
+                //Header / Home 둘 다 다시 조회
+                requestNotificationRefresh(
+                    prev => prev + 1
+                );
+            } catch (e) {
+                console.error("❌ 단건 읽음 처리 실패:", e);
+            }
+        }
+
     }
 
     setIsOpen(false);
@@ -232,8 +277,6 @@ export default function NotificationCenter() {
             targetUrl = `/projects/${targetProjectNo}/note/${targetNoteNo}`;
           }
         }
-
-
       }
 
       navigate(targetUrl);
@@ -244,10 +287,13 @@ export default function NotificationCenter() {
   const handleReadAll = async () => {
     try {
       await apiClient.patch("/notification/read-all");
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, notificationRead: "Y", isRead: "Y" }))
+      // setNotifications((prev) =>
+      //   prev.map((n) => ({ ...n, notificationRead: "Y", isRead: "Y" }))
+      // );
+      // setUnreadCount(0);
+      requestNotificationRefresh(
+          prev => prev + 1
       );
-      setUnreadCount(0);
     } catch (e) {
       console.error("❌ 전체 읽음 처리 실패:", e);
     }
