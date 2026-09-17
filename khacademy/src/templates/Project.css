@@ -2497,8 +2497,6 @@
     font-weight: 600;
 }
 
-<<<<<<< HEAD
-
 /* =====================================================
     Chat Unread Badge
 ===================================================== */
@@ -2548,7 +2546,8 @@
         right: 4px;
     }
 
-=======
+}
+
 .project-close-issue-summary {
     display: flex;
     gap: 10px;
@@ -2588,5 +2587,4 @@
 .project-close-issue-status.resolved {
     background-color: #f0fdf4;
     color: #15803d;
->>>>>>> origin/main
 }
