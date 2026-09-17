@@ -45,3 +45,6 @@ loginUserState.debugLabel = "로그인 유저의 정보";
 isLoginState.debugLabel = "로그인 상태";
 isAdminState.debugLabel = "관리자 여부";
 
+//알림 데이터 갱신 신호
+//값 자체에 의미는 없고 값이 바뀌면 알림을 다시 조회
+export const notificationRefreshState = atom(0);
