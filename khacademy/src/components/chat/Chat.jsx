@@ -325,29 +325,30 @@ export default function Chat() {
 
 
     //● 메세지 수정
-    const handleEdit = async (message) => {
-        //종료 프로젝트는 메세지 전송 불가
-        if (isClosed) return;
+    const handleEdit = async (message, content) => {
 
-        const content = window.prompt(
-            "메시지를 수정하세요.",
-            message.content
-        );
+        //종료 프로젝트는 메세지 수정 불가
+        if (isClosed) return false;
 
-        if (content === null) return;//메세지 수정 취소
-        if (content.trim() === "") return;//빈 문자열 방지
+        //빈 문자열 방지
+        if (!content || content.trim() === "") {
+            return false;
+        }
 
         try {
-            await apiClient.put(`/message/${message.no}`, {
-                content: content
-            });
+            await apiClient.put(
+                `/message/${message.no}`,
+                {
+                    content: content
+                }
+            );
 
-            //- 수정 후 다시 조회 → 서버가 Websocket으로 수정 결과를 보내주기 때문에 필요없음
-            //loadMessages(selectedChannel.chatChannelNo);
-
+            //수정 결과는 서버가 WebSocket /update로 보내줌
+            return true;
         }
         catch (e) {
             console.error("메시지 수정 실패", e);
+            return false;
         }
     };
 
@@ -404,7 +405,7 @@ export default function Chat() {
 
                             //검색 결과의 과거 context를 보는 중이 아니라면
                             //실제 메세지 목록에 새 메세지 추가
-                            if(contextModeRef.current === false) {
+                            if (contextModeRef.current === false) {
                                 setMessages(prev => [
                                     ...prev,
                                     json
@@ -412,7 +413,7 @@ export default function Chat() {
                             }
 
                             //다른 사람이 보낸 메세지
-                            if(isMine === false) {
+                            if (isMine === false) {
                                 //현재 채널에 들어와 있으므로 서버 기준 읽음 처리
                                 client.publish({
                                     destination: `/app/${channelNo}/read`
@@ -420,7 +421,7 @@ export default function Chat() {
 
                                 //화면상 최신 위치를 바로 보고 있지 않다면
                                 //새 메세지 안내 표시
-                                if(
+                                if (
                                     messageBottomRef.current === false
                                     || searchOpenRef.current === true
                                     || contextModeRef.current === true
@@ -698,7 +699,7 @@ export default function Chat() {
         messageBottomRef.current = isBottom;
 
         //context 화면의 맨 아래는 실제 최신 메세지가 아니므로 제외
-        if(
+        if (
             isBottom === true
             && contextModeRef.current === false
         ) {
@@ -710,7 +711,7 @@ export default function Chat() {
     const moveToPendingMessage = useCallback(async () => {
         //검색 결과 등 과거 context를 보고 있으면
         //최신 목록 자체를 다시 불러와야 함
-        if(contextMode === true) {
+        if (contextMode === true) {
             await returnLatestMessages();
         }
 
@@ -803,7 +804,7 @@ export default function Chat() {
                             )}
 
                             <FiArrowDown />
-                            
+
                         </button>
                     )}
 

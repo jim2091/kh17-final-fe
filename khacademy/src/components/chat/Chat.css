@@ -137,7 +137,7 @@
     color: #58616b;
     text-align: left;
     cursor: pointer;
-    transition: 
+    transition:
         background-color 0.15s ease,
         color 0.15s ease;
 }
@@ -200,10 +200,9 @@
     font-size: 17px;
     cursor: pointer;
     opacity: 0;
-    transition: 
+    transition:
         opacity 0.15s ease,
-        background-color 0.15s ease
-        color 0.15s ease;
+        background-color 0.15s ease color 0.15s ease;
 }
 
 .channel-item-wrapper:hover .channel-menu-button {
@@ -268,9 +267,8 @@
     border: 1px solid #dfe3e8;
     border-radius: 8px;
     overflow: hidden;
-    transition: 
-        border-color 0.15s ease
-        box-shadow 0.15s ease;
+    transition:
+        border-color 0.15s ease box-shadow 0.15s ease;
 }
 
 .channel-name-prefix {
@@ -429,13 +427,13 @@
 }
 
 /* 메세지 */
-.message-area > .message-outer {
+.message-area>.message-outer {
     width: 100%;
     display: flex;
     margin-bottom: 12px;
 }
 
-.message-area > .message-outer > .message-inner {
+.message-area>.message-outer>.message-inner {
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -502,23 +500,23 @@
 }
 
 /* 내 메세지 */
-.message-area > .message-outer.my {
+.message-area>.message-outer.my {
     justify-content: flex-end;
 }
 
-.message-area > .message-outer.my > .message-inner {
+.message-area>.message-outer.my>.message-inner {
     flex-direction: row-reverse;
 }
 
-.message-area > .message-outer.my .content-wrapper {
+.message-area>.message-outer.my .content-wrapper {
     align-items: flex-end;
 }
 
-.message-area > .message-outer.my .content {
+.message-area>.message-outer.my .content {
     flex-direction: row-reverse;
 }
 
-.message-area > .message-outer.my .body {
+.message-area>.message-outer.my .body {
     background-color: #4f6ef7;
     border-radius: 12px 4px 12px 12px;
     color: #ffffff;
@@ -578,16 +576,155 @@
     font-style: italic;
 }
 
-.message-area > .message-outer.my .deleted-message {
-    color: rgba(255,255,255,0.8);
+.message-area>.message-outer.my .deleted-message {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* =====================================================
+    Message Edit
+===================================================== */
+
+.message-area .content.message-editing {
+    display: block;
+}
+
+
+/* 수정 영역 */
+
+.message-edit-box {
+    width: clamp(260px, 34vw, 430px);
+    max-width: 100%;
+}
+
+
+/* 수정 입력창 */
+
+.message-edit-textarea {
+    width: 100%;
+    min-height: 72px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #b8c5df;
+    border-radius: 10px;
+
+    background-color: #ffffff;
+    color: #343a40;
+
+    font-size: 14px;
+    line-height: 1.5;
+
+    font-family: inherit;
+
+    resize: vertical;
+
+    outline: none;
+
+    box-sizing: border-box;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.message-edit-textarea:focus {
+    border-color: #6f91ef;
+
+    box-shadow:
+        0 0 0 3px rgba(79, 110, 247, 0.12);
+}
+
+
+.message-edit-textarea:disabled {
+    background-color: #f8f9fb;
+}
+
+
+/* 수정창 아래 */
+
+.message-edit-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: 6px;
+}
+
+
+.message-edit-guide {
+    color: #9aa1aa;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+
+.message-edit-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+}
+
+
+/* 취소 / 저장 */
+
+.message-edit-actions button {
+    padding: 5px 10px;
+
+    border-radius: 6px;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.message-edit-cancel {
+    border: 1px solid #dfe3e8;
+
+    background-color: #ffffff;
+
+    color: #69717a;
+}
+
+
+.message-edit-cancel:hover {
+    background-color: #f5f6f8;
+}
+
+
+.message-edit-save {
+    border: 1px solid #4f6ef7;
+
+    background-color: #4f6ef7;
+
+    color: #ffffff;
+}
+
+
+.message-edit-save:hover {
+    background-color: #405ee2;
+}
+
+
+.message-edit-actions button:disabled {
+    cursor: default;
+    opacity: 0.55;
 }
 
 /* 메세지 메뉴 */
 .message-menu-wrapper {
-     position: absolute;
-     bottom: 0;
-     margin-top: 0;
-     z-index: 20;
+    position: absolute;
+    bottom: 0;
+    margin-top: 0;
+    z-index: 20;
 }
 
 /* 상대방 메시지 - 말풍선 오른쪽 */
@@ -615,7 +752,7 @@
     font-size: 17px;
     cursor: pointer;
     opacity: 0;
-    transition: 
+    transition:
         opacity 0.15s ease,
         background-color 0.15s ease;
 }
@@ -1118,7 +1255,7 @@
     font-weight: 700;
 }
 
-.chat-new-message-preview > svg {
+.chat-new-message-preview>svg {
     flex-shrink: 0;
 
     color: #376feb;
@@ -1181,7 +1318,7 @@
         display: flex;
     }
 
-     /* 채팅 영역 */
+    /* 채팅 영역 */
     .chat-header-inner {
         padding: 0 20px;
     }
@@ -1239,11 +1376,11 @@
         padding: 14px 12px;
     }
 
-    .message-area > .message-outer {
+    .message-area>.message-outer {
         margin-bottom: 10px;
     }
 
-    .message-area > .message-outer > .message-inner {
+    .message-area>.message-outer>.message-inner {
         max-width: 88%;
     }
 
@@ -1279,6 +1416,18 @@
         right: 12px;
 
         bottom: 64px;
+    }
+
+    .message-edit-box {
+        width: min(72vw, 360px);
+    }
+
+    .message-edit-footer {
+        align-items: flex-end;
+    }
+
+    .message-edit-guide {
+        font-size: 9px;
     }
 
 }
