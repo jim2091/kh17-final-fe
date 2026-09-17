@@ -176,12 +176,12 @@ export default function DepartmentDetail() {
 
 
     return (
-        <div className="department-page">
+        <div className="organization-department-page">
 
             {/* 뒤로가기 */}
             <button
                 type="button"
-                className="department-back-button"
+                className="organization-department-back-button"
                 onClick={() =>
                     navigate(
                         "/organization/departments"
@@ -199,13 +199,13 @@ export default function DepartmentDetail() {
             {/* 부서 정보 */}
             {department && (
 
-                <div className="department-detail-header">
+                <div className="organization-department-detail-header">
 
                     <div>
 
-                        <div className="department-detail-title-row">
+                        <div className="organization-department-detail-title-row">
 
-                            <div className="department-detail-symbol">
+                            <div className="organization-department-detail-symbol">
                                 {department.deptName
                                     ?.charAt(0)
                                     || "부"}
@@ -214,12 +214,12 @@ export default function DepartmentDetail() {
 
                             <div>
 
-                                <h2 className="department-detail-title">
+                                <h2 className="organization-department-detail-title">
                                     {department.deptName}
                                 </h2>
 
 
-                                <div className="department-detail-description">
+                                <div className="organization-department-detail-description">
 
                                     {department.deptInfo
                                         || "등록된 부서 설명이 없습니다."
@@ -234,7 +234,7 @@ export default function DepartmentDetail() {
                     </div>
 
 
-                    <div className="department-detail-count">
+                    <div className="organization-department-detail-count">
 
                         <FiUsers />
 
@@ -250,24 +250,24 @@ export default function DepartmentDetail() {
 
 
             {/* 구성원 */}
-            <div className="department-member-section">
+            <div className="organization-department-member-section">
 
-                <div className="department-member-header">
+                <div className="organization-department-member-header">
 
                     <div>
 
-                        <div className="department-member-title">
+                        <div className="organization-department-member-title">
                             구성원
                         </div>
 
-                        <div className="department-member-description">
+                        <div className="organization-department-member-description">
                             현재 부서에 소속된 구성원입니다.
                         </div>
 
                     </div>
 
 
-                    <div className="department-member-total">
+                    <div className="organization-department-member-total">
 
                         {keyword.trim().length > 0
                             ? `${filteredMemberList.length} / ${memberList.length}명`
@@ -278,9 +278,9 @@ export default function DepartmentDetail() {
 
                 </div>
 
-                <div className="department-member-toolbar">
+                <div className="organization-department-member-toolbar">
 
-                    <div className="department-member-search">
+                    <div className="organization-department-member-search">
 
                         <FiSearch />
 
@@ -299,29 +299,29 @@ export default function DepartmentDetail() {
 
                 </div>
 
-                <div className="department-member-list-wrapper">
+                <div className="organization-department-member-list-wrapper">
 
-                    <table className="department-member-table">
+                    <table className="organization-department-member-table">
 
                         <thead>
                             <tr>
-                                <th className="department-col-member">
+                                <th className="organization-department-col-member">
                                     구성원
                                 </th>
 
-                                <th className="department-col-position">
+                                <th className="organization-department-col-position">
                                     직급
                                 </th>
 
-                                <th className="department-col-email">
+                                <th className="organization-department-col-email">
                                     이메일
                                 </th>
 
-                                <th className="department-col-contact">
+                                <th className="organization-department-col-contact">
                                     연락처
                                 </th>
 
-                                <th className="department-col-status">
+                                <th className="organization-department-col-status">
                                     상태
                                 </th>
                             </tr>
@@ -336,7 +336,7 @@ export default function DepartmentDetail() {
 
                                     <td
                                         colSpan="5"
-                                        className="department-member-empty"
+                                        className="organization-department-member-empty"
                                     >
                                         구성원 정보를 불러오는 중입니다.
                                     </td>
@@ -349,7 +349,7 @@ export default function DepartmentDetail() {
 
                                     <td
                                         colSpan="5"
-                                        className="department-member-empty"
+                                        className="organization-department-member-empty"
                                     >
                                         {keyword.trim().length > 0
                                             ? "검색 조건에 맞는 구성원이 없습니다."
@@ -371,18 +371,18 @@ export default function DepartmentDetail() {
 
                                         <tr
                                             key={member.empNo}
-                                            className="department-member-row"
+                                            className="organization-department-member-row"
                                             onClick={() =>
                                                 setSelectedMember(member)
                                             }
                                         >
 
                                             {/* 구성원 */}
-                                            <td className="department-col-member">
+                                            <td className="organization-department-col-member">
 
-                                                <div className="department-member-user">
+                                                <div className="organization-department-member-user">
 
-                                                    <div className="department-member-profile">
+                                                    <div className="organization-department-member-profile">
 
                                                         <img
                                                             src={
@@ -403,14 +403,14 @@ export default function DepartmentDetail() {
                                                     </div>
 
 
-                                                    <div className="department-member-name-area">
+                                                    <div className="organization-department-member-name-area">
 
-                                                        <div className="department-member-name">
+                                                        <div className="organization-department-member-name">
                                                             {member.empName}
                                                         </div>
 
                                                         {member.empLevel === "admin" && (
-                                                            <span className="department-admin-badge">
+                                                            <span className="organization-department-admin-badge">
                                                                 관리자
                                                             </span>
                                                         )}
@@ -423,27 +423,27 @@ export default function DepartmentDetail() {
 
 
                                             {/* 직급 */}
-                                            <td className="department-col-position">
+                                            <td className="organization-department-col-position">
                                                 {member.positionName || "-"}
                                             </td>
 
 
                                             {/* 이메일 */}
-                                            <td className="department-col-email">
+                                            <td className="organization-department-col-email">
                                                 {member.empEmail || "-"}
                                             </td>
 
 
                                             {/* 연락처 */}
-                                            <td className="department-col-contact">
+                                            <td className="organization-department-col-contact">
                                                 {member.empContact || "-"}
                                             </td>
 
 
                                             {/* 상태 */}
-                                            <td className="department-col-status">
+                                            <td className="organization-department-col-status">
 
-                                                <div className="department-member-status">
+                                                <div className="organization-department-member-status">
 
                                                     <span
                                                         className={
@@ -468,7 +468,7 @@ export default function DepartmentDetail() {
 
 
                                             {/* 이메일 */}
-                                            <td className="department-member-email">
+                                            <td className="organization-department-member-email">
                                                 {member.empEmail || "-"}
                                             </td>
 
@@ -482,7 +482,7 @@ export default function DepartmentDetail() {
                                             {/* Presence */}
                                             <td>
 
-                                                <div className="department-member-status">
+                                                <div className="organization-department-member-status">
 
                                                     <span
                                                         className={
@@ -525,7 +525,7 @@ export default function DepartmentDetail() {
                 }
                 centered
                 size="sm"
-                className="department-profile-modal"
+                className="organization-department-profile-modal"
             >
                 {selectedMember && (() => {
 
@@ -536,12 +536,12 @@ export default function DepartmentDetail() {
                         <>
                             <Modal.Body>
 
-                                <div className="department-profile-popup">
+                                <div className="organization-department-profile-popup">
 
                                     {/* 프로필 상단 */}
-                                    <div className="department-profile-popup-header">
+                                    <div className="organization-department-profile-popup-header">
 
-                                        <div className="department-profile-popup-image">
+                                        <div className="organization-department-profile-popup-image">
 
                                             <img
                                                 src={
@@ -562,17 +562,17 @@ export default function DepartmentDetail() {
                                         </div>
 
 
-                                        <div className="department-profile-popup-main">
+                                        <div className="organization-department-profile-popup-main">
 
-                                            <div className="department-profile-popup-name-row">
+                                            <div className="organization-department-profile-popup-name-row">
 
-                                                <div className="department-profile-popup-name">
+                                                <div className="organization-department-profile-popup-name">
                                                     {selectedMember.empName}
                                                 </div>
 
 
                                                 {selectedMember.empLevel === "admin" && (
-                                                    <span className="department-admin-badge">
+                                                    <span className="organization-department-admin-badge">
                                                         관리자
                                                     </span>
                                                 )}
@@ -580,14 +580,14 @@ export default function DepartmentDetail() {
                                             </div>
 
 
-                                            <div className="department-profile-popup-position">
+                                            <div className="organization-department-profile-popup-position">
                                                 {department?.deptName}
                                                 {" · "}
                                                 {selectedMember.positionName || "-"}
                                             </div>
 
 
-                                            <div className="department-profile-popup-status">
+                                            <div className="organization-department-profile-popup-status">
 
                                                 <span
                                                     className={
@@ -606,54 +606,54 @@ export default function DepartmentDetail() {
 
 
                                     {/* 상세 정보 */}
-                                    <div className="department-profile-popup-info">
+                                    <div className="organization-department-profile-popup-info">
 
-                                        <div className="department-profile-info-item">
+                                        <div className="organization-department-profile-info-item">
 
-                                            <div className="department-profile-info-label">
+                                            <div className="organization-department-profile-info-label">
                                                 이메일
                                             </div>
 
-                                            <div className="department-profile-info-value">
+                                            <div className="organization-department-profile-info-value">
                                                 {selectedMember.empEmail || "-"}
                                             </div>
 
                                         </div>
 
 
-                                        <div className="department-profile-info-item">
+                                        <div className="organization-department-profile-info-item">
 
-                                            <div className="department-profile-info-label">
+                                            <div className="organization-department-profile-info-label">
                                                 연락처
                                             </div>
 
-                                            <div className="department-profile-info-value">
+                                            <div className="organization-department-profile-info-value">
                                                 {selectedMember.empContact || "-"}
                                             </div>
 
                                         </div>
 
 
-                                        <div className="department-profile-info-item">
+                                        <div className="organization-department-profile-info-item">
 
-                                            <div className="department-profile-info-label">
+                                            <div className="organization-department-profile-info-label">
                                                 부서
                                             </div>
 
-                                            <div className="department-profile-info-value">
+                                            <div className="organization-department-profile-info-value">
                                                 {department?.deptName || "-"}
                                             </div>
 
                                         </div>
 
 
-                                        <div className="department-profile-info-item">
+                                        <div className="organization-department-profile-info-item">
 
-                                            <div className="department-profile-info-label">
+                                            <div className="organization-department-profile-info-label">
                                                 직급
                                             </div>
 
-                                            <div className="department-profile-info-value">
+                                            <div className="organization-department-profile-info-value">
                                                 {selectedMember.positionName || "-"}
                                             </div>
 
@@ -667,7 +667,7 @@ export default function DepartmentDetail() {
 
                                         <button
                                             type="button"
-                                            className="department-profile-message-button"
+                                            className="organization-department-profile-message-button"
                                         >
                                             메시지 보내기
                                         </button>
