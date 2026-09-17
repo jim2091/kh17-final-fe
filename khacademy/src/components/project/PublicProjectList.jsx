@@ -129,7 +129,7 @@ export default function PublicProjectList() {
             navigate(`/projects/${project.projectNo}/task`);
         }
         catch(e){
-            toast.error("프로젝트 참가에 실패했습니다.");
+            toast.error("이미 참가했거나 추방당한 프로젝트입니다.");
         }
     },[navigate,loadProjectList])
 
