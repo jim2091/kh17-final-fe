@@ -459,7 +459,7 @@ export default function MessageArea(
                                     {/* 내가 보낸 메세지이고 삭제되지 않은 경우 */}
                                     {message.deleted !== "Y"
                                     && isEditing === false
-                                    && (isMine || (isClosed === false)) && (
+                                    && isClosed === false && (
                                         <div className="message-menu-wrapper">
                                             <button
                                                 className="message-menu-button"
