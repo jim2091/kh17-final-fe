@@ -1,6 +1,6 @@
-/* =========================================================
-   FILES PAGE
-========================================================= */
+/* ==========================================
+   전체 페이지
+========================================== */
 
 .files-page {
     width: 100%;
@@ -28,9 +28,9 @@
 }
 
 
-/* =========================================================
-   TOOLBAR
-========================================================= */
+/* ==========================================
+   Toolbar
+========================================== */
 
 .files-toolbar {
     width: 100%;
@@ -40,16 +40,10 @@
     align-items: center;
 
     gap: 10px;
-
     margin-bottom: 14px;
 
     box-sizing: border-box;
 }
-
-
-/* =========================================================
-   SEARCH AREA
-========================================================= */
 
 .files-search-area {
     display: flex;
@@ -58,14 +52,13 @@
     gap: 6px;
 
     min-width: 0;
-
     flex: 1 1 auto;
 }
 
 
-/* =========================================================
-   SEARCH TYPE
-========================================================= */
+/* ==========================================
+   검색 타입
+========================================== */
 
 .files-search-type {
     width: 92px;
@@ -74,16 +67,13 @@
     flex: 0 0 auto;
 
     padding: 0 28px 0 12px;
-
     box-sizing: border-box;
 
     border: 1px solid #e2e5ea;
     border-radius: 9px;
-
     outline: none;
 
     background: #f8f9fb;
-
     color: #4b5563;
 
     font-family:
@@ -113,13 +103,14 @@
     border-color: #b7b0ff;
 
     box-shadow:
-        0 0 0 3px rgba(91, 77, 248, 0.08);
+        0 0 0 3px
+        rgba(91, 77, 248, 0.08);
 }
 
 
-/* =========================================================
-   SEARCH
-========================================================= */
+/* ==========================================
+   검색
+========================================== */
 
 .files-search {
     position: relative;
@@ -128,7 +119,6 @@
     height: 38px;
 
     flex: 0 1 310px;
-
     min-width: 0;
 }
 
@@ -142,11 +132,9 @@
 
     border: 1px solid #e2e5ea;
     border-radius: 9px;
-
     outline: none;
 
     background: #f8f9fb;
-
     color: #202124;
 
     font-family:
@@ -173,17 +161,17 @@
 
 .files-search input:focus {
     background: #fff;
-
     border-color: #b7b0ff;
 
     box-shadow:
-        0 0 0 3px rgba(91, 77, 248, 0.08);
+        0 0 0 3px
+        rgba(91, 77, 248, 0.08);
 }
 
 
-/* =========================================================
-   SEARCH SELECT
-========================================================= */
+/* ==========================================
+   출처 / 파일 형태 검색
+========================================== */
 
 .files-source-search-select,
 .files-type-search-select {
@@ -196,11 +184,9 @@
 
     border: 1px solid #e2e5ea;
     border-radius: 9px;
-
     outline: none;
 
     background: #f8f9fb;
-
     color: #4b5563;
 
     font-family:
@@ -223,16 +209,17 @@
 .files-source-search-select:hover,
 .files-type-search-select:hover {
     background: #f3f4f7;
+    border-color: #d6dae1;
 }
 
 .files-source-search-select:focus,
 .files-type-search-select:focus {
     background: #fff;
-
     border-color: #b7b0ff;
 
     box-shadow:
-        0 0 0 3px rgba(91, 77, 248, 0.08);
+        0 0 0 3px
+        rgba(91, 77, 248, 0.08);
 }
 
 .files-source-search-select option,
@@ -258,9 +245,9 @@
 }
 
 
-/* =========================================================
-   SEARCH BUTTON
-========================================================= */
+/* ==========================================
+   검색 버튼
+========================================== */
 
 .files-search button {
     position: absolute;
@@ -312,9 +299,9 @@
 }
 
 
-/* =========================================================
-   RESET
-========================================================= */
+/* ==========================================
+   검색 초기화
+========================================== */
 
 .files-search-reset {
     height: 38px;
@@ -327,7 +314,6 @@
     border-radius: 9px;
 
     background: #fff;
-
     color: #6b7280;
 
     font-family:
@@ -353,10 +339,14 @@
     color: #5b4df8;
 }
 
+.files-search-reset:active {
+    transform: scale(0.97);
+}
 
-/* =========================================================
-   SORT
-========================================================= */
+
+/* ==========================================
+   정렬
+========================================== */
 
 .files-sort-area {
     display: flex;
@@ -375,11 +365,9 @@
 
     border: 1px solid #e2e5ea;
     border-radius: 9px;
-
     outline: none;
 
     background: #fff;
-
     color: #4b5563;
 
     font-family:
@@ -406,13 +394,14 @@
     border-color: #b7b0ff;
 
     box-shadow:
-        0 0 0 3px rgba(91, 77, 248, 0.07);
+        0 0 0 3px
+        rgba(91, 77, 248, 0.07);
 }
 
 
-/* =========================================================
-   UPLOAD BUTTON
-========================================================= */
+/* ==========================================
+   업로드
+========================================== */
 
 .files-upload-button {
     height: 38px;
@@ -434,7 +423,6 @@
     border-radius: 9px;
 
     background: #5b4df8;
-
     color: #fff;
 
     font-family:
@@ -449,7 +437,8 @@
     cursor: pointer;
 
     box-shadow:
-        0 3px 10px rgba(91, 77, 248, 0.18);
+        0 3px 10px
+        rgba(91, 77, 248, 0.18);
 
     transition:
         background 0.18s ease,
@@ -461,7 +450,8 @@
     background: #5042e8;
 
     box-shadow:
-        0 5px 14px rgba(91, 77, 248, 0.24);
+        0 5px 14px
+        rgba(91, 77, 248, 0.24);
 
     transform: translateY(-1px);
 }
@@ -472,8 +462,11 @@
 
 .files-upload-button:disabled {
     opacity: 0.55;
+
     cursor: not-allowed;
+
     transform: none;
+
     box-shadow: none;
 }
 
@@ -489,14 +482,24 @@
 }
 
 
-/* =========================================================
-   FILE LIST
-========================================================= */
+/* ==========================================
+   파일 목록
+========================================== */
 
 .files-list {
     width: 100%;
     min-width: 0;
 
+    /*
+     * 파일명
+     * 출처
+     * 업로더
+     * 날짜
+     * 다운로드
+     * 크기
+     * Record
+     * 삭제
+     */
     --file-col:
         minmax(0, 1fr)
         120px
@@ -515,17 +518,15 @@
     background: #fff;
 
     box-shadow:
-        0 2px 10px rgba(20, 24, 40, 0.025);
+        0 2px 10px
+        rgba(20, 24, 40, 0.025);
 }
-
-
-/* =========================================================
-   LIST HEADER
-========================================================= */
 
 .files-list-header {
     display: grid;
-    grid-template-columns: var(--file-col);
+
+    grid-template-columns:
+        var(--file-col);
 
     align-items: center;
 
@@ -548,14 +549,11 @@
     letter-spacing: -0.1px;
 }
 
-
-/* =========================================================
-   LIST ROW
-========================================================= */
-
 .files-list-row {
     display: grid;
-    grid-template-columns: var(--file-col);
+
+    grid-template-columns:
+        var(--file-col);
 
     align-items: center;
 
@@ -601,9 +599,9 @@
 }
 
 
-/* =========================================================
-   FILE NAME
-========================================================= */
+/* ==========================================
+   파일명
+========================================== */
 
 .files-col-file {
     min-width: 0;
@@ -628,6 +626,7 @@
     overflow: hidden;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 
     color: #292d35;
@@ -643,9 +642,9 @@
 }
 
 
-/* =========================================================
-   SOURCE
-========================================================= */
+/* ==========================================
+   출처
+========================================== */
 
 .files-col-source {
     min-width: 0;
@@ -658,6 +657,7 @@
     overflow: hidden;
 
     white-space: nowrap;
+
     text-overflow: ellipsis;
 
     color: #6b7280;
@@ -692,15 +692,14 @@
 
 .files-col-source.files-source-clickable:hover {
     background: #e9e7ff;
-    color: #4f46c9;
 
-    text-decoration: none;
+    color: #4f46c9;
 }
 
 
-/* =========================================================
-   UPLOADER
-========================================================= */
+/* ==========================================
+   업로더
+========================================== */
 
 .files-col-uploader {
     min-width: 0;
@@ -710,6 +709,7 @@
     overflow: hidden;
 
     white-space: nowrap;
+
     text-overflow: ellipsis;
 
     color: #4b5563;
@@ -718,9 +718,9 @@
 }
 
 
-/* =========================================================
-   DATE
-========================================================= */
+/* ==========================================
+   날짜
+========================================== */
 
 .files-col-date {
     min-width: 0;
@@ -735,22 +735,24 @@
 }
 
 
-/* =========================================================
-   DOWNLOAD
-========================================================= */
+/* ==========================================
+   다운로드
+========================================== */
 
 .files-col-download {
     min-width: 0;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 }
 
 
-/* =========================================================
-   SIZE
-========================================================= */
+/* ==========================================
+   크기
+========================================== */
 
 .files-col-size {
     min-width: 0;
@@ -765,23 +767,25 @@
 }
 
 
-/* =========================================================
-   RECORD / DELETE
-========================================================= */
+/* ==========================================
+   Record / 삭제
+========================================== */
 
 .files-col-record,
 .files-col-delete {
     min-width: 0;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 }
 
 
-/* =========================================================
-   FILE ICON
-========================================================= */
+/* ==========================================
+   파일 아이콘
+========================================== */
 
 .files-icon {
     width: 36px;
@@ -800,7 +804,8 @@
     box-sizing: border-box;
 
     box-shadow:
-        0 2px 5px rgba(20, 24, 40, 0.08);
+        0 2px 5px
+        rgba(20, 24, 40, 0.08);
 }
 
 .files-icon svg {
@@ -815,7 +820,8 @@
     border-radius: 13px;
 
     box-shadow:
-        0 6px 18px rgba(20, 24, 40, 0.1);
+        0 6px 18px
+        rgba(20, 24, 40, 0.1);
 }
 
 .files-icon-large svg {
@@ -824,9 +830,9 @@
 }
 
 
-/* =========================================================
-   IMAGE THUMBNAIL
-========================================================= */
+/* ==========================================
+   이미지 썸네일
+========================================== */
 
 .files-image-thumbnail {
     position: relative;
@@ -837,6 +843,7 @@
     flex: 0 0 auto;
 
     border: 1px solid #e2e5ea;
+
     border-radius: 8px;
 
     overflow: hidden;
@@ -853,7 +860,8 @@
     justify-content: center;
 
     box-shadow:
-        0 2px 5px rgba(20, 24, 40, 0.06);
+        0 2px 5px
+        rgba(20, 24, 40, 0.06);
 }
 
 .files-image-thumbnail img {
@@ -864,10 +872,13 @@
 
     object-fit: cover;
 
-    transition: transform 0.2s ease;
+    transition:
+        transform 0.2s ease;
 }
 
-.files-list-row:hover .files-image-thumbnail img {
+.files-list-row:hover
+.files-image-thumbnail
+img {
     transform: scale(1.05);
 }
 
@@ -899,16 +910,17 @@
 }
 
 
-/* =========================================================
-   FILE TYPE COLORS
-========================================================= */
+/* ==========================================
+   파일 아이콘 색상
+========================================== */
 
 .files-icon-pdf {
-    background: linear-gradient(
-        145deg,
-        #ef4444,
-        #dc2626
-    );
+    background:
+        linear-gradient(
+            145deg,
+            #ef4444,
+            #dc2626
+        );
 
     color: #fff;
 }
@@ -919,11 +931,12 @@
 }
 
 .files-icon-word {
-    background: linear-gradient(
-        145deg,
-        #4285f4,
-        #2563eb
-    );
+    background:
+        linear-gradient(
+            145deg,
+            #4285f4,
+            #2563eb
+        );
 
     color: #fff;
 }
@@ -934,11 +947,12 @@
 }
 
 .files-icon-excel {
-    background: linear-gradient(
-        145deg,
-        #34a853,
-        #16843d
-    );
+    background:
+        linear-gradient(
+            145deg,
+            #34a853,
+            #16843d
+        );
 
     color: #fff;
 }
@@ -949,11 +963,12 @@
 }
 
 .files-icon-powerpoint {
-    background: linear-gradient(
-        145deg,
-        #f97316,
-        #ea580c
-    );
+    background:
+        linear-gradient(
+            145deg,
+            #f97316,
+            #ea580c
+        );
 
     color: #fff;
 }
@@ -964,11 +979,12 @@
 }
 
 .files-icon-zip {
-    background: linear-gradient(
-        145deg,
-        #f59e0b,
-        #d97706
-    );
+    background:
+        linear-gradient(
+            145deg,
+            #f59e0b,
+            #d97706
+        );
 
     color: #fff;
 }
@@ -989,9 +1005,9 @@
 }
 
 
-/* =========================================================
-   ICON BUTTONS
-========================================================= */
+/* ==========================================
+   액션 버튼
+========================================== */
 
 .files-download-button,
 .files-delete-button,
@@ -1058,9 +1074,9 @@
 }
 
 
-/* =========================================================
-   EMPTY
-========================================================= */
+/* ==========================================
+   빈 목록
+========================================== */
 
 .files-empty {
     min-height: 360px;
@@ -1101,9 +1117,180 @@
 }
 
 
-/* =========================================================
-   DETAIL MODAL
-========================================================= */
+/* ==========================================
+   로딩
+========================================== */
+
+.files-loading-spinner {
+    width: 28px;
+    height: 28px;
+
+    border: 3px solid #ecebff;
+    border-top-color: #5b4df8;
+
+    border-radius: 50%;
+
+    animation:
+        files-spinner 0.8s
+        linear infinite;
+}
+
+@keyframes files-spinner {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ==========================================
+   파일 개수
+========================================== */
+
+.files-count {
+    margin-top: 10px;
+
+    padding: 0 4px;
+
+    color: #9aa1ad;
+
+    font-size: 11px;
+}
+
+.files-count strong {
+    color: #5b4df8;
+
+    font-weight: 700;
+}
+
+
+/* ==========================================
+   Pagination
+========================================== */
+
+.files-pagination {
+    width: 100%;
+
+    min-height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    margin-top: 22px;
+    margin-bottom: 8px;
+
+    user-select: none;
+}
+
+.files-page-button {
+    min-width: 32px;
+    height: 32px;
+
+    padding: 0 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid transparent;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #737b87;
+
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.files-page-button:hover:not(:disabled) {
+    background: #f4f3ff;
+
+    border-color: #e8e5ff;
+
+    color: #5b4df8;
+}
+
+.files-page-button.active {
+    background: #5b4df8;
+
+    border-color: #5b4df8;
+
+    color: #fff;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 3px 8px
+        rgba(91, 77, 248, 0.18);
+}
+
+.files-page-button:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.files-page-button:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+}
+
+.files-page-arrow {
+    width: 32px;
+
+    padding: 0;
+}
+
+.files-page-arrow svg {
+    width: 16px;
+    height: 16px;
+
+    stroke: currentColor;
+}
+
+.files-page-dots {
+    min-width: 20px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #a3a8b1;
+
+    font-size: 11px;
+
+    pointer-events: none;
+}
+
+
+/* ==========================================
+   상세 팝업
+========================================== */
 
 .files-detail-overlay {
     position: fixed;
@@ -1113,6 +1300,7 @@
     z-index: 9999;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1120,49 +1308,51 @@
 
     padding: 20px;
 
-    background: rgba(15, 18, 28, 0.62);
+    background:
+        rgba(15, 18, 28, 0.62);
 
     backdrop-filter: blur(4px);
 
     animation:
         files-detail-fade-in
-        0.18s
-        ease;
+        0.18s ease;
 }
-
-
-/* =========================================================
-   MODAL
-========================================================= */
 
 .files-detail-modal {
     width: min(650px, 94vw);
-    max-height: min(760px, 92vh);
+
+    max-height:
+        min(760px, 92vh);
 
     display: flex;
+
     flex-direction: column;
 
     overflow: hidden;
 
-    border: 1px solid rgba(255, 255, 255, 0.65);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.65);
+
     border-radius: 18px;
 
     background: #fff;
 
     box-shadow:
-        0 24px 70px rgba(0, 0, 0, 0.24),
-        0 4px 18px rgba(0, 0, 0, 0.08);
+        0 24px 70px
+            rgba(0, 0, 0, 0.24),
+        0 4px 18px
+            rgba(0, 0, 0, 0.08);
 
     animation:
         files-detail-modal-in
-        0.2s
-        ease;
+        0.2s ease;
 }
 
 
-/* =========================================================
-   MODAL HEADER
-========================================================= */
+/* ==========================================
+   상세 헤더
+========================================== */
 
 .files-detail-header {
     flex: 0 0 auto;
@@ -1170,6 +1360,7 @@
     min-height: 64px;
 
     display: flex;
+
     align-items: center;
     justify-content: space-between;
 
@@ -1188,6 +1379,7 @@
     min-width: 0;
 
     display: flex;
+
     align-items: center;
 
     gap: 11px;
@@ -1212,6 +1404,7 @@
     background: transparent;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1238,9 +1431,9 @@
 }
 
 
-/* =========================================================
-   MODAL BODY
-========================================================= */
+/* ==========================================
+   상세 Body
+========================================== */
 
 .files-detail-body {
     flex: 1 1 auto;
@@ -1257,9 +1450,9 @@
 }
 
 
-/* =========================================================
-   PREVIEW
-========================================================= */
+/* ==========================================
+   상세 미리보기
+========================================== */
 
 .files-detail-preview {
     width: 100%;
@@ -1270,6 +1463,7 @@
     margin-bottom: 16px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1278,6 +1472,7 @@
     box-sizing: border-box;
 
     border: 1px solid #e6e8ed;
+
     border-radius: 14px;
 
     background:
@@ -1304,7 +1499,8 @@
     border-radius: 8px;
 
     box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.1);
+        0 8px 25px
+        rgba(0, 0, 0, 0.1);
 }
 
 .files-detail-image {
@@ -1314,6 +1510,7 @@
 
 .files-detail-image-error {
     display: flex;
+
     flex-direction: column;
 
     align-items: center;
@@ -1328,14 +1525,15 @@
 
 .files-detail-file-icon {
     display: flex;
+
     align-items: center;
     justify-content: center;
 }
 
 
-/* =========================================================
-   DETAIL INFO
-========================================================= */
+/* ==========================================
+   상세 정보
+========================================== */
 
 .files-detail-info {
     width: 100%;
@@ -1345,112 +1543,11 @@
     overflow: hidden;
 
     border: 1px solid #e6e8ed;
+
     border-radius: 14px;
 
     background: #fff;
 }
-
-.files-detail-info-title {
-    padding: 14px 17px;
-
-    border-bottom: 1px solid #eef0f3;
-
-    color: #343a46;
-
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.files-detail-info-list {
-    width: 100%;
-}
-
-.files-detail-info-item {
-    min-height: 47px;
-
-    display: grid;
-
-    grid-template-columns: 86px minmax(0, 1fr);
-
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 8px 17px;
-
-    box-sizing: border-box;
-
-    border-bottom: 1px solid #f1f2f5;
-}
-
-.files-detail-info-item:last-child {
-    border-bottom: none;
-}
-
-.files-detail-info-item > span {
-    color: #9aa1ad;
-
-    font-size: 10px;
-    font-weight: 500;
-}
-
-.files-detail-info-item > strong {
-    min-width: 0;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    color: #3f4652;
-
-    font-size: 11px;
-    font-weight: 600;
-}
-
-
-/* =========================================================
-   SOURCE BUTTON
-========================================================= */
-
-.files-detail-source-button {
-    width: fit-content;
-    max-width: 100%;
-
-    padding: 5px 9px;
-
-    border: none;
-    border-radius: 6px;
-
-    background: #f2f0ff;
-
-    color: #5b4df8;
-
-    font-family:
-        "Pretendard",
-        "Noto Sans KR",
-        Arial,
-        sans-serif;
-
-    font-size: 10px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
-}
-
-.files-detail-source-button:hover {
-    background: #e8e5ff;
-    color: #4638d0;
-}
-
-
-/* =========================================================
-   실제 JSX에서 사용되는 상세 정보 클래스
-========================================================= */
 
 .files-detail-name {
     margin-bottom: 14px;
@@ -1460,6 +1557,7 @@
     box-sizing: border-box;
 
     border: 1px solid #e6e8ed;
+
     border-radius: 12px;
 
     background: #fff;
@@ -1484,6 +1582,7 @@
     overflow: hidden;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 
     color: #2f3540;
@@ -1497,7 +1596,9 @@
 
     display: grid;
 
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns:
+        76px
+        minmax(0, 1fr);
 
     align-items: center;
 
@@ -1507,7 +1608,9 @@
 
     box-sizing: border-box;
 
-    border-bottom: 1px solid #f0f1f4;
+    border-bottom:
+        1px solid
+        #f0f1f4;
 
     background: #fff;
 }
@@ -1529,6 +1632,7 @@
     overflow: hidden;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 
     color: #4b5563;
@@ -1538,17 +1642,20 @@
 }
 
 
-/* =========================================================
-   DETAIL SOURCE LINK
-========================================================= */
+/* ==========================================
+   상세 출처
+========================================== */
 
+.files-detail-source-button,
 .files-detail-source-link {
     width: fit-content;
+
     max-width: 100%;
 
     padding: 5px 9px;
 
     border: none;
+
     border-radius: 6px;
 
     background: #f2f0ff;
@@ -1571,15 +1678,17 @@
         color 0.15s ease;
 }
 
+.files-detail-source-button:hover,
 .files-detail-source-link:hover {
     background: #e8e5ff;
+
     color: #4638d0;
 }
 
 
-/* =========================================================
-   MODAL FOOTER
-========================================================= */
+/* ==========================================
+   상세 Footer
+========================================== */
 
 .files-detail-footer {
     flex: 0 0 auto;
@@ -1587,6 +1696,7 @@
     min-height: 66px;
 
     display: flex;
+
     align-items: center;
     justify-content: flex-end;
 
@@ -1605,6 +1715,7 @@
     height: 36px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1642,9 +1753,9 @@
 }
 
 
-/* =========================================================
-   FOOTER BUTTONS
-========================================================= */
+/* ==========================================
+   상세 다운로드
+========================================== */
 
 .files-detail-download-button {
     border: 1px solid #e0e3e8;
@@ -1660,9 +1771,16 @@
 
 .files-detail-download-button:hover {
     background: #f7f7ff;
+
     border-color: #d9d5ff;
+
     color: #5548df;
 }
+
+
+/* ==========================================
+   상세 Record
+========================================== */
 
 .files-detail-record-button {
     border: 1px solid #dedafc;
@@ -1678,8 +1796,14 @@
 
 .files-detail-record-button:hover {
     background: #eceaff;
+
     border-color: #cfc9ff;
 }
+
+
+/* ==========================================
+   상세 삭제
+========================================== */
 
 .files-detail-delete-button {
     border: 1px solid #f4d0d0;
@@ -1695,13 +1819,14 @@
 
 .files-detail-delete-button:hover {
     background: #fff0f0;
+
     border-color: #efb7b7;
 }
 
 
-/* =========================================================
-   ANIMATION
-========================================================= */
+/* ==========================================
+   Animation
+========================================== */
 
 @keyframes files-detail-fade-in {
     from {
@@ -1716,23 +1841,30 @@
 @keyframes files-detail-modal-in {
     from {
         opacity: 0;
-        transform: translateY(8px) scale(0.985);
+
+        transform:
+            translateY(8px)
+            scale(0.985);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+
+        transform:
+            translateY(0)
+            scale(1);
     }
 }
 
 
-/* =========================================================
+/* ==========================================
    1100px
-========================================================= */
+========================================== */
 
 @media (max-width: 1100px) {
     .files-search {
         width: 250px;
+
         flex-basis: 250px;
     }
 
@@ -1746,10 +1878,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    1000px
-   RECORD 숨김
-========================================================= */
+========================================== */
 
 @media (max-width: 1000px) {
     .files-list-header .files-col-record,
@@ -1770,10 +1901,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    900px
-   SIZE 숨김
-========================================================= */
+========================================== */
 
 @media (max-width: 900px) {
     .files-list-header .files-col-size,
@@ -1793,9 +1923,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    800px
-========================================================= */
+========================================== */
 
 @media (max-width: 800px) {
     .files-toolbar {
@@ -1814,10 +1944,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    750px
-   DATE 숨김
-========================================================= */
+========================================== */
 
 @media (max-width: 750px) {
     .files-list-header .files-col-date,
@@ -1836,9 +1965,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    700px
-========================================================= */
+========================================== */
 
 @media (max-width: 700px) {
     .files-page {
@@ -1847,6 +1976,7 @@
 
     .files-toolbar {
         gap: 8px;
+
         align-items: flex-start;
     }
 
@@ -1859,8 +1989,11 @@
     }
 
     .files-search {
-        width: calc(100% - 98px);
-        flex-basis: calc(100% - 98px);
+        width:
+            calc(100% - 98px);
+
+        flex-basis:
+            calc(100% - 98px);
     }
 
     .files-search-type {
@@ -1877,11 +2010,13 @@
 
     .files-search-source,
     .files-search-type-mode {
-        width: calc(100% - 98px);
+        width:
+            calc(100% - 98px);
     }
 
     .files-sort-area {
         width: auto;
+
         margin-left: 0;
     }
 
@@ -1894,9 +2029,9 @@
     }
 
 
-    /* -----------------------------------------
-       Mobile List
-    ----------------------------------------- */
+    /* ======================================
+       파일 목록
+    ====================================== */
 
     .files-list {
         border-radius: 11px;
@@ -1947,30 +2082,63 @@
 
     .files-col-source {
         padding: 0 5px;
+
         font-size: 10px;
     }
 
     .files-col-source.files-source-clickable {
         padding: 4px 7px;
+
         font-size: 9px;
     }
 
     .files-download-button,
-    .files-delete-button {
+    .files-delete-button,
+    .files-record-button {
         width: 29px;
         height: 29px;
     }
 
     .files-download-button svg,
-    .files-delete-button svg {
+    .files-delete-button svg,
+    .files-record-button svg {
         width: 15px;
         height: 15px;
     }
 
 
-    /* -----------------------------------------
-       Modal
-    ----------------------------------------- */
+    /* ======================================
+       Pagination
+    ====================================== */
+
+    .files-pagination {
+        margin-top: 18px;
+
+        gap: 2px;
+    }
+
+    .files-page-button {
+        min-width: 30px;
+        height: 30px;
+
+        padding: 0 6px;
+
+        font-size: 10px;
+    }
+
+    .files-page-arrow {
+        width: 30px;
+    }
+
+    .files-page-dots {
+        min-width: 17px;
+        height: 30px;
+    }
+
+
+    /* ======================================
+       상세
+    ====================================== */
 
     .files-detail-overlay {
         padding: 10px;
@@ -1978,6 +2146,7 @@
 
     .files-detail-modal {
         width: 100%;
+
         max-height: 94vh;
 
         border-radius: 15px;
@@ -2005,7 +2174,9 @@
     .files-detail-info-row {
         min-height: 43px;
 
-        grid-template-columns: 70px minmax(0, 1fr);
+        grid-template-columns:
+            70px
+            minmax(0, 1fr);
 
         padding: 0 13px;
     }
@@ -2026,10 +2197,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    600px
-   UPLOADER 숨김
-========================================================= */
+========================================== */
 
 @media (max-width: 600px) {
     .files-list-header .files-col-uploader,
@@ -2070,10 +2240,9 @@
 }
 
 
-/* =========================================================
+/* ==========================================
    480px
-   SOURCE 숨김
-========================================================= */
+========================================== */
 
 @media (max-width: 480px) {
     .files-list-header .files-col-source,
@@ -2098,6 +2267,7 @@
 
     .files-upload-button {
         min-width: auto;
+
         padding: 0 11px;
     }
 
@@ -2110,6 +2280,49 @@
         height: 14px;
     }
 
+
+    /* ======================================
+       Pagination
+    ====================================== */
+
+    .files-pagination {
+        gap: 1px;
+
+        margin-top: 16px;
+    }
+
+    .files-page-button {
+        min-width: 28px;
+        height: 28px;
+
+        padding: 0 5px;
+
+        font-size: 10px;
+
+        border-radius: 7px;
+    }
+
+    .files-page-arrow {
+        width: 28px;
+    }
+
+    .files-page-arrow svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .files-page-dots {
+        min-width: 15px;
+        height: 28px;
+
+        font-size: 10px;
+    }
+
+
+    /* ======================================
+       상세
+    ====================================== */
+
     .files-detail-header-title {
         gap: 8px;
     }
@@ -2120,6 +2333,7 @@
 
     .files-detail-footer {
         justify-content: stretch;
+
         gap: 5px;
     }
 
@@ -2138,9 +2352,34 @@
 }
 
 
-/* =========================================================
+/* ==========================================
+   400px
+========================================== */
+
+@media (max-width: 400px) {
+    .files-pagination {
+        gap: 0;
+    }
+
+    .files-page-button {
+        min-width: 27px;
+
+        padding: 0 4px;
+    }
+
+    .files-page-arrow {
+        width: 27px;
+    }
+
+    .files-page-dots {
+        min-width: 13px;
+    }
+}
+
+
+/* ==========================================
    360px
-========================================================= */
+========================================== */
 
 @media (max-width: 360px) {
     .files-page {
@@ -2153,13 +2392,17 @@
     }
 
     .files-search {
-        width: calc(100% - 87px);
-        flex-basis: calc(100% - 87px);
+        width:
+            calc(100% - 87px);
+
+        flex-basis:
+            calc(100% - 87px);
     }
 
     .files-search-source,
     .files-search-type-mode {
-        width: calc(100% - 87px);
+        width:
+            calc(100% - 87px);
     }
 
     .files-detail-body {
@@ -2167,7 +2410,9 @@
     }
 
     .files-detail-info-row {
-        grid-template-columns: 62px minmax(0, 1fr);
+        grid-template-columns:
+            62px
+            minmax(0, 1fr);
 
         padding-left: 10px;
         padding-right: 10px;
@@ -2176,5 +2421,21 @@
     .files-detail-footer {
         padding-left: 8px;
         padding-right: 8px;
+    }
+
+    .files-page-button {
+        min-width: 26px;
+        height: 27px;
+
+        font-size: 9px;
+    }
+
+    .files-page-arrow {
+        width: 26px;
+    }
+
+    .files-page-dots {
+        min-width: 12px;
+        height: 27px;
     }
 }

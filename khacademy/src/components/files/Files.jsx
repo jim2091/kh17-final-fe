@@ -1,10 +1,21 @@
+
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import {
+    useNavigate,
+    useOutletContext,
+    useParams,
+} from "react-router-dom";
 import { apiClient } from "../../utils/reaxios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import "./Files.css";
 import RecordLinkModal from "../records/RecordLinkModal";
+
+/*
+ * ==========================================
+ * 파일 출처
+ * ==========================================
+ */
 
 const SOURCE_LABEL = {
     FILE: "파일함",
@@ -14,6 +25,12 @@ const SOURCE_LABEL = {
     TASK_COMMENT: "업무 댓글",
     PROFILE: "프로필",
 };
+
+/*
+ * ==========================================
+ * 검색
+ * ==========================================
+ */
 
 const SEARCH_TYPE_LABEL = {
     name: "파일명",
@@ -51,6 +68,12 @@ const FILE_TYPE_SEARCH_OPTIONS = [
     label: value,
 }));
 
+/*
+ * ==========================================
+ * 정렬
+ * ==========================================
+ */
+
 const SORT_OPTIONS = [
     { value: "date-desc", label: "최신순" },
     { value: "date-asc", label: "오래된순" },
@@ -60,38 +83,113 @@ const SORT_OPTIONS = [
     { value: "size-asc", label: "작은 파일순" },
 ];
 
-export default function Files({ source = "FILE", sourceNo = null }) {
+/*
+ * ==========================================
+ * 페이지 크기
+ * ==========================================
+ */
+
+const PAGE_SIZE = 10;
+
+/*
+ * ==========================================
+ * 컴포넌트
+ * ==========================================
+ */
+
+export default function Files({
+    source = "FILE",
+    sourceNo = null,
+}) {
     const { projectNo } = useParams();
     const navigate = useNavigate();
     const { project } = useOutletContext();
 
+    /*
+     * ==========================================
+     * 파일 목록
+     * ==========================================
+     */
+
     const [files, setFiles] = useState([]);
+
     const [loginUser, setLoginUser] = useState("");
     const [loginRole, setLoginRole] = useState("");
     const [projectStatus, setProjectStatus] = useState("");
 
-    const [searchType, setSearchType] = useState("name");
-    const [keyword, setKeyword] = useState("");
-    const [sourceKeyword, setSourceKeyword] = useState("");
-    const [fileTypeKeyword, setFileTypeKeyword] = useState("");
+    /*
+     * ==========================================
+     * 검색
+     * ==========================================
+     */
 
-    const [sortType, setSortType] = useState("date-desc");
+    const [searchType, setSearchType] = useState("name");
+
+    const [keyword, setKeyword] = useState("");
+
+    const [sourceKeyword, setSourceKeyword] =
+        useState("");
+
+    const [fileTypeKeyword, setFileTypeKeyword] =
+        useState("");
+
+    /*
+     * ==========================================
+     * 정렬
+     * ==========================================
+     */
+
+    const [sortType, setSortType] =
+        useState("date-desc");
+
+    /*
+     * ==========================================
+     * 페이징
+     * ==========================================
+     */
+
+    const [page, setPage] = useState(1);
+
+    const [size] = useState(PAGE_SIZE);
+
+    const [totalCount, setTotalCount] =
+        useState(0);
+
+    const [totalPages, setTotalPages] =
+        useState(0);
+
+    /*
+     * ==========================================
+     * 상태
+     * ==========================================
+     */
 
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
     /*
-     * 파일 상세 팝업
-     *
-     * 이미지든 일반 파일이든
-     * 작은 화면에서는 이 팝업을 통해
-     * 파일 정보를 확인할 수 있도록 사용
+     * ==========================================
+     * 파일 상세
+     * ==========================================
      */
-    const [detailFile, setDetailFile] = useState(null);
-    const [detailImageError, setDetailImageError] = useState(false);
 
-    const [recordModalOpen, setRecordModalOpen] = useState(false);
-    const [recordTargetFile, setRecordTargetFile] = useState(null);
+    const [detailFile, setDetailFile] =
+        useState(null);
+
+    const [detailImageError, setDetailImageError] =
+        useState(false);
+
+    /*
+     * ==========================================
+     * Record
+     * ==========================================
+     */
+
+    const [recordModalOpen, setRecordModalOpen] =
+        useState(false);
+
+    const [recordTargetFile, setRecordTargetFile] =
+        useState(null);
 
     const fileInputRef = useRef(null);
 
@@ -102,12 +200,29 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      */
 
     const isProjectClosed =
-        String(project?.projectStatus || projectStatus || "").toLowerCase() ===
-            "closed" ||
-        String(projectStatus || "").toLowerCase() === "closed";
+        String(
+            project?.projectStatus ||
+                projectStatus ||
+                ""
+        ).toLowerCase() === "closed";
+
+    /*
+     * ==========================================
+     * 출처 표시
+     * ==========================================
+     */
 
     const getSourceLabel = fileSource =>
-        fileSource ? SOURCE_LABEL[fileSource] || fileSource : "-";
+        fileSource
+            ? SOURCE_LABEL[fileSource] ||
+              fileSource
+            : "-";
+
+    /*
+     * ==========================================
+     * sourceNo 존재 여부
+     * ==========================================
+     */
 
     const hasSourceNo = file =>
         file &&
@@ -115,75 +230,145 @@ export default function Files({ source = "FILE", sourceNo = null }) {
         file.attachSourceNo !== undefined &&
         file.attachSourceNo !== "";
 
+    /*
+     * ==========================================
+     * 출처 클릭 가능 여부
+     * ==========================================
+     */
+
     const isSourceClickable = file =>
         !!(
             file?.attachSource &&
             hasSourceNo(file) &&
-            ["NOTE", "NOTE_COMMENT", "TASK", "TASK_COMMENT"].includes(
-                file.attachSource
-            )
+            [
+                "NOTE",
+                "NOTE_COMMENT",
+                "TASK",
+                "TASK_COMMENT",
+            ].includes(file.attachSource)
         );
 
     /*
      * ==========================================
      * 출처 원본 이동
+     *
+     * 기존에 정상 작동하던 로직 유지
      * ==========================================
      */
 
-    const handleSourceClick = async (e, file) => {
+    const handleSourceClick = async (
+        e,
+        file
+    ) => {
         if (e) {
             e.stopPropagation();
         }
 
-        if (!isSourceClickable(file)) return;
+        if (!isSourceClickable(file)) {
+            return;
+        }
 
-        const sourceType = file.attachSource;
-        const sourceNo = file.attachSourceNo;
+        const sourceType =
+            file.attachSource;
+
+        const sourceNo =
+            file.attachSourceNo;
 
         try {
-            if (sourceType === "NOTE") {
-                navigate(`/projects/${projectNo}/note/${sourceNo}`);
-                return;
-            }
-
-            if (sourceType === "TASK") {
-                navigate(`/projects/${projectNo}/task?taskNo=${sourceNo}`);
-                return;
-            }
-
-            if (sourceType === "NOTE_COMMENT") {
-                const response = await apiClient.get(
-                    `/note/comment/${sourceNo}`
+            /*
+             * 노트
+             */
+            if (
+                sourceType === "NOTE"
+            ) {
+                navigate(
+                    `/projects/${projectNo}/note/${sourceNo}`
                 );
 
-                const comment = response.data;
+                return;
+            }
+
+            /*
+             * 업무
+             */
+            if (
+                sourceType === "TASK"
+            ) {
+                navigate(
+                    `/projects/${projectNo}/task?taskNo=${sourceNo}`
+                );
+
+                return;
+            }
+
+            /*
+             * 노트 댓글
+             *
+             * 댓글 번호로 댓글 정보를 조회한 후
+             * 원본 노트 번호를 가져감
+             */
+            if (
+                sourceType ===
+                "NOTE_COMMENT"
+            ) {
+                const response =
+                    await apiClient.get(
+                        `/note/comment/${sourceNo}`
+                    );
+
+                const comment =
+                    response.data;
 
                 if (
                     !comment ||
-                    comment.noteNo === null ||
-                    comment.noteNo === undefined
+                    comment.noteNo ===
+                        null ||
+                    comment.noteNo ===
+                        undefined
                 ) {
-                    toast.warning("댓글의 원본 노트를 찾을 수 없습니다.");
+                    toast.warning(
+                        "댓글의 원본 노트를 찾을 수 없습니다."
+                    );
+
                     return;
                 }
 
-                navigate(`/projects/${projectNo}/note/${comment.noteNo}`);
+                navigate(
+                    `/projects/${projectNo}/note/${comment.noteNo}`
+                );
+
                 return;
             }
 
-            if (sourceType === "TASK_COMMENT") {
-                const response = await apiClient.get(
-                    `/task/comment/${sourceNo}`
-                );
+            /*
+             * 업무 댓글
+             *
+             * 댓글 번호로 댓글 정보를 조회한 후
+             * 원본 업무 번호를 가져감
+             */
+            if (
+                sourceType ===
+                "TASK_COMMENT"
+            ) {
+                const response =
+                    await apiClient.get(
+                        `/task/comment/${sourceNo}`
+                    );
 
-                const comment = response.data;
+                const comment =
+                    response.data;
 
                 if (
                     !comment ||
-                    comment.taskNo === null ||
-                    comment.taskNo === undefined
+                    comment.taskNo ===
+                        null ||
+                    comment.taskNo ===
+                        undefined
                 ) {
-                    toast.warning("댓글의 원본 업무를 찾을 수 없습니다.");
+                    toast.warning(
+                        "댓글의 원본 업무를 찾을 수 없습니다."
+                    );
+
                     return;
                 }
 
@@ -192,11 +377,19 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                 );
             }
         } catch (error) {
-            console.error("출처 원본 이동 실패:", error);
-            console.error("서버 응답:", error.response?.data);
+            console.error(
+                "출처 원본 이동 실패:",
+                error
+            );
+
+            console.error(
+                "서버 응답:",
+                error.response?.data
+            );
 
             toast.error(
-                error.response?.data?.message ||
+                error.response?.data
+                    ?.message ||
                     "원본으로 이동하는 중 오류가 발생했습니다."
             );
         }
@@ -204,69 +397,219 @@ export default function Files({ source = "FILE", sourceNo = null }) {
 
     /*
      * ==========================================
-     * 파일 목록 조회
+     * 현재 검색어
      * ==========================================
      */
 
-    const fetchFiles = async (
-        searchKeyword = keyword,
+    const getCurrentKeyword = (
         currentSearchType = searchType
     ) => {
+        if (
+            currentSearchType ===
+            "source"
+        ) {
+            return sourceKeyword;
+        }
+
+        if (
+            currentSearchType ===
+            "type"
+        ) {
+            return fileTypeKeyword;
+        }
+
+        return keyword;
+    };
+
+    /*
+     * ==========================================
+     * 파일 목록 조회
+     *
+     * 백엔드 페이징 + 정렬 사용
+     * ==========================================
+     */
+
+    const fetchFiles = async ({
+        targetPage = page,
+        targetKeyword = getCurrentKeyword(),
+        targetSearchType = searchType,
+        targetSortType = sortType,
+    } = {}) => {
         if (!projectNo) {
-            console.error("프로젝트 번호가 없습니다.");
+            console.error(
+                "프로젝트 번호가 없습니다."
+            );
 
             setFiles([]);
             setProjectStatus("");
+            setTotalCount(0);
+            setTotalPages(0);
 
             return;
         }
 
-        const validSearchTypes = ["name", "source", "uploader", "type"];
+        const validSearchTypes = [
+            "name",
+            "source",
+            "uploader",
+            "type",
+        ];
 
-        const normalizedSearchType = validSearchTypes.includes(
-            currentSearchType
-        )
-            ? currentSearchType
-            : "name";
+        const normalizedSearchType =
+            validSearchTypes.includes(
+                targetSearchType
+            )
+                ? targetSearchType
+                : "name";
 
-        const trimmedKeyword = String(searchKeyword ?? "").trim();
+        const trimmedKeyword =
+            String(
+                targetKeyword ?? ""
+            ).trim();
+
+        const safePage =
+            Math.max(
+                1,
+                Number(targetPage) || 1
+            );
+
+        const safeSortType =
+            SORT_OPTIONS.some(
+                option =>
+                    option.value ===
+                    targetSortType
+            )
+                ? targetSortType
+                : "date-desc";
 
         try {
             setLoading(true);
 
-            let url = `/attach/list/${projectNo}`;
+            /*
+             * 백엔드로 전달할 파라미터
+             */
+            const params = {
+                page: safePage,
+                size,
+                searchType:
+                    normalizedSearchType,
+                sortType:
+                    safeSortType,
+            };
 
+            /*
+             * 검색어가 있을 때만 전달
+             */
             if (trimmedKeyword) {
-                const params = new URLSearchParams();
-
-                params.append("keyword", trimmedKeyword);
-                params.append("searchType", normalizedSearchType);
-
-                url += `?${params.toString()}`;
+                params.keyword =
+                    trimmedKeyword;
             }
 
-            const response = await apiClient.get(url);
+            console.log(
+                "[Files] 조회 요청:",
+                params
+            );
 
+            const response =
+                await apiClient.get(
+                    `/attach/list/${projectNo}`,
+                    {
+                        params,
+                    }
+                );
+
+            const data =
+                response.data || {};
+
+            console.log(
+                "[Files] 조회 응답:",
+                data
+            );
+
+            /*
+             * 파일 목록
+             *
+             * 백엔드에서 이미
+             * 정렬 + 페이징된 상태
+             */
             setFiles(
-                Array.isArray(response.data?.files)
-                    ? response.data.files
+                Array.isArray(
+                    data.files
+                )
+                    ? data.files
                     : []
             );
 
-            setLoginUser(response.data?.loginUser || "");
-            setLoginRole(response.data?.loginRole || "");
-            setProjectStatus(response.data?.projectStatus || "");
+            /*
+             * 로그인 사용자
+             */
+            setLoginUser(
+                data.loginUser || ""
+            );
+
+            /*
+             * 로그인 권한
+             */
+            setLoginRole(
+                data.loginRole || ""
+            );
+
+            /*
+             * 프로젝트 상태
+             */
+            setProjectStatus(
+                data.projectStatus ||
+                    ""
+            );
+
+            /*
+             * 현재 페이지
+             */
+            setPage(
+                Number(data.page) ||
+                    safePage
+            );
+
+            /*
+             * 전체 파일 수
+             */
+            setTotalCount(
+                Number(
+                    data.totalCount
+                ) || 0
+            );
+
+            /*
+             * 전체 페이지 수
+             */
+            setTotalPages(
+                Number(
+                    data.totalPages
+                ) || 0
+            );
         } catch (error) {
-            console.error("파일 목록 조회 실패:", error);
-            console.error("서버 응답:", error.response?.data);
+            console.error(
+                "파일 목록 조회 실패:",
+                error
+            );
+
+            console.error(
+                "서버 응답:",
+                error.response?.data
+            );
 
             setFiles([]);
+
             setLoginUser("");
             setLoginRole("");
             setProjectStatus("");
 
+            setTotalCount(0);
+            setTotalPages(0);
+
             toast.error(
-                error.response?.data?.message ||
+                error.response?.data
+                    ?.message ||
                     "파일 목록을 불러오는 중 오류가 발생했습니다."
             );
         } finally {
@@ -274,16 +617,102 @@ export default function Files({ source = "FILE", sourceNo = null }) {
         }
     };
 
+    /*
+     * ==========================================
+     * 프로젝트 변경
+     * ==========================================
+     */
+
     useEffect(() => {
         setKeyword("");
         setSourceKeyword("");
         setFileTypeKeyword("");
+
         setSearchType("name");
         setSortType("date-desc");
+
+        setPage(1);
+        setTotalCount(0);
+        setTotalPages(0);
+
         setProjectStatus("");
 
-        fetchFiles("", "name");
+        fetchFiles({
+            targetPage: 1,
+            targetKeyword: "",
+            targetSearchType: "name",
+            targetSortType:
+                "date-desc",
+        });
     }, [projectNo]);
+
+    /*
+     * ==========================================
+     * 검색 조건 변경
+     * ==========================================
+     */
+
+    const handleSearchTypeChange = e => {
+        const value =
+            e.target.value;
+
+        setSearchType(value);
+
+        setKeyword("");
+        setSourceKeyword("");
+        setFileTypeKeyword("");
+
+        setPage(1);
+    };
+
+    /*
+     * ==========================================
+     * 출처 검색
+     * ==========================================
+     */
+
+    const handleSourceChange = e => {
+        const value =
+            e.target.value;
+
+        setSourceKeyword(value);
+
+        setPage(1);
+
+        fetchFiles({
+            targetPage: 1,
+            targetKeyword: value,
+            targetSearchType:
+                "source",
+            targetSortType:
+                sortType,
+        });
+    };
+
+    /*
+     * ==========================================
+     * 파일 형태 검색
+     * ==========================================
+     */
+
+    const handleFileTypeChange =
+        e => {
+            const value =
+                e.target.value;
+
+            setFileTypeKeyword(value);
+
+            setPage(1);
+
+            fetchFiles({
+                targetPage: 1,
+                targetKeyword: value,
+                targetSearchType:
+                    "type",
+                targetSortType:
+                    sortType,
+            });
+        };
 
     /*
      * ==========================================
@@ -291,190 +720,399 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const handleSearchTypeChange = e => {
-        setSearchType(e.target.value);
-        setKeyword("");
-        setSourceKeyword("");
-        setFileTypeKeyword("");
-    };
-
-    const handleSourceChange = e => {
-        const value = e.target.value;
-
-        setSourceKeyword(value);
-
-        fetchFiles(value, "source");
-    };
-
-    const handleFileTypeChange = e => {
-        const value = e.target.value;
-
-        setFileTypeKeyword(value);
-
-        fetchFiles(value, "type");
-    };
-
     const handleSearch = () => {
-        if (searchType === "source") {
-            return fetchFiles(sourceKeyword, searchType);
-        }
+        const currentKeyword =
+            getCurrentKeyword();
 
-        if (searchType === "type") {
-            return fetchFiles(fileTypeKeyword, searchType);
-        }
+        setPage(1);
 
-        fetchFiles(keyword, searchType);
+        fetchFiles({
+            targetPage: 1,
+            targetKeyword:
+                currentKeyword,
+            targetSearchType:
+                searchType,
+            targetSortType:
+                sortType,
+        });
     };
+
+    /*
+     * ==========================================
+     * 검색 초기화
+     * ==========================================
+     */
 
     const handleSearchReset = () => {
         setKeyword("");
         setSourceKeyword("");
         setFileTypeKeyword("");
 
-        fetchFiles("", searchType);
-    };
+        setPage(1);
 
-    const handleSearchKeyDown = e => {
-        if (searchType === "source" || searchType === "type") return;
-
-        if (e.key === "Enter") {
-            handleSearch();
-        }
+        fetchFiles({
+            targetPage: 1,
+            targetKeyword: "",
+            targetSearchType:
+                searchType,
+            targetSortType:
+                sortType,
+        });
     };
 
     /*
      * ==========================================
-     * 정렬
+     * 검색 Enter
+     * ==========================================
+     */
+
+    const handleSearchKeyDown =
+        e => {
+            if (
+                searchType ===
+                    "source" ||
+                searchType ===
+                    "type"
+            ) {
+                return;
+            }
+
+            if (
+                e.key === "Enter"
+            ) {
+                handleSearch();
+            }
+        };
+
+    /*
+     * ==========================================
+     * 정렬 변경
      * ==========================================
      */
 
     const handleSortChange = e => {
-        setSortType(e.target.value);
+        const value =
+            e.target.value;
+
+        setSortType(value);
+        setPage(1);
+
+        /*
+         * 백엔드에 정렬 조건 전달
+         *
+         * 프론트에서 sortedFiles로
+         * 다시 정렬하지 않음
+         */
+        fetchFiles({
+            targetPage: 1,
+            targetKeyword:
+                getCurrentKeyword(),
+            targetSearchType:
+                searchType,
+            targetSortType: value,
+        });
     };
-
-    const sortedFiles = [...files].sort((a, b) => {
-        let result = 0;
-
-        if (["name-asc", "name-desc"].includes(sortType)) {
-            const nameA = String(a.attachName || "").toLowerCase();
-            const nameB = String(b.attachName || "").toLowerCase();
-
-            result = nameA.localeCompare(nameB, "ko", {
-                numeric: true,
-                sensitivity: "base",
-            });
-
-            if (sortType === "name-desc") {
-                result = -result;
-            }
-        } else if (["date-asc", "date-desc"].includes(sortType)) {
-            const dateA = new Date(a.attachCtime || 0).getTime();
-            const dateB = new Date(b.attachCtime || 0).getTime();
-
-            const safeDateA = Number.isNaN(dateA) ? 0 : dateA;
-            const safeDateB = Number.isNaN(dateB) ? 0 : dateB;
-
-            result = safeDateA - safeDateB;
-
-            if (sortType === "date-desc") {
-                result = -result;
-            }
-        } else if (["size-asc", "size-desc"].includes(sortType)) {
-            result =
-                Number(a.attachSize || 0) -
-                Number(b.attachSize || 0);
-
-            if (sortType === "size-desc") {
-                result = -result;
-            }
-        }
-
-        return result;
-    });
 
     /*
      * ==========================================
-     * 업로드
+     * 페이지 이동
      * ==========================================
      */
 
-    const handleUploadClick = () => {
-        if (uploading) return;
+    const handlePageChange =
+        targetPage => {
+            if (loading) {
+                return;
+            }
 
-        if (!projectNo) {
-            toast.warning("프로젝트 정보가 없습니다.");
-            return;
+            if (
+                targetPage < 1 ||
+                targetPage >
+                    totalPages
+            ) {
+                return;
+            }
+
+            setPage(targetPage);
+
+            fetchFiles({
+                targetPage,
+                targetKeyword:
+                    getCurrentKeyword(),
+                targetSearchType:
+                    searchType,
+                targetSortType:
+                    sortType,
+            });
+
+            /*
+             * 목록 상단으로 이동
+             */
+            document
+                .querySelector(
+                    ".files-list"
+                )
+                ?.scrollIntoView({
+                    behavior:
+                        "smooth",
+                    block: "start",
+                });
+        };
+
+    /*
+     * ==========================================
+     * 페이지 번호 계산
+     * ==========================================
+     */
+
+    const getPageNumbers = () => {
+        if (
+            totalPages <= 0
+        ) {
+            return [];
         }
 
-        if (isProjectClosed) {
-            toast.warning("종료된 프로젝트에는 파일을 업로드할 수 없습니다.");
-            return;
+        /*
+         * 7페이지 이하
+         */
+        if (
+            totalPages <= 7
+        ) {
+            return Array.from(
+                {
+                    length:
+                        totalPages,
+                },
+                (_, index) =>
+                    index + 1
+            );
         }
 
-        fileInputRef.current?.click();
+        let startPage =
+            Math.max(
+                1,
+                page - 2
+            );
+
+        let endPage =
+            Math.min(
+                totalPages,
+                page + 2
+            );
+
+        /*
+         * 현재 페이지가 앞쪽
+         */
+        if (
+            startPage === 1
+        ) {
+            endPage =
+                Math.min(
+                    totalPages,
+                    5
+                );
+        }
+
+        /*
+         * 현재 페이지가 뒤쪽
+         */
+        if (
+            endPage ===
+            totalPages
+        ) {
+            startPage =
+                Math.max(
+                    1,
+                    totalPages - 4
+                );
+        }
+
+        const pages = [];
+
+        for (
+            let i = startPage;
+            i <= endPage;
+            i++
+        ) {
+            pages.push(i);
+        }
+
+        return pages;
     };
 
-    const handleFileChange = async e => {
-        const file = e.target.files?.[0];
+    /*
+     * ==========================================
+     * 업로드 버튼
+     * ==========================================
+     */
 
-        if (!file) return;
-
-        if (!projectNo) {
-            toast.warning("프로젝트 정보가 없습니다.");
-            e.target.value = "";
-            return;
-        }
-
-        if (isProjectClosed) {
-            toast.warning("종료된 프로젝트에는 파일을 업로드할 수 없습니다.");
-            e.target.value = "";
-            return;
-        }
-
-        const formData = new FormData();
-
-        formData.append("projectNo", projectNo);
-        formData.append("attach", file);
-        formData.append("source", source || "FILE");
-
-        if (
-            sourceNo !== null &&
-            sourceNo !== undefined &&
-            sourceNo !== ""
-        ) {
-            formData.append("sourceNo", sourceNo);
-        }
-
-        try {
-            setUploading(true);
-
-            await apiClient.post("/attach/upload", formData);
-
-            let currentKeyword = keyword;
-
-            if (searchType === "source") {
-                currentKeyword = sourceKeyword;
+    const handleUploadClick =
+        () => {
+            if (uploading) {
+                return;
             }
 
-            if (searchType === "type") {
-                currentKeyword = fileTypeKeyword;
+            if (!projectNo) {
+                toast.warning(
+                    "프로젝트 정보가 없습니다."
+                );
+
+                return;
             }
 
-            await fetchFiles(currentKeyword, searchType);
+            if (
+                isProjectClosed
+            ) {
+                toast.warning(
+                    "종료된 프로젝트에는 파일을 업로드할 수 없습니다."
+                );
 
-            toast.success("파일이 업로드되었습니다.");
-        } catch (error) {
-            console.error("파일 업로드 실패:", error);
-            console.error("서버 응답:", error.response?.data);
+                return;
+            }
 
-            toast.error(
-                error.response?.data?.message ||
-                    "파일 업로드 중 오류가 발생했습니다."
+            fileInputRef.current?.click();
+        };
+
+    /*
+     * ==========================================
+     * 파일 업로드
+     * ==========================================
+     */
+
+    const handleFileChange =
+        async e => {
+            const file =
+                e.target.files?.[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (!projectNo) {
+                toast.warning(
+                    "프로젝트 정보가 없습니다."
+                );
+
+                e.target.value = "";
+
+                return;
+            }
+
+            if (
+                isProjectClosed
+            ) {
+                toast.warning(
+                    "종료된 프로젝트에는 파일을 업로드할 수 없습니다."
+                );
+
+                e.target.value = "";
+
+                return;
+            }
+
+            const formData =
+                new FormData();
+
+            formData.append(
+                "projectNo",
+                projectNo
             );
-        } finally {
-            setUploading(false);
-            e.target.value = "";
-        }
+
+            formData.append(
+                "attach",
+                file
+            );
+
+            formData.append(
+                "source",
+                source || "FILE"
+            );
+
+            if (
+                sourceNo !== null &&
+                sourceNo !==
+                    undefined &&
+                sourceNo !== ""
+            ) {
+                formData.append(
+                    "sourceNo",
+                    sourceNo
+                );
+            }
+
+            try {
+                setUploading(true);
+
+                await apiClient.post(
+                    "/attach/upload",
+                    formData
+                );
+
+                /*
+                 * 업로드 후
+                 * 현재 검색 / 정렬 / 페이지 유지
+                 */
+                await fetchFiles({
+                    targetPage:
+                        page,
+                    targetKeyword:
+                        getCurrentKeyword(),
+                    targetSearchType:
+                        searchType,
+                    targetSortType:
+                        sortType,
+                });
+
+                toast.success(
+                    "파일이 업로드되었습니다."
+                );
+            } catch (error) {
+                console.error(
+                    "파일 업로드 실패:",
+                    error
+                );
+
+                console.error(
+                    "서버 응답:",
+                    error.response?.data
+                );
+
+                toast.error(
+                    error.response?.data
+                        ?.message ||
+                        "파일 업로드 중 오류가 발생했습니다."
+                );
+            } finally {
+                setUploading(
+                    false
+                );
+
+                e.target.value =
+                    "";
+            }
+        };
+
+    /*
+     * ==========================================
+     * 파일 확장자
+     * ==========================================
+     */
+
+    const getExtension = (
+        fileName = ""
+    ) => {
+        const index =
+            fileName.lastIndexOf(
+                "."
+            );
+
+        return index === -1
+            ? ""
+            : fileName
+                  .substring(
+                      index + 1
+                  )
+                  .toLowerCase();
     };
 
     /*
@@ -483,16 +1121,13 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const getExtension = (fileName = "") => {
-        const index = fileName.lastIndexOf(".");
-
-        return index === -1
-            ? ""
-            : fileName.substring(index + 1).toLowerCase();
-    };
-
-    const getFileType = (fileName = "") => {
-        const extension = getExtension(fileName);
+    const getFileType = (
+        fileName = ""
+    ) => {
+        const extension =
+            getExtension(
+                fileName
+            );
 
         if (
             [
@@ -503,56 +1138,121 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                 "webp",
                 "svg",
                 "bmp",
-            ].includes(extension)
+            ].includes(
+                extension
+            )
         ) {
             return "image";
         }
 
-        if (extension === "pdf") return "pdf";
+        if (
+            extension === "pdf"
+        ) {
+            return "pdf";
+        }
 
-        if (["doc", "docx"].includes(extension)) return "word";
+        if (
+            ["doc", "docx"].includes(
+                extension
+            )
+        ) {
+            return "word";
+        }
 
-        if (["xls", "xlsx"].includes(extension)) return "excel";
+        if (
+            ["xls", "xlsx"].includes(
+                extension
+            )
+        ) {
+            return "excel";
+        }
 
-        if (["ppt", "pptx"].includes(extension)) return "powerpoint";
+        if (
+            ["ppt", "pptx"].includes(
+                extension
+            )
+        ) {
+            return "powerpoint";
+        }
 
-        if (["zip", "rar", "7z"].includes(extension)) return "zip";
+        if (
+            [
+                "zip",
+                "rar",
+                "7z",
+            ].includes(
+                extension
+            )
+        ) {
+            return "zip";
+        }
 
         return "file";
     };
 
-    const getFileUrl = attachNo =>
-        attachNo
-            ? `http://localhost:8080/api/attach/${attachNo}`
-            : "";
-
     /*
      * ==========================================
-     * 파일 상세 팝업
+     * 파일 URL
      * ==========================================
      */
 
-    const openFileDetail = file => {
-        setDetailImageError(false);
-        setDetailFile(file);
-    };
+    const getFileUrl =
+        attachNo =>
+            attachNo
+                ? `http://localhost:8080/api/attach/${attachNo}`
+                : "";
 
-    const closeFileDetail = () => {
-        setDetailFile(null);
-        setDetailImageError(false);
-    };
+    /*
+     * ==========================================
+     * 파일 상세
+     * ==========================================
+     */
 
-    useEffect(() => {
-        const handleKeyDown = e => {
-            if (e.key === "Escape" && detailFile) {
-                closeFileDetail();
-            }
+    const openFileDetail =
+        file => {
+            setDetailImageError(
+                false
+            );
+
+            setDetailFile(file);
         };
 
-        document.addEventListener("keydown", handleKeyDown);
+    const closeFileDetail =
+        () => {
+            setDetailFile(null);
+            setDetailImageError(
+                false
+            );
+        };
+
+    /*
+     * ==========================================
+     * ESC
+     * ==========================================
+     */
+
+    useEffect(() => {
+        const handleKeyDown =
+            e => {
+                if (
+                    e.key ===
+                        "Escape" &&
+                    detailFile
+                ) {
+                    closeFileDetail();
+                }
+            };
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
 
         return () => {
-            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
         };
     }, [detailFile]);
 
@@ -562,11 +1262,17 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const handleDownload = attachNo => {
-        if (attachNo) {
-            window.location.href = getFileUrl(attachNo);
-        }
-    };
+    const handleDownload =
+        attachNo => {
+            if (!attachNo) {
+                return;
+            }
+
+            window.location.href =
+                getFileUrl(
+                    attachNo
+                );
+        };
 
     /*
      * ==========================================
@@ -574,25 +1280,56 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const canDeleteFile = file => {
-        if (isProjectClosed) {
+    const canDeleteFile =
+        file => {
+            if (
+                isProjectClosed
+            ) {
+                return false;
+            }
+
+            const role =
+                String(
+                    loginRole || ""
+                ).toLowerCase();
+
+            const currentUser =
+                String(
+                    loginUser ?? ""
+                );
+
+            const uploader =
+                String(
+                    file?.attachUploader ??
+                        ""
+                );
+
+            /*
+             * 프로젝트 관리자
+             */
+            if (
+                role === "owner" ||
+                role === "manager"
+            ) {
+                return true;
+            }
+
+            /*
+             * 일반 멤버
+             */
+            if (
+                role === "member"
+            ) {
+                return (
+                    currentUser !==
+                        "" &&
+                    currentUser ===
+                        uploader
+                );
+            }
+
             return false;
-        }
-
-        const role = String(loginRole || "").toLowerCase();
-        const currentUser = String(loginUser ?? "");
-        const uploader = String(file?.attachUploader ?? "");
-
-        if (role === "owner" || role === "manager") {
-            return true;
-        }
-
-        if (role === "member") {
-            return currentUser !== "" && currentUser === uploader;
-        }
-
-        return false;
-    };
+        };
 
     /*
      * ==========================================
@@ -600,56 +1337,145 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const handleDelete = async (attachNo, fileName) => {
-        if (isProjectClosed) {
-            toast.warning("종료된 프로젝트의 파일은 삭제할 수 없습니다.");
-            return;
-        }
+    const handleDelete =
+        async (
+            attachNo,
+            fileName
+        ) => {
+            if (
+                isProjectClosed
+            ) {
+                toast.warning(
+                    "종료된 프로젝트의 파일은 삭제할 수 없습니다."
+                );
 
-        const result = await Swal.fire({
-            title: "파일을 삭제하시겠습니까?",
-            html: `<strong>"${fileName}"</strong> 파일이 삭제됩니다.<br><span style="font-size:13px;color:#64748b;">삭제한 파일은 복구할 수 없습니다.</span>`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#e11d48",
-            cancelButtonColor: "#94a3b8",
-            confirmButtonText: "삭제",
-            cancelButtonText: "취소",
-            reverseButtons: true,
-        });
-
-        if (!result.isConfirmed) return;
-
-        try {
-            await apiClient.delete(`/attach/${attachNo}`);
-
-            if (detailFile?.attachNo === attachNo) {
-                closeFileDetail();
+                return;
             }
 
-            setFiles(prev =>
-                prev.filter(file => file.attachNo !== attachNo)
-            );
+            const result =
+                await Swal.fire({
+                    title: "파일을 삭제하시겠습니까?",
+                    html: `<strong>"${fileName}"</strong> 파일이 삭제됩니다.<br><span style="font-size:13px;color:#64748b;">삭제한 파일은 복구할 수 없습니다.</span>`,
+                    icon: "warning",
+                    showCancelButton:
+                        true,
+                    confirmButtonColor:
+                        "#e11d48",
+                    cancelButtonColor:
+                        "#94a3b8",
+                    confirmButtonText:
+                        "삭제",
+                    cancelButtonText:
+                        "취소",
+                    reverseButtons:
+                        true,
+                });
 
-            toast.success("파일이 삭제되었습니다.");
-        } catch (error) {
-            console.error("파일 삭제 실패:", error);
-            console.error("서버 응답:", error.response?.data);
+            if (
+                !result.isConfirmed
+            ) {
+                return;
+            }
 
-            const message =
-                error.response?.data?.message ||
-                error.response?.data ||
-                "파일 삭제 중 오류가 발생했습니다.";
+            try {
+                await apiClient.delete(
+                    `/attach/${attachNo}`
+                );
 
-            Swal.fire({
-                title: "기록에서 참조 중인 파일은 삭제할 수 없습니다.",
-                text: message,
-                icon: "warning",
-                confirmButtonColor: "#64748b",
-                confirmButtonText: "확인",
-            });
-        }
-    };
+                if (
+                    detailFile?.attachNo ===
+                    attachNo
+                ) {
+                    closeFileDetail();
+                }
+
+                /*
+                 * 삭제 후
+                 * 현재 페이지 다시 조회
+                 *
+                 * 서버가 totalCount / totalPages를
+                 * 다시 계산하도록 함
+                 */
+                const newTotalCount =
+                    Math.max(
+                        0,
+                        totalCount - 1
+                    );
+
+                const newTotalPages =
+                    Math.ceil(
+                        newTotalCount /
+                            size
+                    );
+
+                /*
+                 * 현재 페이지의 마지막 파일을
+                 * 삭제한 경우 이전 페이지로 이동
+                 */
+                if (
+                    files.length ===
+                        1 &&
+                    page >
+                        newTotalPages &&
+                    newTotalPages >
+                        0
+                ) {
+                    await fetchFiles({
+                        targetPage:
+                            newTotalPages,
+                        targetKeyword:
+                            getCurrentKeyword(),
+                        targetSearchType:
+                            searchType,
+                        targetSortType:
+                            sortType,
+                    });
+                } else {
+                    await fetchFiles({
+                        targetPage:
+                            page,
+                        targetKeyword:
+                            getCurrentKeyword(),
+                        targetSearchType:
+                            searchType,
+                        targetSortType:
+                            sortType,
+                    });
+                }
+
+                toast.success(
+                    "파일이 삭제되었습니다."
+                );
+            } catch (error) {
+                console.error(
+                    "파일 삭제 실패:",
+                    error
+                );
+
+                console.error(
+                    "서버 응답:",
+                    error.response?.data
+                );
+
+                const message =
+                    error.response
+                        ?.data
+                        ?.message ||
+                    error.response
+                        ?.data ||
+                    "파일 삭제 중 오류가 발생했습니다.";
+
+                Swal.fire({
+                    title: "기록에서 참조 중인 파일은 삭제할 수 없습니다.",
+                    text: message,
+                    icon: "warning",
+                    confirmButtonColor:
+                        "#64748b",
+                    confirmButtonText:
+                        "확인",
+                });
+            }
+        };
 
     /*
      * ==========================================
@@ -657,62 +1483,134 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const handleRecord = file => {
-        if (isProjectClosed) {
-            toast.warning("종료된 프로젝트에서는 Record를 남길 수 없습니다.");
-            return;
-        }
+    const handleRecord =
+        file => {
+            if (
+                isProjectClosed
+            ) {
+                toast.warning(
+                    "종료된 프로젝트에서는 Record를 남길 수 없습니다."
+                );
 
-        setRecordTargetFile(file);
-        setRecordModalOpen(true);
-    };
+                return;
+            }
 
-    const closeRecordModal = () => {
-        setRecordModalOpen(false);
-        setRecordTargetFile(null);
-    };
+            setRecordTargetFile(
+                file
+            );
+
+            setRecordModalOpen(
+                true
+            );
+        };
+
+    const closeRecordModal =
+        () => {
+            setRecordModalOpen(
+                false
+            );
+
+            setRecordTargetFile(
+                null
+            );
+        };
 
     /*
      * ==========================================
-     * 표시용 포맷
+     * 파일 크기
      * ==========================================
      */
 
-    const formatFileSize = size => {
-        if (size === null || size === undefined) {
-            return "-";
-        }
+    const formatFileSize =
+        size => {
+            if (
+                size === null ||
+                size === undefined
+            ) {
+                return "-";
+            }
 
-        if (size < 1024) {
-            return `${size} B`;
-        }
+            if (
+                size < 1024
+            ) {
+                return `${size} B`;
+            }
 
-        if (size < 1024 * 1024) {
-            return `${(size / 1024).toFixed(1)} KB`;
-        }
+            if (
+                size <
+                1024 *
+                    1024
+            ) {
+                return `${(
+                    size / 1024
+                ).toFixed(1)} KB`;
+            }
 
-        if (size < 1024 * 1024 * 1024) {
-            return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-        }
+            if (
+                size <
+                1024 *
+                    1024 *
+                    1024
+            ) {
+                return `${(
+                    size /
+                    (1024 *
+                        1024)
+                ).toFixed(1)} MB`;
+            }
 
-        return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-    };
+            return `${(
+                size /
+                (1024 *
+                    1024 *
+                    1024)
+            ).toFixed(1)} GB`;
+        };
 
-    const formatDate = date => {
-        if (!date) return "-";
+    /*
+     * ==========================================
+     * 날짜
+     * ==========================================
+     */
 
-        const d = new Date(date);
+    const formatDate =
+        date => {
+            if (!date) {
+                return "-";
+            }
 
-        if (Number.isNaN(d.getTime())) {
-            return "-";
-        }
+            const d =
+                new Date(date);
 
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
+            if (
+                Number.isNaN(
+                    d.getTime()
+                )
+            ) {
+                return "-";
+            }
 
-        return `${year}.${month}.${day}`;
-    };
+            const year =
+                d.getFullYear();
+
+            const month =
+                String(
+                    d.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            const day =
+                String(
+                    d.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            return `${year}.${month}.${day}`;
+        };
 
     /*
      * ==========================================
@@ -720,153 +1618,284 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const FileIcon = ({ file }) => {
-        const type = getFileType(file.attachName);
+    const FileIcon =
+        ({ file }) => {
+            const type =
+                getFileType(
+                    file.attachName
+                );
 
-        if (type === "image") {
-            return (
-                <div className="files-image-thumbnail">
-                    <img
-                        src={getFileUrl(file.attachNo)}
-                        alt={file.attachName}
-                        onError={e => {
-                            e.currentTarget.style.display = "none";
-
-                            if (e.currentTarget.nextElementSibling) {
-                                e.currentTarget.nextElementSibling.style.display =
-                                    "flex";
+            /*
+             * 이미지
+             */
+            if (
+                type === "image"
+            ) {
+                return (
+                    <div className="files-image-thumbnail">
+                        <img
+                            src={getFileUrl(
+                                file.attachNo
+                            )}
+                            alt={
+                                file.attachName
                             }
-                        }}
-                    />
+                            onError={e => {
+                                e.currentTarget.style.display =
+                                    "none";
 
-                    <div className="files-image-fallback">
-                        <span>이미지 없음</span>
+                                if (
+                                    e.currentTarget
+                                        .nextElementSibling
+                                ) {
+                                    e.currentTarget.nextElementSibling.style.display =
+                                        "flex";
+                                }
+                            }}
+                        />
+
+                        <div className="files-image-fallback">
+                            <span>
+                                이미지 없음
+                            </span>
+                        </div>
                     </div>
+                );
+            }
+
+            const iconMap = {
+                pdf: [
+                    "files-icon-pdf",
+                    "PDF",
+                ],
+                word: [
+                    "files-icon-word",
+                    "W",
+                ],
+                excel: [
+                    "files-icon-excel",
+                    "X",
+                ],
+                powerpoint: [
+                    "files-icon-powerpoint",
+                    "P",
+                ],
+                zip: [
+                    "files-icon-zip",
+                    "ZIP",
+                ],
+            };
+
+            if (
+                iconMap[type]
+            ) {
+                const [
+                    className,
+                    text,
+                ] =
+                    iconMap[type];
+
+                return (
+                    <div
+                        className={`files-icon ${className}`}
+                    >
+                        <span>
+                            {text}
+                        </span>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="files-icon files-icon-default">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                    >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                    </svg>
                 </div>
             );
-        }
-
-        const iconMap = {
-            pdf: ["files-icon-pdf", "PDF"],
-            word: ["files-icon-word", "W"],
-            excel: ["files-icon-excel", "X"],
-            powerpoint: ["files-icon-powerpoint", "P"],
-            zip: ["files-icon-zip", "ZIP"],
         };
 
-        if (iconMap[type]) {
-            const [className, text] = iconMap[type];
+    /*
+     * ==========================================
+     * 검색 아이콘
+     * ==========================================
+     */
 
-            return (
-                <div className={`files-icon ${className}`}>
-                    <span>{text}</span>
-                </div>
-            );
-        }
+    const SearchIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+            >
+                <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                />
 
-        return (
-            <div className="files-icon files-icon-default">
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <path d="M14 2v6h6" />
-                </svg>
-            </div>
+                <path d="m16 16 5 5" />
+            </svg>
         );
-    };
 
-    const SearchIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-        >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m16 16 5 5" />
-        </svg>
-    );
+    /*
+     * ==========================================
+     * 업로드 아이콘
+     * ==========================================
+     */
 
-    const UploadIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M12 16V4" />
-            <path d="m7 9 5-5 5 5" />
-            <path d="M5 20h14" />
-        </svg>
-    );
+    const UploadIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M12 16V4" />
+                <path d="m7 9 5-5 5 5" />
+                <path d="M5 20h14" />
+            </svg>
+        );
 
-    const DownloadIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M12 3v12" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
-        </svg>
-    );
+    /*
+     * ==========================================
+     * 다운로드 아이콘
+     * ==========================================
+     */
 
-    const DeleteIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-1 14H6L5 6" />
-            <path d="M10 11v5" />
-            <path d="M14 11v5" />
-            <path d="M9 6V4h6v2" />
-        </svg>
-    );
+    const DownloadIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M12 3v12" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M5 21h14" />
+            </svg>
+        );
 
-    const CloseIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-        >
-            <path d="M6 6l12 12" />
-            <path d="M18 6L6 18" />
-        </svg>
-    );
+    /*
+     * ==========================================
+     * 삭제 아이콘
+     * ==========================================
+     */
 
-    const RecordIcon = () => (
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M6 3h12v18H6z" />
-            <path d="M9 8h6" />
-            <path d="M9 12h6" />
-            <path d="M9 16h4" />
-        </svg>
-    );
+    const DeleteIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v5" />
+                <path d="M14 11v5" />
+                <path d="M9 6V4h6v2" />
+            </svg>
+        );
+
+    /*
+     * ==========================================
+     * 닫기 아이콘
+     * ==========================================
+     */
+
+    const CloseIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+            >
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+            </svg>
+        );
+
+    /*
+     * ==========================================
+     * Record 아이콘
+     * ==========================================
+     */
+
+    const RecordIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M6 3h12v18H6z" />
+                <path d="M9 8h6" />
+                <path d="M9 12h6" />
+                <path d="M9 16h4" />
+            </svg>
+        );
+
+    /*
+     * ==========================================
+     * 이전 페이지 아이콘
+     * ==========================================
+     */
+
+    const ChevronLeftIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="m15 18-6-6 6-6" />
+            </svg>
+        );
+
+    /*
+     * ==========================================
+     * 다음 페이지 아이콘
+     * ==========================================
+     */
+
+    const ChevronRightIcon =
+        () => (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="m9 18 6-6-6-6" />
+            </svg>
+        );
 
     /*
      * ==========================================
@@ -874,266 +1903,506 @@ export default function Files({ source = "FILE", sourceNo = null }) {
      * ==========================================
      */
 
-    const renderSearchInput = () => {
-        if (searchType === "source") {
-            return (
-                <select
-                    className="files-source-search-select"
-                    aria-label="출처 선택"
-                    value={sourceKeyword}
-                    onChange={handleSourceChange}
-                >
-                    <option value="">출처 선택</option>
-
-                    {SOURCE_SEARCH_OPTIONS.map(option => (
-                        <option
-                            key={option.value}
-                            value={option.value}
-                        >
-                            {option.label}
+    const renderSearchInput =
+        () => {
+            /*
+             * 출처
+             */
+            if (
+                searchType ===
+                "source"
+            ) {
+                return (
+                    <select
+                        className="files-source-search-select"
+                        aria-label="출처 선택"
+                        value={
+                            sourceKeyword
+                        }
+                        onChange={
+                            handleSourceChange
+                        }
+                    >
+                        <option value="">
+                            출처 선택
                         </option>
-                    ))}
-                </select>
-            );
-        }
 
-        if (searchType === "type") {
-            return (
-                <select
-                    className="files-type-search-select"
-                    aria-label="파일 형태 선택"
-                    value={fileTypeKeyword}
-                    onChange={handleFileTypeChange}
-                >
-                    <option value="">파일 형태 선택</option>
+                        {SOURCE_SEARCH_OPTIONS.map(
+                            option => (
+                                <option
+                                    key={
+                                        option.value
+                                    }
+                                    value={
+                                        option.value
+                                    }
+                                >
+                                    {
+                                        option.label
+                                    }
+                                </option>
+                            )
+                        )}
+                    </select>
+                );
+            }
 
-                    {FILE_TYPE_SEARCH_OPTIONS.map(option => (
-                        <option
-                            key={option.value}
-                            value={option.value}
-                        >
-                            {option.label}
+            /*
+             * 파일 형태
+             */
+            if (
+                searchType ===
+                "type"
+            ) {
+                return (
+                    <select
+                        className="files-type-search-select"
+                        aria-label="파일 형태 선택"
+                        value={
+                            fileTypeKeyword
+                        }
+                        onChange={
+                            handleFileTypeChange
+                        }
+                    >
+                        <option value="">
+                            파일 형태 선택
                         </option>
-                    ))}
-                </select>
-            );
-        }
 
-        return (
-            <input
-                type="text"
-                aria-label={`${SEARCH_TYPE_LABEL[searchType]} 검색어`}
-                placeholder={`${SEARCH_TYPE_LABEL[searchType]} 검색`}
-                value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-            />
-        );
-    };
+                        {FILE_TYPE_SEARCH_OPTIONS.map(
+                            option => (
+                                <option
+                                    key={
+                                        option.value
+                                    }
+                                    value={
+                                        option.value
+                                    }
+                                >
+                                    {
+                                        option.label
+                                    }
+                                </option>
+                            )
+                        )}
+                    </select>
+                );
+            }
+
+            /*
+             * 파일명 / 업로더
+             */
+            return (
+                <input
+                    type="text"
+                    aria-label={`${SEARCH_TYPE_LABEL[searchType]} 검색어`}
+                    placeholder={`${SEARCH_TYPE_LABEL[searchType]} 검색`}
+                    value={
+                        keyword
+                    }
+                    onChange={e =>
+                        setKeyword(
+                            e.target.value
+                        )
+                    }
+                    onKeyDown={
+                        handleSearchKeyDown
+                    }
+                />
+            );
+        };
 
     /*
      * ==========================================
-     * 파일 상세 팝업
+     * 파일 상세 모달
      * ==========================================
      */
 
-    const renderFileDetailModal = () => {
-        if (!detailFile) return null;
+    const renderFileDetailModal =
+        () => {
+            if (!detailFile) {
+                return null;
+            }
 
-        const detailType = getFileType(detailFile.attachName);
-        const sourceClickable = isSourceClickable(detailFile);
+            const detailType =
+                getFileType(
+                    detailFile.attachName
+                );
 
-        return (
-            <div
-                className="files-detail-overlay"
-                onMouseDown={e => {
-                    if (e.target === e.currentTarget) {
-                        closeFileDetail();
-                    }
-                }}
-            >
-                <div className="files-detail-modal">
-                    <div className="files-detail-header">
-                        <div className="files-detail-header-title">
-                            <span>파일 정보</span>
-                        </div>
+            const sourceClickable =
+                isSourceClickable(
+                    detailFile
+                );
 
-                        <button
-                            type="button"
-                            className="files-detail-close"
-                            onClick={closeFileDetail}
-                            title="닫기"
-                        >
-                            <CloseIcon />
-                        </button>
-                    </div>
-
-                    <div className="files-detail-body">
-                        <div className="files-detail-preview">
-                            {detailType === "image" ? (
-                                !detailImageError ? (
-                                    <img
-                                        src={getFileUrl(
-                                            detailFile.attachNo
-                                        )}
-                                        alt={detailFile.attachName}
-                                        className="files-detail-image"
-                                        onError={() =>
-                                            setDetailImageError(true)
-                                        }
-                                    />
-                                ) : (
-                                    <div className="files-detail-image-error">
-                                        <FileIcon file={detailFile} />
-
-                                        <span>
-                                            이미지를 불러올 수 없습니다.
-                                        </span>
-                                    </div>
-                                )
-                            ) : (
-                                <div className="files-detail-file-icon">
-                                    <FileIcon file={detailFile} />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="files-detail-info">
-                            <div className="files-detail-name">
-                                <span className="files-detail-label">
-                                    파일명
+            return (
+                <div
+                    className="files-detail-overlay"
+                    onMouseDown={e => {
+                        if (
+                            e.target ===
+                            e.currentTarget
+                        ) {
+                            closeFileDetail();
+                        }
+                    }}
+                >
+                    <div className="files-detail-modal">
+                        <div className="files-detail-header">
+                            <div className="files-detail-header-title">
+                                <span>
+                                    파일 정보
                                 </span>
-
-                                <strong title={detailFile.attachName}>
-                                    {detailFile.attachName || "-"}
-                                </strong>
                             </div>
 
-                            <div className="files-detail-info-row">
-                                <span>출처</span>
+                            <button
+                                type="button"
+                                className="files-detail-close"
+                                onClick={
+                                    closeFileDetail
+                                }
+                                title="닫기"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
 
-                                {sourceClickable ? (
-                                    <button
-                                        type="button"
-                                        className="files-detail-source-link"
-                                        onClick={e =>
-                                            handleSourceClick(
-                                                e,
-                                                detailFile
-                                            )
-                                        }
-                                    >
-                                        {getSourceLabel(
-                                            detailFile.attachSource
-                                        )}
-                                    </button>
+                        <div className="files-detail-body">
+                            <div className="files-detail-preview">
+                                {detailType ===
+                                "image" ? (
+                                    !detailImageError ? (
+                                        <img
+                                            src={getFileUrl(
+                                                detailFile.attachNo
+                                            )}
+                                            alt={
+                                                detailFile.attachName
+                                            }
+                                            className="files-detail-image"
+                                            onError={() =>
+                                                setDetailImageError(
+                                                    true
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        <div className="files-detail-image-error">
+                                            <FileIcon
+                                                file={
+                                                    detailFile
+                                                }
+                                            />
+
+                                            <span>
+                                                이미지를 불러올 수 없습니다.
+                                            </span>
+                                        </div>
+                                    )
                                 ) : (
-                                    <span>
-                                        {getSourceLabel(
-                                            detailFile.attachSource
-                                        )}
-                                    </span>
+                                    <div className="files-detail-file-icon">
+                                        <FileIcon
+                                            file={
+                                                detailFile
+                                            }
+                                        />
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="files-detail-info-row">
-                                <span>업로더</span>
+                            <div className="files-detail-info">
+                                <div className="files-detail-name">
+                                    <span className="files-detail-label">
+                                        파일명
+                                    </span>
 
-                                <span>
-                                    {detailFile.empName ||
-                                        detailFile.attachUploader ||
-                                        "-"}
-                                </span>
-                            </div>
+                                    <strong
+                                        title={
+                                            detailFile.attachName
+                                        }
+                                    >
+                                        {detailFile.attachName ||
+                                            "-"}
+                                    </strong>
+                                </div>
 
-                            <div className="files-detail-info-row">
-                                <span>파일 형태</span>
+                                <div className="files-detail-info-row">
+                                    <span>
+                                        출처
+                                    </span>
 
-                                <span>
-                                    {getExtension(
-                                        detailFile.attachName
-                                    )
-                                        ? `.${getExtension(
-                                              detailFile.attachName
-                                          )}`
-                                        : "-"}
-                                </span>
-                            </div>
-
-                            <div className="files-detail-info-row">
-                                <span>크기</span>
-
-                                <span>
-                                    {formatFileSize(
-                                        detailFile.attachSize
+                                    {sourceClickable ? (
+                                        <button
+                                            type="button"
+                                            className="files-detail-source-link"
+                                            onClick={e =>
+                                                handleSourceClick(
+                                                    e,
+                                                    detailFile
+                                                )
+                                            }
+                                        >
+                                            {getSourceLabel(
+                                                detailFile.attachSource
+                                            )}
+                                        </button>
+                                    ) : (
+                                        <span>
+                                            {getSourceLabel(
+                                                detailFile.attachSource
+                                            )}
+                                        </span>
                                     )}
-                                </span>
-                            </div>
+                                </div>
 
-                            <div className="files-detail-info-row">
-                                <span>올린 날짜</span>
+                                <div className="files-detail-info-row">
+                                    <span>
+                                        업로더
+                                    </span>
 
-                                <span>
-                                    {formatDate(
-                                        detailFile.attachCtime
-                                    )}
-                                </span>
+                                    <span>
+                                        {detailFile.empName ||
+                                            detailFile.attachUploader ||
+                                            "-"}
+                                    </span>
+                                </div>
+
+                                <div className="files-detail-info-row">
+                                    <span>
+                                        파일 형태
+                                    </span>
+
+                                    <span>
+                                        {getExtension(
+                                            detailFile.attachName
+                                        )
+                                            ? `.${getExtension(
+                                                  detailFile.attachName
+                                              )}`
+                                            : "-"}
+                                    </span>
+                                </div>
+
+                                <div className="files-detail-info-row">
+                                    <span>
+                                        크기
+                                    </span>
+
+                                    <span>
+                                        {formatFileSize(
+                                            detailFile.attachSize
+                                        )}
+                                    </span>
+                                </div>
+
+                                <div className="files-detail-info-row">
+                                    <span>
+                                        올린 날짜
+                                    </span>
+
+                                    <span>
+                                        {formatDate(
+                                            detailFile.attachCtime
+                                        )}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="files-detail-footer">
-                        <button
-                            type="button"
-                            className="files-detail-download-button"
-                            onClick={() =>
-                                handleDownload(
-                                    detailFile.attachNo
-                                )
-                            }
-                        >
-                            <DownloadIcon />
-
-                            <span>다운로드</span>
-                        </button>
-
-                        {!isProjectClosed && (
+                        <div className="files-detail-footer">
                             <button
                                 type="button"
-                                className="files-detail-record-button"
-                                onClick={() => {
-                                    closeFileDetail();
-                                    handleRecord(detailFile);
-                                }}
+                                className="files-detail-download-button"
+                                onClick={() =>
+                                    handleDownload(
+                                        detailFile.attachNo
+                                    )
+                                }
                             >
-                                <RecordIcon />
+                                <DownloadIcon />
 
-                                <span>Record</span>
+                                <span>
+                                    다운로드
+                                </span>
                             </button>
-                        )}
 
-                        {!isProjectClosed &&
-                            canDeleteFile(detailFile) && (
+                            {!isProjectClosed && (
                                 <button
                                     type="button"
-                                    className="files-detail-delete-button"
+                                    className="files-detail-record-button"
+                                    onClick={() => {
+                                        closeFileDetail();
+
+                                        handleRecord(
+                                            detailFile
+                                        );
+                                    }}
+                                >
+                                    <RecordIcon />
+
+                                    <span>
+                                        Record
+                                    </span>
+                                </button>
+                            )}
+
+                            {!isProjectClosed &&
+                                canDeleteFile(
+                                    detailFile
+                                ) && (
+                                    <button
+                                        type="button"
+                                        className="files-detail-delete-button"
+                                        onClick={() =>
+                                            handleDelete(
+                                                detailFile.attachNo,
+                                                detailFile.attachName
+                                            )
+                                        }
+                                    >
+                                        <DeleteIcon />
+
+                                        <span>
+                                            삭제
+                                        </span>
+                                    </button>
+                                )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+    /*
+     * ==========================================
+     * 페이지네이션
+     * ==========================================
+     */
+
+    const renderPagination =
+        () => {
+            if (
+                loading ||
+                totalPages <= 1
+            ) {
+                return null;
+            }
+
+            const pageNumbers =
+                getPageNumbers();
+
+            return (
+                <div className="files-pagination">
+                    <button
+                        type="button"
+                        className="files-page-button files-page-arrow"
+                        disabled={
+                            page <= 1
+                        }
+                        onClick={() =>
+                            handlePageChange(
+                                page - 1
+                            )
+                        }
+                        aria-label="이전 페이지"
+                        title="이전 페이지"
+                    >
+                        <ChevronLeftIcon />
+                    </button>
+
+                    {page > 3 &&
+                        totalPages >
+                            7 && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="files-page-button"
                                     onClick={() =>
-                                        handleDelete(
-                                            detailFile.attachNo,
-                                            detailFile.attachName
+                                        handlePageChange(
+                                            1
                                         )
                                     }
                                 >
-                                    <DeleteIcon />
-
-                                    <span>삭제</span>
+                                    1
                                 </button>
-                            )}
-                    </div>
+
+                                <span className="files-page-dots">
+                                    ...
+                                </span>
+                            </>
+                        )}
+
+                    {pageNumbers.map(
+                        pageNumber => (
+                            <button
+                                key={
+                                    pageNumber
+                                }
+                                type="button"
+                                className={`files-page-button ${
+                                    pageNumber ===
+                                    page
+                                        ? "active"
+                                        : ""
+                                }`}
+                                onClick={() =>
+                                    handlePageChange(
+                                        pageNumber
+                                    )
+                                }
+                            >
+                                {
+                                    pageNumber
+                                }
+                            </button>
+                        )
+                    )}
+
+                    {page <
+                        totalPages -
+                            2 &&
+                        totalPages >
+                            7 && (
+                            <>
+                                <span className="files-page-dots">
+                                    ...
+                                </span>
+
+                                <button
+                                    type="button"
+                                    className="files-page-button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            totalPages
+                                        )
+                                    }
+                                >
+                                    {
+                                        totalPages
+                                    }
+                                </button>
+                            </>
+                        )}
+
+                    <button
+                        type="button"
+                        className="files-page-button files-page-arrow"
+                        disabled={
+                            page >=
+                            totalPages
+                        }
+                        onClick={() =>
+                            handlePageChange(
+                                page + 1
+                            )
+                        }
+                        aria-label="다음 페이지"
+                        title="다음 페이지"
+                    >
+                        <ChevronRightIcon />
+                    </button>
                 </div>
-            </div>
-        );
-    };
+            );
+        };
 
     /*
      * ==========================================
@@ -1144,41 +2413,64 @@ export default function Files({ source = "FILE", sourceNo = null }) {
     return (
         <div className="files-page">
             <div className="files-container">
+
+                {/* ==========================
+                    Toolbar
+                ========================== */}
+
                 <div className="files-toolbar">
                     <div className="files-search-area">
                         <select
                             className="files-search-type"
-                            value={searchType}
-                            onChange={handleSearchTypeChange}
+                            value={
+                                searchType
+                            }
+                            onChange={
+                                handleSearchTypeChange
+                            }
                         >
-                            {SEARCH_TYPE_OPTIONS.map(option => (
-                                <option
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
+                            {SEARCH_TYPE_OPTIONS.map(
+                                option => (
+                                    <option
+                                        key={
+                                            option.value
+                                        }
+                                        value={
+                                            option.value
+                                        }
+                                    >
+                                        {
+                                            option.label
+                                        }
+                                    </option>
+                                )
+                            )}
                         </select>
 
                         <div
                             className={`files-search ${
-                                searchType === "source"
+                                searchType ===
+                                "source"
                                     ? "files-search-source"
                                     : ""
                             } ${
-                                searchType === "type"
+                                searchType ===
+                                "type"
                                     ? "files-search-type-mode"
                                     : ""
                             }`}
                         >
                             {renderSearchInput()}
 
-                            {searchType !== "source" &&
-                                searchType !== "type" && (
+                            {searchType !==
+                                "source" &&
+                                searchType !==
+                                    "type" && (
                                     <button
                                         type="button"
-                                        onClick={handleSearch}
+                                        onClick={
+                                            handleSearch
+                                        }
                                         aria-label="검색"
                                     >
                                         <SearchIcon />
@@ -1192,7 +2484,9 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                             <button
                                 type="button"
                                 className="files-search-reset"
-                                onClick={handleSearchReset}
+                                onClick={
+                                    handleSearchReset
+                                }
                             >
                                 초기화
                             </button>
@@ -1202,18 +2496,30 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                     <div className="files-sort-area">
                         <select
                             className="files-sort-select"
-                            value={sortType}
-                            onChange={handleSortChange}
+                            value={
+                                sortType
+                            }
+                            onChange={
+                                handleSortChange
+                            }
                             aria-label="파일 정렬"
                         >
-                            {SORT_OPTIONS.map(option => (
-                                <option
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
+                            {SORT_OPTIONS.map(
+                                option => (
+                                    <option
+                                        key={
+                                            option.value
+                                        }
+                                        value={
+                                            option.value
+                                        }
+                                    >
+                                        {
+                                            option.label
+                                        }
+                                    </option>
+                                )
+                            )}
                         </select>
                     </div>
 
@@ -1221,8 +2527,12 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                         <button
                             type="button"
                             className="files-upload-button"
-                            onClick={handleUploadClick}
-                            disabled={uploading}
+                            onClick={
+                                handleUploadClick
+                            }
+                            disabled={
+                                uploading
+                            }
                         >
                             <UploadIcon />
 
@@ -1235,16 +2545,27 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                     )}
 
                     <input
-                        ref={fileInputRef}
+                        ref={
+                            fileInputRef
+                        }
                         type="file"
                         className="files-hidden-input"
-                        onChange={handleFileChange}
+                        onChange={
+                            handleFileChange
+                        }
                     />
                 </div>
 
+                {/* ==========================
+                    파일 목록
+                ========================== */}
+
                 <div className="files-list">
+
                     <div className="files-list-header">
-                        <div className="files-col-file">파일명</div>
+                        <div className="files-col-file">
+                            파일명
+                        </div>
 
                         <div className="files-col-source">
                             출처
@@ -1275,180 +2596,273 @@ export default function Files({ source = "FILE", sourceNo = null }) {
                         </div>
                     </div>
 
+                    {/* 로딩 */}
+
                     {loading && (
                         <div className="files-empty">
-                            파일을 불러오는 중입니다.
-                        </div>
-                    )}
-
-                    {!loading && files.length === 0 && (
-                        <div className="files-empty">
-                            <div className="files-empty-icon">
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                >
-                                    <path d="M4 7h5l2 2h9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" />
-                                    <path d="M4 7V5a2 2 0 0 1 2-2h4l2 2" />
-                                </svg>
-                            </div>
+                            <div className="files-loading-spinner" />
 
                             <p>
-                                {keyword ||
-                                sourceKeyword ||
-                                fileTypeKeyword
-                                    ? "검색 결과가 없습니다."
-                                    : "등록된 파일이 없습니다."}
+                                파일을
+                                불러오는
+                                중입니다.
                             </p>
                         </div>
                     )}
 
+                    {/* 파일 없음 */}
+
                     {!loading &&
-                        sortedFiles.map(file => {
-                            const type = getFileType(
-                                file.attachName
-                            );
+                        files.length ===
+                            0 && (
+                            <div className="files-empty">
+                                <div className="files-empty-icon">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                    >
+                                        <path d="M4 7h5l2 2h9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" />
+                                        <path d="M4 7V5a2 2 0 0 1 2-2h4l2 2" />
+                                    </svg>
+                                </div>
 
-                            const sourceClickable =
-                                isSourceClickable(file);
+                                <p>
+                                    {keyword ||
+                                    sourceKeyword ||
+                                    fileTypeKeyword
+                                        ? "검색 결과가 없습니다."
+                                        : "등록된 파일이 없습니다."}
+                                </p>
+                            </div>
+                        )}
 
-                            return (
-                                <div
-                                    className={`files-list-row ${
-                                        type === "image"
-                                            ? "files-image-row"
-                                            : ""
-                                    }`}
-                                    key={file.attachNo}
-                                    onClick={() =>
-                                        openFileDetail(file)
-                                    }
-                                >
-                                    <div className="files-col-file files-file-name">
-                                        <FileIcon file={file} />
+                    {/* 파일 */}
 
-                                        <span className="files-name-text">
-                                            {file.attachName}
-                                        </span>
-                                    </div>
+                    {!loading &&
+                        files.map(
+                            file => {
+                                const type =
+                                    getFileType(
+                                        file.attachName
+                                    );
 
+                                const sourceClickable =
+                                    isSourceClickable(
+                                        file
+                                    );
+
+                                return (
                                     <div
-                                        className={`files-col-source ${
-                                            sourceClickable
-                                                ? "files-source-clickable"
+                                        className={`files-list-row ${
+                                            type ===
+                                            "image"
+                                                ? "files-image-row"
                                                 : ""
                                         }`}
-                                        onClick={e =>
-                                            handleSourceClick(
-                                                e,
+                                        key={
+                                            file.attachNo
+                                        }
+                                        onClick={() =>
+                                            openFileDetail(
                                                 file
                                             )
                                         }
-                                        title={
-                                            sourceClickable
-                                                ? "원본으로 이동"
-                                                : ""
-                                        }
                                     >
-                                        {getSourceLabel(
-                                            file.attachSource
-                                        )}
-                                    </div>
+                                        {/* 파일명 */}
 
-                                    <div className="files-col-uploader">
-                                        {file.empName ||
-                                            file.attachUploader ||
-                                            "-"}
-                                    </div>
+                                        <div className="files-col-file files-file-name">
+                                            <FileIcon
+                                                file={
+                                                    file
+                                                }
+                                            />
 
-                                    <div className="files-col-date">
-                                        {formatDate(
-                                            file.attachCtime
-                                        )}
-                                    </div>
+                                            <span
+                                                className="files-name-text"
+                                                title={
+                                                    file.attachName
+                                                }
+                                            >
+                                                {
+                                                    file.attachName
+                                                }
+                                            </span>
+                                        </div>
 
-                                    <div className="files-col-download">
-                                        <button
-                                            type="button"
-                                            className="files-download-button"
-                                            onClick={e => {
-                                                e.stopPropagation();
+                                        {/* 출처 */}
 
-                                                handleDownload(
-                                                    file.attachNo
-                                                );
-                                            }}
-                                            title="다운로드"
+                                        <div
+                                            className={`files-col-source ${
+                                                sourceClickable
+                                                    ? "files-source-clickable"
+                                                    : ""
+                                            }`}
+                                            onClick={e =>
+                                                handleSourceClick(
+                                                    e,
+                                                    file
+                                                )
+                                            }
+                                            title={
+                                                sourceClickable
+                                                    ? "원본으로 이동"
+                                                    : ""
+                                            }
                                         >
-                                            <DownloadIcon />
-                                        </button>
-                                    </div>
+                                            {getSourceLabel(
+                                                file.attachSource
+                                            )}
+                                        </div>
 
-                                    <div className="files-col-size">
-                                        {formatFileSize(
-                                            file.attachSize
-                                        )}
-                                    </div>
+                                        {/* 업로더 */}
 
-                                    <div className="files-col-record">
-                                        {!isProjectClosed && (
+                                        <div className="files-col-uploader">
+                                            {file.empName ||
+                                                file.attachUploader ||
+                                                "-"}
+                                        </div>
+
+                                        {/* 날짜 */}
+
+                                        <div className="files-col-date">
+                                            {formatDate(
+                                                file.attachCtime
+                                            )}
+                                        </div>
+
+                                        {/* 다운로드 */}
+
+                                        <div className="files-col-download">
                                             <button
                                                 type="button"
-                                                className="files-record-button"
+                                                className="files-download-button"
                                                 onClick={e => {
                                                     e.stopPropagation();
 
-                                                    handleRecord(
-                                                        file
+                                                    handleDownload(
+                                                        file.attachNo
                                                     );
                                                 }}
-                                                title="Record로 남기기"
+                                                title="다운로드"
                                             >
-                                                <RecordIcon />
+                                                <DownloadIcon />
                                             </button>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    <div className="files-col-delete">
-                                        {!isProjectClosed &&
-                                            canDeleteFile(file) && (
+                                        {/* 크기 */}
+
+                                        <div className="files-col-size">
+                                            {formatFileSize(
+                                                file.attachSize
+                                            )}
+                                        </div>
+
+                                        {/* Record */}
+
+                                        <div className="files-col-record">
+                                            {!isProjectClosed && (
                                                 <button
                                                     type="button"
-                                                    className="files-delete-button"
+                                                    className="files-record-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
 
-                                                        handleDelete(
-                                                            file.attachNo,
-                                                            file.attachName
+                                                        handleRecord(
+                                                            file
                                                         );
                                                     }}
-                                                    title="삭제"
+                                                    title="Record로 남기기"
                                                 >
-                                                    <DeleteIcon />
+                                                    <RecordIcon />
                                                 </button>
                                             )}
+                                        </div>
+
+                                        {/* 삭제 */}
+
+                                        <div className="files-col-delete">
+                                            {!isProjectClosed &&
+                                                canDeleteFile(
+                                                    file
+                                                ) && (
+                                                    <button
+                                                        type="button"
+                                                        className="files-delete-button"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+
+                                                            handleDelete(
+                                                                file.attachNo,
+                                                                file.attachName
+                                                            );
+                                                        }}
+                                                        title="삭제"
+                                                    >
+                                                        <DeleteIcon />
+                                                    </button>
+                                                )}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            }
+                        )}
                 </div>
+
+                {/* ==========================
+                    파일 개수
+                ========================== */}
+
+                {!loading &&
+                    totalCount > 0 && (
+                        <div className="files-count">
+                            총{" "}
+                            <strong>
+                                {totalCount.toLocaleString()}
+                            </strong>
+                            개의 파일
+                        </div>
+                    )}
+
+                {/* ==========================
+                    페이지네이션
+                ========================== */}
+
+                {renderPagination()}
             </div>
+
+            {/* ==========================
+                파일 상세
+            ========================== */}
 
             {renderFileDetailModal()}
 
+            {/* ==========================
+                Record
+            ========================== */}
+
             {recordTargetFile && (
                 <RecordLinkModal
-                    show={recordModalOpen}
-                    onHide={closeRecordModal}
-                    projectNo={projectNo}
+                    show={
+                        recordModalOpen
+                    }
+                    onHide={
+                        closeRecordModal
+                    }
+                    projectNo={
+                        projectNo
+                    }
                     relatedType="ATTACH"
-                    relatedNo={recordTargetFile.attachNo}
-                    relatedTitle={recordTargetFile.attachName}
+                    relatedNo={
+                        recordTargetFile.attachNo
+                    }
+                    relatedTitle={
+                        recordTargetFile.attachName
+                    }
                 />
             )}
         </div>
     );
 }
+
