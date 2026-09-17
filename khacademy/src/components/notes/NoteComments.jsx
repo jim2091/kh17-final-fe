@@ -19,7 +19,8 @@ import "./NoteComments.css";
 // 첨부파일 최대 허용 용량 (1MB)
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
-export default function NoteComments({ noteNo, projectNo }) {
+// projectStatus prop 추가
+export default function NoteComments({ noteNo, projectNo, projectStatus }) {
   // 스토리지 전수 검사로 실제 로그인 사번 및 이름 추출
   const getLoginUserInfo = () => {
     try {
@@ -50,6 +51,9 @@ export default function NoteComments({ noteNo, projectNo }) {
   const canPreview = (fileName = "") => {
     return /\.(docx|doc|hwp|hwpx|xlsx|xls|pptx|ppt|pdf|jpg|jpeg|png|gif|webp|svg|txt|json|log|sql|md)$/i.test(fileName);
   };
+
+  // 프로젝트가 closed 상태인지 판별 (대소문자 및 공백 방어 처리)
+  const isProjectClosed = String(projectStatus || "").trim().toLowerCase() === "closed";
 
   const { empNo: myEmpNo, empName: myEmpName } = getLoginUserInfo();
   const [myProjectMemberNo, setMyProjectMemberNo] = useState(0);
@@ -128,6 +132,7 @@ export default function NoteComments({ noteNo, projectNo }) {
 
   // 파일 선택 시 용량 검증 (toast.warn 알림)
   const handleFileChange = (e) => {
+    if (isProjectClosed) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -147,6 +152,7 @@ export default function NoteComments({ noteNo, projectNo }) {
   // 댓글 등록 제출 핸들러
   const handleAddComment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if (isProjectClosed) return;
     if (!inputContent.trim() && !selectedFile) return;
 
     if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
@@ -202,6 +208,7 @@ export default function NoteComments({ noteNo, projectNo }) {
   };
 
   const handleKeyDown = (e) => {
+    if (isProjectClosed) return;
     if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -210,6 +217,7 @@ export default function NoteComments({ noteNo, projectNo }) {
   };
 
   const handleStartEdit = (comment) => {
+    if (isProjectClosed) return;
     setEditingCommentNo(comment.noteCommentNo);
     setEditInputContent(comment.noteCommentContent || "");
     setOriginalEditContent(comment.noteCommentContent || "");
@@ -222,7 +230,7 @@ export default function NoteComments({ noteNo, projectNo }) {
   };
 
   const handleSaveEdit = async (commentNo) => {
-    if (!editInputContent.trim()) return;
+    if (isProjectClosed || !editInputContent.trim()) return;
 
     try {
       await apiClient.put("/note/comment/", {
@@ -242,6 +250,7 @@ export default function NoteComments({ noteNo, projectNo }) {
   };
 
   const handleDeleteComment = async (commentNo) => {
+    if (isProjectClosed) return;
     const result = await Swal.fire({
       title: "댓글 삭제",
       text: "댓글을 삭제하시겠습니까?",
@@ -292,18 +301,23 @@ export default function NoteComments({ noteNo, projectNo }) {
         <span>댓글 ({comments.length})</span>
       </div>
 
-      {/* 댓글 작성 폼 */}
+      {/* 댓글 작성 폼 (종료된 프로젝트일 경우 안내 문구 추가 가능) */}
       <form className="comment-form" onSubmit={handleAddComment}>
         <textarea
           className="comment-input"
           rows="2"
-          placeholder="노트에 대한 피드백이나 의견을 남겨주세요... (Enter: 등록, Shift+Enter: 줄바꿈)"
+          placeholder={
+            isProjectClosed
+              ? "종료된 프로젝트는 댓글을 작성할 수 없습니다."
+              : "노트에 대한 피드백이나 의견을 남겨주세요... (Enter: 등록, Shift+Enter: 줄바꿈)"
+          }
           value={inputContent}
           onChange={(e) => setInputContent(e.target.value)}
           onKeyDown={handleKeyDown}
+          disabled={isProjectClosed}
         />
 
-        {selectedFile && (
+        {selectedFile && !isProjectClosed && (
           <div className="file-preview-tag">
             <Paperclip size={12} />
             <span>
@@ -328,18 +342,20 @@ export default function NoteComments({ noteNo, projectNo }) {
             ref={fileInputRef}
             className="file-hidden-input"
             onChange={handleFileChange}
+            disabled={isProjectClosed}
           />
           <button
             type="button"
             className="btn-attach"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isProjectClosed}
           >
             <Paperclip size={14} /> 파일 첨부
           </button>
           <button
             type="submit"
             className="btn-submit"
-            disabled={!inputContent.trim() && !selectedFile}
+            disabled={isProjectClosed || (!inputContent.trim() && !selectedFile)}
           >
             <Send size={13} /> 등록
           </button>
@@ -383,7 +399,8 @@ export default function NoteComments({ noteNo, projectNo }) {
                     )}
                   </div>
 
-                  {isMyComment && !isEditing && (
+                  {/* 프로젝트가 closed 상태가 아닐 때만 수정/삭제 버튼 노출 */}
+                  {isMyComment && !isEditing && !isProjectClosed && (
                     <div className="bubble-actions">
                       <button
                         type="button"
@@ -447,7 +464,6 @@ export default function NoteComments({ noteNo, projectNo }) {
                           {file.attachName}
                         </span>
 
-                        {/*  f -> file 변수명 수정 및 단일 미리보기 버튼으로 통합 */}
                         {canPreview(file.attachName) && (
                           <button
                             type="button"

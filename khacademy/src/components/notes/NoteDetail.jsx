@@ -27,31 +27,36 @@ export default function NoteDetail() {
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
   
-  // 💡 [추가] 프로젝트 상태 확인용 상태 (closed 여부 파악)
+  // 프로젝트 상태 확인용 상태 (closed 여부 파악)
   const [projectStatus, setProjectStatus] = useState("ACTIVE");
 
   // 통합 문서 온라인 미리보기 대상 상태 { attachNo, fileName }
   const [previewDocx, setPreviewDocx] = useState(null);
 
-  // 1. 로그인 유저의 사번/멤버 식별 정보 추출 (localStorage & sessionStorage)
+  // 1. 로그인 유저의 사번/멤버 식별 정보 추출 (스토리지 전수 검사 방식 적용)
   const loginUserInfo = useMemo(() => {
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         const val = localStorage.getItem(key);
-        if (val && val.includes("empNo")) {
-          const parsed = JSON.parse(val);
-          if (parsed && parsed.empNo) return parsed;
+        if (val && (val.includes("empNo") || val.includes("empName"))) {
+          try {
+            const parsed = JSON.parse(val);
+            if (parsed && (parsed.empNo || parsed.empName)) {
+              return {
+                empNo: Number(parsed.empNo || parsed.memberNo || 0),
+                empName: String(parsed.empName || "").trim()
+              };
+            }
+          } catch (e) {}
         }
       }
     } catch (e) {}
 
-    const directEmpNo = Number(
-      localStorage.getItem("empNo") ||
-      sessionStorage.getItem("empNo") ||
-      0
-    );
-    return { empNo: directEmpNo };
+    return {
+      empNo: Number(localStorage.getItem("empNo") || sessionStorage.getItem("empNo") || 0),
+      empName: String(localStorage.getItem("empName") || sessionStorage.getItem("empName") || "").trim()
+    };
   }, []);
 
   // 2. 노트 상세 정보, 첨부파일 목록, 프로젝트 정보 조회
@@ -62,13 +67,12 @@ export default function NoteDetail() {
       const [noteRes, fileRes, projectRes] = await Promise.all([
         apiClient.get(`/note/${noteNo}`),
         apiClient.get(`/note/file/${noteNo}`),
-        apiClient.get(`/project/${projectNo}`) // 💡 프로젝트 정보 함께 조회
+        apiClient.get(`/project/${projectNo}`)
       ]);
 
       setNote(noteRes.data);
       setFiles(fileRes.data || []);
       
-      // 프로젝트 상태 값 세팅 (소문자/대문자 모두 대응하기 위해 대문자로 변환하거나 그대로 비교)
       if (projectRes.data) {
         const pStatus = projectRes.data.projectStatus || projectRes.data.status || "ACTIVE";
         setProjectStatus(pStatus);
@@ -83,31 +87,39 @@ export default function NoteDetail() {
     loadNoteDetail();
   }, [loadNoteDetail]);
 
-  // 3. 본인 작성 여부 판별 (사번 or 멤버 번호 일치 검사)
+  // 3. 💡 [개선] 본인 작성 여부 판별 (사번, 멤버 번호, 이름 일치 여부까지 다중 검사)
   const isOwner = useMemo(() => {
     if (!note) return false;
 
     const currentEmpNo = Number(loginUserInfo?.empNo || 0);
-    const noteEmpNo = Number(note.empNo || note.writerEmpNo || 0);
+    const currentEmpName = String(loginUserInfo?.empName || "").trim();
 
-    // 작성자 사번(empNo) 기준 일치 여부 확인
-    if (currentEmpNo > 0 && noteEmpNo > 0) {
-      return currentEmpNo === noteEmpNo;
+    const noteEmpNo = Number(note.empNo || note.writerEmpNo || note.memberNo || 0);
+    const noteWriterName = String(note.writerName || note.empName || note.memberName || "").trim();
+
+    // 1) 사번(empNo) 기준 비교
+    if (currentEmpNo > 0 && noteEmpNo > 0 && currentEmpNo === noteEmpNo) {
+      return true;
     }
 
-    // 프로젝트 멤버 번호(projectMemberNo)가 저장되어 있는 경우 추가 대조
+    // 2) 프로젝트 멤버 번호 기준 비교
     const currentMemberNo = Number(
       localStorage.getItem(`project_${projectNo}_memberNo`) || 0
     );
-    const noteWriterNo = Number(note.noteWriterNo || 0);
-    if (currentMemberNo > 0 && noteWriterNo > 0) {
-      return currentMemberNo === noteWriterNo;
+    const noteWriterNo = Number(note.noteWriterNo || note.projectMemberNo || 0);
+    if (currentMemberNo > 0 && noteWriterNo > 0 && currentMemberNo === noteWriterNo) {
+      return true;
+    }
+
+    // 3) 사원 이름 기준 비교 (사번 키값이 누락된 경우를 대비한 보조 안전장치)
+    if (currentEmpName && noteWriterName && currentEmpName === noteWriterName) {
+      return true;
     }
 
     return false;
   }, [note, loginUserInfo, projectNo]);
 
-  // 💡 [추가] 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
+  // 프로젝트가 closed 상태인지 판별하는 플래그
   const isClosed = String(projectStatus).toLowerCase() === "closed";
 
   // 첨부파일 다운로드 핸들러
@@ -135,7 +147,6 @@ export default function NoteDetail() {
 
   // 노트 삭제
   const handleDeleteNote = async () => {
-    // 만약 방어 코드를 한 번 더 걸고 싶다면 아래 조건 추가 가능
     if (isClosed) {
       toast.warn("종료된 프로젝트의 노트는 삭제할 수 없습니다.");
       return;
@@ -184,7 +195,7 @@ export default function NoteDetail() {
           <ArrowLeft size={15} /> 목록으로
         </button>
 
-        {/* 💡 [수정] 작성자 본인이고(!isClosed), 프로젝트가 closed 상태가 아닐 때만 수정/삭제 버튼 노출 */}
+        {/* 💡 작성자 본인이고 프로젝트가 closed 상태가 아닐 때 수정/삭제 버튼 노출 */}
         {isOwner && !isClosed && (
           <div className="note-top-action-group">
             <button
@@ -264,10 +275,10 @@ export default function NoteDetail() {
         </div>
       </div>
 
-      {/* 분리된 댓글 컴포넌트 */}
-      <NoteComments noteNo={noteNo} projectNo={projectNo} />
+      {/* 댓글 컴포넌트 */}
+      <NoteComments noteNo={noteNo} projectNo={projectNo} projectStatus={projectStatus} />
 
-      {/* 통합 DocxPreview 컴포넌트 (Word, HWP, PDF, 이미지, 텍스트 통합 뷰어) */}
+      {/* 통합 DocxPreview 컴포넌트 */}
       {previewDocx && (
         <DocxPreview
           attachNo={previewDocx.attachNo}
