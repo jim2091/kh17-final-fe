@@ -193,16 +193,45 @@ export default function Edit() {
         emp.empAddress2,
     ]);
 
-    const checkEmpPassword = useCallback(e => {
-        const valid = !!emp.prevEmpPassword;
-        const clazz = valid ? "is-valid" : "is-invalid";
+    // const checkEmpPassword = useCallback(e => {
+    //     const valid = !!emp.prevEmpPassword;
+    //     const clazz = valid ? "is-valid" : "is-invalid";
 
-        setResult(prev => ({
-            ...prev,
-            prevEmpPassword: clazz,
-        }));
+    //     setResult(prev => ({
+    //         ...prev,
+    //         prevEmpPassword: clazz,
+    //     }));
 
-    }, [emp]);
+    // }, [emp]);
+
+    const checkEmpPassword = useCallback(async () => {
+        if (!emp.prevEmpPassword) {
+            setResult(prev => ({
+                ...prev,
+                prevEmpPassword: "is-invalid"
+            }));
+            return;
+        }
+
+        try {
+            const { data } = await apiClient.post("/member/check-password", {
+                empPassword: emp.prevEmpPassword
+            });
+            console.log("입력 비밀번호:", emp.prevEmpPassword);
+            console.log("서버 응답:", data);
+
+            setResult(prev => ({
+                ...prev,
+                prevEmpPassword: data ? "is-valid" : "is-invalid"
+            }));
+
+        } catch (error) {
+            setResult(prev => ({
+                ...prev,
+                prevEmpPassword: "is-invalid"
+            }));
+        }
+    }, [emp.prevEmpPassword]);
     const checkNewEmpPassword = useCallback(e => {
         const valid = (!!emp.newEmpPassword1 && !!emp.newEmpPassword2) ||
             (!emp.newEmpPassword1 && !emp.newEmpPassword2);
@@ -302,7 +331,7 @@ export default function Edit() {
                     </div>
                 </Card>
             </Row>
-            
+
 
             <Row className="mt-4">
                 <Col>
@@ -313,7 +342,7 @@ export default function Edit() {
                 </Col>
             </Row>
             <div className="profile-line mt-1"></div>
-            
+
 
             <Row className="mt-4">
                 <Col sm={3} className="fw-bold">생년월일</Col>
@@ -401,7 +430,7 @@ export default function Edit() {
 
             <Row className="mt-4">
                 <Form.Label column sm={3} className="fw-bold">
-                    <FaAsterisk className="text-danger"/>
+                    <FaAsterisk className="text-danger" />
                     <span className="ms-2">기존 비밀번호</span>
                     {visible.prevEmpPassword === true ? (
                         <FaEye className="text-warning ms-4" onClick={e => {
@@ -421,7 +450,7 @@ export default function Edit() {
                         value={emp.prevEmpPassword ?? ""} onChange={changeStringValue}
                         onBlur={checkEmpPassword} className={result.prevEmpPassword}
                     />
-                    <div className="invalid-feedback">비밀번호는 필수 항목입니다</div>
+                    <div className="invalid-feedback"></div>
                 </Col>
             </Row>
             <Row className="mt-2">
