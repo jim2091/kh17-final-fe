@@ -893,7 +893,7 @@ export default function Task() {
         {/* 우측 상단 액션 그룹 */}
         <div className="kanban-top-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           
-          {/* 💡 [분리 추가] 독립된 새 업무 등록 버튼 (프로젝트가 닫히지 않은 경우에만 노출) */}
+          {/*  독립된 새 업무 등록 버튼 (프로젝트가 닫히지 않은 경우에만 노출) */}
           {!isClosed && (
             <button
               type="button"
@@ -1157,7 +1157,7 @@ export default function Task() {
             </div>
 
             <div style={{ padding: "10px 20px", backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12.5px", color: "#64748b" }}>
-              💡 보관된 업무를 다시 진행해야 하는 경우, 우측 버튼을 눌러 보드로 즉시 되돌릴 수 있습니다.
+              보관된 업무를 다시 진행해야 하는 경우, 우측 버튼을 눌러 보드로 즉시 되돌릴 수 있습니다.
             </div>
 
             <div className="modal-body-list">

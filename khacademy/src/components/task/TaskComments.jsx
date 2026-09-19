@@ -541,7 +541,7 @@ export default function TaskComments({ taskNo, projectNo, loginUser, isClosed })
                       </div>
                     )}
 
-                    {/* 💡 파일이 삭제되어 빈 껍데기만 남은 경우 안내 문구 처리 */}
+                    {/* 파일이 삭제되어 빈 껍데기만 남은 경우 안내 문구 처리 */}
                     {comment.taskCommentContent === "(파일 첨부)" && files.length === 0 && (
                       <div 
                         className="comment-deleted-file-hint" 

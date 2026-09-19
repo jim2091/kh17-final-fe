@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import DocxPreview from "../docx-preview/DocxPreview";
 import NoteComments from "./NoteComments";
+import RecordLinkModal from "../records/RecordLinkModal";
 import "./NoteDetail.css";
 
 // 인라인 미리보기를 지원하는 확장자 판별 헬퍼
@@ -26,12 +27,15 @@ export default function NoteDetail() {
 
   const [note, setNote] = useState(null);
   const [files, setFiles] = useState([]);
-  
-  // 💡 [추가] 프로젝트 상태 확인용 상태 (closed 여부 파악)
+
+  //  프로젝트 상태 확인용 상태 (closed 여부 파악)
   const [projectStatus, setProjectStatus] = useState("ACTIVE");
 
   // 통합 문서 온라인 미리보기 대상 상태 { attachNo, fileName }
   const [previewDocx, setPreviewDocx] = useState(null);
+
+  // Record 연결 모달 상태
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   // 1. 로그인 유저의 사번/멤버 식별 정보 추출 (localStorage & sessionStorage)
   const loginUserInfo = useMemo(() => {
@@ -62,12 +66,12 @@ export default function NoteDetail() {
       const [noteRes, fileRes, projectRes] = await Promise.all([
         apiClient.get(`/note/${noteNo}`),
         apiClient.get(`/note/file/${noteNo}`),
-        apiClient.get(`/project/${projectNo}`) // 💡 프로젝트 정보 함께 조회
+        apiClient.get(`/project/${projectNo}`) 
       ]);
 
       setNote(noteRes.data);
       setFiles(fileRes.data || []);
-      
+
       // 프로젝트 상태 값 세팅 (소문자/대문자 모두 대응하기 위해 대문자로 변환하거나 그대로 비교)
       if (projectRes.data) {
         const pStatus = projectRes.data.projectStatus || projectRes.data.status || "ACTIVE";
@@ -107,7 +111,7 @@ export default function NoteDetail() {
     return false;
   }, [note, loginUserInfo, projectNo]);
 
-  // 💡 [추가] 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
+  // 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
   const isClosed = String(projectStatus).toLowerCase() === "closed";
 
   // 첨부파일 다운로드 핸들러
@@ -184,25 +188,38 @@ export default function NoteDetail() {
           <ArrowLeft size={15} /> 목록으로
         </button>
 
-        {/* 💡 [수정] 작성자 본인이고(!isClosed), 프로젝트가 closed 상태가 아닐 때만 수정/삭제 버튼 노출 */}
-        {isOwner && !isClosed && (
-          <div className="note-top-action-group">
+        <div className="note-top-action-group">
+          {/* Record 등록 버튼: 프로젝트가 종료되지 않았을 때만 노출 */}
+          {!isClosed && (
             <button
               type="button"
               className="btn-note-nav-outline"
-              onClick={() => navigate(`/projects/${projectNo}/note/${noteNo}/edit`)}
+              onClick={() => setRecordModalOpen(true)}
             >
-              <Edit3 size={14} /> 수정
+              <FileText size={14} /> Record로 남기기
             </button>
-            <button
-              type="button"
-              className="btn-note-nav-danger"
-              onClick={handleDeleteNote}
-            >
-              <Trash2 size={14} /> 삭제
-            </button>
-          </div>
-        )}
+          )}
+
+          {/* 작성자 본인이고, 프로젝트가 closed 상태가 아닐 때만 수정/삭제 버튼 노출 */}
+          {isOwner && !isClosed && (
+            <>
+              <button
+                type="button"
+                className="btn-note-nav-outline"
+                onClick={() => navigate(`/projects/${projectNo}/note/${noteNo}/edit`)}
+              >
+                <Edit3 size={14} /> 수정
+              </button>
+              <button
+                type="button"
+                className="btn-note-nav-danger"
+                onClick={handleDeleteNote}
+              >
+                <Trash2 size={14} /> 삭제
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 본체 상세 카드 */}
@@ -275,6 +292,16 @@ export default function NoteDetail() {
           onClose={() => setPreviewDocx(null)}
         />
       )}
+
+      {/* RecordLinkModal */}
+      <RecordLinkModal
+        show={recordModalOpen}
+        onHide={() => setRecordModalOpen(false)}
+        projectNo={projectNo}
+        relatedType="NOTE"
+        relatedNo={note.noteNo}
+        relatedTitle={note.noteTitle}
+      />
     </div>
   );
 }
