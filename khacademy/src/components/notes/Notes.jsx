@@ -31,7 +31,7 @@ export default function Notes() {
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
 
-  // 💡 [추가] 프로젝트 상태 확인용 상태 (closed 여부 파악)
+  //  프로젝트 상태 확인용 상태 (closed 여부 파악)
   const [projectStatus, setProjectStatus] = useState("ACTIVE");
 
   // 필터 모드: 'ALL'(전체글) | 'DOC'(문서 파일 첨부글) | 'IMAGE'(사진 첨부글) | 'TEXT'(첨부파일 없는 일반글)
@@ -58,7 +58,7 @@ export default function Notes() {
           type: "all",
           keyword: ""
         }),
-        apiClient.get(`/project/${projectNo}`) // 💡 프로젝트 정보 함께 조회
+        apiClient.get(`/project/${projectNo}`) 
       ]);
 
       const noteList = res.data?.noteList || (Array.isArray(res.data) ? res.data : []);
@@ -93,7 +93,7 @@ export default function Notes() {
     fetchNotes();
   }, [fetchNotes]);
 
-  // 💡 [추가] 프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
+  //프로젝트가 closed 상태인지 판별하는 플래그 (대소문자 무관 비교)
   const isClosed = String(projectStatus).toLowerCase() === "closed";
 
   // 검색어 및 첨부파일 조건 필터링
@@ -135,7 +135,7 @@ export default function Notes() {
           <p className="notes-subtitle">회의록, 아이디어 및 문서를 공유하고 관리하세요.</p>
         </div>
 
-        {/* 💡 [수정] 프로젝트가 closed 상태가 아닐 때만 '새 노트 작성' 버튼 노출 */}
+        {/*  프로젝트가 closed 상태가 아닐 때만 '새 노트 작성' 버튼 노출 */}
         {!isClosed && (
           <button
             type="button"
