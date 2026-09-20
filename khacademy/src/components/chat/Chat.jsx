@@ -15,6 +15,7 @@ import "./Chat.css";
 
 import RecordLinkModal from "../records/RecordLinkModal";
 import { FiArrowDown } from "react-icons/fi";
+import { onWebSocketReconnect } from "../../utils/websocket";
 
 export default function Chat() {
     //● state
@@ -87,10 +88,29 @@ export default function Chat() {
             const { data } = await apiClient.get(
                 `/channel/project/${projectNo}`
             );
-            setChannels(data);
+
+            const nextChannels = data || [];
+
+            setChannels(nextChannels);
+
+            setSelectedChannel(prev => {
+                if (prev === null) {
+                    return null;
+                }
+
+                const nextSelected = nextChannels.find(
+                    channel =>
+                        Number(channel.chatChannelNo)
+                        === Number(prev.chatChannelNo)
+                );
+
+                // 삭제된 채널이면 null
+                // 수정된 채널이면 서버에서 새로 받은 객체로 교체
+                return nextSelected || null;
+            });
         }
         catch (e) {
-            console.error(e);
+            console.error("채널 목록 조회 실패:", e);
         }
     }, [projectNo]);
 
@@ -121,6 +141,76 @@ export default function Chat() {
         loadUnreadCount();
     }, [loadChannelList, loadUnreadCount]);
 
+    //채널 변경 이벤트 구독 effect
+    useEffect(() => {
+        if (!projectNo) return;
+
+        let subscription = null;
+
+        const subscribeChannelEvent = () => {
+            const client = getWebSocketClient();
+
+            if (client === null || client.connected !== true) {
+                return;
+            }
+
+            // 재연결 시 이전 구독 정리
+            try {
+                subscription?.unsubscribe();
+            }
+            catch (e) {
+                // 이미 끊어진 구독이면 무시
+            }
+
+            subscription = client.subscribe(
+                `/public/project/${projectNo}/channel`,
+                async message => {
+                    const event = JSON.parse(message.body);
+
+                    if (event.eventType === "CHANNEL_DELETED") {
+                        const currentChannel =
+                            selectedChannelRef.current;
+
+                        if (
+                            currentChannel
+                            && Number(currentChannel.chatChannelNo)
+                                === Number(event.channelNo)
+                        ) {
+                            // 메시지 수신 사이의 타이밍 문제 방지
+                            selectedChannelRef.current = null;
+                            setSelectedChannel(null);
+                        }
+                    }
+
+                    // 생성·수정·삭제 모두 목록 재조회
+                    await loadChannelList();
+
+                    // 삭제 채널 unread 제거 및 전체 배지 갱신
+                    await loadUnreadCount();
+                }
+            );
+        };
+
+        const unregisterReconnect =
+            onWebSocketReconnect(subscribeChannelEvent);
+
+        return () => {
+            unregisterReconnect();
+
+            try {
+                subscription?.unsubscribe();
+            }
+            catch (e) {
+                // 이미 연결이 끊긴 경우 무시
+            }
+
+            subscription = null;
+        };
+    }, [
+        projectNo,
+        loadChannelList,
+        loadUnreadCount
+    ]);
 
     //● 채널 선택
     useEffect(() => {
@@ -133,6 +223,31 @@ export default function Chat() {
     //현재 선택 채널 Ref 갱신
     useEffect(() => {
         selectedChannelRef.current = selectedChannel;
+    }, [selectedChannel]);
+
+    //현재 채널이 삭제됐을때 처리
+    useEffect(() => {
+        if (selectedChannel !== null) return;
+
+        setMessages([]);
+        setInput("");
+        setLast(true);
+
+        setSearchOpen(false);
+        setSearchKeyword("");
+        setSearchMessages([]);
+        setSearchTotalCount(0);
+        setSearchPage(1);
+        setSearchLast(true);
+
+        setContextMode(false);
+        setTargetMessageNo(null);
+
+        setPendingMessageCount(0);
+        setLatestPendingMessage(null);
+
+        messageBottomRef.current = true;
+        recordContextRef.current = null;
     }, [selectedChannel]);
 
 
@@ -646,7 +761,25 @@ export default function Chat() {
                     channel => channel.chatChannelNo === data.channelNo
                 );
 
-                if (!targetChannel) return;
+                if (!targetChannel) {
+                    await Swal.fire({
+                        icon: "info",
+                        title: "삭제된 채널입니다",
+                        text: "메세지와 기록은 보존되어 있지만 원본 채널로 이동할 수 없습니다.",
+                        confirmButtonText: "확인"
+                    });
+
+                    const nextParams = new URLSearchParams(searchParams);
+
+                    nextParams.delete("messageNo");
+
+                    setSearchParams(
+                        nextParams,
+                        {replace: true}
+                    );
+
+                    return;
+                }
 
                 //현재 채널과 같은 경우
                 if (selectedChannel && selectedChannel.chatChannelNo === data.channelNo) {
