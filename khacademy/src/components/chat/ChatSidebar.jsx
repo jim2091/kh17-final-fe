@@ -100,7 +100,7 @@ export default function ChatSidebar(
 
         const result = await Swal.fire({
             title: "채널을 삭제하시겠습니까?", 
-            text : `${channel.chatChannelName} 채널의 메시지도 함께 삭제될 수 있습니다 이거 나중에 로직 고칠건데 끝나가는 시점에 이 메시지가 보인다면 제게 알려주세요`,
+            text : `${channel.chatChannelName} 채널이 목록에서 숨겨집니다. 기존 메시지와 연결된 기록은 보존됩니다.`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "삭제",
