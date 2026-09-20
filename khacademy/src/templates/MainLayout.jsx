@@ -5,6 +5,9 @@ import Sidebar from "./Sidebar";
 import "./MainLayout.css";
 import { useCallback, useEffect, useState } from "react";
 import { Bounce, ToastContainer } from "react-toastify";
+import { useAtomValue } from "jotai";
+import { dmWindowOpenState } from "@utils/storage";
+import DmWindow from "@components/dm/DmWindow";
 
 export default function MainLayout() {
 
@@ -49,6 +52,9 @@ export default function MainLayout() {
         };
     }, []);
 
+    const dmWindowOpen =
+        useAtomValue(dmWindowOpenState);
+
     return (
         <div className="main-layout">
 
@@ -67,6 +73,11 @@ export default function MainLayout() {
                     <Outlet />
                 </div>
             </div>
+
+            {/* DM 플로팅 창 */}
+            {dmWindowOpen === true && (
+                <DmWindow />
+            )}
 
             {/* react-toastify container */}
             <ToastContainer

@@ -235,3 +235,27 @@
     }
 
 }
+
+/* =====================================================
+    DM
+===================================================== */
+
+.sidebar-dm-button {
+    width: 100%;
+
+    border: none;
+
+    background-color: transparent;
+
+    text-align: left;
+
+    font-family: inherit;
+
+    cursor: pointer;
+}
+
+
+.sidebar-dm-button:hover {
+    background-color: #e5e7eb;
+    color: #111827;
+}

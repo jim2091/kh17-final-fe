@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiArrowLeft, FiSearch, FiUsers } from "react-icons/fi";
+import { FiArrowLeft, FiSearch, FiUsers, FiMessageCircle } from "react-icons/fi";
 import { apiClient } from "@utils/reaxios";
 import { useWebSocket } from "../../../websocket/WebSocketProvider";
 import NoImage from "@assets/noimages.png";
 import "./Department.css";
 import Modal from "react-bootstrap/Modal";
-
+import { useAtomValue, useSetAtom } from "jotai";
+import { loginUserState, dmWindowOpenState, dmTargetState } from "@utils/storage";
 
 export default function DepartmentDetail() {
 
@@ -14,6 +15,14 @@ export default function DepartmentDetail() {
 
     const navigate = useNavigate();
 
+    const loginUser =
+        useAtomValue(loginUserState);
+
+    const setDmWindowOpen =
+        useSetAtom(dmWindowOpenState);
+
+    const setDmTarget =
+        useSetAtom(dmTargetState);
 
     //부서 정보
     const [department, setDepartment] =
@@ -173,7 +182,43 @@ export default function DepartmentDetail() {
             );
         });
     }, [memberList, keyword]);
+    
+    //구성원과 DM 시작
+    const openDm = useCallback(() => {
 
+        if(!selectedMember) return;
+
+        //자기 자신과 DM 불가
+        if(Number(selectedMember.empNo) === Number(loginUser?.empNo)) {
+            return;
+        }
+
+        //DM창에 전달할 상대방 정보
+        setDmTarget({
+            targetEmpNo: selectedMember.empNo,
+
+            targetEmpName: selectedMember.empName,
+
+            targetPositionName: selectedMember.positionName,
+
+            targetPresence: getPresence(selectedMember),
+
+            targetAttachNo: selectedMember.attachNo
+        });
+
+        //DM창 열기
+        setDmWindowOpen(true);
+
+        //프로필 모달 닫기
+        setSelectedMember(null);
+
+    }, [
+        selectedMember,
+        loginUser,
+        getPresence,
+        setDmTarget,
+        setDmWindowOpen
+    ]);
 
     return (
         <div className="organization-department-page">
@@ -183,9 +228,7 @@ export default function DepartmentDetail() {
                 type="button"
                 className="organization-department-back-button"
                 onClick={() =>
-                    navigate(
-                        "/organization/departments"
-                    )
+                    navigate("/organization/departments")
                 }
             >
                 <FiArrowLeft />
@@ -662,16 +705,22 @@ export default function DepartmentDetail() {
                                     </div>
 
 
-                                    {/*
-                                        DM 구현 후 이 위치에 추가
+                                    {Number(selectedMember.empNo)
+                                        !== Number(loginUser?.empNo) && (
 
                                         <button
                                             type="button"
                                             className="organization-department-profile-message-button"
+                                            onClick={openDm}
                                         >
-                                            메시지 보내기
+                                            <FiMessageCircle />
+
+                                            <span>
+                                                DM 보내기
+                                            </span>
                                         </button>
-                                    */}
+
+                                    )}
 
                                 </div>
 
