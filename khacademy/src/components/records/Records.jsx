@@ -894,13 +894,6 @@ export default function Records() {
         setSearchCondition(prev => ({
             ...prev,
 
-            //OPEN / RESOLVED를 선택하면 결과는 ISSUE밖에 없으므로
-            //타입도 ISSUE로 맞춰준다
-            type:
-                filterCondition.issueStatus !== "ALL"
-                    ? "ISSUE"
-                    : prev.type,
-
             issueStatus: filterCondition.issueStatus,
             relatedType: filterCondition.relatedType,
 
@@ -1073,7 +1066,7 @@ export default function Records() {
                                                     }))
                                                 }
                                             >
-                                                <option value="">
+                                                <option value="ALL">
                                                     전체
                                                 </option>
                                                 <option value="OPEN">
@@ -1131,7 +1124,7 @@ export default function Records() {
                                                     }))
                                                 }
                                             >
-                                                <option value="ALL">
+                                                <option value="">
                                                     전체
                                                 </option>
 

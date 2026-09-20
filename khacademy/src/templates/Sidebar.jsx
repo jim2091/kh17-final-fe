@@ -1,5 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
+import { useSetAtom } from "jotai";
+import { dmWindowOpenState } from "@utils/storage";
 
 export default function Sidebar({
     sidebarOpen,
@@ -10,6 +12,18 @@ export default function Sidebar({
     //closeSidebar도 같이 써주게 그냥 따로 빼서 온클릭 걸어주기로
     const moveToProjectAdd = () => {
         navigate("/projects/add");
+        closeSidebar();
+    };
+
+    const setDmWindowOpen =
+        useSetAtom(dmWindowOpenState);
+
+    //DM 창 열기
+    const openDmWindow = () => {
+
+        setDmWindowOpen(true);
+
+        //작은 화면이면 사이드바는 닫기
         closeSidebar();
     };
 
@@ -103,6 +117,28 @@ export default function Sidebar({
                             </NavLink>
                         </div>
                     </div>
+
+                    {/* 커뮤니케이션 */}
+                    <div className="sidebar-group">
+
+                        <div className="sidebar-group-title">
+                            커뮤니케이션
+                        </div>
+
+                        <div className="sidebar-group-menu">
+
+                            <button
+                                type="button"
+                                className="sidebar-link sidebar-dm-button"
+                                onClick={openDmWindow}
+                            >
+                                DM
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>

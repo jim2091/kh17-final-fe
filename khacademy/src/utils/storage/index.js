@@ -48,3 +48,14 @@ isAdminState.debugLabel = "관리자 여부";
 //알림 데이터 갱신 신호
 //값 자체에 의미는 없고 값이 바뀌면 알림을 다시 조회
 export const notificationRefreshState = atom(0);
+
+
+//DM 플로팅 창 열림 여부
+export const dmWindowOpenState = atom(false);
+
+dmWindowOpenState.debugLabel = "DM 창 열림 여부";
+
+//DM 창에서 바로 열 상대방 정보
+export const dmTargetState = atom(null);
+
+dmTargetState.debugLabel = "DM 대상 사용자";
