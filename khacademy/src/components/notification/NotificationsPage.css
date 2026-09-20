@@ -170,3 +170,64 @@
   color: #475569 !important;
   border: 1px solid #e2e8f0;
 }
+/* =========================================
+   알림 분류 필터 탭 (전체/프로젝트/노트/업무/일정)
+   ========================================= */
+
+.notifications-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.notifications-category-btn {
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  transition: all 0.15s ease-in-out;
+  box-shadow: none !important;
+}
+
+.notifications-category-btn:hover {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* 선택된(활성) 탭 - 기본(전체) */
+.notifications-category-btn.active-all {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+}
+
+/* 선택된(활성) 탭 - 카테고리별 색상 매칭 */
+.notifications-category-btn.active-schedule {
+  background-color: #eef2ff !important;
+  color: #4f46e5 !important;
+  border-color: #c7d2fe !important;
+}
+
+.notifications-category-btn.active-task {
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #dcfce7 !important;
+}
+
+.notifications-category-btn.active-note {
+  background-color: #fff7ed !important;
+  color: #c2410c !important;
+  border-color: #ffedd5 !important;
+}
+
+.notifications-category-btn.active-project {
+  background-color: #faf5ff !important;
+  color: #7e22ce !important;
+  border-color: #f3e8ff !important;
+}
