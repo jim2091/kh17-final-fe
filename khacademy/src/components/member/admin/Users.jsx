@@ -39,6 +39,8 @@ export default function Users() {
         "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
 
     const [isSearch, setIsSearch] = useState(false);
+
+    const [searchType, setSearchType] = useState("all");
     //회원상세창 state
     const [show, setShow] = useState(false);
 
@@ -84,7 +86,7 @@ export default function Users() {
 
     // console.log("page : ", page);
     const loadData = useCallback(async () => {
-        if (isSearch) return;
+        if (searchType !== "all") return;
 
         const { data } = await apiClient.post("/admin/", page);
 
@@ -94,7 +96,7 @@ export default function Users() {
 
 
 
-    }, [page]);
+    }, [page, searchType]);
 
 
     const totalData = useCallback(async () => {
@@ -137,6 +139,83 @@ export default function Users() {
         });
     }, [editData]);
 
+    // const search = useCallback(async (e) => {
+
+    //     e.preventDefault();
+
+    //     const newPage = {
+    //         ...page,
+    //         page: 1,
+    //         sort: "empNo",
+    //         direction: "asc",
+    //     };
+    //     setPage(newPage);
+    //     setIsSearch(true);
+    //     // loadData();
+
+    //     const { data } = await apiClient.post("/admin/complexSearch",
+    //         {
+    //             keyword: keyword.keyword,
+    //             pageVO: newPage,
+    //         }
+    //     );
+
+    //     setEmpList(data.list);
+    //     setCount(data.count);
+
+    // }, [keyword, page]);
+    // console.log("count : ", count);
+
+
+    const searchInitial = useCallback(async (tab) => {
+
+        setActiveTab(tab);
+        setSearchType("initial");
+
+        const newPage = {
+            ...page,
+            page: 1,
+            sort: "empNo",
+            direction: "asc",
+        };
+
+        setPage(newPage);
+
+        const { data } = await apiClient.post("/admin/initial", {
+            tab: tab,
+            pageVO: newPage,
+        });
+
+        setEmpList(data.list);
+        setCount(data.count);
+
+    }, [page]);
+
+
+    // const searchInitial = useCallback(async (tab) => {
+
+    //     setActiveTab(tab);
+
+    //     const newPage = {
+    //         ...page,
+    //         page: 1,
+    //         sort: "empNo",
+    //         direction: "asc",
+    //     };
+
+    //     setPage(newPage);
+    //     setIsSearch(true);
+
+    //     const { data } = await apiClient.post("/admin/initial", {
+    //         tab: tab,
+    //         pageVO: newPage,
+    //     });
+
+    //     setEmpList(data.list);
+    //     setCount(data.count);
+
+    // }, [page]);
+
     const search = useCallback(async (e) => {
 
         e.preventDefault();
@@ -145,11 +224,11 @@ export default function Users() {
             ...page,
             page: 1,
             sort: "empNo",
+            direction: "asc",
+        };
 
-        }
         setPage(newPage);
-        setIsSearch(true);
-        // loadData();
+        setSearchType("complex");
 
         const { data } = await apiClient.post("/admin/complexSearch",
             {
@@ -162,33 +241,53 @@ export default function Users() {
         setCount(data.count);
 
     }, [keyword, page]);
-    // console.log("count : ", count);
 
+    const changeSort = async (sort) => {
 
-
-
-    const searchInitial = useCallback(async (tab) => {
-        setActiveTab(tab);
+        const direction =
+            page.sort === sort && page.direction === "asc"
+                ? "desc"
+                : "asc";
 
         const newPage = {
             ...page,
             page: 1,
-            sort: "empNo",
+            sort,
+            direction,
+        };
 
-        }
         setPage(newPage);
-        setIsSearch(true);
 
-        const { data } = await apiClient.post("/admin/initial", {
-            tab: tab,
-            pageVO: newPage,
-        });
+        let data;
 
-        // setPage(prev=>({...prev, page : 1}));
+        if (searchType === "complex") {
+
+            const response = await apiClient.post(
+                "/admin/complexSearch",
+                {
+                    keyword: keyword.keyword,
+                    pageVO: newPage,
+                }
+            );
+
+            data = response.data;
+
+        } else if (searchType === "initial") {
+
+            const response = await apiClient.post(
+                "/admin/initial",
+                {
+                    tab: activeTab,
+                    pageVO: newPage,
+                }
+            );
+
+            data = response.data;
+        }
+
         setEmpList(data.list);
         setCount(data.count);
-    }, [page]);
-    // console.log("list : ", empList);
+    };
 
     const changeState = useCallback(async (emp) => {
         const empName = emp.empName === null ? "이름없음" : emp.empName;
@@ -661,24 +760,36 @@ export default function Users() {
                         <tr>
                             <th className="check-column">
                                 <div className="d-flex align-items-center justify-content-center">
-                                <Form.Check
-                                    className="big-checkbox"
-                                    checked={
-                                        empList.length > 0 &&
-                                        checked.length === empList.length
-                                    }
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setChecked(empList.map(emp => emp.empNo));
-                                        } else {
-                                            setChecked([]);
+                                    <Form.Check
+                                        className="big-checkbox"
+                                        checked={
+                                            empList.length > 0 &&
+                                            checked.length === empList.length
                                         }
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                ></Form.Check>
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setChecked(empList.map(emp => emp.empNo));
+                                            } else {
+                                                setChecked([]);
+                                            }
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    ></Form.Check>
                                 </div>
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            <th
+                                onClick={() => changeSort("empName")}
+                                className="sortable name-column"
+                            >
+                                <span>사번/이름</span>
+
+                                {page.sort === "empName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "empName",
@@ -692,9 +803,21 @@ export default function Users() {
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
 
-                            </th>
+                            </th> */}
                             <th className="level-column">레벨</th>
-                            <th onClick={() => setPage(prev => ({
+                            <th
+                                onClick={() => changeSort("empEmail")}
+                                className="sortable email-column"
+                            >
+                                <span>이메일</span>
+
+                                {page.sort === "empEmail" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "empEmail",
@@ -706,8 +829,20 @@ export default function Users() {
                                 ) : (
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
+                            </th> */}
+                            <th
+                                onClick={() => changeSort("deptName")}
+                                className="sortable dept-column"
+                            >
+                                <span>부서</span>
+
+                                {page.sort === "deptName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "deptName",
@@ -719,8 +854,20 @@ export default function Users() {
                                 ) : (
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
+                            </th> */}
+                            <th
+                                onClick={() => changeSort("positionName")}
+                                className="sortable position-column"
+                            >
+                                <span>직급</span>
+
+                                {page.sort === "positionName" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "positionName",
@@ -732,11 +879,23 @@ export default function Users() {
                                 ) : (
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
-                            </th>
+                            </th> */}
                             <th className="birth-column">생일</th>
                             <th className="contact-column">연락처</th>
                             <th className="address-column">주소</th>
-                            <th onClick={() => setPage(prev => ({
+                            <th
+                                onClick={() => changeSort("empState")}
+                                className="sortable state-column"
+                            >
+                                <span>계정상태</span>
+
+                                {page.sort === "empState" && page.direction === "asc" ? (
+                                    <BiSolidDownArrow className="ms-2" />
+                                ) : (
+                                    <BiSolidUpArrow className="ms-2" />
+                                )}
+                            </th>
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "empState",
@@ -748,7 +907,7 @@ export default function Users() {
                                 ) : (
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
-                            </th>
+                            </th> */}
                         </tr>
                     </thead>
 
