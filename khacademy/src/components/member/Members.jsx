@@ -31,40 +31,77 @@ export default function Members() {
 
     const [isSearch, setIsSearch] = useState(false);
 
+    // const loadData = useCallback(async () => {
+    //     if (isSearch) return;
+    //     const { data } = await apiClient.post("/member/", page);
+
+    //     setEmpList(data.list);
+    //     setCount(data.count);
+    //     setChecked([]);
+    // }, [page, isSearch]);
+
     const loadData = useCallback(async () => {
-        if (isSearch) return;
-        const { data } = await apiClient.post("/member/", page);
+
+        let response;
+
+        if (isSearch) {
+
+            // 초성 검색
+            response = await apiClient.post("/member/initial", {
+                tab: activeTab,
+                pageVO: page,
+            });
+
+        } else {
+
+            // 전체 목록
+            response = await apiClient.post("/member/", page);
+
+        }
+
+        const { data } = response;
 
         setEmpList(data.list);
         setCount(data.count);
-        setChecked([]);
-    }, [page]);
+
+    }, [page, isSearch, activeTab]);
     // console.log("empList : ", empList);
     useEffect(() => {
         loadData();
     }, [loadData]);
 
-    const searchInitial = useCallback(async (tab) => {
+    const searchInitial = useCallback((tab) => {
+
         setActiveTab(tab);
 
-        const newPage = {
-            ...page,
-            page: 1,
-            sort: "empNo",
-
-        }
-        setPage(newPage);
         setIsSearch(true);
 
-        const { data } = await apiClient.post("/member/initial", {
-            tab: tab,
-            pageVO: newPage,
-        });
+        setPage(prev => ({
+            ...prev,
+            page: 1,
+            sort: "empNo",
+            direction: "asc",
+        }));
 
-        // setPage(prev=>({...prev, page : 1}));
-        setEmpList(data.list);
-        setCount(data.count);
-    }, [page]);
+    }, []);
+    const changeSort = useCallback((sort) => {
+
+    setPage(prev => {
+
+        const direction =
+            prev.sort === sort && prev.direction === "asc"
+                ? "desc"
+                : "asc";
+
+        return {
+            ...prev,
+            page: 1,
+            sort: sort,
+            direction: direction,
+        };
+    });
+
+}, []);
 
     const totalPage = useMemo(() => {
         return Math.ceil(count / page.size);
@@ -113,12 +150,16 @@ export default function Members() {
                 <Table className="member-table">
                     <thead>
                         <tr>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "empName",
                                 direction: prev.sort === "empName" && prev.direction === "asc" ? "desc" : "asc",
-                            }))} className="sortable name-column">
+                            }))} className="sortable name-column"> */}
+                            <th
+                                onClick={() => changeSort("empName")}
+                                className="sortable name-column"
+                            >
                                 <span>이름</span>
                                 {page.sort === "empName" && page.direction === "asc" ? (
                                     <BiSolidDownArrow className="ms-2" />
@@ -127,12 +168,16 @@ export default function Members() {
                                 )}
 
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "empEmail",
                                 direction: prev.sort === "empEmail" && prev.direction === "asc" ? "desc" : "asc",
-                            }))} className="sortable email-column">
+                            }))} className="sortable email-column"> */}
+                            <th
+                                onClick={() => changeSort("empEmail")}
+                                className="sortable email-column"
+                            >
                                 <span>이메일</span>
                                 {page.sort === "empEmail" && page.direction === "asc" ? (
                                     <BiSolidDownArrow className="ms-2" />
@@ -140,12 +185,16 @@ export default function Members() {
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "deptName",
                                 direction: prev.sort === "deptName" && prev.direction === "asc" ? "desc" : "asc",
-                            }))} className="sortable dept-column">
+                            }))} className="sortable dept-column"> */}
+                            <th
+                                onClick={() => changeSort("deptName")}
+                                className="sortable dept-column"
+                            >
                                 <span>부서</span>
                                 {page.sort === "deptName" && page.direction === "asc" ? (
                                     <BiSolidDownArrow className="ms-2" />
@@ -153,12 +202,16 @@ export default function Members() {
                                     <BiSolidUpArrow className="ms-2" />
                                 )}
                             </th>
-                            <th onClick={() => setPage(prev => ({
+                            {/* <th onClick={() => setPage(prev => ({
                                 ...prev,
                                 page: 1,
                                 sort: "positionName",
                                 direction: prev.sort === "positionName" && prev.direction === "asc" ? "desc" : "asc",
-                            }))} className="sortable position-column">
+                            }))} className="sortable position-column"> */}
+                            <th
+                                onClick={() => changeSort("positionName")}
+                                className="sortable position-column"
+                            >
                                 <span>직급</span>
                                 {page.sort === "positionName" && page.direction === "asc" ? (
                                     <BiSolidDownArrow className="ms-2" />

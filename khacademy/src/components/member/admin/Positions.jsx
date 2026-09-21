@@ -14,35 +14,8 @@ export default function Positions() {
     const [position, setPosition] = useState({
         positionName: "",
         positionInfo: "",
-        positionBlock: "",
+        positionBlock: "N",
     });
-
-    const changePositionValue = useCallback(e => {
-        const { name, value } = e.target;
-        setPosition(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    }, []);
-
-    const sendData = useCallback(async () => {
-
-        await apiClient.post("/position/add", position);
-        toast.success("직급이 추가되었습니다.");
-
-        setPosition({
-            positionName: "",
-            positionInfo: "",
-            positionBlock: "",
-        });
-
-        loadData();
-
-
-
-    }, [position]);
-
-
     const [positionList, setPositionList] = useState([]);
 
 
@@ -64,15 +37,90 @@ export default function Positions() {
 
     });
     const [count, setCount] = useState(0);
-
-
-
     const loadData = useCallback(async () => {
         const { data } = await apiClient.post("/position/", page);
 
         setPositionList(data.list);
         setCount(data.count);
     }, [page]);
+
+    const changePositionValue = useCallback(e => {
+        const { name, value } = e.target;
+        setPosition(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }, []);
+
+    // const sendData = useCallback(async () => {
+
+    //     await apiClient.post("/position/add", position);
+    //     toast.success("직급이 추가되었습니다.");
+
+    //     setPosition({
+    //         positionName: "",
+    //         positionInfo: "",
+    //         positionBlock: "",
+    //     });
+
+    //     loadData();
+
+
+
+    // }, [position]);
+    const sendData = useCallback(async () => {
+
+        // 직급명 필수
+        if (!position.positionName.trim()) {
+            toast.warning("직급명을 입력해주세요.");
+            return;
+        }
+
+        // 직급명: 한글 2~10자
+        if (!/^[가-힣]{2,10}$/.test(position.positionName)) {
+            toast.warning("직급명은 한글 2~10자로 입력해주세요.");
+            return;
+        }
+
+        // 직급 설명: 최대 300자
+        if (position.positionInfo.length > 300) {
+            toast.warning("직급 설명은 300자 이내로 입력해주세요.");
+            return;
+        }
+
+        // 활성화 여부
+        if (position.positionBlock !== "Y" && position.positionBlock !== "N") {
+            toast.warning("활성화 여부를 선택해주세요.");
+            return;
+        }
+
+        try {
+
+            await apiClient.post("/position/add", position);
+
+            toast.success("직급이 추가되었습니다.");
+
+            setPosition({
+                positionName: "",
+                positionInfo: "",
+                positionBlock: "N",
+            });
+
+            loadData();
+
+        } catch (e) {
+            console.log("e : ", e);
+            toast.error("직급 추가에 실패하였습니다. 잠시 후 다시 시도해주세요.");
+        }
+
+    }, [position, loadData]);
+
+
+    
+
+
+
+
 
     useEffect(() => {
         loadData();
@@ -225,7 +273,7 @@ export default function Positions() {
                             ))}
                         </tbody>
                     </Table>
-                    
+
                 </div>
                 <div className="department-side">
                     <div>
@@ -282,43 +330,43 @@ export default function Positions() {
 
                 </div>
                 <Pagination size="lg" className="mt-5 justify-content-center dept-pagination">
-                        <Pagination.Prev
-                            disabled={pageGroup === 1}
-                            onClick={() =>
-                                setPage(prev => ({
-                                    ...prev,
-                                    page: startPage - 1
-                                }))
-                            }
-                        />
-                        {Array.from(
-                            { length: endPage - startPage + 1 },
-                            (_, index) => startPage + index)
-                            .map(pageNumber => (
+                    <Pagination.Prev
+                        disabled={pageGroup === 1}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: startPage - 1
+                            }))
+                        }
+                    />
+                    {Array.from(
+                        { length: endPage - startPage + 1 },
+                        (_, index) => startPage + index)
+                        .map(pageNumber => (
 
-                                <Pagination.Item
-                                    key={pageNumber}
-                                    active={page.page === pageNumber}
-                                    onClick={() =>
-                                        setPage(prev => ({
-                                            ...prev,
-                                            page: pageNumber
-                                        }))}
-                                >{pageNumber}</Pagination.Item>
+                            <Pagination.Item
+                                key={pageNumber}
+                                active={page.page === pageNumber}
+                                onClick={() =>
+                                    setPage(prev => ({
+                                        ...prev,
+                                        page: pageNumber
+                                    }))}
+                            >{pageNumber}</Pagination.Item>
 
-                            ))}
+                        ))}
 
 
-                        <Pagination.Next
-                            disabled={endPage === totalPage}
-                            onClick={() =>
-                                setPage(prev => ({
-                                    ...prev,
-                                    page: endPage + 1
-                                }))
-                            }
-                        />
-                    </Pagination>
+                    <Pagination.Next
+                        disabled={endPage === totalPage}
+                        onClick={() =>
+                            setPage(prev => ({
+                                ...prev,
+                                page: endPage + 1
+                            }))
+                        }
+                    />
+                </Pagination>
             </div>
         </div>
         <Offcanvas show={show}

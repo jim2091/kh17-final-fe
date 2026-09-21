@@ -1,138 +1,21 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { Button, Col, Row, Table, Form, Card, Badge } from "react-bootstrap";
-import Nav from 'react-bootstrap/Nav';
-import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-// import { Link, useNavigate } from "react-router-dom";
 import { apiClient } from "@utils/reaxios";
-import Modal from 'react-bootstrap/Modal';
 import { toast } from "react-toastify";
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
 import Swal from "sweetalert2";
 import Pagination from 'react-bootstrap/Pagination';
 import Offcanvas from 'react-bootstrap/Offcanvas';
-// import "../member.css";
 import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
-
-function MyVerticallyCenteredModal(props) {
-    const [dept, setDept] = useState({
-        deptName: "",
-        deptInfo: "",
-        deptBlock: "",
-    });
-
-    const changeStringValue = useCallback(e => {
-        const { name, value } = e.target;
-        setDept(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    }, []);
-
-    const sendData = useCallback(async () => {
-        await apiClient.post("/dept/add", dept);
-        toast.success("부서가 추가되었습니다.");
-
-        setDept({
-            deptName: "",
-            deptInfo: "",
-            deptBlock: "",
-        });
-
-        // 부모에게 "추가 완료"를 알림
-        props.onAdd();
-
-        // 모달 닫기
-        props.onHide();
-
-    }, [dept, props]);
+import '../member.css';
 
 
-
-
-    return (
-        <Modal
-            {...props}
-            onHide={() => {
-                setDept({
-                    deptName: "",
-                    deptInfo: "",
-                    deptBlock: "",
-                });
-
-                props.onHide();
-            }}
-            size="lg"
-            aria-labelledby="contained-modal-title-vcenter"
-            centered
-        >
-            <Modal.Header closeButton>
-                <Modal.Title id="contained-modal-title-vcenter">
-                    부서 추가
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>부서명</Form.Label>
-                    <Col sm={9}>
-                        <Form.Control type="text" name="deptName" value={dept.deptName}
-                            onChange={changeStringValue} className="w-50 d-inline-block">
-                        </Form.Control>
-                    </Col>
-                </Row>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>부서설명</Form.Label>
-                    <Col sm={9}>
-                        <Form.Control type="text" name="deptInfo" value={dept.deptInfo}
-                            onChange={changeStringValue} className="w-50 d-inline-block">
-                        </Form.Control>
-                    </Col>
-                </Row>
-                <Row className="mt-4">
-                    <Form.Label column sm={3}>활성화여부</Form.Label>
-                    <Col sm={9}>
-                        <Form.Check type="radio"
-                            name="deptBlock"
-                            value="Y"
-                            className="d-inline-block"
-                            label="Y"
-                            checked={dept.deptBlock === "Y"}
-                            onChange={changeStringValue}
-                        >
-                        </Form.Check>
-                        <Form.Check type="radio"
-                            name="deptBlock"
-                            value="N"
-                            className="d-inline-block"
-                            label="N"
-                            checked={dept.deptBlock === "N"}
-                            onChange={changeStringValue}
-                        >
-                        </Form.Check>
-                    </Col>
-                </Row>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button onClick={sendData}>Add</Button>
-                <Button onClick={() => {
-                    setDept({
-                        deptName: "",
-                        deptInfo: "",
-                        deptBlock: "",
-                    });
-                    props.onHide();
-                }}>Close</Button>
-            </Modal.Footer>
-        </Modal>
-    );
-}
 
 export default function Departments() {
 
     const [dept, setDept] = useState({
         deptName: "",
         deptInfo: "",
-        deptBlock: "",
+        deptBlock: "N",
     });
 
     const changeDeptValue = useCallback(e => {
@@ -143,24 +26,91 @@ export default function Departments() {
         }));
     }, []);
 
-    const sendData = useCallback(async () => {
+    // const sendData = useCallback(async () => {
 
-        await apiClient.post("/dept/add", dept);
-        toast.success("부서가 추가되었습니다.");
+    //     await apiClient.post("/dept/add", dept);
+    //     toast.success("부서가 추가되었습니다.");
 
-        setDept({
-            deptName: "",
-            deptInfo: "",
-            deptBlock: "",
-        });
+    //     setDept({
+    //         deptName: "",
+    //         deptInfo: "",
+    //         deptBlock: "",
+    //     });
 
 
 
-    }, [dept]);
+    // }, [dept]);
+    const sendData = async () => {
+        console.log("sendData 실행");
+
+        // 부서명
+        if (!dept.deptName || dept.deptName.trim() === "") {
+            Swal.fire({
+                icon: "warning",
+                title: "부서명을 입력해주세요.",
+            });
+            return;
+        }
+
+        if (!/^[가-힣]{3,10}$/.test(dept.deptName)) {
+            Swal.fire({
+                icon: "warning",
+                title: "부서명을 확인해주세요.",
+                text: "부서명은 한글 3~10자로 입력해주세요.",
+            });
+            return;
+        }
+
+        // 부서 설명
+        if (dept.deptInfo && dept.deptInfo.length > 300) {
+            Swal.fire({
+                icon: "warning",
+                title: "부서 설명이 너무 깁니다.",
+                text: "부서 설명은 300자 이내로 입력해주세요.",
+            });
+            return;
+        }
+
+        // 활성화 여부
+        if (dept.deptBlock !== "Y" && dept.deptBlock !== "N") {
+            Swal.fire({
+                icon: "warning",
+                title: "활성화 여부를 선택해주세요.",
+            });
+            return;
+        }
+
+        try {
+
+            await apiClient.post("/admin/departments", dept);
+
+            Swal.fire({
+                icon: "success",
+                title: "부서가 추가되었습니다.",
+            });
+
+            // 등록 후 초기화
+            setDept({
+                deptName: "",
+                deptInfo: "",
+                deptBlock: "Y",
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "부서 추가에 실패했습니다.",
+                text: "잠시 후 다시 시도해주세요.",
+            });
+        }
+    };
 
     const [deptList, setDeptList] = useState([]);
 
-    const [modalShow, setModalShow] = useState(false);
+    // const [modalShow, setModalShow] = useState(false);
 
     const [selectedDept, setSelectedDept] = useState({
 
